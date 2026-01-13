@@ -1,3 +1,5 @@
+import MicButton from "@/components/common/MicButton";
+
 export default function Home() {
   return (
     <div>
@@ -8,6 +10,7 @@ export default function Home() {
         <li>약</li>
         <li>마이페이지</li>
       </ul>
+      <MicButton />
     </div>
   );
 }
