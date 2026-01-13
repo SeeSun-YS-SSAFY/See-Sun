@@ -1,1 +1,83 @@
 @import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-white: #fff;
+  --color-black: #000;
+
+  /* yellow */
+  --color-yellow-50: #ffffee;
+  --color-yellow-100: #ffffdd;
+  --color-yellow-200: #ffffbb;
+  --color-yellow-300: #ffff98;
+  --color-yellow-400: #ffff76;
+  --color-yellow-500: #ffff53;
+  --color-yellow-600: #e6e64b;
+  --color-yellow-700: #cccc42;
+  --color-yellow-800: #b5b439;
+  --color-yellow-900: #9d9b30;
+
+  /* blue */
+  --color-blue-50: #a09cd7;
+  --color-blue-100: #7c76c7;
+  --color-blue-200: #6660be;
+  --color-blue-300: #5049b5;
+  --color-blue-400: #3a32ac;
+  --color-blue-500: #241ba2;
+  --color-blue-600: #211992;
+  --color-blue-700: #1d1682;
+  --color-blue-800: #1a1475;
+  --color-blue-900: #171268;
+
+  /* gray */
+  --color-gray-50: #f3f3f3;
+  --color-gray-100: #f3f3f3;
+  --color-gray-200: #d9d9d9;
+  --color-gray-300: #d9d9d9;
+  --color-gray-400: #d9d9d9;
+  --color-gray-500: #c2c2c2;
+  --color-gray-600: #c2c2c2;
+  --color-gray-700: #c2c2c2;
+  --color-gray-800: #8c8c8c;
+  --color-gray-900: #8c8c8c;
+
+  /* shadow */
+  --shadow-100: 0px 4px 4px 0 rgba(0, 0, 0, 0.25);
+
+  /* Fonts Primitives */
+
+  /* sizes */
+  --text-48: 3rem;
+  --text-40: 2.5rem;
+  --text-32: 2rem;
+  --text-24: 1.5rem;
+
+  /* weights */
+  --font-weight-800: 800;
+
+  /* letter-spacings */
+  --tracking-0: 0rem;
+}
+
+/* Fonts Semantics */
+
+/* heading */
+@layer components {
+  .text-title-large {
+    @apply text-48 font-800 tracking-0;
+  }
+  .text-title-medium {
+    @apply text-40 font-800 tracking-0;
+  }
+  .text-title-small {
+    @apply text-32 font-800 tracking-0;
+  }
+
+  /* body */
+  .text-body-large {
+    @apply text-32 font-800 tracking-0;
+  }
+  .text-body-medium {
+    @apply text-24 font-800 tracking-0;
+  }
+}
