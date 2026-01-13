@@ -6,7 +6,7 @@ export default function Home() {
         <li>식단</li>
         <li>운동</li>
         <li>약</li>
-        <li className="text-title-large text-blue-50 shadow-100">마이페이지</li>
+        <li>마이페이지</li>
       </ul>
     </div>
   );
