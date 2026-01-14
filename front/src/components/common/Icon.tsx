@@ -7,7 +7,7 @@ type IconProps = {
   className?: string;
   color?: string;
   variation?: 'rounded' | 'sharp' | 'outlined';
-  weight?: number;
+  weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
 };
 
 export default function Icon({
@@ -29,7 +29,7 @@ export default function Icon({
         "material-symbols-outlined": variation === 'outlined',
         "material-symbols-rounded": variation === 'rounded',
         "material-symbols-sharp": variation === 'sharp',
-      }, className)}
+      }, className, 'select-none')}
 
       style={{
         fontSize: `${size}px`,

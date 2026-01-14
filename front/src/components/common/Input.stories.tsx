@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
     args: {
-        placeholder: '입력텍스트',
+        placeholder: '입력 텍스트',
         width: '400px',
     }
 }
