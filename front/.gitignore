@@ -246,3 +246,5 @@ next-env.d.ts
 
 .next
 # End of https://www.toptal.com/developers/gitignore/api/nextjs
+*storybook.log
+storybook-static

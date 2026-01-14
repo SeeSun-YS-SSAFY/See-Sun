@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "next dev"
+    "dev": "next dev",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "keywords": [],
   "author": "",
@@ -24,8 +26,20 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^5.0.0",
+    "@storybook/addon-a11y": "^10.1.11",
+    "@storybook/addon-docs": "^10.1.11",
+    "@storybook/addon-onboarding": "^10.1.11",
+    "@storybook/addon-vitest": "^10.1.11",
+    "@storybook/nextjs-vite": "^10.1.11",
     "@types/node": "25.0.7",
     "@types/react": "19.2.8",
-    "typescript": "5.9.3"
+    "@vitest/browser-playwright": "^4.0.17",
+    "@vitest/coverage-v8": "^4.0.17",
+    "playwright": "^1.57.0",
+    "storybook": "^10.1.11",
+    "typescript": "5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.17"
   }
 }

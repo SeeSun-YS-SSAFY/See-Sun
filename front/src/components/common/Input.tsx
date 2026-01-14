@@ -19,14 +19,14 @@ export default function Input({
   };
 
   return (
-    <div className={cn("relative self-stretch inline-flex flex-col justify-center items-center", className)}>
+    <div className={cn("relative self-stretch inline-flex flex-col justify-center items-center")}>
       <div className="self-stretch pl-2.5 inline-flex justify-between items-center">
         <div className="flex-1 flex justify-start items-center gap-2.5 overflow-hidden">
           <input
             ref={inputRef}
             type="text"
             placeholder={placeholder}
-            className="justify-start text-white placeholder:text-gray-500 text-3xl font-extrabold leading-12 bg-transparent border-none outline-none flex-1"
+            className={cn("justify-start w-full text-white placeholder:text-gray-500 text-3xl font-extrabold leading-12 bg-transparent border-none outline-none flex-1", className)}
             {...props}
           />
         </div>
