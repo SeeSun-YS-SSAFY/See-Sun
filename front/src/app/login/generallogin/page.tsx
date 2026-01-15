@@ -5,7 +5,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/common/Icon";
-
+import Image from "next/image";
 
 export default function GeneralLogin() {
   const [phone, setPhone] = useState("");
@@ -71,11 +71,13 @@ export default function GeneralLogin() {
             onClick={() => router.back()}
             className="absolute left-0 flex items-center px-4"
           >
-            <Icon
-              name="arrow_back"
-              size={70}
-              color="#afafaf"
+            <Image 
+            src="/arrow_back.png"
+            width={70}
+            height={70}
+            alt="Picture of the author"
             />
+
           </button>
 
           {/* 중앙 타이틀 */}
