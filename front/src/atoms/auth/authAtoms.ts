@@ -7,7 +7,7 @@ export type AuthState = {
 };
 
 export const authAtom = atom<AuthState>({
-  accessToken: null,
+  accessToken: localStorage.getItem('accessToken'),
   isAuthed: false,
 });
 
