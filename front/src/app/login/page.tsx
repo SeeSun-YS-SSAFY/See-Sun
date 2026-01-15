@@ -12,11 +12,6 @@ export default function Login() {
       <div className="text-title-large text-yellow-500">See:Sun</div>
 
       <div className="mt-20 flex flex-col gap-2">
-      <Button onClick={() => {
-          window.location.href = `${API_BASE}/auth/kakao`;
-        }}>
-          카카오로 로그인
-        </Button>
 
         <Button onClick={() => {
           window.location.href = `${API_BASE}/auth/google`;

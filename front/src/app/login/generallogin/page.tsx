@@ -4,6 +4,7 @@ import { useState } from "react";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
+import Icon from "@/components/common/Icon";
 
 
 export default function GeneralLogin() {
@@ -63,16 +64,25 @@ export default function GeneralLogin() {
 
   return (
     <div>
-       <div>
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="text-sm text-gray-400 hover:text-white underline"
-        >
-          뒤로가기
-        </button>
-        <div className="text-title-large text-yellow-500">로그인</div>
-      </div>
+       <div className="relative flex items-center h-16">
+          {/* 왼쪽 뒤로가기 */}
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="absolute left-0 flex items-center px-4"
+          >
+            <Icon
+              name="arrow_back"
+              size={70}
+              color="#afafaf"
+            />
+          </button>
+
+          {/* 중앙 타이틀 */}
+          <div className="mx-auto text-title-large text-yellow-500">
+            로그인
+          </div>
+        </div>
 
       <div className="mt-20 flex flex-col gap-10">
         {/* 전화번호 */}
