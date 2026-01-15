@@ -1,17 +1,18 @@
 import { http, HttpResponse } from "msw";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 
 type LoginBody = {
-  phone?: string;
-  code?: string;
+  phone_number?: string;
+  pin_number?: string;
 };
 
 export const handlers = [
   // 어떤 도메인이든 /auth/login 으로 끝나면 다 잡음
-  http.post("*/auth/login", async ({ request }) => {
+  http.post(`${API_BASE}/auth/login`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as LoginBody;
 
-    const phone = String(body.phone ?? "");
-    const code = String(body.code ?? "");
+    const phone = String(body.phone_number ?? "");
+    const code = String(body.pin_number ?? "");
 
     if (phone === "01012345678" && code === "1234") {
       return HttpResponse.json(

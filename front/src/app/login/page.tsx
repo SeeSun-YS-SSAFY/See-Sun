@@ -9,7 +9,7 @@ export default function Login() {
 
   return (
     <div>
-      <div className="text-title-large text-yellow-500">See:Sun</div>
+      <div className="text-title-large text-white">See:Sun</div>
 
       <div className="mt-20 flex flex-col gap-2">
 

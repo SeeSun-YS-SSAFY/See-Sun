@@ -79,7 +79,7 @@ export default function GeneralLogin() {
           </button>
 
           {/* 중앙 타이틀 */}
-          <div className="mx-auto text-title-large text-yellow-500">
+          <div className="mx-auto text-title-large text-white">
             로그인
           </div>
         </div>
