@@ -1,98 +1,87 @@
 """
 운동 관련 데이터 시리얼라이저 모듈.
 
-이 모듈은 운동 카테고리, 상세 정보, 기록 생성 등 운동 기능과 관련된
-모든 데이터의 변환 및 검증 로직을 담고 있다.
-
-Classes:
-    ExerciseCategorySerializer: 카테고리 정보 직렬화
-    ExerciseStepSerializer: 운동 단계 정보 직렬화
-    ExerciseSerializer: 운동 상세 정보 (카테고리, 단계 포함) 직렬화
-    ExerciseLogSerializer: 운동 기록 생성 및 조회용 직렬화
+이 모듈은 운동 카테고리, 상세 정보, 루틴(Playlist), 세션(ExerciseSession) 등
+운동 기능과 관련된 데이터의 변환 및 검증 로직을 담고 있다.
 """
 from rest_framework import serializers
-from .models import Exercise, ExerciseCategory, ExerciseStep, ExerciseLog
+from .models import (
+    ExerciseCategory, Exercise, ExerciseMedia,
+    Playlist, PlaylistItem,
+    ExerciseSession, ExerciseSessionItem
+)
 
 class ExerciseCategorySerializer(serializers.ModelSerializer):
-    """
-    운동 카테고리 정보를 변환하는 시리얼라이저.
-
-    Attributes:
-        code: 카테고리 코드
-        name: 카테고리 이름
-    """
+    """운동 카테고리 정보 시리얼라이저"""
     class Meta:
         model = ExerciseCategory
-        fields = ('code', 'name')
+        fields = ('category_id', 'display_name')
 
-class ExerciseStepSerializer(serializers.ModelSerializer):
-    """
-    운동의 단계별 상세 정보를 변환하는 시리얼라이저.
-
-    Attributes:
-        sequence: 단계 순서
-        script: 안내 스크립트
-        type: 가이드 타입
-    """
+class ExerciseMediaSerializer(serializers.ModelSerializer):
+    """운동 미디어 정보 시리얼라이저"""
     class Meta:
-        model = ExerciseStep
-        fields = ('sequence', 'script', 'type')
+        model = ExerciseMedia
+        fields = ('media_id', 'media_type', 'locale', 'url', 'duration_ms')
 
 class ExerciseSerializer(serializers.ModelSerializer):
-    """
-    운동의 전체 상세 정보를 변환하는 시리얼라이저.
-
-    기본 운동 정보 외에 카테고리 코드와 하위 단계 들을 포함하여 반환한다.
-
-    Attributes:
-        category_code: 소속 카테고리의 코드
-        steps: 운동 단계 목록 (ExerciseStepSerializer)
-    """
-    category_code = serializers.CharField(source='category.code', read_only=True)
-    steps = ExerciseStepSerializer(many=True, read_only=True)
+    """운동 상세 정보 시리얼라이저"""
+    category = ExerciseCategorySerializer(read_only=True)
+    media_contents = ExerciseMediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = Exercise
         fields = (
-            'id', 'name', 'difficulty', 'description', 
-            'category_code', 'steps'
+            'exercise_id', 'category', 'exercise_name', 'exercise_description',
+            'first_description', 'main_form', 'form_description', 
+            'stay_form', 'fixed_form', 'exercise_guide_text',
+            'media_contents'
         )
 
-class ExerciseLogSerializer(serializers.ModelSerializer):
-    """
-    운동 기록 데이터를 변환하는 시리얼라이저.
+class PlaylistItemSerializer(serializers.ModelSerializer):
+    """플레이리스트 항목 시리얼라이저"""
+    exercise = ExerciseSerializer(read_only=True)
+    exercise_id = serializers.UUIDField(write_only=True)
 
-    기록 생성 시에는 사용자 정보를 request context에서 가져와 자동 할당하며,
-    조회 시에는 운동명(exercise_name)을 포함하여 반환한다.
-
-    Attributes:
-        exercise_name: 운동의 이름
-        created_at: 기록 생성 일시 (읽기 전용)
-
-    Methods:
-        create: 운동 기록 생성
-    """
-    exercise_name = serializers.CharField(source='exercise.name', read_only=True)
-    
     class Meta:
-        model = ExerciseLog
+        model = PlaylistItem
         fields = (
-            'id', 'exercise', 'exercise_name',
-            'start_time', 'end_time', 'duration', 'count', 'created_at'
+            'playlist_item_id', 'exercise', 'exercise_id',
+            'sequence_no', 'set_count', 'reps_count', 
+            'duration_sec', 'rest_sec', 'cue_overrides'
+        )
+
+class PlaylistSerializer(serializers.ModelSerializer):
+    """플레이리스트(루틴) 시리얼라이저"""
+    items = PlaylistItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Playlist
+        fields = (
+            'playlist_id', 'mode', 'title', 'status', 'items', 'created_at'
         )
         read_only_fields = ('user', 'created_at')
 
-    def create(self, validated_data):
-        """
-        운동 기록을 생성한다.
+class ExerciseSessionItemSerializer(serializers.ModelSerializer):
+    """운동 세션 항목 시리얼라이저"""
+    exercise_name = serializers.CharField(source='exercise.exercise_name', read_only=True)
 
-        요청을 보낸 사용자(User)를 기록의 소유자로 할당한다.
+    class Meta:
+        model = ExerciseSessionItem
+        fields = (
+            'session_item_id', 'exercise', 'exercise_name', 'playlist_item',
+            'sequence_no', 'started_at', 'ended_at', 'duration_ms',
+            'is_skipped', 'skip_reason', 'rest_sec'
+        )
 
-        Args:
-            validated_data (dict): 유효성 검증을 통과한 데이터
+class ExerciseSessionSerializer(serializers.ModelSerializer):
+    """운동 세션 시리얼라이저"""
+    items = ExerciseSessionItemSerializer(many=True, read_only=True)
 
-        Returns:
-            ExerciseLog: 생성된 운동 기록 인스턴스
-        """
-        user = self.context['request'].user
-        return ExerciseLog.objects.create(user=user, **validated_data)
+    class Meta:
+        model = ExerciseSession
+        fields = (
+            'session_id', 'playlist', 'mode', 
+            'started_at', 'ended_at', 'duration_ms', 
+            'is_valid', 'abnormal_end_reason', 'items'
+        )
+        read_only_fields = ('user', 'session_id', 'items')
