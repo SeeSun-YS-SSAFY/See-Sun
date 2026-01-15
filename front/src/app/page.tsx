@@ -1,9 +1,10 @@
 import Icon from "@/components/common/Icon";
 import Image from "next/image";
+import { ReactNode } from "react";
 
 export default function Home() {
   return (
-    <div className="bg-blue-500 h-screen flex flex-col items-center justify-center py-15">
+    <div className="bg-blue-500 h-full flex flex-col items-center justify-center py-15">
       <div className="flex items-center gap-1">
         <Image
           src="/Seesunlogo_240x240.png"
@@ -19,7 +20,7 @@ export default function Home() {
           <Card title="식단" icon="fork_spoon" />
           <Card title="운동" icon="exercise" />
           <Card title="약" icon="pill" />
-          <Card title="내정보" icon="person" />
+          <Card title={<span>마이<br />페이지</span>} icon="person" />
         </div>
       </div>
     </div>
@@ -28,14 +29,14 @@ export default function Home() {
 
 // TODO: 나중에 폴더 구조 정해지면 분리하기
 type CardProps = {
-  title: string;
+  title: string | ReactNode;
   icon: string;
 };
 
 function Card({ title, icon }: CardProps) {
   return (
-    <div className="flex flex-col items-center gap-3 px-10 w-full cursor-pointer rounded-[16px] shadow-100 outline-2 outline-black bg-yellow-500 h-52.5 justify-center">
-      <h2 className="break-keep text-title-small text-blue-900">{title}</h2>
+    <div className="flex flex-col active:bg-yellow-700 items-center gap-3 px-10 w-full cursor-pointer rounded-[16px] shadow-100 outline-2 outline-black bg-yellow-500 h-52.5 justify-center">
+      <h2 className="break-keep whitespace-pre-line text-title-small text-blue-900">{title}</h2>
       <Icon
         name={icon}
         size={64}
