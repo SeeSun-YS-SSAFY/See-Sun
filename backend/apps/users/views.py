@@ -1,76 +1,125 @@
-"""
-사용자 관련 API 뷰셋 모듈.
-
-이 모듈은 회원가입, 프로필 조회 및 수정 등 사용자와 관련된
-API 엔드포인트를 처리하는 ViewSet을 정의한다.
-
-Classes:
-    UserViewSet: 사용자 관련 액션을 처리하는 ViewSet
-"""
-from rest_framework import viewsets, status, mixins
-from rest_framework.decorators import action
-from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 from .serializers import UserSignupSerializer
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.exceptions import ValidationError, AuthenticationFailed
+from drf_spectacular.utils import extend_schema, OpenApiExample
+from .containers import Container
 
-User = get_user_model()
-
-class UserViewSet(mixins.RetrieveModelMixin,
-                  mixins.UpdateModelMixin,
-                  viewsets.GenericViewSet):
+class GoogleLoginView(APIView):
     """
-    사용자 관련 API 요청을 처리하는 ViewSet.
-
-    회원가입(signup), 내 정보 조회(retrieve), 정보 수정(update) 기능을 제공한다.
-    signup 액션은 누구나 접근 가능하며, 그 외 액션은 인증된 사용자만 접근 가능하다.
-
-    Attributes:
-        serializer_class: 사용할 시리얼라이저 클래스 (UserSignupSerializer)
-        queryset: 쿼리셋 정의 (모든 사용자)
-
-    Methods:
-        get_permissions: 액션별 권한 설정
-        signup: 회원가입 처리
+    Google OAuth2 로그인 API VIEW
     """
-    serializer_class = UserSignupSerializer
-    queryset = User.objects.all()
     
-    def get_permissions(self):
-        """
-        현재 액션에 따른 권한 클래스를 반환한다.
-
-        회원가입(signup)은 AllowAny, 그 외에는 IsAuthenticated를 적용한다.
-
-        Returns:
-            list: 적용할 권한 클래스 목록
-        """
-        if self.action == 'signup':
-            return [AllowAny()]
-        return [IsAuthenticated()]
-
-    @action(detail=False, methods=['post'])
-    def signup(self, request):
-        """
-        신규 회원가입을 처리한다.
-
-        사용자로부터 입력받은 데이터를 검증하고 유저를 생성한다.
-        성공 시 생성된 유저 정보와 (임시) 액세스 토큰을 반환한다.
-
-        Args:
-            request: HTTP 요청 객체
-
-        Returns:
-            Response: 생성된 유저 정보 및 토큰 (HTTP 201)
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+    @extend_schema(
+        summary="Google 소셜 로그인",
+        description="Google OAuth2 Code를 받아 JWT 토큰을 발급합니다. 'code'는 필수이며, 테스트 환경에 따라 'redirect_uri'를 설정할 수 있습니다.",
+        request={
+            'application/json': {
+                'type': 'object',
+                'properties': {
+                    'code': {'type': 'string', 'description': 'Google Authorization Code'},
+                    'device_hash': {'type': 'string', 'description': '기기 식별 해시 (선택)'},
+                    'redirect_uri': {'type': 'string', 'description': 'Code 발급에 사용된 Redirect URI (기본값: postmessage)'}
+                },
+                'required': ['code']
+            }
+        },
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'access_token': {'type': 'string'},
+                    'refresh_token': {'type': 'string'},
+                    'expires_in': {'type': 'integer'},
+                    'is_new_user': {'type': 'boolean'},
+                    'user': {
+                        'type': 'object',
+                        'properties': {
+                            'user_id': {'type': 'string'},
+                            'display_name': {'type': 'string'},
+                            'email': {'type': 'string'},
+                            'profile_completed': {'type': 'boolean'}
+                        }
+                    },
+                    'tts_message': {'type': 'string'}
+                },
+                'example': {
+                    "access_token": "jwt_token_example",
+                    "refresh_token": "jwt_token_example",
+                    "expires_in": 900,
+                    "is_new_user": True,
+                     "user": {
+                        "user_id": "uuid-string",
+                        "display_name": "홍길동",
+                        "email": "user@gmail.com",
+                        "profile_completed": False
+                      },
+                    "tts_message": "Google 로그인이 완료되었습니다."
+                }
+            },
+            401: {
+                'type': 'object',
+                'properties': {
+                    'error': {'type': 'string'},
+                    'tts_message': {'type': 'string'}
+                },
+                'example': {
+                    "error": "OAUTH_FAILED",
+                    "tts_message": "Google 계정 인증에 실패했습니다. 다시 시도해 주세요."
+                }
+            }
+        }
+    )
+    def post(self, request):
+        code = request.data.get('code')
+        device_hash = request.data.get('device_hash')
+        redirect_uri = request.data.get('redirect_uri', 'postmessage')
         
-        # 토큰 발급 로직 (추후 SimpleJWT 연동 예정, 현재는 user id 반환)
-        # 테스트 통과를 위해 임시 키 반환
-        return Response({
-            "user": serializer.data,
-            "access": "temp_access_token",
-            "refresh": "temp_refresh_token"
-        }, status=status.HTTP_201_CREATED)
+        if not code:
+            raise ValidationError({'code': 'This field is required.'})
+            
+        try:
+            service = Container.get_social_login_service()
+            tokens = service.execute(
+                provider_name='GOOGLE', 
+                code=code, 
+                device_hash=device_hash,
+                redirect_uri=redirect_uri
+            )
+            
+            return Response({
+                'access_token': tokens.access_token,
+                'refresh_token': tokens.refresh_token,
+                'expires_in': tokens.expires_in,
+                'is_new_user': tokens.is_new_user,
+                'user': {
+                    'user_id': tokens.user.user_id,
+                    'display_name': tokens.user.display_name,
+                    'email': tokens.user.email,
+                    'profile_completed': tokens.user.profile_completed
+                },
+                'tts_message': 'Google 로그인이 완료되었습니다.'
+            }, status=status.HTTP_200_OK)
+            
+        except AuthenticationFailed as e:
+            # 명세서에 맞춘 401 에러 응답
+            return Response({
+                "error": "OAUTH_FAILED",
+                "tts_message": str(e.detail) if hasattr(e, 'detail') else "Google 계정 인증에 실패했습니다."
+            }, status=status.HTTP_401_UNAUTHORIZED)
+            
+        except Exception as e:
+            # 500 등 기타 에러
+            raise e
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    사용자 ViewSet
+    """
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSignupSerializer
+    permission_classes = [IsAuthenticated] # 기본적으로 인증 필요
