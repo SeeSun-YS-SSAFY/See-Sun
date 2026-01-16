@@ -98,6 +98,8 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
 
+# ----------------------------------------------------------------------------
+
 class PlaylistItemCreateSerializer(serializers.ModelSerializer):
     """플레이리스트 생성 시 항목 입력용 시리얼라이저"""
     exercise_id = serializers.UUIDField()
@@ -105,6 +107,8 @@ class PlaylistItemCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PlaylistItem
         fields = ('exercise_id', 'sequence_no', 'set_count', 'reps_count')
+
+# ----------------------------------------------------------------------------
 
 class PlaylistCreateSerializer(serializers.ModelSerializer):
     """플레이리스트 생성 시리얼라이저"""
