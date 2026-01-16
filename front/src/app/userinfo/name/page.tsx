@@ -1,3 +1,4 @@
+"use client";
 
 import { useEffect, useState } from "react";
 import MicButton from "@/components/common/MicButton";
@@ -7,13 +8,11 @@ import {
   sttErrorAtom,
   sttTextAtom,
   uploadStatusAtom,
-} from "@/atoms/";
+} from "@/atoms/stt/sttAtoms";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
-
-
 
 export default function Name() {
   const router = useRouter();
