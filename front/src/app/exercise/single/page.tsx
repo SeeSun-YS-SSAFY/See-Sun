@@ -1,19 +1,32 @@
 "use client";
 
 import Button from "@/components/common/Button";
+import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
-const EXERCISE_TYPE = {
-  1: "근력",
-  2: "유산소",
-  3: "유연성 운동",
-  4: "균형",
-  5: "자주하는 운동",
-} as const;
+type Category = {
+  category_id: number;
+  display_name: string;
+};
 
 export default function SingleExercise() {
   const router = useRouter();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await apiClient.get<Category[]>("/exercises/category");
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div className="h-full flex-col flex">
@@ -29,11 +42,12 @@ export default function SingleExercise() {
         <h1 className="text-title-large text-white">단일</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        {Object.entries(EXERCISE_TYPE).map(([key, value]) => (
-          <Button key={key} onClick={() => router.push(`/exercise/${key}`)}>
-            {value}
+        {categories.map((category) => (
+          <Button key={category.category_id} onClick={() => router.push(`/exercise/${category.category_id}`)}>
+            {category.display_name}
           </Button>
         ))}
+        <Button onClick={() => router.push(`/exercise/5`)}>자주하는 운동</Button>
       </div>
     </div>
   );

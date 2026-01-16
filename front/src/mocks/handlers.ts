@@ -26,8 +26,33 @@ export const handlers = [
 
     return HttpResponse.json({ message: "인증 실패" }, { status: 401 });
   }),
+  http.get(
+    `${API_BASE}/exercises/category`,
+    () => {
+      const categoryList = [
+        {
+          category_id: 1,
+          display_name: '근력 운동',
+        },
+        {
+          category_id: 2,
+          display_name: '유산소'
+        },
+        {
+          category_id: 3,
+          display_name: '유연성 운동'
+        },
+        {
+          category_id: 4,
+          display_name: '균형'
+        },
+      ];
+      return HttpResponse.json(categoryList);
+    }
+  ),
+
   http.get<{ category_id: string }>(
-    `${API_BASE}/exercise/category/:category_id`,
+    `${API_BASE}/exercises/category/:category_id`,
     ({ params }) => {
       const exerciseListMap = {
         1: {
@@ -134,6 +159,32 @@ export const handlers = [
             },
           ],
         },
+        5: {
+          category_id: 5,
+          category_name: "자주하는 운동",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        }
       };
       return HttpResponse.json(exerciseListMap[params.category_id]);
     }

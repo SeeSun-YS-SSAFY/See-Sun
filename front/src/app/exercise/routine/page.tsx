@@ -2,11 +2,32 @@
 
 import Button from "@/components/common/Button";
 import Icon from "@/components/common/Icon";
+import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+type Category = {
+  category_id: number;
+  display_name: string;
+};
 
 export default function RoutineExercise() {
   const router = useRouter();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await apiClient.get<Category[]>("/exercises/category");
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <div className="h-full flex-col flex">
@@ -22,10 +43,9 @@ export default function RoutineExercise() {
         <h1 className="text-title-large text-white">루틴</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        <Button>근력</Button>
-        <Button>유산소</Button>
-        <Button>유연성 운동</Button>
-        <Button>균형</Button>
+        {categories.map((category) => (
+          <Button key={category.category_id}>{category.display_name}</Button>
+        ))}
         <div className="flex gap-3.5">
           <Button>개인 맞춤</Button>
           <Button className="flex items-center w-21 h-21 shrink-0">
