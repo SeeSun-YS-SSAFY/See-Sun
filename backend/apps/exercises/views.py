@@ -34,19 +34,7 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
             queryset = queryset.filter(category_id=category_id)
         return queryset
 
-class RoutineViewSet(viewsets.ModelViewSet):
-    """
-    나만의 루틴(Playlist) 관리용 ViewSet.
-    인증된 사용자만 접근 가능하며, 자신의 루틴만 조회/수정 가능하다.
-    """
-    serializer_class = PlaylistSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return Playlist.objects.filter(user=self.request.user, status='ACTIVE')
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+# -----------------------------------------------------------------------
 
 class SessionViewSet(viewsets.ModelViewSet):
     """
@@ -179,7 +167,7 @@ class ExerciseDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # -----------------------------------------------------------------------------------------------
-
+# 운동 플레이리스트 생성 
 class PlaylistCreateView(APIView):
     """
     운동 루틴(플레이리스트) 생성 API
@@ -199,3 +187,32 @@ class PlaylistCreateView(APIView):
             playlist = serializer.save()
             return Response(PlaylistSerializer(playlist).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -----------------------------------------------------------------------
+# 플레이리스트 상세 조회 
+class PlaylistDetailView(APIView):
+    """
+    플레이리스트(루틴) 상세 조회 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="플레이리스트 상세 조회",
+        description="플레이리스트 ID를 받아 상세 정보(운동 목록 포함)를 반환합니다. 본인의 플레이리스트만 조회 가능합니다.",
+        responses={
+            200: PlaylistSerializer,
+            404: OpenApiResponse(description="Playlist not found or permission denied")
+        },
+        tags=['Exercises']
+    )
+    def get(self, request, playlist_id):
+        try:
+            # 본인의 플레이리스트이면서 활성 상태인 것만 조회
+            playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
+        except Playlist.DoesNotExist:
+            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = PlaylistSerializer(playlist)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------------
