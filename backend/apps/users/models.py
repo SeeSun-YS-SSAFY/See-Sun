@@ -55,6 +55,10 @@ class User(AbstractUser):
     height_cm = models.IntegerField(null=True, blank=True, verbose_name='키(cm)')
     weight_kg = models.IntegerField(null=True, blank=True, verbose_name='몸무게(kg)')
     is_profile_completed = models.BooleanField(default=False, verbose_name='프로필 완성 여부')
+    
+    # Soft Delete 필드
+    is_deleted = models.BooleanField(default=False, verbose_name='탈퇴 여부')
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='탈퇴 일시')
 
     class Meta:
         db_table = 'users'
