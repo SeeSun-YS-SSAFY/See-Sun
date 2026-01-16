@@ -2,8 +2,10 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 from .serializers import (
-    UserSignupSerializer, SignupSerializer, UserProfileSerializer,
+    UserSignupSerializer, SignupSerializer, LoginSerializer, LogoutSerializer,
+    UserProfileSerializer,
     UserProfileCompletionSerializer, UserProfileUpdateSerializer
 )
 from rest_framework.response import Response
@@ -11,6 +13,7 @@ from rest_framework import status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import TokenError
 from .containers import Container
 
 User = get_user_model()
@@ -251,6 +254,90 @@ class LoginView(APIView):
             },
             'tts_message': tts_message
         }, status=status.HTTP_200_OK)
+
+
+class LogoutView(APIView):
+    """
+    로그아웃 API (BE_V1_AUTH_005)
+    """
+    permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        summary="로그아웃",
+        description="Refresh Token을 블랙리스트에 등록하여 로그아웃합니다.",
+        request=LogoutSerializer,
+        responses={
+            200: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            'message': '로그아웃이 완료되었습니다.',
+                            'tts_message': '로그아웃이 완료되었습니다. 다시 로그인해주세요.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Invalid Token',
+                        value={
+                            'error': 'INVALID_TOKEN',
+                            'tts_message': '유효하지 않은 토큰입니다.'
+                        }
+                    )
+                ]
+            )
+        },
+        tags=['Auth']
+    )
+    def post(self, request):
+        """로그아웃 처리"""
+        serializer = LogoutSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            refresh_token = serializer.validated_data['refresh_token']
+            token = RefreshToken(refresh_token)
+            
+            # Refresh Token 블랙리스트 등록
+            token.blacklist()
+            
+            return Response({
+                'message': '로그아웃이 완료되었습니다.',
+                'tts_message': '로그아웃이 완료되었습니다. 다시 로그인해주세요.'
+            }, status=status.HTTP_200_OK)
+            
+        except TokenError as e:
+            return Response({
+                'error': 'INVALID_TOKEN',
+                'tts_message': '유효하지 않은 토큰입니다.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                'error': 'LOGOUT_FAILED',
+                'tts_message': '로그아웃 중 오류가 발생했습니다.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class GoogleLoginView(APIView):
