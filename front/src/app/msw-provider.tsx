@@ -1,24 +1,28 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export default function MSWProvider({ children }: { children: React.ReactNode }) {
+export default function MSWProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [mswReady, setMswReady] = useState(false);
   useEffect(() => {
-    const shouldMock =
-      process.env.NODE_ENV === "development" &&
-      process.env.NEXT_PUBLIC_API_MOCKING === "enabled";
-
-    if (!shouldMock) return;
-
-    (async () => {
+    const init = async () => {
       const { worker } = await import("@/mocks/browser");
-      await worker.start({
-        onUnhandledRequest: "bypass",
-      });
-      // 콘솔로 확실히 확인하고 싶으면 아래 한 줄 추가
-      console.log("[MSW] Mocking enabled");
-    })();
+      await worker.start();
+      setMswReady(true);
+    };
+
+    if (process.env.NODE_ENV === "development") {
+      init();
+    } else {
+      setMswReady(true);
+    }
   }, []);
+
+  if (!mswReady) return null;
 
   return <>{children}</>;
 }

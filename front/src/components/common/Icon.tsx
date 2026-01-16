@@ -6,7 +6,7 @@ type IconProps = {
   size?: number;
   className?: string;
   color?: string;
-  variation?: 'rounded' | 'sharp' | 'outlined';
+  variation?: "rounded" | "sharp" | "outlined";
   weight?: number;
 };
 
@@ -16,7 +16,7 @@ export default function Icon({
   size,
   className,
   color,
-  variation = 'outlined',
+  variation = "outlined",
   weight = 400,
 }: IconProps) {
   const getFontVariationSettings = (filled: boolean, weight: number) => {
@@ -25,12 +25,14 @@ export default function Icon({
 
   return (
     <span
-      className={cn({
-        "material-symbols-outlined": variation === 'outlined',
-        "material-symbols-rounded": variation === 'rounded',
-        "material-symbols-sharp": variation === 'sharp',
-      }, className)}
-
+      className={cn(
+        {
+          "material-symbols-outlined": variation === "outlined",
+          "material-symbols-rounded": variation === "rounded",
+          "material-symbols-sharp": variation === "sharp",
+        },
+        className
+      )}
       style={{
         fontSize: `${size}px`,
         fontVariationSettings: getFontVariationSettings(filled, weight),

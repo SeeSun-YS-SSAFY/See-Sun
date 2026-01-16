@@ -512,7 +512,7 @@
 | 항목 | 내용 |
 | --- | --- |
 | Description | 카테고리별 운동 목록 조회 |
-| URL | `/exercise/category/{category_id}` |
+| URL | `/exercises/category/{category_id}` |
 | Auth Required | X |
 
 ### Response 200 (Success)
