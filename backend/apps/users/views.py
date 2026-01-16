@@ -10,7 +10,10 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
+from rest_framework_simplejwt.tokens import RefreshToken
 from .containers import Container
+
+User = get_user_model()
 
 
 class SignupView(APIView):
@@ -119,6 +122,135 @@ class SignupView(APIView):
                 'error': 'SIGNUP_FAILED',
                 'tts_message': '회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class LoginView(APIView):
+    """
+    PIN 기반 로그인 API (BE_V1_AUTH_002)
+    """
+    permission_classes = [AllowAny]
+    
+    @extend_schema(
+        summary="로그인",
+        description="전화번호와 PIN 번호로 로그인합니다.",
+        request=LoginSerializer,
+        responses={
+            200: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'access_token': {'type': 'string'},
+                        'refresh_token': {'type': 'string'},
+                        'expires_in': {'type': 'integer'},
+                        'user': {
+                            'type': 'object',
+                            'properties': {
+                                'user_id': {'type': 'string', 'format': 'uuid'},
+                                'display_name': {'type': 'string'},
+                                'profile_completed': {'type': 'boolean'}
+                            }
+                        },
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            'access_token': 'eyJ0eXAiOiJKV1QiLCJhbGc...',
+                            'refresh_token': 'eyJ0eXAiOiJKV1QiLCJhbGc...',
+                            'expires_in': 900,
+                            'user': {
+                                'user_id': '550e8400-e29b-41d4-a716-446655440000',
+                                'display_name': '홍길동',
+                                'profile_completed': True
+                            },
+                            'tts_message': '로그인이 완료되었습니다. 메인 페이지로 이동합니다.'
+                        }
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Invalid Credentials',
+                        value={
+                            'error': 'INVALID_CREDENTIALS',
+                            'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
+                        }
+                    )
+                ]
+            )
+        },
+        tags=['Auth']
+    )
+    def post(self, request):
+        """로그인 처리"""
+        serializer = LoginSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        phone_number = serializer.validated_data['phone_number']
+        pin_number = serializer.validated_data['pin_number']
+        device_hash = serializer.validated_data.get('device_hash', '')
+        
+        # 1. 사용자 조회
+        try:
+            user = User.objects.get(phone_number=phone_number)
+        except User.DoesNotExist:
+            return Response({
+                'error': 'INVALID_CREDENTIALS',
+                'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # 2. PIN 검증
+        if not user.pin_hash or not check_password(pin_number, user.pin_hash):
+            return Response({
+                'error': 'INVALID_CREDENTIALS',
+                'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
+            }, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # 3. JWT 토큰 발급
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        
+        # 4. profile_completed 확인
+        profile_completed = all([
+            user.birthdate,
+            user.gender,
+            user.height_cm,
+            user.weight_kg
+        ])
+        
+        # 5. TTS 메시지 결정
+        if profile_completed:
+            tts_message = '로그인이 완료되었습니다. 메인 페이지로 이동합니다.'
+        else:
+            tts_message = '로그인이 완료되었습니다. 정확한 가이드를 위해 사용자 데이터 수집 화면으로 전환됩니다.'
+        
+        return Response({
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'expires_in': 900,  # 15분
+            'user': {
+                'user_id': str(user.id),
+                'display_name': user.name or user.username,
+                'profile_completed': profile_completed
+            },
+            'tts_message': tts_message
+        }, status=status.HTTP_200_OK)
 
 
 class GoogleLoginView(APIView):
