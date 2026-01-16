@@ -4,6 +4,14 @@ import Button from "@/components/common/Button";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const EXERCISE_TYPE = {
+  1: "근력",
+  2: "유산소",
+  3: "유연성 운동",
+  4: "균형",
+  5: "자주하는 운동",
+} as const;
+
 export default function SingleExercise() {
   const router = useRouter();
 
@@ -21,11 +29,11 @@ export default function SingleExercise() {
         <h1 className="text-title-large text-white">단일</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        <Button>근력</Button>
-        <Button>유산소</Button>
-        <Button>유연성 운동</Button>
-        <Button>균형</Button>
-        <Button>자주하는 운동</Button>
+        {Object.entries(EXERCISE_TYPE).map(([key, value]) => (
+          <Button key={key} onClick={() => router.push(`/exercise/${key}`)}>
+            {value}
+          </Button>
+        ))}
       </div>
     </div>
   );
