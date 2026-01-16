@@ -11,6 +11,7 @@ import {
   repsCountAtom,
   setCountAtom,
 } from "@/atoms/exercise/makeExerciseAtoms";
+import InputDisable from "@/components/common/Input_disable";
 
 export default function Make_Exercise() {
   const router = useRouter();
@@ -32,20 +33,21 @@ export default function Make_Exercise() {
 
   return (
     <div>
-      <div className="relative flex items-center h-16">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="absolute left-0 flex items-center px-4"
-        >
-          <Image src="/arrow_back.png" width={70} height={70} alt="뒤로가기" />
-        </button>
-
-        <div className="mx-auto text-title-large text-white">개인맞춤</div>
-      </div>
+            {/* 헤더 */}
+        <div className="relative flex items-center py-2.5 justify-center">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="absolute left-0 flex items-center"
+          >
+            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          </button>
+  
+          <h1 className="text-title-large text-white">개인맞춤</h1>
+        </div>
 
       <div className="mt-10 flex flex-col gap-4">
-        <Input
+        <InputDisable
           placeholder="운동 종류"
           inputMode="text"
           maxLength={20}

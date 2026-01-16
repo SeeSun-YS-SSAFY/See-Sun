@@ -1,7 +1,6 @@
 "use client";
 
 import Button from "@/components/common/Button";
-import Icon from "@/components/common/Icon";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -12,7 +11,7 @@ type Category = {
   display_name: string;
 };
 
-export default function RoutineExercise() {
+export default function SingleExercise() {
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -40,21 +39,14 @@ export default function RoutineExercise() {
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
         </button>
 
-        <h1 className="text-title-large text-white">루틴</h1>
+        <h1 className="text-title-large text-white">개인맞춤</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {categories.map((category) => (
-          <Button key={category.category_id}>{category.display_name}</Button>
+          <Button key={category.category_id} onClick={() => router.push(`/exercise/${category.category_id}`)}>
+            {category.display_name}
+          </Button>
         ))}
-        <div className="flex gap-3.5">
-          <Button>개인 맞춤</Button>
-          <Button
-              className="flex items-center w-21 h-21 shrink-0"
-              onClick={() => router.push("/exercise/custom")}
-            >
-              <Icon name="settings" filled color="#000" size={48} />
-            </Button>
-        </div>
       </div>
     </div>
   );
