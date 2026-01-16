@@ -8,8 +8,15 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Exercise, Playlist, ExerciseSession
 from .serializers import (
-    ExerciseSerializer, PlaylistSerializer, ExerciseSessionSerializer
+    ExerciseSerializer, PlaylistSerializer, ExerciseSessionSerializer,
+    ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
+    PlaylistCreateSerializer
 )
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from .models import Exercise, Playlist, ExerciseSession, ExerciseCategory
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -53,3 +60,142 @@ class SessionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+# -----------------------------------------------------------------------------------------------
+class ExerciseCategoryListView(APIView):
+    """
+    운동 카테고리 목록 조회 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="운동 카테고리 목록 조회",
+        description="모든 운동 카테고리 목록을 반환합니다.",
+        responses={
+            200: OpenApiResponse(
+                response=ExerciseCategorySerializer(many=True),
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value=[
+                            {
+                                "category_id": "1",
+                                "display_name": "근력 운동"
+                            },
+                            {
+                                "category_id": "2",
+                                "display_name": "유산소 운동"
+                            }
+                        ]
+                    )
+                ]
+            )
+        },
+        tags=['Exercises']
+    )
+    def get(self, request):
+        categories = ExerciseCategory.objects.all()
+        serializer = ExerciseCategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# ----------------------------------------------------------------------------
+
+class ExerciseListByCategoryView(APIView):
+    """
+    특정 카테고리의 운동 목록 조회 API (Custom Response)
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="카테고리별 운동 목록 조회",
+        description="특정 카테고리 ID를 받아 해당 카테고리 정보와 운동 목록(픽토그램 포함)을 반환합니다.",
+        responses={
+            200: OpenApiResponse(
+                description="Success",
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            "category_id": "1",
+                            "category_name": "근력 운동",
+                            "exercises": [
+                                {
+                                    "exercise_id": "uuid...",
+                                    "exercise_name": "스쿼트",
+                                    "pictogram_url": "https://example.com/squat.png"
+                                }
+                            ]
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(description="Category not found")
+        },
+        tags=['Exercises']
+    )
+    def get(self, request, category_id):
+        try:
+            category = ExerciseCategory.objects.get(category_id=category_id)
+        except ExerciseCategory.DoesNotExist:
+            return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        exercises = Exercise.objects.filter(category=category, is_active=True).prefetch_related('media_contents')
+        
+        # Serialize exercises
+        exercise_data = ExerciseSimpleSerializer(exercises, many=True).data
+        
+        response_data = {
+            "category_id": category.category_id,
+            "category_name": category.display_name,
+            "exercises": exercise_data
+        }
+        
+        return Response(response_data, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------------------------------------
+
+class ExerciseDetailView(APIView):
+    """
+    운동 상세 정보 조회 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="운동 상세 정보 조회",
+        description="운동 ID를 받아 상세 정보를 반환합니다.",
+        responses={
+            200: ExerciseDetailSerializer,
+            404: OpenApiResponse(description="Exercise not found")
+        },
+        tags=['Exercises']
+    )
+    def get(self, request, exercise_id):
+        try:
+            exercise = Exercise.objects.prefetch_related('media_contents').select_related('category').get(exercise_id=exercise_id)
+        except Exercise.DoesNotExist:
+            return Response({"error": "Exercise not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = ExerciseDetailSerializer(exercise)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------------------------------------
+
+class PlaylistCreateView(APIView):
+    """
+    운동 루틴(플레이리스트) 생성 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="운동 루틴 생성",
+        description="제목과 운동 목록을 받아 새로운 루틴을 생성합니다.",
+        request=PlaylistCreateSerializer,
+        responses={201: PlaylistCreateSerializer},
+        tags=['Exercises']
+    )
+    def post(self, request):
+        serializer = PlaylistCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            playlist = serializer.save()
+            return Response(PlaylistSerializer(playlist).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
