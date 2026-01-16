@@ -17,6 +17,7 @@ export default function CustomMake() {
   const [title, setTitle] = useAtom(routineTitleAtom);
   const addRoutine = useSetAtom(addRoutineAtom);
   const exercises = useAtomValue(exerciseListAtom);
+  const setExercises = useSetAtom(exerciseListAtom);
 
   const onSubmit = async () => {
     const result = await addRoutine();
@@ -26,6 +27,7 @@ export default function CustomMake() {
       alert(message);
       return;
     }
+    setExercises([]);
     router.push("/exercise/custom");
   };
 
@@ -38,7 +40,7 @@ export default function CustomMake() {
         <div className="relative flex items-center py-2.5 justify-center">
           <button
             type="button"
-            onClick={() => router.push("/exercise/custom/")}
+            onClick={() => { setExercises([]); router.push("/exercise/custom/"); }}
             className="absolute left-0 flex items-center"
           >
             <Image src="/arrow_back.png" width={60} height={60} alt="back" />
