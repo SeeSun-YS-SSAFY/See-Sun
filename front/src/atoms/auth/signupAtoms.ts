@@ -29,7 +29,6 @@ function validateSignupInput(name: string, phone: string, pin: string) {
   if (!name.trim()) return "이름을 입력해주세요.";
   if (!/^01[0-9]{8,9}$/.test(phone)) return "전화번호를 정확히 입력해주세요.";
   if (!/^\d{4}$/.test(pin)) return "PIN 4자리를 입력해주세요.";
-  if (!API_BASE) return "환경변수 NEXT_PUBLIC_API_BASE_URL이 설정되지 않았습니다.";
   return null;
 }
 
