@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { Swiper as SwiperType } from "swiper";
-import { Mousewheel, EffectCoverflow } from "swiper/modules";
+import { Mousewheel, EffectCreative } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
-import "swiper/css/effect-coverflow";
+import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
 
 type Exercise = {
@@ -24,25 +24,29 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
 
   return (
-    <div className="demo-slider-container h-full w-full flex items-center justify-center">
-      <div className="demo-slider-wrap w-full max-w-sm h-[400px]">
+    <div className="h-full w-full flex items-center justify-center">
+      <div className="w-full max-w-sm h-[400px]">
         <Swiper
           onSwiper={(swiper) => (swiperRef.current = swiper)}
-          effect={"coverflow"}
+          effect={"creative"}
           grabCursor={true}
           centeredSlides={true}
           slidesPerView="auto"
           direction={"vertical"}
-          spaceBetween={-100}
-          coverflowEffect={{
-            rotate: 0,
-            // stretch: -20, // Negative stretch to create overlap
-            depth: 150,
-            // modifier: 1,
-            slideShadows: false,
+          spaceBetween={0}
+          creativeEffect={{
+            limitProgress: 3,
+            prev: {
+              translate: ["0%", "20%", -200],
+              scale: 0.8,
+            },
+            next: {
+              translate: ["0%", "-20%", -200],
+              scale: 0.8,
+            },
           }}
-          modules={[EffectCoverflow]}
-          className="demo-slider swiper-container h-full w-full"
+          modules={[EffectCreative]}
+          className="swiper-container h-full w-full"
           onTouchEnd={() => {
             swiperRef.current?.slideToClosest();
           }}
@@ -80,10 +84,9 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
                     <div
                       className={`
                         text-center
-                        ${
-                          isActive
-                            ? "text-black text-3xl font-extrabold"
-                            : "text-gray-900 text-xl font-bold"
+                        ${isActive
+                          ? "text-black text-3xl font-extrabold"
+                          : "text-gray-900 text-xl font-bold"
                         }
                       `}
                     >
