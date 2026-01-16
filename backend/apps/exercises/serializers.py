@@ -135,6 +135,45 @@ class PlaylistCreateSerializer(serializers.ModelSerializer):
         
         return playlist
 
+class PlaylistUpdateSerializer(serializers.ModelSerializer):
+    """플레이리스트 기본 정보(제목) 수정 시리얼라이저"""
+    class Meta:
+        model = Playlist
+        fields = ('title', 'status', 'mode')
+
+class PlaylistItemAddSerializer(serializers.ModelSerializer):
+    """플레이리스트에 운동 추가 시리얼라이저"""
+    exercise_id = serializers.UUIDField()
+    sequence_no = serializers.IntegerField(required=False)
+
+    class Meta:
+        model = PlaylistItem
+        fields = (
+            'exercise_id', 'sequence_no', 'set_count', 'reps_count',
+            'duration_sec', 'rest_sec'
+        )
+        
+    def create(self, validated_data):
+        exercise_id = validated_data.pop('exercise_id')
+        exercise = Exercise.objects.get(exercise_id=exercise_id)
+        playlist = self.context['playlist']
+        
+        # sequence_no가 제공되지 않은 경우, 자동으로 가장 마지막 번호 + 1 할당
+        if 'sequence_no' not in validated_data:
+            last_item = PlaylistItem.objects.filter(playlist=playlist).order_by('-sequence_no').first()
+            validated_data['sequence_no'] = (last_item.sequence_no + 1) if last_item else 1
+            
+        return PlaylistItem.objects.create(playlist=playlist, exercise=exercise, **validated_data)
+
+class PlaylistItemUpdateSerializer(serializers.ModelSerializer):
+    """플레이리스트 항목 상세 수정 시리얼라이저"""
+    class Meta:
+        model = PlaylistItem
+        fields = (
+            'sequence_no', 'set_count', 'reps_count',
+            'duration_sec', 'rest_sec', 'cue_overrides'
+        )
+
 # -------------------------------------------------------------------------
 
 class PlaylistSerializer(serializers.ModelSerializer):

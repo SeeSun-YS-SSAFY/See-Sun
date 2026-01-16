@@ -172,3 +172,102 @@ class PlaylistDetailApiTests(APITestCase):
         print(f"  - 항목이 sequence_no 순서(1 -> 2)로 정렬됨 확인")
         
         print(f"[{self._testMethodName}] 테스트 성공")
+
+    def test_update_playlist_title(self):
+        """플레이리스트 제목 수정(PATCH) 테스트"""
+        print(f"\n[{self._testMethodName}] 테스트 시작: 플레이리스트 제목 수정")
+        
+        url = reverse('exercises:playlist_detail', kwargs={'playlist_id': self.my_playlist.playlist_id})
+        update_data = {"title": "수정된 제목"}
+        
+        response = self.client.patch(url, update_data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        print(f"  - 상태 코드 200 OK")
+        self.assertEqual(response.data['title'], "수정된 제목")
+        print(f"  - 제목 변경 확인: {response.data['title']}")
+        
+        # 다른 필드 변질 없는지 확인
+        self.assertEqual(len(response.data['items']), 1)
+        
+        print("\n[수정 후 응답 데이터 확인]")
+        print(json.dumps(response.data, indent=4, ensure_ascii=False))
+        
+        print(f"[{self._testMethodName}] 테스트 성공")
+
+    def test_add_playlist_item(self):
+        """플레이리스트 운동 추가(POST) 테스트"""
+        print(f"\n[{self._testMethodName}] 테스트 시작: 운동 추가")
+        
+        # 새 운동 생성
+        exercise2 = Exercise.objects.create(category=self.category, exercise_name='런지', exercise_description='...')
+        
+        url = reverse('exercises:playlist_item_add', kwargs={'playlist_id': self.my_playlist.playlist_id})
+        data = {
+            "exercise_id": str(exercise2.exercise_id),
+            "set_count": 5,
+            "reps_count": 12
+        }
+        
+        response = self.client.post(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(len(response.data['items']), 2)
+        print(f"  - 아이템 개수 2개로 증가 확인")
+        self.assertEqual(response.data['items'][1]['exercise_name'], '런지')
+        
+        print("\n[추가 후 응답 데이터 확인]")
+        print(json.dumps(response.data, indent=4, ensure_ascii=False))
+
+        print(f"[{self._testMethodName}] 테스트 성공")
+
+    def test_delete_playlist_item(self):
+        """플레이리스트 항목 삭제(DELETE) 테스트"""
+        print(f"\n[{self._testMethodName}] 테스트 시작: 항목 삭제")
+        
+        item_id = self.my_playlist_item.playlist_item_id
+        url = reverse('exercises:playlist_item_detail', kwargs={
+            'playlist_id': self.my_playlist.playlist_id,
+            'item_id': item_id
+        })
+        
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['items']), 0)
+        print(f"  - 아이템 삭제 후 0개 확인")
+        
+        print("\n[삭제 후 응답 데이터 확인]")
+        print(json.dumps(response.data, indent=4, ensure_ascii=False))
+
+        print(f"[{self._testMethodName}] 테스트 성공")
+
+    def test_delete_playlist(self):
+        """플레이리스트 삭제(DELETE) 테스트"""
+        print(f"\n[{self._testMethodName}] 테스트 시작: 플레이리스트 삭제")
+        
+        # 삭제할 플레이리스트 생성
+        playlist_to_delete = Playlist.objects.create(
+            user=self.user,
+            title='삭제할 루틴',
+            mode='CUSTOM',
+            status='ACTIVE'
+        )
+        
+        url = reverse(self.url_name, kwargs={'playlist_id': playlist_to_delete.playlist_id})
+        response = self.client.delete(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        print(f"  - 상태 코드 204 No Content 검증 완료")
+        
+        # DB에서 삭제 확인
+        with self.assertRaises(Playlist.DoesNotExist):
+            Playlist.objects.get(playlist_id=playlist_to_delete.playlist_id)
+        print(f"  - DB에서 삭제됨 확인")
+        
+        print("\n[삭제 결과 확인]")
+        print("삭제 성공 (HTTP 204 No Content) - 응답 본문 없음")
+        
+        print(f"[{self._testMethodName}] 테스트 성공")
+
+

@@ -10,13 +10,16 @@ from .models import Exercise, Playlist, ExerciseSession
 from .serializers import (
     ExerciseSerializer, PlaylistSerializer, ExerciseSessionSerializer,
     ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
-    PlaylistCreateSerializer
+    ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
+    ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
+    PlaylistCreateSerializer, PlaylistUpdateSerializer, PlaylistItemAddSerializer,
+    PlaylistItemUpdateSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-from .models import Exercise, Playlist, ExerciseSession, ExerciseCategory
+from .models import Exercise, Playlist, ExerciseSession, ExerciseCategory, PlaylistItem
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -234,5 +237,127 @@ class PlaylistDetailView(APIView):
             
         serializer = PlaylistSerializer(playlist)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary="플레이리스트 기본 정보 수정",
+        description="플레이리스트의 제목 등을 수정합니다. (운동 목록 수정 아님)",
+        request=PlaylistUpdateSerializer,
+        responses={
+            200: PlaylistSerializer,
+            404: OpenApiResponse(description="Playlist not found")
+        },
+        tags=['Exercises']
+    )
+    def patch(self, request, playlist_id):
+        try:
+            playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
+        except Playlist.DoesNotExist:
+            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = PlaylistUpdateSerializer(playlist, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_playlist = serializer.save()
+            # 응답은 전체 정보를 내려줌
+            return Response(PlaylistSerializer(updated_playlist).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @extend_schema(
+        summary="플레이리스트 삭제",
+        description="플레이리스트를 삭제합니다.",
+        responses={204: OpenApiResponse(description="Playlist deleted"), 404: OpenApiResponse(description="Playlist not found")},
+        tags=['Exercises']
+    )
+    def delete(self, request, playlist_id):
+        try:
+            playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user)
+        except Playlist.DoesNotExist:
+            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        playlist.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# -----------------------------------------------------------------------
+
+class PlaylistItemAddView(APIView):
+    """
+    플레이리스트 운동 추가 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="플레이리스트에 운동 추가",
+        description="특정 플레이리스트에 운동을 추가합니다.",
+        request=PlaylistItemAddSerializer,
+        responses={201: PlaylistSerializer, 404: OpenApiResponse(description="Playlist not found")},
+        tags=['Exercises']
+    )
+    def post(self, request, playlist_id):
+        try:
+            playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
+        except Playlist.DoesNotExist:
+            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PlaylistItemAddSerializer(data=request.data, context={'playlist': playlist})
+        if serializer.is_valid():
+            serializer.save()
+            # 추가 후 변경된 전체 플레이리스트 반환
+            return Response(PlaylistSerializer(playlist).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -----------------------------------------------------------------------
+
+class PlaylistItemDetailView(APIView):
+    """
+    플레이리스트 항목 개별 삭제 및 수정 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, playlist_id, item_id, user):
+        try:
+            # 본인의 활성 플레이리스트에 속한 아이템인지 확인
+            item = PlaylistItem.objects.select_related('playlist').get(
+                playlist_item_id=item_id,
+                playlist__playlist_id=playlist_id,
+                playlist__user=user,
+                playlist__status='ACTIVE'
+            )
+            return item
+        except PlaylistItem.DoesNotExist:
+            return None
+
+    @extend_schema(
+        summary="플레이리스트 항목 삭제",
+        description="플레이리스트에서 특정 운동 항목을 삭제합니다.",
+        responses={200: PlaylistSerializer, 404: OpenApiResponse(description="Item not found")},
+        tags=['Exercises']
+    )
+    def delete(self, request, playlist_id, item_id):
+        item = self.get_object(playlist_id, item_id, request.user)
+        if not item:
+            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        playlist = item.playlist
+        item.delete()
+        
+        # 삭제 후 갱신된 플레이리스트 반환
+        return Response(PlaylistSerializer(playlist).data, status=status.HTTP_200_OK)
+
+    @extend_schema(
+        summary="플레이리스트 항목 상세 수정",
+        description="운동 항목의 세트 수, 횟수, 순서 등을 수정합니다.",
+        request=PlaylistItemUpdateSerializer,
+        responses={200: PlaylistSerializer, 404: OpenApiResponse(description="Item not found")},
+        tags=['Exercises']
+    )
+    def patch(self, request, playlist_id, item_id):
+        item = self.get_object(playlist_id, item_id, request.user)
+        if not item:
+            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = PlaylistItemUpdateSerializer(item, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(PlaylistSerializer(item.playlist).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------------------------------------------------
