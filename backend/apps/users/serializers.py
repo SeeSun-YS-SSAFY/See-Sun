@@ -135,6 +135,22 @@ class LogoutSerializer(serializers.Serializer):
         return value
 
 
+class UserDeleteSerializer(serializers.Serializer):
+    """
+    회원탈퇴 시리얼라이저 (BE_V1_AUTH_006)
+    """
+    confirmation = serializers.BooleanField(
+        required=True,
+        error_messages={'required': '탈퇴 확인이 필요합니다.'}
+    )
+    
+    def validate_confirmation(self, value):
+        """탈퇴 확인 검증"""
+        if not value:
+            raise serializers.ValidationError('탈퇴를 진행하려면 확인이 필요합니다.')
+        return value
+
+
 class UserSignupSerializer(serializers.ModelSerializer):
     """
     회원가입 요청 데이터를 처리하는 시리얼라이저.
