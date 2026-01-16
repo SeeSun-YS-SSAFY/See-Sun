@@ -2,12 +2,121 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
-from .serializers import UserSignupSerializer
+from .serializers import UserSignupSerializer, SignupSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
-from drf_spectacular.utils import extend_schema, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from .containers import Container
+
+
+class SignupView(APIView):
+    """
+    회원가입 API (BE_V1_AUTH_001)
+    """
+    permission_classes = [AllowAny]
+    
+    @extend_schema(
+        summary="회원가입",
+        description="이름, 전화번호, PIN 번호로 회원가입을 진행합니다.",
+        request=SignupSerializer,
+        responses={
+            201: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'user_id': {'type': 'string', 'format': 'uuid'},
+                        'name': {'type': 'string'},
+                        'phone_number_masked': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            'user_id': '550e8400-e29b-41d4-a716-446655440000',
+                            'name': '홍길동',
+                            'phone_number_masked': '010-****-1234',
+                            'tts_message': '회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'errors': {
+                            'type': 'object',
+                            'additionalProperties': {'type': 'array', 'items': {'type': 'string'}}
+                        }
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Validation Error',
+                        value={
+                            'errors': {
+                                'name': ['이름을 입력해주세요.'],
+                                'phone_number': ['올바른 전화번호 형식이 아닙니다.'],
+                                'pin_number': ['PIN 번호는 4자리 숫자여야 합니다.']
+                            }
+                        }
+                    )
+                ]
+            ),
+            409: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Phone Number Already Exists',
+                        value={
+                            'error': 'PHONE_NUMBER_ALREADY_EXISTS',
+                            'tts_message': '이미 가입된 전화번호입니다.'
+                        }
+                    )
+                ]
+            )
+        },
+        tags=['Auth']
+    )
+    def post(self, request):
+        """회원가입 처리"""
+        serializer = SignupSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'errors': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = serializer.save()
+            
+            # 전화번호 마스킹 (010-****-1234)
+            phone = user.phone_number
+            phone_masked = f"{phone[:3]}-****-{phone[-4:]}"
+            
+            return Response({
+                'user_id': str(user.id),
+                'name': user.name,
+                'phone_number_masked': phone_masked,
+                'tts_message': '회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response({
+                'error': 'SIGNUP_FAILED',
+                'tts_message': '회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 class GoogleLoginView(APIView):
     """
