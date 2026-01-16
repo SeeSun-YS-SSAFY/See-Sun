@@ -51,7 +51,7 @@ export default function Login() {
           일반 로그인
         </Button>
 
-        <Button onClick={() => console.log("회원가입 버튼 클릭")}>
+        <Button onClick={() => router.push("/signin")}>
             회원 가입
         </Button>
       </div>
