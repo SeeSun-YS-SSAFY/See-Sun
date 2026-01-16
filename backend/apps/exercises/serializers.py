@@ -86,14 +86,14 @@ class ExerciseSimpleSerializer(serializers.ModelSerializer):
 # ----------------------------------------------------------------------------
 
 class PlaylistItemSerializer(serializers.ModelSerializer):
-    """플레이리스트 항목 시리얼라이저"""
-    exercise = ExerciseSerializer(read_only=True)
-    exercise_id = serializers.UUIDField(write_only=True)
+    """플레이리스트 항목 시리얼라이저 (Read Only)"""
+    exercise_id = serializers.UUIDField(source='exercise.exercise_id', read_only=True)
+    exercise_name = serializers.CharField(source='exercise.exercise_name', read_only=True)
 
     class Meta:
         model = PlaylistItem
         fields = (
-            'playlist_item_id', 'exercise', 'exercise_id',
+            'playlist_item_id', 'exercise_id', 'exercise_name',
             'sequence_no', 'set_count', 'reps_count', 
             'duration_sec', 'rest_sec', 'cue_overrides'
         )

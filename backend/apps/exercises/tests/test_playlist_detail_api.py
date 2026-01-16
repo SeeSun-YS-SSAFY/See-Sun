@@ -64,6 +64,20 @@ class PlaylistDetailApiTests(APITestCase):
         """내 플레이리스트 상세 조회 성공 테스트"""
         print(f"\n[{self._testMethodName}] 테스트 시작: 내 플레이리스트 상세 조회")
         
+        # 두 번째 아이템 추가
+        exercise2 = Exercise.objects.create(
+            category=self.category,
+            exercise_name='런지',
+            exercise_description='하체 운동'
+        )
+        PlaylistItem.objects.create(
+            playlist=self.my_playlist,
+            exercise=exercise2,
+            sequence_no=2,
+            set_count=3,
+            reps_count=15
+        )
+
         url = reverse(self.url_name, kwargs={'playlist_id': self.my_playlist.playlist_id})
         response = self.client.get(url)
         
@@ -74,9 +88,10 @@ class PlaylistDetailApiTests(APITestCase):
         self.assertEqual(response.data['title'], '나의 루틴')
         print(f"  - 플레이리스트 정보(ID, 제목) 검증 완료")
         
-        self.assertEqual(len(response.data['items']), 1)
-        self.assertEqual(response.data['items'][0]['exercise']['exercise_name'], '스쿼트')
-        print(f"  - 플레이리스트 아이템 및 운동 정보 검증 완료")
+        self.assertEqual(len(response.data['items']), 2)
+        self.assertEqual(response.data['items'][0]['exercise_name'], '스쿼트')
+        self.assertEqual(response.data['items'][1]['exercise_name'], '런지')
+        print(f"  - 플레이리스트 아이템(2개) 및 운동 정보 검증 완료")
         
         print("\n[응답 데이터 확인]")
         print(json.dumps(response.data, indent=4, ensure_ascii=False))
@@ -120,5 +135,40 @@ class PlaylistDetailApiTests(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         print(f"  - 상태 코드 401 Unauthorized 검증 완료")
+        
+        print(f"[{self._testMethodName}] 테스트 성공")
+
+    def test_playlist_items_ordering(self):
+        """플레이리스트 항목이 sequence_no 순서대로 정렬되는지 테스트"""
+        print(f"\n[{self._testMethodName}] 테스트 시작: 항목 정렬 순서 검증")
+        
+        # 추가 아이템 생성 (sequence_no를 2로 설정)
+        exercise2 = Exercise.objects.create(
+            category=self.category, 
+            exercise_name='런지',
+            exercise_description='하체 운동'
+        )
+        PlaylistItem.objects.create(
+            playlist=self.my_playlist,
+            exercise=exercise2,
+            sequence_no=2,
+            set_count=3
+        )
+        
+        url = reverse(self.url_name, kwargs={'playlist_id': self.my_playlist.playlist_id})
+        response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        items = response.data['items']
+        
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]['sequence_no'], 1)
+        self.assertEqual(items[0]['exercise_name'], '스쿼트')
+        self.assertEqual(items[1]['sequence_no'], 2)
+        self.assertEqual(items[1]['exercise_name'], '런지')
+        
+        print(f"  - 항목 1: {items[0]['exercise_name']} (Seq: {items[0]['sequence_no']})")
+        print(f"  - 항목 2: {items[1]['exercise_name']} (Seq: {items[1]['sequence_no']})")
+        print(f"  - 항목이 sequence_no 순서(1 -> 2)로 정렬됨 확인")
         
         print(f"[{self._testMethodName}] 테스트 성공")

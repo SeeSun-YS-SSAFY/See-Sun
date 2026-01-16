@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView,
-    PlaylistCreateView, PlaylistDetailView, SessionViewSet
+    PlaylistCreateView, PlaylistDetailView, SessionViewSet, PlaylistListView
 )
 
 app_name = 'exercises'
@@ -16,7 +16,8 @@ urlpatterns = [
     path('category/<str:category_id>/', ExerciseListByCategoryView.as_view(), name='exercise_list_by_category'),
     path('category/', ExerciseCategoryListView.as_view(), name='category_list'),
     path('playlist/<uuid:playlist_id>/', PlaylistDetailView.as_view(), name='playlist_detail'),
-    path('playlist/', PlaylistCreateView.as_view(), name='playlist_create'),
+    path('playlist/create/', PlaylistCreateView.as_view(), name='playlist_create'),
+    path('playlist/', PlaylistListView.as_view(), name='playlist_list'),
     path('<uuid:exercise_id>/', ExerciseDetailView.as_view(), name='exercise_detail'),
     path('', include(router.urls)),
 ]

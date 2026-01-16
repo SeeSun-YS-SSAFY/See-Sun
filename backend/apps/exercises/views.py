@@ -189,6 +189,26 @@ class PlaylistCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------------------------------------------------
+class PlaylistListView(APIView):
+    """
+    내 플레이리스트 목록 조회 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="내 플레이리스트 목록 조회",
+        description="사용자가 생성한 모든 활성 플레이리스트 목록을 반환합니다.",
+        responses={
+            200: PlaylistSerializer(many=True),
+        },
+        tags=['Exercises']
+    )
+    def get(self, request):
+        playlists = Playlist.objects.filter(user=request.user, status='ACTIVE')
+        serializer = PlaylistSerializer(playlists, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------------
 # 플레이리스트 상세 조회 
 class PlaylistDetailView(APIView):
     """
