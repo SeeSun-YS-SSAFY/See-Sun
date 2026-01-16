@@ -19,7 +19,7 @@ export default function RoutineExercise() {
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
         </button>
 
-        <h1 className="text-title-large text-white">단일</h1>
+        <h1 className="text-title-large text-white">루틴</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         <Button>근력</Button>
