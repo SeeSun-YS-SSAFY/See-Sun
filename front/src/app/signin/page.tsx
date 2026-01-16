@@ -34,12 +34,14 @@ export default function Signin() {
 
     
     if (!result.ok) {
-        alert("에러");
-        return;
+      const message =
+        "error" in result ? result.error : "회원가입에 실패했습니다.";
+      alert(message);
+      return;
     }
 
     alert("회원가입 성공");
-    router.push("/login");
+    router.push("/");
     };
   return (
     <div className="min-h-screen">

@@ -1,6 +1,6 @@
 // atoms/auth/signupAtoms.ts
 import { atom } from "jotai";
-import type { WritableAtom } from "jotai";
+import { setAuthTokenAtom } from "./authAtoms";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -36,64 +36,58 @@ function validateSignupInput(name: string, phone: string, pin: string) {
 /**
  * 회원가입 요청 atom (write-only)
  */
-export const signupRequestAtom: WritableAtom<
+export const signupRequestAtom = atom(
   null,
-  [],
-  Promise<SignupResult>
-> = atom(null, async (get, set) => {
-  const name = get(signupNameAtom);
-  const phone_number = get(signupPhoneAtom);
-  const pin_number = get(signupPinAtom);
+  async (get, set): Promise<SignupResult> => {
+    const name = get(signupNameAtom);
+    const phone_number = get(signupPhoneAtom);
+    const pin_number = get(signupPinAtom);
 
-  // 1) 검증
-  const msg = validateSignupInput(name, phone_number, pin_number);
-  if (msg) {
-    return { ok: false as const, error: msg };
-  }
+    const msg = validateSignupInput(name, phone_number, pin_number);
+    if (msg) return { ok: false as const, error: msg };
 
-  set(signupLoadingAtom, true);
+    set(signupLoadingAtom, true);
 
-  try {
-    // 2) 서버 요청
-    const res = await fetch(`${API_BASE}/auth/signup/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone_number, pin_number }),
-    });
+    try {
+      const base = API_BASE as string;
+      const res = await fetch(`${base}/auth/signup/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone_number, pin_number }),
+      });
 
-    if (!res.ok) {
-      let serverMsg = "회원가입에 실패했습니다.";
-      try {
-        const err = await res.json();
-        serverMsg = err?.message ?? err?.error ?? serverMsg;
-      } catch {}
-      throw new Error(serverMsg);
+      if (!res.ok) {
+        let serverMsg = "회원가입에 실패했습니다.";
+        try {
+          const err = await res.json();
+          serverMsg = err?.message ?? err?.error ?? err?.detail ?? serverMsg;
+        } catch {}
+        throw new Error(serverMsg);
+      }
+
+      const data: SignupResponse = await res.json().catch(() => ({} as any));
+
+      if (data?.token) set(setAuthTokenAtom, data.token);
+
+      return { ok: true as const, data };
+    } catch (e: any) {
+      return { ok: false as const, error: e?.message ?? "회원가입에 실패했습니다." };
+    } finally {
+      set(signupLoadingAtom, false);
     }
-
-    const data: SignupResponse = await res.json().catch(() => ({} as any));
-
-    if (data?.token) {
-      set(authTokenAtom, data.token);
-    }
-
-    return { ok: true as const, data };
-  } catch (e: any) {
-    return {
-      ok: false as const,
-      error: e?.message ?? "회원가입에 실패했습니다.",
-    };
-  } finally {
-    set(signupLoadingAtom, false);
   }
-});
+);
+
 
 /** 폼 초기화 */
-export const signupResetAtom: WritableAtom<null, [], void> = atom(
+export const signupResetAtom = atom(
   null,
   (_get, set) => {
     set(signupNameAtom, "");
     set(signupPhoneAtom, "");
     set(signupPinAtom, "");
     set(signupLoadingAtom, false);
+    // set(authTokenAtom, null);
   }
 );
+
