@@ -1,5 +1,4 @@
 import { atom } from "jotai";
-import type { PrimitiveAtom } from "jotai";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -14,7 +13,8 @@ export type RoutineListResult =
 
 export const routinesAtom = atom<Routine[]>([]);
 export const routinesLoadingAtom = atom(false);
-export const routinesErrorAtom: PrimitiveAtom<string | null> = atom<string | null>(null);
+const initialRoutinesError: string | null = null;
+export const routinesErrorAtom = atom(initialRoutinesError);
 
 /**
  * 루틴 목록 불러오기 (write-only)
