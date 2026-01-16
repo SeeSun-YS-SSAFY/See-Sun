@@ -229,13 +229,18 @@ class LoginView(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         
-        # 4. profile_completed 확인
+        # 4. profile_completed 확인 및 업데이트
         profile_completed = all([
             user.birthdate,
             user.gender,
             user.height_cm,
             user.weight_kg
         ])
+        
+        # DB 필드 동기화 (변경된 경우만 업데이트)
+        if user.is_profile_completed != profile_completed:
+            user.is_profile_completed = profile_completed
+            user.save(update_fields=['is_profile_completed'])
         
         # 5. TTS 메시지 결정
         if profile_completed:
@@ -485,9 +490,25 @@ class UserProfileCompletionView(APIView):
     def put(self, request):
         serializer = UserProfileCompletionSerializer(request.user, data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.save()
+            
+            return Response({
+                'message': '프로필이 완성되었습니다.',
+                'profile_completed': True,
+                'tts_message': '정보 입력이 완료되었습니다. 메인 화면으로 이동합니다.',
+                'user': {
+                    'birthdate': str(user.birthdate),
+                    'gender': user.gender,
+                    'height_cm': user.height_cm,
+                    'weight_kg': user.weight_kg
+                }
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            'error': 'VALIDATION_ERROR',
+            'tts_message': '입력 정보를 확인해주세요.',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 # -------------------------------------------------------------
 
