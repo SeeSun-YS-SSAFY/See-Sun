@@ -2,8 +2,10 @@ from rest_framework.views import APIView
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
-from django.contrib.auth.hashers import check_password
-from .serializers import UserSignupSerializer, SignupSerializer, LoginSerializer
+from .serializers import (
+    UserSignupSerializer, SignupSerializer, UserProfileSerializer,
+    UserProfileCompletionSerializer, UserProfileUpdateSerializer
+)
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import ValidationError, AuthenticationFailed
@@ -358,10 +360,69 @@ class GoogleLoginView(APIView):
             # 500 등 기타 에러
             raise e
 
-class UserViewSet(viewsets.ModelViewSet):
+# -------------------------------------------------------------
+
+class UserProfileView(APIView):
     """
-    사용자 ViewSet
+    내 프로필 조회 API
+    GET /api/v1/users/profile/
     """
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSignupSerializer
-    permission_classes = [IsAuthenticated] # 기본적으로 인증 필요
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="내 프로필 조회",
+        description="현재 로그인된 사용자의 프로필 정보를 조회합니다.",
+        responses={200: UserProfileSerializer},
+        tags=['Profile']
+    )
+    def get(self, request):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+# -------------------------------------------------------------
+
+class UserProfileCompletionView(APIView):
+    """
+    프로필 필수 정보 입력(완성) API
+    PUT /api/v1/users/profile/completion/
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="프로필 필수 정보 입력 (완성)",
+        description="회원가입 후 키, 몸무게, 성별, 생년월일 등 필수 정보를 입력하여 프로필을 완성합니다.",
+        request=UserProfileCompletionSerializer,
+        responses={200: UserProfileCompletionSerializer},
+        tags=['Profile']
+    )
+    def put(self, request):
+        serializer = UserProfileCompletionSerializer(request.user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -------------------------------------------------------------
+
+class UserProfileUpdateView(APIView):
+    """
+    프로필 정보 수정 API
+    PATCH /api/v1/users/profile/edit/
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="프로필 정보 수정",
+        description="프로필 정보를 부분적으로 수정합니다.",
+        request=UserProfileUpdateSerializer,
+        responses={200: UserProfileUpdateSerializer},
+        tags=['Profile']
+    )
+    def patch(self, request):
+        serializer = UserProfileUpdateSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -------------------------------------------------------------

@@ -79,6 +79,7 @@ class SignupSerializer(serializers.Serializer):
         
         return user
 
+# -------------------------------------------------------------
 
 class LoginSerializer(serializers.Serializer):
     """
@@ -150,3 +151,63 @@ class UserSignupSerializer(serializers.ModelSerializer):
             birthdate=validated_data.get('birthdate')
         )
         return user
+
+# ----------------------------------------------------------------------
+# 사용자 프로필 조회 시리얼라이저
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    """
+    사용자 프로필 조회 시리얼라이저.
+    민감한 정보(비밀번호 등)를 제외한 사용자 정보를 반환한다.
+    """
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'name', 'phone_number',
+            'birthdate', 'gender', 'height_cm', 'weight_kg',
+            'is_profile_completed'
+        )
+        read_only_fields = fields
+
+# -------------------------------------------------------------
+
+class UserProfileCompletionSerializer(serializers.ModelSerializer):
+    """
+    프로필 필수 정보 입력(완성) 시리얼라이저.
+    회원가입 후 초기 프로필 설정 시 사용된다.
+    """
+    class Meta:
+        model = User
+        fields = ('height_cm', 'weight_kg', 'gender', 'birthdate')
+        extra_kwargs = {
+            'height_cm': {'required': True},
+            'weight_kg': {'required': True},
+            'gender': {'required': True},
+            'birthdate': {'required': True},
+        }
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        instance.is_profile_completed = True
+        instance.save()
+        return instance
+
+# -------------------------------------------------------------
+
+class UserProfileUpdateSerializer(serializers.ModelSerializer):
+    """
+    프로필 정보 수정 시리얼라이저.
+    원하는 필드만 선택적으로 수정할 수 있다.
+    """
+    class Meta:
+        model = User
+        fields = ('name', 'height_cm', 'weight_kg', 'gender', 'birthdate')
+        extra_kwargs = {
+            'name': {'required': False},
+            'height_cm': {'required': False},
+            'weight_kg': {'required': False},
+            'gender': {'required': False},
+            'birthdate': {'required': False},
+        }
+
+# -------------------------------------------------------------
