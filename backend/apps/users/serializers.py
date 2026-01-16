@@ -80,6 +80,44 @@ class SignupSerializer(serializers.Serializer):
         return user
 
 
+class LoginSerializer(serializers.Serializer):
+    """
+    PIN 기반 로그인 시리얼라이저 (BE_V1_AUTH_002)
+    """
+    phone_number = serializers.CharField(
+        max_length=20,
+        required=True,
+        error_messages={'required': '전화번호를 입력해주세요.'}
+    )
+    pin_number = serializers.CharField(
+        max_length=4,
+        min_length=4,
+        write_only=True,
+        required=True,
+        error_messages={
+            'required': 'PIN 번호를 입력해주세요.',
+            'min_length': 'PIN 번호는 4자리여야 합니다.',
+            'max_length': 'PIN 번호는 4자리여야 합니다.'
+        }
+    )
+    device_hash = serializers.CharField(
+        max_length=255,
+        required=False,
+        allow_blank=True
+    )
+    
+    def validate_phone_number(self, value):
+        """전화번호 정규화"""
+        phone = re.sub(r'[^0-9]', '', value)
+        return phone
+    
+    def validate_pin_number(self, value):
+        """PIN 번호 검증"""
+        if not value.isdigit():
+            raise serializers.ValidationError('PIN 번호는 숫자만 가능합니다.')
+        return value
+
+
 class UserSignupSerializer(serializers.ModelSerializer):
     """
     회원가입 요청 데이터를 처리하는 시리얼라이저.
