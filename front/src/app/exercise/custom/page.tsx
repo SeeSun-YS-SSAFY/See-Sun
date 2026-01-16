@@ -31,13 +31,13 @@ export default function Custom() {
         <div className="relative flex items-center py-2.5 justify-center">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/exercise/routine/")}
             className="absolute left-0 flex items-center"
           >
             <Image src="/arrow_back.png" width={60} height={60} alt="back" />
           </button>
   
-          <h1 className="text-title-large text-white">개인맞춤</h1>
+          <h1 className="text-title-large text-white">개인설정</h1>
         </div>
 
       {/* 루틴 목록 */}

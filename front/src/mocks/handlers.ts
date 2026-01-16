@@ -47,7 +47,7 @@ export const handlers = [
     );
   }),
 
-  http.post(`${API_BASE}/exercises/playlist/`, async ({ request }) => {
+  http.post(`${API_BASE}/exercises/playlist/create/`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as {
       title?: string;
       items?: unknown[];
@@ -69,14 +69,7 @@ export const handlers = [
       );
     }
 
-    return HttpResponse.json(
-      {
-        playlist_id: "mock-playlist-1",
-        title,
-        items,
-      },
-      { status: 201 }
-    );
+    return HttpResponse.json({ playlist_id: "mock-playlist-1", title, items }, { status: 201 });
   }),
 
   // (선택) 슬래시 없는 버전도 들어오는 경우 대비

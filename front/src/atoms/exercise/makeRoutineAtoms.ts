@@ -29,10 +29,20 @@ export const addRoutineAtom = atom(
         throw new Error("NEXT_PUBLIC_API_BASE_URL이 설정되지 않았습니다.");
       }
 
-      const res = await fetch(`${API_BASE}/exercises/playlist/`, {
+      const payload = {
+        title,
+        items: items.map(({ exercise_name, set_count, reps_count, sequence_no }) => ({
+          exercise_name,
+          set_count,
+          reps_count,
+          sequence_no,
+        })),
+      };
+
+      const res = await fetch(`${API_BASE}/exercises/playlist/create/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, items }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {

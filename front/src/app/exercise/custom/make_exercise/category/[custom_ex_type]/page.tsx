@@ -1,10 +1,13 @@
 "use client";
 
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
+import type { Exercise } from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSetAtom } from "jotai";
+import { setSelectedExerciseNameAtom } from "@/atoms/exercise/makeExerciseAtoms";
 
 type ExerciseCategoryResponse = {
   category_id: number;
@@ -16,11 +19,11 @@ type ExerciseCategoryResponse = {
   }[];
 };
 
-export default function ExerciseType() {
+export default function CustomExerciseType() {
   const router = useRouter();
-  const params = useParams<{ ex_type: string }>();
-
-  const { ex_type: exType } = params;
+  const params = useParams<{ custom_ex_type: string }>();
+  const exType = params.custom_ex_type;
+  const setSelectedName = useSetAtom(setSelectedExerciseNameAtom);
 
   const [exerciseCategory, setExercises] =
     useState<ExerciseCategoryResponse | null>(null);
@@ -40,7 +43,7 @@ export default function ExerciseType() {
       <div className="relative flex items-center py-2.5 justify-center">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/exercise/custom/make_exercise/category/")}
           className="absolute left-0 flex items-center"
         >
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
@@ -52,10 +55,15 @@ export default function ExerciseType() {
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {exerciseCategory && (
-          <ExerciseSwiper exercises={exerciseCategory.exercises} />
+          <ExerciseSwiper
+            exercises={exerciseCategory.exercises as unknown as Exercise[]}
+            onPick={(ex) => {
+              setSelectedName(ex.exercise_name);
+              router.push("/exercise/custom/make_exercise");
+            }}
+          />
         )}
       </div>
     </div>
   );
 }
-

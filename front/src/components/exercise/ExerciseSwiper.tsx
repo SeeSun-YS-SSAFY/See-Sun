@@ -10,7 +10,7 @@ import "swiper/css";
 import "swiper/css/effect-coverflow";
 import { cn } from "@/utils/cn";
 
-type Exercise = {
+export type Exercise = {
   exercise_id: number;
   exercise_name: string;
   pictogram_url: string;
@@ -18,9 +18,10 @@ type Exercise = {
 
 type ExerciseSwiperProps = {
   exercises: Exercise[];
+  onPick?: (exercise: Exercise) => void;
 };
 
-export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
+export default function ExerciseSwiper({ exercises, onPick }: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
 
   return (
@@ -61,6 +62,9 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
                         : "bg-yellow-700 opacity-80",
                       "self-stretch h-full w-full rounded-[20px] inline-flex flex-col justify-center items-center gap-2.5 transition-all duration-300"
                     )}
+                    onClick={() => {
+                      if (isActive) onPick?.(exercise);
+                    }}
                   >
                     <div
                       className={cn("relative w-40 h-0", isActive && "h-32")}

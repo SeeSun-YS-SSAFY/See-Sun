@@ -11,7 +11,7 @@ import {
   repsCountAtom,
   setCountAtom,
 } from "@/atoms/exercise/makeExerciseAtoms";
-import InputDisable from "@/components/common/Input_disable";
+import InputDisable from "@/components/common/InputButton";
 
 export default function Make_Exercise() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function Make_Exercise() {
       alert(message);
       return;
     }
-    router.back();
+    router.push("/exercise/custom/make_routine/");
   };
 
   return (
@@ -37,13 +37,13 @@ export default function Make_Exercise() {
         <div className="relative flex items-center py-2.5 justify-center">
           <button
             type="button"
-            onClick={() => router.back()}
+            onClick={() => router.push("/exercise/custom/make_routine/")}
             className="absolute left-0 flex items-center"
           >
             <Image src="/arrow_back.png" width={60} height={60} alt="back" />
           </button>
   
-          <h1 className="text-title-large text-white">개인맞춤</h1>
+          <h1 className="text-title-large text-white">운동추가</h1>
         </div>
 
       <div className="mt-10 flex flex-col gap-4">
