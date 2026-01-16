@@ -9,7 +9,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import Exercise, Playlist, ExerciseSession
 from .serializers import (
     ExerciseSerializer, PlaylistSerializer, ExerciseSessionSerializer,
-    ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer
+    ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
+    PlaylistCreateSerializer
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -178,3 +179,23 @@ class ExerciseDetailView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 # -----------------------------------------------------------------------------------------------
+
+class PlaylistCreateView(APIView):
+    """
+    운동 루틴(플레이리스트) 생성 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        summary="운동 루틴 생성",
+        description="제목과 운동 목록을 받아 새로운 루틴을 생성합니다.",
+        request=PlaylistCreateSerializer,
+        responses={201: PlaylistCreateSerializer},
+        tags=['Exercises']
+    )
+    def post(self, request):
+        serializer = PlaylistCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            playlist = serializer.save()
+            return Response(PlaylistSerializer(playlist).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -1,6 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ExerciseViewSet, RoutineViewSet, SessionViewSet, ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView
+from .views import (
+    ExerciseViewSet, RoutineViewSet, SessionViewSet, 
+    ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView,
+    PlaylistCreateView
+)
 
 app_name = 'exercises'
 
@@ -13,6 +17,7 @@ router.register(r'sessions', SessionViewSet, basename='session')
 urlpatterns = [
     path('category/<str:category_id>/', ExerciseListByCategoryView.as_view(), name='exercise_list_by_category'),
     path('category/', ExerciseCategoryListView.as_view(), name='category_list'),
+    path('playlist/', PlaylistCreateView.as_view(), name='playlist_create'),
     path('<uuid:exercise_id>/', ExerciseDetailView.as_view(), name='exercise_detail'),
     path('', include(router.urls)),
 ]

@@ -98,6 +98,39 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
 
+class PlaylistItemCreateSerializer(serializers.ModelSerializer):
+    """플레이리스트 생성 시 항목 입력용 시리얼라이저"""
+    exercise_id = serializers.UUIDField()
+
+    class Meta:
+        model = PlaylistItem
+        fields = ('exercise_id', 'sequence_no', 'set_count', 'reps_count')
+
+class PlaylistCreateSerializer(serializers.ModelSerializer):
+    """플레이리스트 생성 시리얼라이저"""
+    items = PlaylistItemCreateSerializer(many=True)
+
+    class Meta:
+        model = Playlist
+        fields = ('playlist_id', 'title', 'items')
+
+    def create(self, validated_data):
+        items_data = validated_data.pop('items')
+        user = self.context['request'].user
+        
+        from django.db import transaction
+        with transaction.atomic():
+            # 1. Playlist 생성
+            playlist = Playlist.objects.create(user=user, mode='CUSTOM', status='ACTIVE', **validated_data)
+            
+            # 2. PlaylistItem 생성
+            for item_data in items_data:
+                exercise_id = item_data.pop('exercise_id')
+                exercise = Exercise.objects.get(exercise_id=exercise_id)
+                PlaylistItem.objects.create(playlist=playlist, exercise=exercise, **item_data)
+        
+        return playlist
+
 # -------------------------------------------------------------------------
 
 class PlaylistSerializer(serializers.ModelSerializer):
