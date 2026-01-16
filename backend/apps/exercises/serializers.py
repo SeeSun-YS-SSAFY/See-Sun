@@ -141,6 +141,8 @@ class PlaylistUpdateSerializer(serializers.ModelSerializer):
         model = Playlist
         fields = ('title', 'status', 'mode')
 
+# -------------------------------------------------------------------------
+
 class PlaylistItemAddSerializer(serializers.ModelSerializer):
     """플레이리스트에 운동 추가 시리얼라이저"""
     exercise_id = serializers.UUIDField()
@@ -164,6 +166,8 @@ class PlaylistItemAddSerializer(serializers.ModelSerializer):
             validated_data['sequence_no'] = (last_item.sequence_no + 1) if last_item else 1
             
         return PlaylistItem.objects.create(playlist=playlist, exercise=exercise, **validated_data)
+
+# -------------------------------------------------------------------------
 
 class PlaylistItemUpdateSerializer(serializers.ModelSerializer):
     """플레이리스트 항목 상세 수정 시리얼라이저"""
