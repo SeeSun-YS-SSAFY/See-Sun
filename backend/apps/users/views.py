@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 from .serializers import (
     UserSignupSerializer, SignupSerializer, LoginSerializer, LogoutSerializer,
+    UserDeleteSerializer,
     UserProfileSerializer,
     UserProfileCompletionSerializer, UserProfileUpdateSerializer
 )
@@ -229,13 +230,18 @@ class LoginView(APIView):
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
         
-        # 4. profile_completed 확인
+        # 4. profile_completed 확인 및 업데이트
         profile_completed = all([
             user.birthdate,
             user.gender,
             user.height_cm,
             user.weight_kg
         ])
+        
+        # DB 필드 동기화 (변경된 경우만 업데이트)
+        if user.is_profile_completed != profile_completed:
+            user.is_profile_completed = profile_completed
+            user.save(update_fields=['is_profile_completed'])
         
         # 5. TTS 메시지 결정
         if profile_completed:
@@ -466,6 +472,49 @@ class UserProfileView(APIView):
         serializer = UserProfileSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    
+    @extend_schema(
+        summary='회원탈퇴',
+        description='사용자 계정을 탈퇴 처리합니다 (Soft Delete).',
+        request=UserDeleteSerializer,
+        responses={200: OpenApiResponse(description='탈퇴 완료')},
+        tags=['Profile']
+    )
+    def delete(self, request):
+        """회원탈퇴 처리 (Soft Delete)"""
+        serializer = UserDeleteSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {'error': 'CONFIRMATION_REQUIRED', 'tts_message': '회원탈퇴를 진행하려면 확인이 필요합니다.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = request.user
+            from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+            from django.utils import timezone
+            
+            # 모든 Refresh Token 블랙리스트 등록
+            for token in OutstandingToken.objects.filter(user=user):
+                BlacklistedToken.objects.get_or_create(token=token)
+            
+            # Soft Delete
+            user.is_deleted = True
+            user.deleted_at = timezone.now()
+            user.is_active = False
+            user.save()
+            
+            return Response({
+                'message': '회원탈퇴가 완료되었습니다.',
+                'tts_message': '회원탈퇴가 완료되었습니다. 그동안 시선을 이용해 주셔서 감사합니다.'
+            }, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({
+                'error': 'DELETE_FAILED',
+                'tts_message': '회원탈퇴 중 오류가 발생했습니다.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 # -------------------------------------------------------------
 
 class UserProfileCompletionView(APIView):
@@ -485,9 +534,25 @@ class UserProfileCompletionView(APIView):
     def put(self, request):
         serializer = UserProfileCompletionSerializer(request.user, data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            user = serializer.save()
+            
+            return Response({
+                'message': '프로필이 완성되었습니다.',
+                'profile_completed': True,
+                'tts_message': '정보 입력이 완료되었습니다. 메인 화면으로 이동합니다.',
+                'user': {
+                    'birthdate': str(user.birthdate),
+                    'gender': user.gender,
+                    'height_cm': user.height_cm,
+                    'weight_kg': user.weight_kg
+                }
+            }, status=status.HTTP_200_OK)
+        
+        return Response({
+            'error': 'VALIDATION_ERROR',
+            'tts_message': '입력 정보를 확인해주세요.',
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 # -------------------------------------------------------------
 
@@ -513,3 +578,100 @@ class UserProfileUpdateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -------------------------------------------------------------
+
+
+class UserDeleteView(APIView):
+    """
+    회원탈퇴 API (BE_V1_AUTH_006)
+    DELETE /api/v1/users/profile/
+    """
+    permission_classes = [IsAuthenticated]
+    
+    @extend_schema(
+        summary="회원탈퇴",
+        description="사용자 계정을 탈퇴 처리합니다 (Soft Delete). 모든 Refresh Token을 블랙리스트에 등록하고 사용자를 비활성화합니다.",
+        request=UserDeleteSerializer,
+        responses={
+            200: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Success',
+                        value={
+                            'message': '회원탈퇴가 완료되었습니다.',
+                            'tts_message': '회원탈퇴가 완료되었습니다. 그동안 시선을 이용해 주셔서 감사합니다.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                response={
+                    'type': 'object',
+                    'properties': {
+                        'error': {'type': 'string'},
+                        'tts_message': {'type': 'string'}
+                    }
+                },
+                examples=[
+                    OpenApiExample(
+                        'Confirmation Required',
+                        value={
+                            'error': 'CONFIRMATION_REQUIRED',
+                            'tts_message': '회원탈퇴를 진행하려면 확인이 필요합니다.'
+                        }
+                    )
+                ]
+            )
+        },
+        tags=['Profile']
+    )
+    def delete(self, request):
+        """회원탈퇴 처리 (Soft Delete)"""
+        serializer = UserDeleteSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(
+                {
+                    'error': 'CONFIRMATION_REQUIRED',
+                    'tts_message': '회원탈퇴를 진행하려면 확인이 필요합니다.',
+                    'errors': serializer.errors
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = request.user
+            
+            # 모든 Refresh Token 블랙리스트 등록
+            from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+            
+            for token in OutstandingToken.objects.filter(user=user):
+                try:
+                    BlacklistedToken.objects.get_or_create(token=token)
+                except Exception:
+                    pass  # 이미 블랙리스트에 있는 경우 무시
+            
+            # Soft Delete: is_deleted=True, deleted_at 설정
+            from django.utils import timezone
+            user.is_deleted = True
+            user.deleted_at = timezone.now()
+            user.is_active = False  # 로그인 불가 처리
+            user.save()
+            
+            return Response({
+                'message': '회원탈퇴가 완료되었습니다.',
+                'tts_message': '회원탈퇴가 완료되었습니다. 그동안 시선을 이용해 주셔서 감사합니다.'
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({
+                'error': 'DELETE_FAILED',
+                'tts_message': '회원탈퇴 중 오류가 발생했습니다. 다시 시도해 주세요.',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

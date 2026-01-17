@@ -48,9 +48,12 @@ export default function RoutineExercise() {
         ))}
         <div className="flex gap-3.5">
           <Button>개인 맞춤</Button>
-          <Button className="flex items-center w-21 h-21 shrink-0">
-            <Icon name="settings" filled color="#000" size={48} />
-          </Button>
+          <Button
+              className="flex items-center w-21 h-21 shrink-0"
+              onClick={() => router.push("/exercise/custom")}
+            >
+              <Icon name="settings" filled color="#000" size={48} />
+            </Button>
         </div>
       </div>
     </div>

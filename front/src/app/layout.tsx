@@ -8,7 +8,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="ko">
       <body className="bg-blue-500">
-        <div className="mx-auto h-screen max-w-5xl px-5 pt-9 pb-9 text-center">
+        <div className="mx-auto max-w-5xl px-5 pt-9 pb-9 text-center">
           <MSWProvider>{children}</MSWProvider>
         </div>
       </body>
