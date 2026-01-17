@@ -19,7 +19,7 @@ export default function SingleExercise() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await apiClient.get<Category[]>("/exercises/category");
+        const data = await apiClient.get<Category[]>("/exercises/category/");
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -43,7 +43,7 @@ export default function SingleExercise() {
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {categories.map((category) => (
-          <Button key={category.category_id} onClick={() => router.push(`/exercise/custom/make_exercise/category/${category.category_id}`)}>
+          <Button key={category.category_id} onClick={() => router.push(`/exercise/custom/make_exercise/category/${category.category_id}/`)}>
             {category.display_name}
           </Button>
         ))}

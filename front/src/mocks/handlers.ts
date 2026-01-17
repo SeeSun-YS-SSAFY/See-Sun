@@ -111,7 +111,7 @@ export const handlers = [
   ),
 
   http.get<{ category_id: string }>(
-    `${API_BASE}/exercises/category/:category_id`,
+    `${API_BASE}/exercises/category/:category_id/`,
     ({ params }) => {
       const exerciseListMap = {
         1: {
