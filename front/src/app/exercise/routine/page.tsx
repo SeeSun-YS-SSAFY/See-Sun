@@ -34,7 +34,7 @@ export default function RoutineExercise() {
       <div className="relative flex items-center py-2.5 justify-center">
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={() => router.push("/exercise/")}
           className="absolute left-0 flex items-center"
         >
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
