@@ -28,17 +28,17 @@ export default function Custom() {
   return (
     <div>
       {/* 헤더 */}
-        <div className="relative flex items-center py-2.5 justify-center">
-          <button
-            type="button"
-            onClick={() => router.push("/exercise/routine/")}
-            className="absolute left-0 flex items-center"
-          >
-            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
-          </button>
-  
-          <h1 className="text-title-large text-white">개인설정</h1>
-        </div>
+      <div className="relative flex items-center h-16">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="absolute left-0 flex items-center px-4"
+        >
+          <Image src="/arrow_back.png" width={70} height={70} alt="Back" />
+        </button>
+
+        <div className="mx-auto text-title-large text-white">개인맞춤</div>
+      </div>
 
       {/* 루틴 목록 */}
       <div className="mt-20 px-6">
@@ -59,9 +59,9 @@ export default function Custom() {
           <div className="flex flex-col gap-2">
             {routines.map((r) => (
               <Button
-                key={r.id}
+                key={r.playlist_id}
                 type="button"
-                onClick={() => router.push(`/exercise/custom/routine/${r.id}`)}
+                onClick={() => router.push(`/exercise/custom/routine/${r.playlist_id}`)}
               >
                 {r.title}
               </Button>

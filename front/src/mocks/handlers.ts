@@ -33,6 +33,58 @@ export const handlers = [
 
     return HttpResponse.json({ message: "인증 실패" }, { status: 401 });
   }),
+
+
+
+  http.get(`${API_BASE}/exercises/playlist/`, () => {
+    return HttpResponse.json(
+      [
+        { id: 1, title: "아침 스트레칭 루틴" },
+        { id: 2, title: "상체 근력 루틴" },
+        { id: 3, title: "하체 + 코어 루틴" },
+      ],
+      { status: 200 }
+    );
+  }),
+
+  http.post(`${API_BASE}/exercises/playlist/create/`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as {
+      title?: string;
+      items?: unknown[];
+    };
+
+    const title = String(body.title ?? "").trim();
+    const items = Array.isArray(body.items) ? body.items : [];
+
+    if (!title) {
+      return HttpResponse.json(
+        { message: "루틴 이름을 입력해주세요." },
+        { status: 400 }
+      );
+    }
+    if (items.length === 0) {
+      return HttpResponse.json(
+        { message: "운동을 1개 이상 추가해주세요." },
+        { status: 400 }
+      );
+    }
+
+    return HttpResponse.json({ playlist_id: "mock-playlist-1", title, items }, { status: 201 });
+  }),
+
+  // (선택) 슬래시 없는 버전도 들어오는 경우 대비
+  http.get(`${API_BASE}/exercises/playlist`, () => {
+    return HttpResponse.json(
+      [
+        { id: 1, title: "아침 스트레칭 루틴" },
+        { id: 2, title: "상체 근력 루틴" },
+        { id: 3, title: "하체 + 코어 루틴" },
+      ],
+      { status: 200 }
+    );
+  }),
+
+
   http.get(
     `${API_BASE}/exercises/category`,
     () => {
