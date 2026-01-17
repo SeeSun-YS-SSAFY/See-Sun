@@ -89,11 +89,12 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
     """플레이리스트 항목 시리얼라이저 (Read Only)"""
     exercise_id = serializers.UUIDField(source='exercise.exercise_id', read_only=True)
     exercise_name = serializers.CharField(source='exercise.exercise_name', read_only=True)
+    exercise_guide_text = serializers.CharField(source='exercise.exercise_guide_text', read_only=True)
 
     class Meta:
         model = PlaylistItem
         fields = (
-            'playlist_item_id', 'exercise_id', 'exercise_name',
+            'playlist_item_id', 'exercise_id', 'exercise_name', 'exercise_guide_text',
             'sequence_no', 'set_count', 'reps_count', 
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
@@ -134,6 +135,8 @@ class PlaylistCreateSerializer(serializers.ModelSerializer):
                 PlaylistItem.objects.create(playlist=playlist, exercise=exercise, **item_data)
         
         return playlist
+
+# -------------------------------------------------------------------------
 
 class PlaylistUpdateSerializer(serializers.ModelSerializer):
     """플레이리스트 기본 정보(제목) 수정 시리얼라이저"""

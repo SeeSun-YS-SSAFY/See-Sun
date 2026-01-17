@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>See-Sun TTS Prototype</title>
+    <style>
+        :root {
+            --primary: #9b59b6;
+            --primary-dark: #8e44ad;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --text-muted: #a0a0a0;
+            --accent: #00bcd4;
+            --danger: #ff5252;
+            --border-radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: #000;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Mobile Container */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Header */
+        .app-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(18,18,18,0.95);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+        .app-logo { font-size: 20px; font-weight: 800; color: white; letter-spacing: -0.5px; }
+        .app-logo span { color: var(--primary); }
+
+        /* Auth Overlay */
+        #auth-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-color);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+        }
+        .auth-title { font-size: 24px; margin-bottom: 30px; font-weight: bold; }
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            background: #2a2a2a;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        .auth-switch {
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--accent);
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .input-group { width: 100%; margin-bottom: 15px; }
+        .input-label { display: block; color: var(--text-muted); font-size: 12px; margin-bottom: 5px; text-align: left; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+        .nav-tab {
+            margin-right: 20px;
+            padding-bottom: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+        }
+        .nav-tab.active { color: white; }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 100px 20px; /* Padding for bottom player */
+            scroll-behavior: smooth;
+        }
+        .section { display: none; }
+        .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Script View (New) */
+        .script-container {
+            padding: 10px 0;
+        }
+        .script-line {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            background: #2a2a2a;
+            color: #ccc;
+            font-size: 16px;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 4px solid transparent;
+        }
+        .script-line:hover { background: #333; }
+        .script-line.active {
+            background: #3a2a4b; /* Dark purple bg */
+            color: white;
+            border-left-color: var(--primary);
+            font-weight: 500;
+            transform: translateX(5px);
+        }
+
+        /* Playlist UI */
+        .playlist-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .playlist-input-group input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+        }
+        .btn-sm { padding: 8px 16px; background: #333; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+        .playlist-info {
+            margin-bottom: 20px;
+        }
+        .playlist-title { font-size: 22px; font-weight: bold; color: white; margin-bottom: 5px; }
+        .playlist-meta { font-size: 13px; color: var(--text-muted); }
+
+        .track-list { display: flex; flex-direction: column; gap: 12px; }
+        .track-item {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+        .track-item.playing {
+            border: 1px solid var(--primary);
+            background: rgba(155, 89, 182, 0.1);
+        }
+        .track-index {
+            width: 30px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+        .track-info { flex: 1; }
+        .track-name { font-size: 16px; font-weight: 600; color: white; margin-bottom: 4px; }
+        .track-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Library UI */
+        .category-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            margin-bottom: 10px;
+        }
+        .category-scroll::-webkit-scrollbar { display: none; }
+        .chip {
+            padding: 8px 16px;
+            background: #2a2a2a;
+            border-radius: 20px;
+            font-size: 13px;
+            white-space: nowrap;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .chip.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        .exercise-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .exercise-card:active { transform: scale(0.97); }
+        .exercise-img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            font-size: 20px;
+        }
+        .exercise-card-body { padding: 12px; }
+        .exercise-card-title { font-size: 14px; font-weight: 600; color: white; }
+
+        /* Bottom Player */
+        .bottom-player {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            background: rgba(30,30,30, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 15px 20px 25px 20px;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            box-shadow: 0 -5px 30px rgba(0,0,0,0.5);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 50;
+        }
+        .bottom-player.visible { transform: translateY(0); }
+
+        .player-bar-container {
+            position: relative;
+            width: 100%;
+            height: 40px; /* 터치 영역 확보 */
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        .player-track-bg {
+            width: 100%;
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            position: relative;
+        }
+        .player-track-progress {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        .player-time-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 10px;
+        }
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(155, 89, 182, 0.4);
+            cursor: pointer;
+        }
+        .play-icon { width: 0; height: 0; border-left: 18px solid white; border-top: 10px solid transparent; border-bottom: 10px solid transparent; margin-left: 5px; }
+        .pause-icon { width: 16px; height: 20px; border-left: 5px solid white; border-right: 5px solid white; display: none; }
+        
+        #play-btn-wrapper.playing .play-icon { display: none; }
+        #play-btn-wrapper.playing .pause-icon { display: block; }
+        
+        .speed-control {
+            font-size: 12px;
+            color: var(--primary);
+            background: rgba(155, 89, 182, 0.1);
+            padding: 5px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+        }
+
+        /* Status Toast */
+        .toast {
+            position: absolute;
+            top: 80px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 90;
+        }
+        .toast.show { opacity: 1; }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Auth Screen -->
+        <div id="auth-overlay">
+            <div class="auth-title">See-Sun<br>TTS Test Lab</div>
+            
+            <!-- Login Form -->
+            <div id="form-login" style="width: 100%;">
+                <p style="color: #888; margin-bottom: 30px; font-size: 14px;">개발자 테스트용 액세스 토큰을 입력하세요</p>
+                <div class="input-group">
+                    <label class="input-label">Access Token</label>
+                    <input type="text" id="token-input" class="input-field" placeholder="Access Token 입력">
+                </div>
+                <button class="btn-primary" onclick="handleLogin()">시작하기</button>
+                <div class="auth-switch" onclick="toggleAuthMode('signup')">계정이 없으신가요? 회원가입 테스트</div>
+            </div>
+
+            <!-- Signup Form (Mock) -->
+            <div id="form-signup" style="width: 100%; display: none;">
+                <p style="color: #888; margin-bottom: 20px; font-size: 14px;">회원가입 접근성 테스트</p>
+                
+                <div class="input-group">
+                    <label class="input-label">아이디 (ID)</label>
+                    <input type="text" id="signup-id" class="input-field" placeholder="아이디를 입력하세요" data-tts="아이디를 입력해주세요. 영문과 숫자를 사용할 수 있습니다.">
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">비밀번호 (Password)</label>
+                    <input type="password" id="signup-pw" class="input-field" placeholder="비밀번호" data-tts="비밀번호를 입력해주세요. 8자 이상이어야 합니다.">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">비밀번호 확인</label>
+                    <input type="password" id="signup-pw-confirm" class="input-field" placeholder="비밀번호 확인" data-tts="비밀번호를 한 번 더 입력해주세요.">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">이름 (Name)</label>
+                    <input type="text" id="signup-name" class="input-field" placeholder="이름" data-tts="이름을 입력해주세요.">
+                </div>
+
+                <button class="btn-primary" onclick="alert('테스트용 UI입니다. 실제 가입은 백엔드 로직이 필요합니다.');">가입하기</button>
+                <div class="auth-switch" onclick="toggleAuthMode('login')">이미 계정이 있으신가요? 로그인</div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <div class="app-logo">See<span>Sun</span></div>
+            <div style="font-size: 12px; color: #666;">DEV BUILD</div>
+        </header>
+
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="switchTab('playlist')">Playlists</div>
+            <div class="nav-tab" onclick="switchTab('library')">Library</div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="toast">알림 메시지</div>
+
+        <!-- Content -->
+        <div class="content-area">
+            
+            <!-- Playlist Section -->
+            <div id="section-playlist" class="section active">
+                <div class="playlist-input-group">
+                    <input type="text" id="playlistId" placeholder="Playlist UUID를 입력하세요...">
+                    <button class="btn-sm" onclick="loadPlaylist()">LOAD</button>
+                </div>
+                
+                <div id="playlist-info" class="playlist-info" style="display:none;">
+                    <h2 id="pl-title" class="playlist-title">제목 없음</h2>
+                    <p id="pl-count" class="playlist-meta">0 items</p>
+                </div>
+
+                <div id="track-list" class="track-list">
+                    <!-- Items inserted via JS -->
+                    <div style="text-align: center; color: #555; padding: 40px;">
+                        플레이리스트를 로드해주세요.
+                    </div>
+                </div>
+                
+                <!-- Floating Action Button for Playlist -->
+                <div style="height: 20px;"></div>
+                <button class="btn-primary" style="margin-top: 10px; width: auto; padding: 10px 30px; align-self: center;" onclick="playPlaylistTTS()">
+                    ▶ 전체 재생 (Start Playlist)
+                </button>
+            </div>
+
+            <!-- Library Section -->
+            <div id="section-library" class="section">
+                <div id="category-scroll" class="category-scroll">
+                    <!-- Categories inserted via JS -->
+                    <span class="chip">로딩중...</span>
+                </div>
+                
+                <div id="exercise-grid" class="exercise-grid">
+                    <!-- Exercises inserted via JS -->
+                </div>
+                
+                <div id="lib-empty-state" style="text-align: center; color: #555; padding: 40px; display: none;">
+                    카테고리를 선택하여 운동을 탐색하세요.
+                </div>
+            </div>
+
+            <!-- Single Player & Script Section (New) -->
+            <div id="section-player-view" class="section">
+                <!-- Back Button -->
+                <button class="btn-sm" onclick="switchTab('library')" style="margin-bottom:15px; background:none; border:1px solid #444; color:#aaa;">
+                    ← Back to Library
+                </button>
+                
+                <div class="playlist-info">
+                    <h2 id="sp-title" class="playlist-title">운동 제목</h2>
+                    <p class="playlist-meta">터치하여 원하는 문장부터 들어보세요.</p>
+                </div>
+
+                <div id="script-box" class="script-container">
+                    <!-- Script lines will go here -->
+                </div>
+                <!-- Space for bottom player -->
+                <div style="height: 120px;"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Player -->
+        <div id="bottom-player" class="bottom-player">
+            <!-- Progress Bar -->
+            <div class="player-bar-container" id="progress-container">
+                <div class="player-track-bg">
+                    <div id="progress-fill" class="player-track-progress"></div>
+                </div>
+            </div>
+            <div class="player-time-label">
+                <span id="current-time">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+
+            <div class="now-playing">
+                <div id="np-title" class="np-title">Ready</div>
+                <div id="np-desc" class="np-artist">재생 대기 중</div>
+            </div>
+            
+            <div class="controls-row">
+                <!-- Speed Control -->
+                <div class="speed-control" id="speed-btn" onclick="toggleSpeed()" style="display:block;">1.0x</div>
+                
+                <button class="control-btn" onclick="playPrev()">⏮</button>
+                <div id="play-btn-wrapper" class="play-btn" onclick="togglePlay()">
+                    <div class="play-icon"></div>
+                    <div class="pause-icon"></div>
+                </div>
+                <button class="control-btn" onclick="playNext()">⏭</button>
+                <button class="control-btn" style="font-size:16px;" onclick="stopAudio()">⏹</button>
+            </div>
+        </div>
+        
+        <!-- Audio Element (Hidden) -->
+        <audio id="audio-player" style="display:none;"></audio>
+    </div>
+
+    <script>
+        /* --- State & Config --- */
+        let authHeader = '';
+        let playlistItems = [];
+        let currentMode = 'playlist'; 
+        let currentIndex = 0;
+        let isPlaying = false;
+        let synth = window.speechSynthesis; // 브라우저 TTS 엔진 (안내용)
+        
+        // Audio Player State
+        const audio = document.getElementById('audio-player');
+        let currentQueue = []; 
+        let playbackRate = 1.0;
+
+        /* --- Init --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('seesun_token');
+            if (savedToken) {
+                document.getElementById('token-input').value = savedToken;
+            }
+
+            // Audio Event Listeners
+            audio.addEventListener('timeupdate', updateProgress);
+            audio.addEventListener('loadedmetadata', () => {
+                document.getElementById('duration').innerText = formatTime(audio.duration);
+            });
+            audio.addEventListener('ended', playNext);
+            
+            // Progress Bar Click
+            document.getElementById('progress-container').addEventListener('click', seekAudio);
+
+            // 접근성: TTS는 이 페이지 자체의 내비게이션 용도로 별도 SpeechSynthesis 사용 가능하지만
+            // 여기서는 Google TTS 오디오 플레이어 기능에 집중.
+            
+            // 접근성 테스트: 입력 필드 포커스 시 TTS 안내
+            setupFocusTTS('token-input', "액세스 토큰을 입력해보거라.");
+            
+            // 회원가입 필드 일괄 적용
+            document.querySelectorAll('#form-signup input').forEach(input => {
+                const text = input.getAttribute('data-tts');
+                if(text) setupFocusTTS(input.id, text);
+            });
+        });
+
+        function toggleAuthMode(mode) {
+            if (mode === 'signup') {
+                document.getElementById('form-login').style.display = 'none';
+                document.getElementById('form-signup').style.display = 'block';
+                // 화면 전환 시 안내
+                speakSimple("회원가입 화면입니다.");
+            } else {
+                document.getElementById('form-login').style.display = 'block';
+                document.getElementById('form-signup').style.display = 'none';
+                speakSimple("로그인 화면입니다.");
+            }
+        }
+
+        function setupFocusTTS(elementId, text) {
+            const el = document.getElementById(elementId);
+            if(!el) return;
+            el.addEventListener('focus', () => speakSimple(text));
+        }
+
+        function speakSimple(text) {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            synth.speak(utterance);
+        }
+
+        function handleLogin() {
+            const input = document.getElementById('token-input').value.trim();
+            if(!input) return alert("토큰을 입력해주세요.");
+            
+            authHeader = `Bearer ${input}`;
+            localStorage.setItem('seesun_token', input);
+            
+            document.getElementById('auth-overlay').style.display = 'none';
+            loadCategories(); // Preload categories
+            showToast("인증되었습니다.");
+        }
+
+        /* --- UI Logic --- */
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            
+            if (tab === 'playlist') {
+                document.querySelector('.nav-tab:nth-child(1)').classList.add('active');
+                document.getElementById('section-playlist').classList.add('active');
+            } else {
+                document.querySelector('.nav-tab:nth-child(2)').classList.add('active');
+                document.getElementById('section-library').classList.add('active');
+            }
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.innerText = msg;
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        function showPlayer(visible) {
+            const player = document.getElementById('bottom-player');
+            if (visible) player.classList.add('visible');
+            else player.classList.remove('visible');
+        }
+
+        function updatePlayerUI(isPlayingState) {
+            const wrapper = document.getElementById('play-btn-wrapper');
+            if (isPlayingState) wrapper.classList.add('playing');
+            else wrapper.classList.remove('playing');
+        }
+
+        /* --- Data Fetching --- */
+        async function loadPlaylist() {
+            const id = document.getElementById('playlistId').value.trim();
+            if (!id) return showToast("Playlist ID를 입력하세요.");
+
+            try {
+                const res = await fetch(`/api/v1/exercises/playlist/${id}/`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                if (!res.ok) throw new Error('로드 실패');
+                
+                const data = await res.json();
+                playlistItems = data.items;
+                
+                document.getElementById('playlist-info').style.display = 'block';
+                document.getElementById('pl-title').innerText = data.title;
+                document.getElementById('pl-count').innerText = `${playlistItems.length} items`;
+                
+                renderTrackList();
+                showToast("플레이리스트 로드 완료");
+            } catch (e) {
+                showToast("불러오기 실패: " + e.message);
+            }
+        }
+
+        async function loadCategories() {
+            try {
+                const res = await fetch('/api/v1/exercises/category/', {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await res.json();
+                
+                const container = document.getElementById('category-scroll');
+                container.innerHTML = '';
+                
+                data.forEach((cat, idx) => {
+                    const span = document.createElement('span');
+                    span.className = 'chip';
+                    if (idx === 0) span.classList.add('active'); // Default select
+                    span.innerText = cat.display_name;
+                    span.onclick = () => {
+                        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+                        span.classList.add('active');
+                        loadExercisesByCategory(cat.category_id);
+                    };
+                    container.appendChild(span);
+                    
+                    if (idx === 0) loadExercisesByCategory(cat.category_id); // Load first category
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadExercisesByCategory(catId) {
+            const grid = document.getElementById('exercise-grid');
+            grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center;">로딩 중...</div>';
+            
+            try {
+                const res = await fetch(`/api/v1/exercises/category/${catId}/`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await res.json();
+                const exercises = data.exercises || [];
+
+                grid.innerHTML = '';
+                if(exercises.length === 0) {
+                    grid.innerHTML = '<div style="color:#666; grid-column:1/-1; text-align:center;">운동이 없습니다.</div>';
+                    return;
+                }
+
+                exercises.forEach(ex => {
+                    const card = document.createElement('div');
+                    card.className = 'exercise-card';
+                    card.innerHTML = `
+                        <div class="exercise-img">🏋️</div>
+                        <div class="exercise-card-body">
+                            <div class="exercise-card-title">${ex.exercise_name}</div>
+                        </div>
+                    `;
+                    card.onclick = () => playSingleExercise(ex.exercise_id, ex.exercise_name);
+                    grid.appendChild(card);
+                });
+
+            } catch (e) {
+                grid.innerHTML = '<div style="color:red; grid-column:1/-1; text-align:center;">에러 발생</div>';
+            }
+        }
+
+        async function playSingleExercise(exId, exName) {
+            showToast("상세 정보 로딩 중...");
+            try {
+                const res = await fetch(`/api/v1/exercises/${exId}/`, {
+                    headers: { 'Authorization': authHeader }
+                });
+                const data = await res.json();
+                
+                // Construct full text and split into sentences
+                const fields = [
+                    data.exercise_description,
+                    data.first_description ? "준비 자세: " + data.first_description : null,
+                    data.main_form ? "주 운동: " + data.main_form : null,
+                    data.form_description,
+                    data.stay_form ? "유지 자세: " + data.stay_form : null,
+                    data.fixed_form ? "고정 자세: " + data.fixed_form : null,
+                    data.exercise_guide ? "가이드: " + data.exercise_guide : null
+                ];
+                
+                // Split by logical delimiters (., \n) but keep them roughly intact
+                // Simple split strategy: Split by period or newline, verify length
+                let sentences = [];
+                fields.forEach(f => {
+                    if(!f) return;
+                    // Split by period followed by space or newline
+                    const parts = f.split(/(?<=[.?!])\s+|\n+/);
+                    parts.forEach(p => {
+                        const s = p.trim();
+                        if(s.length > 0) sentences.push(s);
+                    });
+                });
+
+                if (sentences.length === 0) sentences.push("제공된 설명이 없습니다.");
+
+                // Queue Setup
+                currentQueue = sentences.map((s, idx) => ({
+                    title: exName,
+                    desc: `문장 ${idx + 1} / ${sentences.length}`,
+                    text: s
+                }));
+                
+                currentIndex = 0;
+                currentMode = 'exercise';
+
+                // Switch UI
+                document.getElementById('sp-title').innerText = exName;
+                renderScript(currentQueue);
+                
+                // Manually handle tab switching logic
+                document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+                document.getElementById('section-player-view').classList.add('active');
+                // Deselect tabs
+                document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+
+                startPlayback();
+
+            } catch (e) {
+                console.error(e);
+                showToast("불러오기 실패: " + e.message);
+            }
+        }
+        
+        function renderScript(queueItems) {
+            const box = document.getElementById('script-box');
+            box.innerHTML = '';
+            
+            queueItems.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'script-line';
+                // If item has globalIndex, use it. usage in playlist.
+                // If item is from PlaySingleExercise, we might need to store index?
+                // PlaySingleExercise uses simple array map without globalIndex property initially.
+                // Let's normalize.
+                
+                const clickTarget = (item.globalIndex !== undefined) ? item.globalIndex : currentQueue.indexOf(item);
+                
+                div.id = `script-line-${clickTarget}`;
+                div.innerText = item.text;
+                div.onclick = () => {
+                   currentIndex = clickTarget;
+                   startPlayback();
+                };
+                box.appendChild(div);
+            });
+        }
+        
+        function highlightScript(idx) {
+            document.querySelectorAll('.script-line').forEach(el => el.classList.remove('active'));
+            const el = document.getElementById(`script-line-${idx}`);
+            if(el) {
+                el.classList.add('active');
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        /* --- Rendering --- */
+        function renderTrackList() {
+            const list = document.getElementById('track-list');
+            list.innerHTML = '';
+            playlistItems.forEach((item, i) => {
+                const div = document.createElement('div');
+                div.className = 'track-item';
+                div.id = `track-${i}`;
+                div.innerHTML = `
+                    <div class="track-index">${i+1}</div>
+                    <div class="track-info">
+                        <div class="track-name">${item.exercise_name}</div>
+                        <div class="track-desc">세트: ${item.set_count}회 | ${item.exercise_guide_text ? '가이드 포함' : '가이드 없음'}</div>
+                    </div>
+                `;
+                div.onclick = () => {
+                    // Play specific index from playlist
+                    setupPlaylistQueue();
+                    currentIndex = i;
+                    startPlayback();
+                };
+                list.appendChild(div);
+            });
+        }
+
+        /* --- TTS Engine (Google Cloud + Audio Player) --- */
+        async function fetchAudio(text) {
+            try {
+                const res = await fetch('/api/v1/exercises/google-tts/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': authHeader,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                if(!res.ok) throw new Error("TTS 서버 오류");
+                
+                const blob = await res.blob();
+                return URL.createObjectURL(blob);
+            } catch(e) {
+                console.error(e);
+                showToast("오디오 변환 실패");
+                return null;
+            }
+        }
+
+        async function startPlayback() {
+            if (currentIndex >= currentQueue.length) {
+                showToast("재생 목록 끝");
+                isPlaying = false;
+                updatePlayerUI(false);
+                return;
+            }
+
+            const item = currentQueue[currentIndex];
+            
+            // UI Update
+            showPlayer(true);
+            document.getElementById('np-title').innerText = item.title;
+            document.getElementById('np-desc').innerText = item.desc;
+            
+            // Check if we need to update Script View (Playlist Mode)
+            // Check if we need to update Script View (Playlist Mode)
+            if (currentMode === 'playlist') {
+                // Force render if first item or index changed
+                if (item.playlistItemIndex !== undefined && (item.playlistItemIndex !== lastRenderedItemIndex || lastRenderedItemIndex === -1)) {
+                    lastRenderedItemIndex = item.playlistItemIndex;
+                    
+                    // Filter sentences for this specific exercise
+                    const exerciseSentences = currentQueue.filter(q => q.playlistItemIndex === item.playlistItemIndex);
+                    
+                    document.getElementById('sp-title').innerText = item.title;
+                    if(exerciseSentences.length > 0) {
+                        renderScript(exerciseSentences); 
+                    } else {
+                        document.getElementById('script-box').innerHTML = '<div style="padding:20px; color:#666;">스크립트가 없습니다.</div>';
+                    }
+                }
+                highlightScript(currentIndex);
+            } 
+            else if (currentMode === 'exercise') {
+                highlightScript(currentIndex);
+            }
+            
+            // Track Item Highlight (if view is visible, though we switched to script view)
+            // We can keep this for background logic or small player updates
+            document.querySelectorAll('.track-item').forEach(el => el.classList.remove('playing'));
+            if (currentMode === 'playlist' && item.playlistItemIndex !== undefined) {
+                 const el = document.getElementById(`track-${item.playlistItemIndex}`);
+                 if (el) el.classList.add('playing');
+            }
+            isPlaying = true; // Set playing state early for UI
+            updatePlayerUI(true);
+            showToast("TTS 오디오 생성 중...");
+            
+            const audioUrl = await fetchAudio(item.text);
+            
+            if (audioUrl) {
+                audio.src = audioUrl;
+                audio.playbackRate = playbackRate;
+                audio.play();
+                isPlaying = true;
+                updatePlayerUI(true);
+            } else {
+                // If fetch fails, stop or try next?
+                isPlaying = false;
+                updatePlayerUI(false);
+            }
+        }
+
+        function togglePlay() {
+            if (!audio.src) {
+                 if(currentQueue.length > 0) startPlayback();
+                 return;
+            }
+            
+            if (audio.paused) {
+                audio.play();
+                isPlaying = true;
+            } else {
+                audio.pause();
+                isPlaying = false;
+            }
+            updatePlayerUI(isPlaying);
+        }
+
+        function stopAudio() {
+            audio.pause();
+            audio.currentTime = 0;
+            isPlaying = false;
+            updatePlayerUI(false);
+            showPlayer(false);
+        }
+
+        function playNext() {
+            if(currentIndex < currentQueue.length - 1) {
+                currentIndex++;
+                startPlayback();
+            } else {
+                showToast("마지막 항목입니다.");
+                stopAudio();
+            }
+        }
+
+        function playPrev() {
+            if(currentIndex > 0) {
+                currentIndex--;
+                startPlayback();
+            } else {
+                audio.currentTime = 0; // Replay first
+            }
+        }
+
+        function toggleSpeed() {
+            const speeds = [1.0, 1.25, 1.5, 2.0, 0.8];
+            let idx = speeds.indexOf(playbackRate);
+            idx = (idx + 1) % speeds.length;
+            playbackRate = speeds[idx];
+            
+            // Apply speed
+            audio.playbackRate = playbackRate;
+            document.getElementById('speed-btn').innerText = `${playbackRate}x`;
+            showToast(`배속: ${playbackRate}x`);
+            
+            // Audible Feedback & Resume
+            speakAndResume(`${playbackRate} 배속`);
+        }
+        
+        // Helper for Feedback
+        function speakAndResume(text) {
+            // 1. Pause Content
+            const wasPlaying = !audio.paused;
+            if (wasPlaying) {
+                audio.pause();
+            }
+            
+            // 2. Speak Feedback using Browser TTS (Fast & Client-side)
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ko-KR';
+            utterance.rate = 1.2; // Slightly faster for feedback
+            
+            utterance.onend = () => {
+                // 3. Resume Content
+                if (wasPlaying) {
+                    audio.play().catch(e => console.log("Resume failed:", e));
+                }
+            };
+            
+            synth.speak(utterance);
+        }
+
+        function updateProgress() {
+            if(audio.duration) {
+                const percent = (audio.currentTime / audio.duration) * 100;
+                document.getElementById('progress-fill').style.width = `${percent}%`;
+                document.getElementById('current-time').innerText = formatTime(audio.currentTime);
+            }
+        }
+
+        function seekAudio(e) {
+            if(!audio.duration) return;
+            const container = document.getElementById('progress-container');
+            const rect = container.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const percent = clickX / rect.width;
+            
+            audio.currentTime = percent * audio.duration;
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = Math.floor(sec % 60);
+            return `${m}:${s < 10 ? '0'+s : s}`;
+        }
+
+        /* --- Helper: Text Splitter --- */
+        function splitTextIntoSentences(text) {
+            if (!text) return ["가이드가 없습니다."];
+            const parts = text.split(/(?<=[.?!])\s+|\n+/);
+            const sentences = [];
+            parts.forEach(p => {
+                const s = p.trim();
+                if(s.length > 0) sentences.push(s);
+            });
+            if(sentences.length === 0) return ["내용 없음"];
+            return sentences;
+        }
+
+        function setupPlaylistQueue() {
+            currentMode = 'playlist';
+            currentQueue = [];
+            
+            playlistItems.forEach((item, pIdx) => {
+                // Use guide text or name
+                const rawText = item.exercise_guide_text || `${item.exercise_name}.`;
+                const sentences = splitTextIntoSentences(rawText);
+                
+                sentences.forEach((s, sIdx) => {
+                    currentQueue.push({
+                        title: item.exercise_name,
+                        desc: `${item.set_count} Sets | ${sIdx+1}/${sentences.length}`,
+                        text: s,
+                        playlistItemIndex: pIdx,
+                        globalIndex: 0 // Will be set after
+                    });
+                });
+            });
+            
+            // Assign global indices
+            currentQueue.forEach((q, i) => q.globalIndex = i);
+        }
+        
+        // Track current view context
+        let lastRenderedItemIndex = -1;
+
+        function playPlaylistTTS() {
+            if (playlistItems.length === 0) return showToast("데이터가 없습니다.");
+            setupPlaylistQueue();
+            currentIndex = 0;
+            lastRenderedItemIndex = -1; // Reset
+            
+            // Auto-switch to player view for script
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById('section-player-view').classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            
+            startPlayback();
+        }
+
+    </script>
+</body>
+</html>
