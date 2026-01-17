@@ -26,7 +26,7 @@ export default function Home() {
           <Card title="식단" icon="fork_spoon" />
           <Card title="운동" icon="exercise" href='/exercise' />
           <Card title="약" icon="pill" />
-          <Card title={<span>마이<br />페이지</span>} icon="person" />
+          <Card title={<span>마이<br />페이지</span>} icon="person" href='/mypage' />
         </div>
       </div>
     </div>
