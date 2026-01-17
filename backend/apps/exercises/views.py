@@ -18,6 +18,7 @@ from .serializers import (
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.generic import TemplateView  # TemplateView 추가
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from .models import Exercise, Playlist, ExerciseSession, ExerciseCategory, PlaylistItem
 
@@ -359,5 +360,40 @@ class PlaylistItemDetailView(APIView):
             serializer.save()
             return Response(PlaylistSerializer(item.playlist).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -----------------------------------------------------------------------
+
+class TTSTestView(TemplateView):
+    """
+    TTS 기능 테스트를 위한 임시 페이지 뷰
+    """
+    template_name = "exercises/tts_test.html"
+
+# -----------------------------------------------------------------------
+
+class GoogleTTSView(APIView):
+    """
+    Google Cloud TTS를 이용하여 텍스트를 오디오로 변환하여 반환하는 API
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        text = request.data.get('text')
+        if not text:
+            return Response({"error": "text is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from .google_tts import GoogleTTSClient
+            tts_client = GoogleTTSClient()
+            audio_content = tts_client.synthesize_text(text)
+            
+            # 오디오 바이너리 스트리밍 반환
+            from django.http import HttpResponse
+            response = HttpResponse(audio_content, content_type="audio/mpeg")
+            response['Content-Disposition'] = 'inline; filename="tts_output.mp3"'
+            return response
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # -----------------------------------------------------------------------

@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView,
     PlaylistCreateView, PlaylistDetailView, SessionViewSet, PlaylistListView,
-    PlaylistItemAddView, PlaylistItemDetailView
+    PlaylistItemAddView, PlaylistItemDetailView, TTSTestView, GoogleTTSView
 )
 
 app_name = 'exercises'
@@ -14,6 +14,8 @@ router.register(r'sessions', SessionViewSet, basename='session')
 # router.register(r'', ExerciseViewSet, basename='exercise')
 
 urlpatterns = [
+    path('google-tts/', GoogleTTSView.as_view(), name='google_tts'),
+    path('tts-test/', TTSTestView.as_view(), name='tts_test'),
     path('category/<str:category_id>/', ExerciseListByCategoryView.as_view(), name='exercise_list_by_category'),
     path('category/', ExerciseCategoryListView.as_view(), name='category_list'),
     path('playlist/<uuid:playlist_id>/items/<uuid:item_id>/', PlaylistItemDetailView.as_view(), name='playlist_item_detail'),
