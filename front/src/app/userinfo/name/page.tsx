@@ -12,8 +12,12 @@ import {
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
+import { useRouter } from "next/navigation";
+
+
 
 export default function Name() {
+  const router = useRouter();
   const recordingStatus = useAtomValue(recordingStatusAtom);
   const uploadStatus = useAtomValue(uploadStatusAtom);
   const sttText = useAtomValue(sttTextAtom);
@@ -36,6 +40,18 @@ export default function Name() {
 
   // ✅ 다음 버튼 활성화 조건: STT 성공 + 이름 존재
   const canGoNext = uploadStatus === "success" && name.trim().length > 0;
+
+  const handleNext = () => {
+
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
+
+    // ✅ 세션 스토리지 저장
+    sessionStorage.setItem("signup_name", trimmedName);
+
+    // ✅ 다음 페이지 이동
+    router.push("/userinfo/height"); // ← 다음 페이지 경로로 수정
+  };
 
   return (
     <div>
@@ -75,7 +91,7 @@ export default function Name() {
       )}
       
       <div className="mt-6">
-        <Button disabled={!name} onClick={() => console.log("다음", name)}>
+        <Button disabled={!name} onClick={handleNext}>
           다음
         </Button>
       </div>
