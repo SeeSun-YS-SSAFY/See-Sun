@@ -1,13 +1,63 @@
-'use client';
+"use client";
 
 import Icon from "@/components/common/Icon";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  authAtom,
+  setAuthTokenAtom,
+  refreshAuthTokenAtom,
+} from "@/atoms/auth/authAtoms";
 
 export default function Home() {
   const router = useRouter();
+  const auth = useAtomValue(authAtom);
+  const setAuthToken = useSetAtom(setAuthTokenAtom);
+  const refreshAuth = useSetAtom(refreshAuthTokenAtom);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    const guard = async () => {
+      try {
+        // 1) 로컬 access 토큰 우선 확인
+        const localAccess =
+          typeof window !== "undefined"
+            ? localStorage.getItem("accessToken")
+            : null;
+        if (localAccess) {
+          setAuthToken(localAccess);
+          setChecking(false);
+          return;
+        }
+
+        // 2) 없으면 jotai 액션으로 refresh 시도
+        const ok = await refreshAuth();
+        if (ok) {
+          setChecking(false);
+          return;
+        }
+
+        // 3) 실패 시 로그인으로 이동
+        router.replace("/login");
+      } catch {
+        router.replace("/login");
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    // 이미 인증 상태면 바로 통과
+    if (auth.isAuthed) {
+      setChecking(false);
+    } else {
+      void guard();
+    }
+  }, [auth.isAuthed, router, setAuthToken, refreshAuth]);
+
+  if (checking) return null;
 
   return (
     <div className="bg-blue-500 h-full flex flex-col items-center justify-center py-15">

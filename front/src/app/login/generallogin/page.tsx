@@ -4,59 +4,59 @@ import { useState } from "react";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
-import Icon from "@/components/common/Icon";
 import Image from "next/image";
+import { useSetAtom } from "jotai";
+import { setAuthTokenAtom } from "@/atoms/auth/authAtoms";
 
 export default function GeneralLogin() {
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const setAuthToken = useSetAtom(setAuthTokenAtom);
 
   const handleLogin = async () => {
-    // 1️⃣ 검증
     if (!/^01[0-9]{8,9}$/.test(phone)) {
-      alert("전화번호를 정확히 입력해주세요");
+      alert("Please enter a valid phone number");
       return;
     }
 
     if (!/^\d{4}$/.test(code)) {
-      alert("인증번호 4자리를 입력해주세요");
+      alert("Please enter 4-digit PIN");
       return;
     }
 
     try {
       setLoading(true);
 
-      // 2️⃣ 백엔드 인증 요청
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            phone,
-            code,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone_number: phone,
+          pin_number: code,
+        }),
+      });
 
-      console.log("BASE_URL =", process.env.NEXT_PUBLIC_API_BASE_URL);
-      console.log("REQ_URL =", `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`);
-
-
-      if (!res.ok) {
-        throw new Error("인증 실패");
-      }
+      if (!res.ok) throw new Error("AUTH_FAILED");
 
       const data = await res.json();
 
-      alert("로그인 성공");
-      
+      // 다양한 키(needs: BE, mocks) 대응
+      const access = data.access_token ?? data.access ?? data.accessToken ?? null;
+      const refresh = data.refresh_token ?? data.refresh ?? data.refreshToken ?? null;
+
+      if (access) {
+        localStorage.setItem("accessToken", access);
+        setAuthToken(access);
+      }
+      if (refresh) {
+        localStorage.setItem("refreshToken", refresh);
+      }
+
+      router.replace("/");
     } catch (e) {
-      alert("로그인에 실패했습니다");
+      alert("Login failed");
     } finally {
       setLoading(false);
     }
@@ -64,53 +64,37 @@ export default function GeneralLogin() {
 
   return (
     <div>
-       <div className="relative flex items-center h-16">
-          {/* 왼쪽 뒤로가기 */}
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="absolute left-0 flex items-center px-4"
-          >
-            <Image 
-            src="/arrow_back.png"
-            width={70}
-            height={70}
-            alt="Picture of the author"
-            />
+      <div className="relative flex items-center h-16">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          className="absolute left-0 flex items-center px-4"
+        >
+          <Image src="/arrow_back.png" width={70} height={70} alt="back" />
+        </button>
 
-          </button>
-
-          {/* 중앙 타이틀 */}
-          <div className="mx-auto text-title-large text-white">
-            로그인
-          </div>
-        </div>
+        <div className="mx-auto text-title-large text-white">Login</div>
+      </div>
 
       <div className="mt-20 flex flex-col gap-10">
-        {/* 전화번호 */}
         <Input
-          placeholder="전화번호"
+          placeholder="Phone number"
           inputMode="numeric"
           maxLength={11}
           value={phone}
-          onChange={(e) =>
-            setPhone(e.target.value.replace(/[^0-9]/g, ""))
-          }
+          onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ""))}
         />
 
-        {/* 인증번호 */}
         <Input
-          placeholder="PIN번호 4자리"
+          placeholder="4-digit PIN"
           inputMode="numeric"
           maxLength={4}
           value={code}
-          onChange={(e) =>
-            setCode(e.target.value.replace(/[^0-9]/g, ""))
-          }
+          onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ""))}
         />
 
         <Button onClick={handleLogin} disabled={loading}>
-          {loading ? "로그인 중..." : "로그인"}
+          {loading ? "Signing in..." : "Sign in"}
         </Button>
       </div>
     </div>
