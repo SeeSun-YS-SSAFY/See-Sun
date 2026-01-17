@@ -9,6 +9,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 type Exercise = {
   exercise_id: number;
@@ -22,6 +23,12 @@ type ExerciseSwiperProps = {
 
 export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
+
+  const router = useRouter();
+  const { ex_type: exType } = useParams<{ ex_type: string }>();
+  const searchParams = useSearchParams();
+
+  const mode = searchParams.get("mode");
 
   return (
     <div className="h-full w-full flex items-center justify-center">
@@ -49,6 +56,9 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
               <SwiperSlide
                 key={exercise.exercise_id}
                 className="w-full rounded-[20px] my-auto transition-all duration-300"
+                onClick={() =>
+                  router.push(`${exType}/${exercise.exercise_id}?mode=${mode}`)
+                }
               >
                 {({ isActive }) => (
                   <div className="flex flex-col justify-center h-full">
@@ -57,7 +67,7 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
                         isActive
                           ? "bg-yellow-300 shadow-100 outline-2 -outline-offset-2 outline-black"
                           : "bg-yellow-700 opacity-80",
-                        "self-stretch w-full rounded-[20px] inline-flex flex-col justify-center items-center gap-2.5 transition-all duration-300 h-[212px]"
+                        "self-stretch w-full rounded-[20px] inline-flex flex-col justify-center items-center gap-2.5 transition-all duration-300 h-[212px]",
                       )}
                     >
                       <div
@@ -69,7 +79,7 @@ export default function ExerciseSwiper({ exercises }: ExerciseSwiperProps) {
                           fill
                           className={cn(
                             "object-contain hidden",
-                            isActive && "block"
+                            isActive && "block",
                           )}
                         />
                       </div>
