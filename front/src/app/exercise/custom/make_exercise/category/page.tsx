@@ -19,7 +19,7 @@ export default function SingleExercise() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await apiClient.get<Category[]>("/exercises/category");
+        const data = await apiClient.get<Category[]>("/exercises/category/");
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);

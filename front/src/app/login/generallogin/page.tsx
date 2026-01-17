@@ -31,7 +31,7 @@ export default function GeneralLogin() {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

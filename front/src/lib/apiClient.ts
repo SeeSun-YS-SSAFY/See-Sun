@@ -1,168 +1,78 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// apiClient.ts
+import { getDefaultStore } from "jotai";
+import { authAtom, logoutAtom } from "@/atoms/auth/authAtoms";
 
-if (!BASE_URL) {
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+if (!API_BASE) {
   throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 }
 
-// ✅ 토큰 가져오기
-function getAccessToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("accessToken");
-}
+// jotai store 직접 접근 (컴포넌트 밖)
+const store = getDefaultStore();
 
-function getRefreshToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("refreshToken");
-}
-
-function setAccessToken(token: string | null) {
-  if (typeof window === "undefined") return;
-  if (token) localStorage.setItem("accessToken", token);
-  else localStorage.removeItem("accessToken");
-}
-
-function setRefreshToken(token: string | null) {
-  if (typeof window === "undefined") return;
-  if (token) localStorage.setItem("refreshToken", token);
-  else localStorage.removeItem("refreshToken");
-}
-
-// ✅ refresh 요청 (엔드포인트는 너 백엔드에 맞게 수정!)
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
-
-  // 예: /users/auth/refresh/ (너 백엔드에 맞춰 바꿔)
-  const res = await fetch(`${BASE_URL}/users/token/refresh/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-
-  if (!res.ok) return null;
-
-  const data = (await res.json()) as {
-    access_token?: string;
-    refresh_token?: string;
-  };
-
-  if (!data.access_token) return null;
-
-  // access 갱신
-  setAccessToken(data.access_token);
-
-  return data.access_token;
-}
-
-// ✅ 공통 fetch: Authorization 붙이고, 401이면 refresh 후 1회 재시도
+/**
+ * 공통 fetch 함수 (Bearer 토큰 방식)
+ */
 async function fetchWithAuth(
-  url: string,
-  init: RequestInit,
-  retry = true
-): Promise<Response> {
-  const accessToken = getAccessToken();
+  input: RequestInfo,
+  init: RequestInit = {}
+) {
+  const { accessToken } = store.get(authAtom);
 
   const headers = new Headers(init.headers);
-  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
 
-  const res = await fetch(url, { ...init, headers });
-
-  // 401이면 access 만료 가능성 → refresh 시도
-  if (res.status === 401 && retry) {
-    const newAccess = await refreshAccessToken();
-    if (!newAccess) {
-      // refresh 실패 → 로그아웃 처리
-      setAccessToken(null);
-      setRefreshToken(null);
-      throw new Error("AUTH_EXPIRED");
-    }
-
-    // 새 토큰으로 1회 재시도
-    const retryHeaders = new Headers(init.headers);
-    retryHeaders.set("Authorization", `Bearer ${newAccess}`);
-    return fetch(url, { ...init, headers: retryHeaders });
+  // ✅ Bearer 토큰만 사용
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
   }
 
-  return res;
+  headers.set("Content-Type", "application/json");
+
+  const res = await fetch(`${API_BASE}${input}`, {
+    ...init,
+    headers,
+    // ❌ credentials: "include" 절대 사용 안 함
+  });
+
+  // 🔥 인증 만료 처리
+  if (res.status === 401) {
+    store.set(logoutAtom);
+    throw new Error("Unauthorized");
+  }
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+
+  return res.json();
 }
 
+/**
+ * API 메서드 래퍼
+ */
+// apiClient.ts
 export const apiClient = {
-  get: async <T>(path: string): Promise<T> => {
-    const res = await fetchWithAuth(`${BASE_URL}${path}`, {
+  get: async <T>(url: string): Promise<T> =>
+    fetchWithAuth(url, {
       method: "GET",
-      credentials: "include",
-    });
+    }),
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${text ? ` - ${text}` : ""}`);
-    }
-
-    return res.json();
-  },
-
-  post: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetchWithAuth(`${BASE_URL}${path}`, {
+  post: async <T>(url: string, body?: any): Promise<T> =>
+    fetchWithAuth(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      credentials: "include",
-    });
+    }),
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${text ? ` - ${text}` : ""}`);
-    }
-
-    return res.json();
-  },
-
-  put: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetchWithAuth(`${BASE_URL}${path}`, {
+  put: async <T>(url: string, body?: any): Promise<T> =>
+    fetchWithAuth(url, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      credentials: "include",
-    });
+    }),
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${text ? ` - ${text}` : ""}`);
-    }
-
-    return res.json();
-  },
-
-  patch: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetchWithAuth(`${BASE_URL}${path}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${text ? ` - ${text}` : ""}`);
-    }
-
-    return res.json();
-  },
-
-  delete: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetchWithAuth(`${BASE_URL}${path}`, {
+  delete: async <T>(url: string): Promise<T> =>
+    fetchWithAuth(url, {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const text = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${text ? ` - ${text}` : ""}`);
-    }
-
-    return res.json();
-  },
+    }),
 };
