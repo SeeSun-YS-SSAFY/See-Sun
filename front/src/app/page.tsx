@@ -1,14 +1,40 @@
-'use client';
+"use client";
 
 import Icon from "@/components/common/Icon";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
 
 export default function Home() {
   const router = useRouter();
+  
 
+  const hydrate = useSetAtom(hydrateAuthFromStorageAtom);
+  const { isAuthed, accessToken  } = useAtomValue(authAtom);
+
+  // ✅ hydration 끝났는지(깜빡임 방지)
+  const [ready, setReady] = useState(false);
+
+  // 1) 앱 진입 시 localStorage -> jotai 반영
+  useEffect(() => {
+    hydrate();
+    setReady(true);
+  }, [hydrate]);
+
+  // 2) auth 상태에 따라 라우팅
+  useEffect(() => {
+    if (!ready) return;
+    if (!isAuthed) router.replace("/login");
+  }, [ready, isAuthed, router]);
+
+  // hydration 전/리다이렉트 직전 깜빡임 방지
+  if (!ready) return null;
+  if (!isAuthed) return null;
+
+  // ✅ 여기부터는 "로그인 된 사용자만" 홈 UI 보임
   return (
     <div className="bg-blue-500 h-full flex flex-col items-center justify-center py-15">
       <div className="flex items-center gap-1">
@@ -21,12 +47,20 @@ export default function Home() {
         <h1 className="text-title-medium text-[#FFDB65]">See:Sun</h1>
       </div>
 
+       <div className="mt-2 max-w-xs break-all text-xs text-white/80 text-center">
+        accessToken:
+        <br />
+        <span className="text-white">
+          {accessToken}
+        </span>
+      </div>
+
       <div className="flex-1 flex flex-col justify-center">
         <div className="grid-cols-2 grid gap-4">
           <Card title="식단" icon="fork_spoon" />
-          <Card title="운동" icon="exercise" href='/exercise' />
+          <Card title="운동" icon="exercise" href="/exercise" />
           <Card title="약" icon="pill" />
-          <Card title={<span>마이<br />페이지</span>} icon="person" href='/mypage' />
+          <Card title={<span>마이<br />페이지</span>} icon="person" href="/mypage" />
         </div>
       </div>
     </div>
@@ -37,16 +71,18 @@ export default function Home() {
 type CardProps = {
   title: string | ReactNode;
   icon: string;
-  href?: string
+  href?: string;
 };
 
 function Card({ title, icon, href }: CardProps) {
   return (
     <Link
-      href={href ?? ''}
+      href={href ?? "#"}
       className="flex flex-col active:bg-yellow-700 items-center gap-3 px-10 w-full cursor-pointer rounded-[16px] shadow-100 outline-2 outline-black bg-yellow-500 h-52.5 justify-center"
     >
-      <h2 className="break-keep whitespace-pre-line text-title-small text-blue-900">{title}</h2>
+      <h2 className="break-keep whitespace-pre-line text-title-small text-blue-900">
+        {title}
+      </h2>
       <Icon
         name={icon}
         size={64}
