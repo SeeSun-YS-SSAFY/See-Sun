@@ -50,7 +50,7 @@ export default function Weight() {
   const handleNext = () => {
     if (!isValidWeight) return;
 
-    sessionStorage.setItem("signup_weight", String(weightNum));
+    sessionStorage.setItem("weight", String(weightNum));
     router.push("/userinfo/gender"); // ✅ 다음 단계: gender
   };
 
@@ -73,7 +73,7 @@ export default function Weight() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 

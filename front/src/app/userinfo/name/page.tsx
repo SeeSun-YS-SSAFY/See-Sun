@@ -45,7 +45,7 @@ export default function Name() {
     if (!trimmedName) return;
 
     // ✅ 세션 스토리지 저장
-    sessionStorage.setItem("signup_name", trimmedName);
+    sessionStorage.setItem("name", trimmedName);
 
     // ✅ 다음 페이지 이동
     router.push("/userinfo/height"); // ← 다음 페이지 경로로 수정
@@ -71,7 +71,7 @@ export default function Name() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 

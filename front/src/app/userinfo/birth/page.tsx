@@ -100,7 +100,7 @@ export default function Birth() {
     if (!parsedBirth) return;
 
     // 저장은 ISO 형태로 (YYYY-MM-DD)
-    sessionStorage.setItem("signup_birth", parsedBirth.iso);
+    sessionStorage.setItem("birth", parsedBirth.iso);
     router.push("/userinfo/phone"); // ✅ 다음 단계: phone
   };
 
@@ -123,7 +123,7 @@ export default function Birth() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 

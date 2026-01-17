@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import MicButton from "@/components/common/MicButton";
 import { useAtomValue } from "jotai";
 import {
@@ -20,12 +20,8 @@ function extractGender(text: string): Gender {
   const t = text.toLowerCase();
 
   // 한국어
-  if (t.includes("남") || t.includes("남자") || t.includes("남성")) {
-    return "male";
-  }
-  if (t.includes("여") || t.includes("여자") || t.includes("여성")) {
-    return "female";
-  }
+  if (t.includes("남") || t.includes("남자") || t.includes("남성")) return "male";
+  if (t.includes("여") || t.includes("여자") || t.includes("여성")) return "female";
 
   // 영어
   if (t.includes("male") || t.includes("man")) return "male";
@@ -44,13 +40,18 @@ export default function Gender() {
 
   const { handlers } = useVoiceRecorder();
 
-  // ✅ 성별 상태
+  // ✅ 실제로 저장할 값
   const [gender, setGender] = useState<Gender>("");
 
-  // ✅ STT 성공 시 성별 판별
+  // ✅ 인풋에 표시되는 "원문" 텍스트 (입력 안되는 문제 해결 핵심)
+  const [genderText, setGenderText] = useState("");
+
+  // ✅ STT 성공 시 성별 판별 + 인풋 표시도 채움
   useEffect(() => {
     if (uploadStatus === "success" && sttText) {
       const g = extractGender(sttText);
+
+      setGenderText(sttText); // 인식된 원문 보여주기
       if (g) setGender(g);
     }
   }, [uploadStatus, sttText]);
@@ -60,9 +61,8 @@ export default function Gender() {
 
   const handleNext = () => {
     if (!isValidGender) return;
-
-    sessionStorage.setItem("signup_gender", gender);
-    router.push("/userinfo/birth"); // ✅ 다음 단계
+    sessionStorage.setItem("gender", gender);
+    router.push("/userinfo/birth");
   };
 
   return (
@@ -84,31 +84,32 @@ export default function Gender() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 
       {showGenderInput && (
         <div className="mt-6 flex flex-col gap-2">
           <Input
-            placeholder="성별"
+            placeholder="성별 (예: 남성 / 여성)"
             inputMode="text"
-            value={
-              gender === "male"
-                ? "남성"
-                : gender === "female"
-                ? "여성"
-                : ""
-            }
+            value={genderText}
             onChange={(e) => {
-              const g = extractGender(e.target.value);
-              setGender(g);
+              const text = e.target.value;
+              setGenderText(text);              // ✅ 입력은 그대로 유지
+              setGender(extractGender(text));   // ✅ 판별 가능한 순간에만 gender 갱신
             }}
           />
 
           {!isValidGender && (
             <div className="text-red-400 text-xs">
-              “남성” 또는 “여성”으로 말씀해주세요.
+              “남성” 또는 “여성”으로 입력/말씀해주세요.
+            </div>
+          )}
+
+          {isValidGender && (
+            <div className="text-white/70 text-xs">
+              선택됨: {gender === "male" ? "남성" : "여성"}
             </div>
           )}
         </div>

@@ -70,7 +70,7 @@ export default function Phone() {
 
     try {
       // ✅ 현재 입력값을 sessionStorage에 저장
-      sessionStorage.setItem("signup_phone", phoneDigits);
+      sessionStorage.setItem("phone", phoneDigits);
 
       // ✅ sessionStorage 값들 모아서 payload 생성
       const payload = buildProfilePayloadFromSession();
@@ -109,7 +109,7 @@ export default function Phone() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 

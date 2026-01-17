@@ -52,7 +52,7 @@ export default function Height() {
   const handleNext = () => {
     if (!isValidHeight) return;
 
-    sessionStorage.setItem("signup_height", String(heightNum));
+    sessionStorage.setItem("height", String(heightNum));
     router.push("/userinfo/weight"); // 다음 단계 경로로 바꿔줘
   };
 
@@ -75,7 +75,7 @@ export default function Height() {
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: ${sttError}`}
+          {uploadStatus === "error" && sttError && `오류: 연결오류`}
         </div>
       </div>
 
