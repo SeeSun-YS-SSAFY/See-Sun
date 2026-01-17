@@ -154,6 +154,11 @@ class PlaylistItemAddSerializer(serializers.ModelSerializer):
             'exercise_id', 'sequence_no', 'set_count', 'reps_count',
             'duration_sec', 'rest_sec'
         )
+
+    def validate_exercise_id(self, value):
+        if not Exercise.objects.filter(exercise_id=value).exists():
+            raise serializers.ValidationError("존재하지 않는 운동 ID입니다.")
+        return value
         
     def create(self, validated_data):
         exercise_id = validated_data.pop('exercise_id')
