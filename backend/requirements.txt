@@ -5,3 +5,5 @@ python-dotenv
 pytest
 pytest-django
 requests
+djangorestframework-simplejwt
+django-cors-headers
