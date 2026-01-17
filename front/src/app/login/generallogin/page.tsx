@@ -64,27 +64,18 @@ export default function GeneralLogin() {
 
   return (
     <div>
-       <div className="relative flex items-center h-16">
-          {/* 왼쪽 뒤로가기 */}
+        <div className="relative flex items-center py-2.5 justify-center">
           <button
             type="button"
-            onClick={() => router.back()}
-            className="absolute left-0 flex items-center px-4"
+            onClick={() => router.push("/login/")}
+            className="absolute left-0 flex items-center"
           >
-            <Image 
-            src="/arrow_back.png"
-            width={70}
-            height={70}
-            alt="Picture of the author"
-            />
-
+            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
           </button>
-
-          {/* 중앙 타이틀 */}
-          <div className="mx-auto text-title-large text-white">
-            로그인
-          </div>
+  
+          <h1 className="text-title-large text-white">로그인</h1>
         </div>
+        
 
       <div className="mt-20 flex flex-col gap-10">
         {/* 전화번호 */}
