@@ -29,23 +29,39 @@ export const addRoutineAtom = atom(
         throw new Error("NEXT_PUBLIC_API_BASE_URL이 설정되지 않았습니다.");
       }
 
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("로그인이 필요합니다. (토큰이 없습니다)");
+      }
+
       const payload = {
         title,
-        items: items.map(({ exercise_name, set_count, reps_count, sequence_no }) => ({
-          exercise_name,
-          set_count,
-          reps_count,
-          sequence_no,
-        })),
+        items: items.map(
+          ({ exercise_id, exercise_name, set_count, reps_count, sequence_no }) => ({
+            // ✅ DB PK
+            exercise_id,
+            exercise_name,
+            set_count,
+            reps_count,
+            sequence_no,
+          })
+        ),
       };
 
       const res = await fetch(`${API_BASE}/exercises/playlist/create/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.log("STATUS:", res.status);
+        console.log("RAW:", text);
+        console.log(payload);
         let msg = "루틴 저장에 실패했습니다.";
         try {
           const err = await res.json();
@@ -55,7 +71,7 @@ export const addRoutineAtom = atom(
       }
 
       const data = (await res.json().catch(() => ({}))) as {
-        playlist_id?: string;
+        playlist_id?: string | number;
         title?: string;
       };
 
@@ -65,10 +81,16 @@ export const addRoutineAtom = atom(
       };
 
       set(routinesAtom, (prev) => [newRoutine, ...prev]);
+
+      // 입력값만 정리 (운동 리스트 초기화는 페이지에서 resetState로 처리 중이면 여기선 안 건드려도 됨)
       set(routineTitleAtom, "");
+
       return { ok: true as const };
     } catch (e: any) {
-      return { ok: false as const, error: e?.message ?? "루틴 저장에 실패했습니다." };
+      return {
+        ok: false as const,
+        error: e?.message ?? "루틴 저장에 실패했습니다.",
+      };
     }
   }
 );

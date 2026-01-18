@@ -16,7 +16,7 @@ export default function Login() {
         <Button 
           className="!bg-white enabled:active:bg-gray-100"
           onClick={() => {
-          window.location.href = `${API_BASE}/auth/google`;
+          window.location.href = `${API_BASE}auth/google/`;
                     }}>
                       <svg
                 xmlns="http://www.w3.org/2000/svg"
