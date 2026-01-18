@@ -4,9 +4,7 @@ import { exerciseListAtom } from "./makeExerciseAtoms";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export type MakeRoutineResult =
-  | { ok: true }
-  | { ok: false; error: string };
+export type MakeRoutineResult = { ok: true } | { ok: false; error: string };
 
 const initialRoutineTitle = "";
 export const routineTitleAtom = atom(initialRoutineTitle);
@@ -16,36 +14,43 @@ export const addRoutineAtom = atom(
   async (get, set): Promise<MakeRoutineResult> => {
     const title = get(routineTitleAtom).trim();
     if (!title) {
-      return { ok: false as const, error: "루틴 이름을 입력해주세요." };
+      return { ok: false as const, error: "루틴 이름을 입력해 주세요." };
     }
 
     const items = get(exerciseListAtom);
     if (items.length === 0) {
-      return { ok: false as const, error: "운동을 1개 이상 추가해주세요." };
+      return { ok: false as const, error: "운동을 1개 이상 추가해 주세요." };
     }
 
     try {
       if (!API_BASE) {
-        throw new Error("NEXT_PUBLIC_API_BASE_URL이 설정되지 않았습니다.");
+        throw new Error("NEXT_PUBLIC_API_BASE_URL 설정이 필요합니다.");
       }
 
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        throw new Error("로그인이 필요합니다. (토큰이 없습니다)");
+        throw new Error("로그인이 필요합니다.");
+      }
+
+      // normalize & validate exercise_id to avoid undefined
+      const normalized = items.map((it, idx) => {
+        const id = Number((it as any).exercise_id ?? (it as any).id ?? (it as any).exerciseId);
+        return {
+          exercise_id: id,
+          exercise_name: (it as any).exercise_name,
+          set_count: (it as any).set_count,
+          reps_count: (it as any).reps_count,
+          sequence_no: (it as any).sequence_no ?? idx + 1,
+        };
+      });
+      const invalid = normalized.filter((i) => !Number.isFinite(i.exercise_id));
+      if (invalid.length > 0) {
+        throw new Error("운동 항목 중 ID가 비어있는 값이 있습니다. 목록을 비우고 다시 추가해 주세요.");
       }
 
       const payload = {
         title,
-        items: items.map(
-          ({ exercise_id, exercise_name, set_count, reps_count, sequence_no }) => ({
-            // ✅ DB PK
-            exercise_id,
-            exercise_name,
-            set_count,
-            reps_count,
-            sequence_no,
-          })
-        ),
+        items: normalized,
       };
 
       const res = await fetch(`${API_BASE}/exercises/playlist/create/`, {
@@ -65,7 +70,7 @@ export const addRoutineAtom = atom(
         let msg = "루틴 저장에 실패했습니다.";
         try {
           const err = await res.json();
-          msg = err?.message ?? err?.detail ?? msg;
+          msg = (err as any)?.message ?? (err as any)?.detail ?? msg;
         } catch {}
         throw new Error(msg);
       }
@@ -81,8 +86,6 @@ export const addRoutineAtom = atom(
       };
 
       set(routinesAtom, (prev) => [newRoutine, ...prev]);
-
-      // 입력값만 정리 (운동 리스트 초기화는 페이지에서 resetState로 처리 중이면 여기선 안 건드려도 됨)
       set(routineTitleAtom, "");
 
       return { ok: true as const };
@@ -94,3 +97,4 @@ export const addRoutineAtom = atom(
     }
   }
 );
+
