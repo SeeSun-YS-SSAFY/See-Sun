@@ -158,6 +158,11 @@ GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
 GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
 GOOGLE_USER_INFO_URI = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
+# Google Cloud Credentials
+# service-account.json 파일이 프로젝트 루트(backend/)에 있다고 가정
+GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, 'service-account.json')
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
+
 SPECTACULAR_SETTINGS = {
     'TITLE': 'See:Sun API',
     'DESCRIPTION': 'Visually Impaired Wellness Service API',
