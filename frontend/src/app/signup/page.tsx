@@ -46,17 +46,23 @@ export default function Signin() {
   return (
     <div className="min-h-screen">
       {/* 헤더 */}
-        <div className="relative flex items-center py-2.5 justify-center">
-          <button
-            type="button"
-            onClick={() => router.push("/login/")}
-            className="absolute left-0 flex items-center"
-          >
-            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
-          </button>
-  
-          <h1 className="text-title-large text-white">회원가입</h1>
-        </div>
+      <div className="relative flex items-center justify-center h-16">
+        <button
+        type="button"
+        onClick={() => router.back()}
+        className="absolute left-0 flex items-center px-4"
+        >
+        <Image
+        src="/arrow_back.png"
+        width={70}
+        height={70}
+        alt="Picture of the author"
+        />
+
+        </button>
+
+        <div className="text-title-large text-white">회원가입</div>
+      </div>
 
       {/* 폼 */}
       <div className="mt-20 flex flex-col gap-10 px-6">
