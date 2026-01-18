@@ -47,15 +47,7 @@ export default function Home() {
         <h1 className="text-title-medium text-[#FFDB65]">See:Sun</h1>
       </div>
 
-       <div className="mt-2 max-w-xs break-all text-xs text-white/80 text-center">
-        accessToken:
-        <br />
-        <span className="text-white">
-          {accessToken}
-        </span>
-      </div>
-
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="mt-10 flex-1 flex flex-col justify-center">
         <div className="grid-cols-2 grid gap-4">
           <Card title="식단" icon="fork_spoon" />
           <Card title="운동" icon="exercise" href="/exercise" />

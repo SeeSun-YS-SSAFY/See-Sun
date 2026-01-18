@@ -3,7 +3,7 @@ import { atomWithStorage } from "jotai/utils";
 import type { SetStateAction } from "jotai";
 
 export type ExerciseItem = {
-  exercise_id: number;
+  exercise_id: string;
   exercise_name: string;
   sequence_no: number;
   set_count: number;
@@ -54,8 +54,8 @@ export const addExerciseAtom = atom(
     if (!selected) {
       return { ok: false as const, error: "운동을 먼저 선택해 주세요." };
     }
-    const exId = Number((selected as any).exercise_id);
-    if (!Number.isFinite(exId) || exId <= 0) {
+    const exId = String((selected as any).exercise_id);
+    if (!exId) {
       return { ok: false as const, error: "선택된 운동 ID가 올바르지 않습니다." };
     }
     if (!name) return { ok: false as const, error: "Please enter exercise name." };

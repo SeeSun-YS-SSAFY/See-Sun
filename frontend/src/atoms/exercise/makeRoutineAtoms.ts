@@ -34,16 +34,24 @@ export const addRoutineAtom = atom(
 
       // normalize & validate exercise_id to avoid undefined
       const normalized = items.map((it, idx) => {
-        const id = Number((it as any).exercise_id ?? (it as any).id ?? (it as any).exerciseId);
+        const id =
+          (it as any).exercise_id ??
+          (it as any).id ??
+          (it as any).exerciseId;
+
         return {
-          exercise_id: id,
-          exercise_name: (it as any).exercise_name,
-          set_count: (it as any).set_count,
-          reps_count: (it as any).reps_count,
-          sequence_no: (it as any).sequence_no ?? idx + 1,
+          exercise_id: id, // ✅ string UUID 그대로
+          exercise_name: it.exercise_name,
+          set_count: it.set_count,
+          reps_count: it.reps_count,
+          sequence_no: it.sequence_no ?? idx + 1,
         };
       });
-      const invalid = normalized.filter((i) => !Number.isFinite(i.exercise_id));
+
+      const invalid = normalized.filter(
+        (i) => typeof i.exercise_id !== "string" || i.exercise_id.trim() === ""
+      );
+
       if (invalid.length > 0) {
         throw new Error("운동 항목 중 ID가 비어있는 값이 있습니다. 목록을 비우고 다시 추가해 주세요.");
       }

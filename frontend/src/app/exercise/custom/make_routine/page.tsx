@@ -16,9 +16,8 @@ export default function CustomMake() {
 
   const [title, setTitle] = useAtom(routineTitleAtom);
   const addRoutine = useSetAtom(addRoutineAtom);
-
-  const exercises = useAtomValue(exerciseListAtom);
-  const setExercises = useSetAtom(exerciseListAtom);
+  const [exercises, setExercises] = useAtom(exerciseListAtom);
+  
 
   // ✅ 초기화 로직을 명시적인 함수로 분리
   const resetState = () => {

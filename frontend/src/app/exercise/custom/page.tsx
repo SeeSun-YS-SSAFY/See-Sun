@@ -57,11 +57,11 @@ export default function Custom() {
 
         {!loading && !error && routines.length > 0 && (
           <div className="flex flex-col gap-2">
-            {routines.map((r) => (
+            {routines.map((r, idx) => (
               <Button
-                key={r.id}
+                key={`${r.id}-${idx}`}
                 type="button"
-                onClick={() => router.push(`/exercise/custom/routine/${r.id}`)}
+                onClick={() => router.push(`#`)}
               >
                 {r.title}
               </Button>
