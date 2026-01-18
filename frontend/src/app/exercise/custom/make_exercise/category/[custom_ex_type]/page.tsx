@@ -7,7 +7,7 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
-import { setSelectedExerciseNameAtom } from "@/atoms/exercise/makeExerciseAtoms";
+import { setSelectedExerciseAtom } from "@/atoms/exercise/makeExerciseAtoms";
 
 type ExerciseCategoryResponse = {
   category_id: number;
@@ -23,7 +23,7 @@ export default function CustomExerciseType() {
   const router = useRouter();
   const params = useParams<{ custom_ex_type: string }>();
   const exType = params.custom_ex_type;
-  const setSelectedName = useSetAtom(setSelectedExerciseNameAtom);
+  const setSelected = useSetAtom(setSelectedExerciseAtom);
 
   const [exerciseCategory, setExercises] =
     useState<ExerciseCategoryResponse | null>(null);
@@ -58,7 +58,7 @@ export default function CustomExerciseType() {
           <ExerciseSwiper
             exercises={exerciseCategory.exercises as unknown as Exercise[]}
             onPick={(ex) => {
-              setSelectedName(ex.exercise_name);
+              setSelected({ exercise_id: ex.exercise_id, exercise_name: ex.exercise_name });
               router.push("/exercise/custom/make_exercise");
             }}
           />

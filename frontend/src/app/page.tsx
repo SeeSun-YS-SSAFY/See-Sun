@@ -7,6 +7,28 @@ import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
+import { apiClient } from "@/lib/apiClient";
+
+type UserProfile = {
+  name?: string;
+  birthdate?: string; // "YYYY-MM-DD" 등
+  gender?: "M" | "F" | "";
+  height_cm?: number;
+  weight_kg?: number;
+};
+
+
+function isProfileComplete(p?: UserProfile | null) {
+  if (!p) return false;
+
+  // 필수: birthdate, gender, height, weight
+  const okBirthdate = Boolean(p.birthdate);
+  const okGender = p.gender === "M" || p.gender === "F";
+  const okHeight = typeof p.height_cm === "number" && p.height_cm > 0;
+  const okWeight = typeof p.weight_kg === "number" && p.weight_kg > 0;
+
+  return okBirthdate && okGender && okHeight && okWeight;
+}
 
 export default function Home() {
   const router = useRouter();
@@ -14,6 +36,7 @@ export default function Home() {
 
   const hydrate = useSetAtom(hydrateAuthFromStorageAtom);
   const { isAuthed, accessToken  } = useAtomValue(authAtom);
+  const [profileChecked, setProfileChecked] = useState(false);
 
   // ✅ hydration 끝났는지(깜빡임 방지)
   const [ready, setReady] = useState(false);
@@ -30,9 +53,42 @@ export default function Home() {
     if (!isAuthed) router.replace("/login");
   }, [ready, isAuthed, router]);
 
+    useEffect(() => {
+    if (!ready) return;
+    if (!isAuthed) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        // 예시: 서버에서 내 프로필 받기 (경로는 백엔드에 맞게 수정)
+        const profile = await apiClient.get<UserProfile>("/users/profile/");
+
+        if (cancelled) return;
+
+        if (!isProfileComplete(profile)) {
+          router.replace("/userinfo/name");
+          return;
+        }
+
+        setProfileChecked(true);
+      } catch (e) {
+        // 프로필 조회가 실패하면(401/404 등) 안전하게 입력 플로우로 보내는 선택지도 가능
+        if (cancelled) return;
+        router.replace("/userinfo/name");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, isAuthed, router]);
+
+
   // hydration 전/리다이렉트 직전 깜빡임 방지
   if (!ready) return null;
   if (!isAuthed) return null;
+  if (!profileChecked) return null;
 
   // ✅ 여기부터는 "로그인 된 사용자만" 홈 UI 보임
   return (
@@ -47,15 +103,7 @@ export default function Home() {
         <h1 className="text-title-medium text-[#FFDB65]">See:Sun</h1>
       </div>
 
-       <div className="mt-2 max-w-xs break-all text-xs text-white/80 text-center">
-        accessToken:
-        <br />
-        <span className="text-white">
-          {accessToken}
-        </span>
-      </div>
-
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="mt-10 flex-1 flex flex-col justify-center">
         <div className="grid-cols-2 grid gap-4">
           <Card title="식단" icon="fork_spoon" />
           <Card title="운동" icon="exercise" href="/exercise" />
