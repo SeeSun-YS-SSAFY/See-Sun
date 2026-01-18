@@ -1,82 +1,78 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+// apiClient.ts
+import { getDefaultStore } from "jotai";
+import { authAtom, logoutAtom } from "@/atoms/auth/authAtoms";
 
-if (!BASE_URL) {
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+if (!API_BASE) {
   throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 }
 
-export const apiClient = {
-  get: async <T>(path: string): Promise<T> => {
-    const res = await fetch(`${BASE_URL}${path}`, {
-      credentials: "include",
-    });
+// jotai store 직접 접근 (컴포넌트 밖)
+const store = getDefaultStore();
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
+/**
+ * 공통 fetch 함수 (Bearer 토큰 방식)
+ */
+async function fetchWithAuth(
+  input: RequestInfo,
+  init: RequestInit = {}
+) {
+  const { accessToken } = store.get(authAtom);
 
-    return res.json();
-  },
+  const headers = new Headers(init.headers);
 
-  post: async <T>(path: string, body: unknown): Promise<T> => {
-  const res = await fetch(`${BASE_URL}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    credentials: "include",
+  // ✅ Bearer 토큰만 사용
+  if (accessToken) {
+    headers.set("Authorization", `Bearer ${accessToken}`);
+  }
+
+  headers.set("Content-Type", "application/json");
+
+  const res = await fetch(`${API_BASE}${input}`, {
+    ...init,
+    headers,
+    // ❌ credentials: "include" 절대 사용 안 함
   });
-  
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
 
-    return res.json();
-  },
+  // 🔥 인증 만료 처리
+  if (res.status === 401) {
+    store.set(logoutAtom);
+    throw new Error("Unauthorized");
+  }
 
-  put: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetch(`${BASE_URL}${path}`, {
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
+
+/**
+ * API 메서드 래퍼
+ */
+// apiClient.ts
+export const apiClient = {
+  get: async <T>(url: string): Promise<T> =>
+    fetchWithAuth(url, {
+      method: "GET",
+    }),
+
+  post: async <T>(url: string, body?: any): Promise<T> =>
+    fetchWithAuth(url, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  put: async <T>(url: string, body?: any): Promise<T> =>
+    fetchWithAuth(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
       body: JSON.stringify(body),
-    });
+    }),
 
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    return res.json();
-  },
-
-  patch: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetch(`${BASE_URL}${path}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    return res.json();
-  },
-
-  delete: async <T>(path: string, body: unknown): Promise<T> => {
-    const res = await fetch(`${BASE_URL}${path}`, {
+  delete: async <T>(url: string): Promise<T> =>
+    fetchWithAuth(url, {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}`);
-    }
-
-    return res.json();
-  },
+    }),
 };
