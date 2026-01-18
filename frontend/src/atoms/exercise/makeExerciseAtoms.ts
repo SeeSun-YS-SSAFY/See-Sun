@@ -21,6 +21,14 @@ export const exerciseNameAtom = atom(initialExerciseName);
 export const setCountAtom = atom(initialSetCount);
 export const repsCountAtom = atom(initialRepsCount);
 
+// 선택된 운동을 저장하기 위한 write-only atom
+export const setSelectedExerciseNameAtom = atom(
+  null,
+  (_get, set, name: string) => {
+    set(exerciseNameAtom, name);
+  }
+);
+
 export const exerciseListAtom = atomWithStorage<ExerciseItem[]>(
   "custom_exercises",
   []

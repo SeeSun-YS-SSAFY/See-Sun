@@ -4,7 +4,7 @@ import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import {
   addRoutineAtom,
@@ -14,10 +14,10 @@ import { exerciseListAtom } from "@/atoms/exercise/makeExerciseAtoms";
 
 export default function CustomMake() {
   const router = useRouter();
-  const pathname = usePathname();
   const [title, setTitle] = useAtom(routineTitleAtom);
   const addRoutine = useSetAtom(addRoutineAtom);
   const exercises = useAtomValue(exerciseListAtom);
+  const setExercises = useSetAtom(exerciseListAtom);
 
   const onSubmit = async () => {
     const result = await addRoutine();
@@ -27,28 +27,28 @@ export default function CustomMake() {
       alert(message);
       return;
     }
+    setExercises([]);
     router.push("/exercise/custom");
   };
 
   useEffect(() => {
-    if (pathname === "/exercise/custom/make_routine") {
-      setTitle("");
-    }
-  }, [pathname, setTitle]);
+    setTitle("");
+  }, [setTitle]);
 
   return (
     <div>
-      <div className="relative flex items-center h-16">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="absolute left-0 flex items-center px-4"
-        >
-          <Image src="/arrow_back.png" width={70} height={70} alt="뒤로가기" />
-        </button>
-
-        <div className="mx-auto text-title-large text-white">개인맞춤</div>
-      </div>
+        <div className="relative flex items-center py-2.5 justify-center">
+          <button
+            type="button"
+            onClick={() => { setExercises([]); router.push("/exercise/custom/"); }}
+            className="absolute left-0 flex items-center"
+          >
+            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          </button>
+  
+          <h1 className="text-title-large text-white">루틴추가</h1>
+        </div>
+      
 
       <div className="mt-10 flex flex-col gap-6">
         <Input
