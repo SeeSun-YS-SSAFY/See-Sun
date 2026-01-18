@@ -41,7 +41,7 @@ export default function Signin() {
     }
 
     alert("회원가입 성공");
-    router.push("/");
+    router.push("/login");
     };
   return (
     <div className="min-h-screen">
