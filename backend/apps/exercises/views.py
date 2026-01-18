@@ -6,9 +6,9 @@
 """
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Exercise, Playlist, ExerciseSession
+from .models import Exercise, Playlist
 from .serializers import (
-    ExerciseSerializer, PlaylistSerializer, ExerciseSessionSerializer,
+    ExerciseSerializer, PlaylistSerializer,
     ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
     ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
     ExerciseCategorySerializer, ExerciseSimpleSerializer, ExerciseDetailSerializer,
@@ -20,7 +20,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.views.generic import TemplateView  # TemplateView 추가
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
-from .models import Exercise, Playlist, ExerciseSession, ExerciseCategory, PlaylistItem
+from .models import Exercise, Playlist, ExerciseCategory, PlaylistItem
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -40,18 +40,6 @@ class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
 
 # -----------------------------------------------------------------------
 
-class SessionViewSet(viewsets.ModelViewSet):
-    """
-    운동 세션(기록) 관리용 ViewSet.
-    """
-    serializer_class = ExerciseSessionSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return ExerciseSession.objects.filter(user=self.request.user).order_by('-started_at')
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
 
 # -----------------------------------------------------------------------------------------------
 class ExerciseCategoryListView(APIView):

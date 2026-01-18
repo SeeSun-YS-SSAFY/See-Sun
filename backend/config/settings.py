@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     # Local
     'apps.users.apps.UsersConfig',
     'apps.exercises.apps.ExercisesConfig',
+    'apps.logs.apps.LogsConfig',
 ]
 
 MIDDLEWARE = [
