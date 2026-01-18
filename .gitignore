@@ -214,3 +214,6 @@ AGENTS.md
 
 ## 구글 TTS 사용할 때 필요한 키json
 service-account.json
+
+## 구글 STT 사용할 때 필요한 키json
+google-credentials.json
