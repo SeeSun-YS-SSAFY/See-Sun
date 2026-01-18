@@ -7,80 +7,14 @@ type LoginBody = {
   pin_number?: string;
 };
 
-type PlaylistItem = {
-  exercise_id: number;
-  exercise_name: string;
-  sequence_no: number;
-  set_count: number;
-  reps_count: number;
+type SignupBody = {
+  name?: string;
+  phone_number?: string;
+  pin_number?: string;
 };
-
-type Playlist = {
-  playlist_id: string;
-  title: string;
-  items: PlaylistItem[];
-};
-
-let playlists: Playlist[] = [
-  {
-    playlist_id: "1",
-    title: "아침 스트레칭 루틴",
-    items: [
-      {
-        exercise_id: 1,
-        exercise_name: "스쿼트",
-        sequence_no: 1,
-        set_count: 3,
-        reps_count: 10,
-      },
-      {
-        exercise_id: 2,
-        exercise_name: "푸시업",
-        sequence_no: 2,
-        set_count: 3,
-        reps_count: 12,
-      },
-      {
-        exercise_id: 3,
-        exercise_name: "플랭크",
-        sequence_no: 3,
-        set_count: 3,
-        reps_count: 45,
-      },
-    ],
-  },
-  {
-    playlist_id: "2",
-    title: "상체 근력 루틴",
-    items: [
-      {
-        exercise_id: 4,
-        exercise_name: "풀업",
-        sequence_no: 1,
-        set_count: 3,
-        reps_count: 8,
-      },
-    ],
-  },
-  {
-    playlist_id: "3",
-    title: "하체 + 코어 루틴",
-    items: [
-      {
-        exercise_id: 5,
-        exercise_name: "런지",
-        sequence_no: 1,
-        set_count: 3,
-        reps_count: 10,
-      },
-    ],
-  },
-];
-
-const nextId = () => String(Date.now());
 
 export const handlers = [
-  // Login
+  // 로그인
   http.post(`${API_BASE}/auth/login`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as LoginBody;
 
@@ -97,46 +31,26 @@ export const handlers = [
       );
     }
 
-    return HttpResponse.json({ message: "Auth failed" }, { status: 401 });
+    return HttpResponse.json({ message: "인증 실패" }, { status: 401 });
   }),
 
-  // List playlists
+
+
   http.get(`${API_BASE}/exercises/playlist/`, () => {
     return HttpResponse.json(
-      playlists.map(({ playlist_id, title }) => ({ playlist_id, title })),
-      { status: 200 }
-    );
-  }),
-  http.get(`${API_BASE}/exercises/playlist`, () => {
-    return HttpResponse.json(
-      playlists.map(({ playlist_id, title }) => ({ playlist_id, title })),
+      [
+        { id: 1, title: "아침 스트레칭 루틴" },
+        { id: 2, title: "상체 근력 루틴" },
+        { id: 3, title: "하체 + 코어 루틴" },
+      ],
       { status: 200 }
     );
   }),
 
-  // Playlist detail
-  http.get(`${API_BASE}/exercises/playlist/:playlist_id/`, ({ params }) => {
-    const playlistId = String(params.playlist_id ?? "");
-    const found = playlists.find((p) => p.playlist_id === playlistId);
-    if (!found) {
-      return HttpResponse.json({ message: "Not found" }, { status: 404 });
-    }
-    return HttpResponse.json(found, { status: 200 });
-  }),
-  http.get("/exercises/playlist/:playlist_id/", ({ params }) => {
-    const playlistId = String(params.playlist_id ?? "");
-    const found = playlists.find((p) => p.playlist_id === playlistId);
-    if (!found) {
-      return HttpResponse.json({ message: "Not found" }, { status: 404 });
-    }
-    return HttpResponse.json(found, { status: 200 });
-  }),
-
-  // Create playlist
-  http.post(`${API_BASE}/exercises/playlist/`, async ({ request }) => {
+  http.post(`${API_BASE}/exercises/playlist/create/`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as {
       title?: string;
-      items?: PlaylistItem[];
+      items?: unknown[];
     };
 
     const title = String(body.title ?? "").trim();
@@ -144,72 +58,226 @@ export const handlers = [
 
     if (!title) {
       return HttpResponse.json(
-        { message: "Title is required" },
+        { message: "루틴 이름을 입력해주세요." },
         { status: 400 }
       );
     }
     if (items.length === 0) {
       return HttpResponse.json(
-        { message: "At least one item is required" },
+        { message: "운동을 1개 이상 추가해주세요." },
         { status: 400 }
       );
     }
 
-    const newPlaylist: Playlist = {
-      playlist_id: nextId(),
-      title,
-      items,
-    };
-    playlists = [newPlaylist, ...playlists];
-
-    return HttpResponse.json(newPlaylist, { status: 201 });
+    return HttpResponse.json({ playlist_id: "mock-playlist-1", title, items }, { status: 201 });
   }),
 
-  // Update playlist (title/items)
-  http.patch(`${API_BASE}/exercises/playlist/edit/`, async ({ request }) => {
-    const body = (await request.json().catch(() => ({}))) as {
-      playlist_id?: string;
-      title?: string;
-      items?: PlaylistItem[];
-    };
+  // (선택) 슬래시 없는 버전도 들어오는 경우 대비
+  http.get(`${API_BASE}/exercises/playlist`, () => {
+    return HttpResponse.json(
+      [
+        { id: 1, title: "아침 스트레칭 루틴" },
+        { id: 2, title: "상체 근력 루틴" },
+        { id: 3, title: "하체 + 코어 루틴" },
+      ],
+      { status: 200 }
+    );
+  }),
 
-    const playlistId = String(body.playlist_id ?? "");
-    const title = body.title?.trim();
-    const items = Array.isArray(body.items) ? body.items : undefined;
 
-    const index = playlists.findIndex((p) => p.playlist_id === playlistId);
-    if (index === -1) {
-      return HttpResponse.json({ message: "Not found" }, { status: 404 });
+  http.get(
+    `${API_BASE}/exercises/category`,
+    () => {
+      const categoryList = [
+        {
+          category_id: 1,
+          display_name: '근력 운동',
+        },
+        {
+          category_id: 2,
+          display_name: '유산소'
+        },
+        {
+          category_id: 3,
+          display_name: '유연성 운동'
+        },
+        {
+          category_id: 4,
+          display_name: '균형'
+        },
+      ];
+      return HttpResponse.json(categoryList);
     }
-    if (title !== undefined && title.length === 0) {
+  ),
+
+  http.get<{ category_id: string }>(
+    `${API_BASE}/exercises/category/:category_id`,
+    ({ params }) => {
+      const exerciseListMap = {
+        1: {
+          category_id: 1,
+          category_name: "근력운동",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "스쿼트",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "스쿼트",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        },
+        2: {
+          category_id: 2,
+          category_name: "유산소",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "슬로우 버피",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "슬로우 버피",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        },
+        3: {
+          category_id: 3,
+          category_name: "유연성 운동",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "스트레칭",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "브릿지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "스트레칭",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "브릿지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        },
+        4: {
+          category_id: 4,
+          category_name: "균형",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        },
+        5: {
+          category_id: 5,
+          category_name: "자주하는 운동",
+          exercises: [
+            {
+              exercise_id: 1,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 2,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 3,
+              exercise_name: "달리기",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+            {
+              exercise_id: 4,
+              exercise_name: "런지",
+              pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+            },
+          ],
+        }
+      };
+      return HttpResponse.json(exerciseListMap[params.category_id]);
+    }
+  ),
+
+  // ✅ 회원가입 (fetch가 /auth/signup/ 로 요청하므로 슬래시 포함!)
+  http.post(`${API_BASE}/auth/signup/`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as SignupBody;
+
+    const name = String(body.name ?? "").trim();
+    const phone = String(body.phone_number ?? "");
+    const pin = String(body.pin_number ?? "");
+
+    // 서버처럼 간단 검증 흉내
+    if (!name) {
+      return HttpResponse.json({ message: "이름을 입력해주세요." }, { status: 400 });
+    }
+    if (!/^01[0-9]{8,9}$/.test(phone)) {
       return HttpResponse.json(
-        { message: "Title is required" },
+        { message: "전화번호를 정확히 입력해주세요." },
         { status: 400 }
       );
     }
-
-    const updated: Playlist = {
-      ...playlists[index],
-      ...(title ? { title } : {}),
-      ...(items ? { items } : {}),
-    };
-    playlists = [
-      ...playlists.slice(0, index),
-      updated,
-      ...playlists.slice(index + 1),
-    ];
-
-    return HttpResponse.json(updated, { status: 200 });
-  }),
-
-  // Delete playlist
-  http.delete(`${API_BASE}/exercises/playlist/:playlist_iddelete/`, ({ params }) => {
-    const playlistId = String(params.playlist_id ?? "");
-    const exists = playlists.some((p) => p.playlist_id === playlistId);
-    playlists = playlists.filter((p) => p.playlist_id !== playlistId);
-    if (!exists) {
-      return HttpResponse.json({ message: "Not found" }, { status: 404 });
+    if (!/^\d{4}$/.test(pin)) {
+      return HttpResponse.json({ message: "PIN 4자리를 입력해주세요." }, { status: 400 });
     }
-    return HttpResponse.json(null, { status: 204 });
+
+    // ✅ 너 signupAtoms.ts는 data.token을 기대함
+    return HttpResponse.json(
+      {
+        token: `mock_access_token_${phone}`,
+        user: { name, phone_number: phone },
+      },
+      { status: 200 }
+    );
   }),
 ];

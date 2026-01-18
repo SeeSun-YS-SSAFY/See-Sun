@@ -3,7 +3,7 @@ import { atom } from "jotai";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type Routine = {
-  playlist_id: number | string;
+  id: number | string;
   title: string;
 };
 

@@ -7,7 +7,7 @@ export type AuthState = {
 };
 
 export const authAtom = atom<AuthState>({
-  accessToken: localStorage.getItem('accessToken'),
+  accessToken: null,
   isAuthed: false,
 });
 
@@ -30,4 +30,12 @@ export const hydrateAuthFromStorageAtom = atom(null, (_get, set) => {
   const token = localStorage.getItem("accessToken");
   if (token) set(authAtom, { accessToken: token, isAuthed: true });
   else set(authAtom, { accessToken: null, isAuthed: false });
+});
+
+/**
+ * ✅ refresh 실패 시 강제 로그아웃용
+ */
+export const logoutAtom = atom(null, (_get, set) => {
+  localStorage.removeItem("accessToken");
+  set(authAtom, { accessToken: null, isAuthed: false });
 });

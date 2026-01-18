@@ -1,16 +1,30 @@
+"use client";
 
+import Button from "@/components/common/Button";
+import Icon from "@/components/common/Icon";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Exercise() {
-    return (
-        <div>
-            운동 방식
-            <ul>
-                <li>근력</li>
-                <li>유산소</li>
-                <li>유연성 운동</li>
-                <li>균형</li>
-                <li>개인맞춤 | 개인설정</li>
-            </ul>
-        </div>
-    );
+  const router = useRouter();
+
+  return (
+    <div className="h-full flex-col flex">
+      <div className="relative flex items-center py-2.5 justify-center">
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="absolute left-0 flex items-center"
+        >
+          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+        </button>
+
+        <h1 className="text-title-large text-white">운동 방식</h1>
+      </div>
+      <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
+        <Button onClick={() => router.push("/exercise/single")}>단일</Button>
+        <Button onClick={() => router.push("/exercise/routine")}>루틴</Button>
+      </div>
+    </div>
+  );
 }
