@@ -417,7 +417,7 @@ class GoogleLoginView(APIView):
         redirect_uri = request.data.get('redirect_uri', 'postmessage')
         
         if not code:
-            raise ValidationError({'code': 'This field is required.'})
+            raise ValidationError({'code': '인증 코드가 필요합니다.'})
             
         try:
             service = Container.get_social_login_service()

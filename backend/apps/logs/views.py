@@ -52,10 +52,10 @@ class ExerciseSessionEndView(APIView):
         try:
             session = ExerciseSession.objects.get(session_id=session_id, user=request.user)
         except ExerciseSession.DoesNotExist:
-            return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "운동 세션을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         if session.status != 'IN_PROGRESS':
-             return Response({"message": "Session is already ended or invalid", "status": session.status}, status=status.HTTP_200_OK)
+             return Response({"message": "이미 종료되었거나 유효하지 않은 세션입니다.", "status": session.status}, status=status.HTTP_200_OK)
 
         # Update Session
         now = timezone.now()
@@ -100,7 +100,7 @@ class ExerciseSessionPingView(APIView):
         try:
             session = ExerciseSession.objects.get(session_id=session_id, user=request.user)
         except ExerciseSession.DoesNotExist:
-             return Response({"error": "Session not found"}, status=status.HTTP_404_NOT_FOUND)
+             return Response({"error": "운동 세션을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         
         session.last_ping_at = timezone.now()
         session.save(update_fields=['last_ping_at'])

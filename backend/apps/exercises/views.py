@@ -117,7 +117,7 @@ class ExerciseListByCategoryView(APIView):
         try:
             category = ExerciseCategory.objects.get(category_id=category_id)
         except ExerciseCategory.DoesNotExist:
-            return Response({"error": "Category not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "해당 카테고리를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         exercises = Exercise.objects.filter(category=category, is_active=True).prefetch_related('media_contents')
         
@@ -153,7 +153,7 @@ class ExerciseDetailView(APIView):
         try:
             exercise = Exercise.objects.prefetch_related('media_contents').select_related('category').get(exercise_id=exercise_id)
         except Exercise.DoesNotExist:
-            return Response({"error": "Exercise not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "해당 운동 정보를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = ExerciseDetailSerializer(exercise)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -222,7 +222,7 @@ class PlaylistDetailView(APIView):
             # 본인의 플레이리스트이면서 활성 상태인 것만 조회
             playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
         except Playlist.DoesNotExist:
-            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "플레이리스트를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
             
         serializer = PlaylistSerializer(playlist)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -241,7 +241,7 @@ class PlaylistDetailView(APIView):
         try:
             playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
         except Playlist.DoesNotExist:
-            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "플레이리스트를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
             
         serializer = PlaylistUpdateSerializer(playlist, data=request.data, partial=True)
         if serializer.is_valid():
@@ -260,7 +260,7 @@ class PlaylistDetailView(APIView):
         try:
             playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user)
         except Playlist.DoesNotExist:
-            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "플레이리스트를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
             
         playlist.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -284,7 +284,7 @@ class PlaylistItemAddView(APIView):
         try:
             playlist = Playlist.objects.get(playlist_id=playlist_id, user=request.user, status='ACTIVE')
         except Playlist.DoesNotExist:
-            return Response({"error": "Playlist not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "플레이리스트를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = PlaylistItemAddSerializer(data=request.data, context={'playlist': playlist})
         if serializer.is_valid():
@@ -323,7 +323,7 @@ class PlaylistItemDetailView(APIView):
     def delete(self, request, playlist_id, item_id):
         item = self.get_object(playlist_id, item_id, request.user)
         if not item:
-            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "해당 운동 항목을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
         
         playlist = item.playlist
         item.delete()
@@ -341,7 +341,7 @@ class PlaylistItemDetailView(APIView):
     def patch(self, request, playlist_id, item_id):
         item = self.get_object(playlist_id, item_id, request.user)
         if not item:
-            return Response({"error": "Item not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "해당 운동 항목을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
             
         serializer = PlaylistItemUpdateSerializer(item, data=request.data, partial=True)
         if serializer.is_valid():
@@ -368,7 +368,7 @@ class GoogleTTSView(APIView):
     def post(self, request):
         text = request.data.get('text')
         if not text:
-            return Response({"error": "text is required"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "변환할 텍스트가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
         
         try:
             from .google_tts import GoogleTTSClient
