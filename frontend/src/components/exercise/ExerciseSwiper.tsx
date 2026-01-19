@@ -3,13 +3,12 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { Swiper as SwiperType } from "swiper";
-import { Mousewheel, EffectCreative } from "swiper/modules";
+import { EffectCreative } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
 import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSwipe } from "./ExerciseSwiper.hooks";
 
 export type Exercise = {
@@ -20,20 +19,14 @@ export type Exercise = {
 
 type ExerciseSwiperProps = {
   exercises: Exercise[];
-  onPick?: (exercise: Exercise) => void;
+  onClick: (exercise: Exercise) => void;
 };
 
 export default function ExerciseSwiper({
   exercises,
-  onPick,
+  onClick,
 }: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
-
-  const router = useRouter();
-  const { ex_type: exType } = useParams<{ ex_type: string }>();
-  const searchParams = useSearchParams();
-
-  const mode = searchParams.get("mode");
 
   const swipeHandlers = useSwipe({
     onSwipeUp: () => swiperRef.current?.slideNext(),
@@ -67,9 +60,7 @@ export default function ExerciseSwiper({
               <SwiperSlide
                 key={exercise.exercise_id}
                 className="w-full my-auto transition-all duration-300 group"
-                onClick={() =>
-                  router.push(`${exType}/${exercise.exercise_id}?mode=${mode}`)
-                }
+                onClick={() => onClick(exercise)}
               >
                 {({ isActive, isNext, isPrev }) => {
                   // 기본 스타일: 배경색, 둥근 모서리, 정렬, 트랜지션
@@ -127,12 +118,7 @@ export default function ExerciseSwiper({
                   );
 
                   return (
-                    <div
-                      className="flex flex-col justify-center h-full"
-                      onClick={() => {
-                        if (isActive) onPick?.(exercise);
-                      }}
-                    >
+                    <div className="flex flex-col justify-center h-full">
                       <div
                         className={cn(
                           slideBaseStyles,
