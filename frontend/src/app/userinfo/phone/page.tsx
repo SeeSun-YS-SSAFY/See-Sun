@@ -17,6 +17,7 @@ import {
   buildProfilePayloadFromSession,
   submitProfileCompletion,
 } from "@/lib/profileApt";
+import { authAtom } from "@/atoms/auth/authAtoms";
 
 function extractDigits(text: string) {
   return (text.match(/\d+/g) ?? []).join("");
@@ -46,6 +47,8 @@ export default function Phone() {
   const [phoneDigits, setPhoneDigits] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  const { accessToken } = useAtomValue(authAtom);
 
   // ✅ STT 성공 시 숫자만 뽑아서 반영
   useEffect(() => {
@@ -79,10 +82,10 @@ export default function Phone() {
       }
 
       // ✅ 백엔드 전송 + localStorage 저장(profileApi에서 처리)
-      await submitProfileCompletion(payload);
+      await submitProfileCompletion(payload, accessToken);
 
       // ✅ 다음 페이지 이동 (원하는 경로로 바꿔도 됨)
-      router.push("/home");
+      router.push("/");
     } catch (e: any) {
       setSubmitError(e?.message ?? "전송 중 오류가 발생했습니다.");
     } finally {
