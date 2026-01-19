@@ -26,8 +26,6 @@ def normalize_command(text: str) -> dict:
     if not text.strip():
         return {'action': None, 'confidence': 0.0}
     
-    model = gemini_client.get_model()
-    
     prompt = f"""음성 인식 결과를 운동 명령어로 분류해주세요.
 
 **입력**: "{text}"
@@ -50,8 +48,7 @@ def normalize_command(text: str) -> dict:
 JSON만 출력:"""
     
     try:
-        response = model.generate_content(prompt)
-        result_text = response.text.strip()
+        result_text = gemini_client.generate_content(prompt)
         
         # JSON 파싱
         if '```' in result_text:
