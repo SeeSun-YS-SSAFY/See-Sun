@@ -43,11 +43,11 @@ export default function SingleExercise() {
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {categories.map((category) => (
-          <Button key={category.category_id} onClick={() => router.push(`/exercise/${category.category_id}`)}>
+          <Button key={category.category_id} onClick={() => router.push(`/exercise/${category.category_id}?mode=single`)}>
             {category.display_name}
           </Button>
         ))}
-        <Button onClick={() => router.push(`/exercise/5`)}>자주하는 운동</Button>
+        <Button onClick={() => router.push(`/exercise/5?mode=single`)}>자주하는 운동</Button>
       </div>
     </div>
   );

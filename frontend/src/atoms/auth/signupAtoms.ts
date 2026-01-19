@@ -22,8 +22,6 @@ export type SignupResult =
   | { ok: true; data: SignupResponse }
   | { ok: false; error: string };
 
-
-
 // 검증 함수 (순수)
 function validateSignupInput(name: string, phone: string, pin: string) {
   if (!name.trim()) return "이름을 입력해주세요.";
@@ -49,7 +47,7 @@ export const signupRequestAtom = atom(
 
     try {
       const base = API_BASE as string;
-      const res = await fetch(`${base}/users/auth/signup/`, {
+      const res = await fetch(`${base}/users/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, phone_number, pin_number }),
@@ -64,29 +62,27 @@ export const signupRequestAtom = atom(
         throw new Error(serverMsg);
       }
 
-      const data: SignupResponse = await res.json().catch(() => ({} as any));
+      const data: SignupResponse = await res.json().catch(() => ({}) as any);
 
       if (data?.token) set(setAuthTokenAtom, data.token);
 
       return { ok: true as const, data };
     } catch (e: any) {
-      return { ok: false as const, error: e?.message ?? "회원가입에 실패했습니다." };
+      return {
+        ok: false as const,
+        error: e?.message ?? "회원가입에 실패했습니다.",
+      };
     } finally {
       set(signupLoadingAtom, false);
     }
-  }
+  },
 );
-
 
 /** 폼 초기화 */
-export const signupResetAtom = atom(
-  null,
-  (_get, set) => {
-    set(signupNameAtom, "");
-    set(signupPhoneAtom, "");
-    set(signupPinAtom, "");
-    set(signupLoadingAtom, false);
-    // set(authTokenAtom, null);
-  }
-);
-
+export const signupResetAtom = atom(null, (_get, set) => {
+  set(signupNameAtom, "");
+  set(signupPhoneAtom, "");
+  set(signupPinAtom, "");
+  set(signupLoadingAtom, false);
+  // set(authTokenAtom, null);
+});
