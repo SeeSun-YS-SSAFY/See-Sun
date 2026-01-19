@@ -307,8 +307,6 @@ export const handlers = [
   http.post<{ session_id: string }, { items?: string[] }>(
     `${API_BASE}/log/session/:session_id/end`,
     async ({ request, params }) => {
-      await request.json();
-
       return HttpResponse.json({
         session_id: params.session_id,
         duration_sec: 1800,

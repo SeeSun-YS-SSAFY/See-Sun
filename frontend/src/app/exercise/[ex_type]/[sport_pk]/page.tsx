@@ -2,13 +2,20 @@
 
 import Icon from "@/components/common/Icon";
 import ProgressBar from "@/components/common/ProgressBar";
+import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
-import { ButtonHTMLAttributes, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { ButtonHTMLAttributes, useEffect, useRef, useState } from "react";
 
 export default function ExerciseType() {
   const router = useRouter();
-  const params = useParams<{ ex_type: string }>();
+  const params = useParams<{ ex_type: string; sport_pk: string }>();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get("mode");
+
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
+  const lastLoggedInfo = useRef<string | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -17,6 +24,51 @@ export default function ExerciseType() {
   const toggleExplain = () => {
     setIsExplain((prev) => !prev);
   };
+
+  // 로깅 API 연결
+  useEffect(() => {
+    // 현재 세션을 구분하기 위한 키 생성
+    const currentInfo = `${mode}-${params.ex_type}-${params.sport_pk}`;
+
+    if (lastLoggedInfo.current !== currentInfo) {
+      lastLoggedInfo.current = currentInfo;
+
+      const fetchLogStart = async () => {
+        try {
+          const data = await apiClient.post<{ session_id: string }>(
+            "/log/session/start",
+            {
+              mode,
+              playlist_id: params.ex_type,
+              exercise_id: params.sport_pk,
+              device_hash: "mock_device_hash",
+            },
+          );
+          setSessionId(data.session_id);
+          sessionIdRef.current = data.session_id;
+        } catch (error) {
+          console.error("로깅 API 호출 중 오류 발생:", error);
+        }
+      };
+
+      fetchLogStart();
+    }
+
+    return () => {
+      const fetchLogEnd = async () => {
+        try {
+          if (sessionIdRef.current) {
+            await apiClient.post(`/log/session/${sessionIdRef.current}/end`);
+            sessionIdRef.current = null;
+          }
+        } catch (error) {
+          console.error("로깅 API 호출 중 오류 발생:", error);
+        }
+      };
+
+      fetchLogEnd();
+    };
+  }, [mode, params.ex_type, params.sport_pk]);
 
   return (
     <div className="h-full flex-col flex">

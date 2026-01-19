@@ -62,7 +62,7 @@ export const apiClient = {
   post: async <T>(url: string, body?: any): Promise<T> =>
     fetchWithAuth(url, {
       method: "POST",
-      body: JSON.stringify(body),
+      body: body && JSON.stringify(body),
     }),
 
   put: async <T>(url: string, body?: any): Promise<T> =>
