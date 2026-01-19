@@ -1,8 +1,9 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import type { SetStateAction } from "jotai";
 
 export type ExerciseItem = {
-  id: number;
+  exercise_id: string;
   exercise_name: string;
   sequence_no: number;
   set_count: number;
@@ -21,11 +22,19 @@ export const exerciseNameAtom = atom(initialExerciseName);
 export const setCountAtom = atom(initialSetCount);
 export const repsCountAtom = atom(initialRepsCount);
 
-// 선택된 운동을 저장하기 위한 write-only atom
-export const setSelectedExerciseNameAtom = atom(
+// selected exercise state (id + name)
+export type SelectedExercise = { exercise_id: number; exercise_name: string } | null;
+const initialSelectedExercise: SelectedExercise = null;
+export const selectedExerciseAtom = atom(initialSelectedExercise);
+
+// setter for selection: sync selected state and input name
+export const setSelectedExerciseAtom = atom(
   null,
-  (_get, set, name: string) => {
-    set(exerciseNameAtom, name);
+  (get, set, ex: SetStateAction<SelectedExercise>) => {
+    const prev = get(selectedExerciseAtom);
+    const next = typeof ex === "function" ? (ex as (p: SelectedExercise) => SelectedExercise)(prev) : ex;
+    set(selectedExerciseAtom, next);
+    set(exerciseNameAtom, next?.exercise_name ?? initialExerciseName);
   }
 );
 
@@ -37,22 +46,30 @@ export const exerciseListAtom = atomWithStorage<ExerciseItem[]>(
 export const addExerciseAtom = atom(
   null,
   (get, set): ExerciseAddResult => {
+    const selected = get(selectedExerciseAtom);
     const name = get(exerciseNameAtom).trim();
     const setCount = Number(get(setCountAtom));
     const repsCount = Number(get(repsCountAtom));
 
-    if (!name) return { ok: false as const, error: "운동 종류를 입력해주세요." };
+    if (!selected) {
+      return { ok: false as const, error: "운동을 먼저 선택해 주세요." };
+    }
+    const exId = String((selected as any).exercise_id);
+    if (!exId) {
+      return { ok: false as const, error: "선택된 운동 ID가 올바르지 않습니다." };
+    }
+    if (!name) return { ok: false as const, error: "Please enter exercise name." };
     if (!Number.isFinite(setCount) || setCount <= 0) {
-      return { ok: false as const, error: "세트 수를 올바르게 입력해주세요." };
+      return { ok: false as const, error: "Enter a valid set count." };
     }
     if (!Number.isFinite(repsCount) || repsCount <= 0) {
-      return { ok: false as const, error: "반복 횟수를 올바르게 입력해주세요." };
+      return { ok: false as const, error: "Enter a valid reps count." };
     }
 
     set(exerciseListAtom, (prev) => [
       ...prev,
       {
-        id: Date.now(),
+        exercise_id: exId,
         exercise_name: name,
         sequence_no: prev.length + 1,
         set_count: setCount,
@@ -60,9 +77,12 @@ export const addExerciseAtom = atom(
       },
     ]);
 
+    // reset state
+    set(selectedExerciseAtom, null);
     set(exerciseNameAtom, initialExerciseName);
     set(setCountAtom, initialSetCount);
     set(repsCountAtom, initialRepsCount);
+
     return { ok: true as const };
   }
 );

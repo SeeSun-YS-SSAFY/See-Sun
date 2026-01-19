@@ -14,18 +14,18 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 
-type Gender = "male" | "female" | "";
+type Gender = "M" | "F" | "";
 
 function extractGender(text: string): Gender {
   const t = text.toLowerCase();
 
   // 한국어
-  if (t.includes("남") || t.includes("남자") || t.includes("남성")) return "male";
-  if (t.includes("여") || t.includes("여자") || t.includes("여성")) return "female";
+  if (t.includes("남") || t.includes("남자") || t.includes("남성")) return "M";
+  if (t.includes("여") || t.includes("여자") || t.includes("여성")) return "F";
 
   // 영어
-  if (t.includes("male") || t.includes("man")) return "male";
-  if (t.includes("female") || t.includes("woman")) return "female";
+  if (t.includes("male") || t.includes("man")) return "M";
+  if (t.includes("female") || t.includes("woman")) return "F";
 
   return "";
 }
@@ -57,7 +57,7 @@ export default function Gender() {
   }, [uploadStatus, sttText]);
 
   const showGenderInput = uploadStatus !== "idle";
-  const isValidGender = gender === "male" || gender === "female";
+  const isValidGender = gender === "M" || gender === "F";
 
   const handleNext = () => {
     if (!isValidGender) return;
@@ -109,7 +109,7 @@ export default function Gender() {
 
           {isValidGender && (
             <div className="text-white/70 text-xs">
-              선택됨: {gender === "male" ? "남성" : "여성"}
+              선택됨: {gender === "M" ? "남성" : "여성"}
             </div>
           )}
         </div>

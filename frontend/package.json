@@ -29,6 +29,7 @@
   "devDependencies": {
     "@types/node": "25.0.7",
     "@types/react": "19.2.8",
+    "cross-env": "^10.1.0",
     "msw": "^2.12.7",
     "typescript": "5.9.3"
   },
