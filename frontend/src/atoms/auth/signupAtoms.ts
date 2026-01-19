@@ -47,7 +47,7 @@ export const signupRequestAtom = atom(
 
     try {
       const base = API_BASE as string;
-      const res = await fetch(`${base}/users/auth/signup`, {
+      const res = await fetch(`${base}/users/auth/signup/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, phone_number, pin_number }),

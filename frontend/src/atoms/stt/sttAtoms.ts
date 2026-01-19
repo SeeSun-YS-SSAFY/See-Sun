@@ -36,3 +36,12 @@ export const setLastAudioBlobAtom = atom(
   null,
   (_get, set, value: Blob | null) => set(lastAudioBlobAtom, value)
 );
+
+// ✅ 추가: STT 상태 초기화용 atom
+export const resetSttAtom = atom(null, (_get, set) => {
+  set(recordingStatusAtom, "off");
+  set(uploadStatusAtom, "idle");
+  set(sttTextAtom, "");
+  set(sttErrorAtom, "");
+  set(lastAudioBlobAtom, null);
+});

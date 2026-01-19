@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   recordingStatusAtom,
   sttErrorAtom,
   sttTextAtom,
   uploadStatusAtom,
+  resetSttAtom,
 } from "@/atoms/stt/sttAtoms";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
@@ -79,6 +80,16 @@ export default function Birth() {
 
   const { handlers } = useVoiceRecorder();
 
+  const resetStt = useSetAtom(resetSttAtom);
+
+  useEffect(() => {
+  resetStt();
+  setBirth("");
+
+  return () => resetStt();
+}, [resetStt]);
+
+
   // ✅ 입력값(표시용): YYYY-MM-DD
   const [birth, setBirth] = useState("");
 
@@ -119,12 +130,12 @@ export default function Birth() {
           {...handlers}
         />
 
-        <div className="text-white text-sm">
+        {/* <div className="text-white text-sm">
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
           {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div>
+        </div> */}
       </div>
 
       {showBirthInput && (

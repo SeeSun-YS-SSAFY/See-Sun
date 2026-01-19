@@ -25,9 +25,8 @@ export async function uploadAudioForSTT(audioBlob: Blob): Promise<{ text: string
 
   // 서버가 json으로 {text: "..."} 준다는 가정
   // 만약 plain text면 아래를 res.text()로 바꾸면 됨
-  const data = (await res.json()) as { text?: string };
-
-  return { text: data.text ?? "" };
+  const data = (await res.json()) as { message?: string };
+  return { text: data.message ?? "" };
 }
 
 async function safeReadText(res: Response) {

@@ -14,7 +14,10 @@ const store = getDefaultStore();
 /**
  * 공통 fetch 함수 (Bearer 토큰 방식)
  */
-async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
+async function fetchWithAuth(
+  input: RequestInfo,
+  init: RequestInit = {}
+) {
   const { accessToken } = store.get(authAtom);
 
   const headers = new Headers(init.headers);
@@ -34,9 +37,6 @@ async function fetchWithAuth(input: RequestInfo, init: RequestInit = {}) {
 
   // 🔥 인증 만료 처리
   if (res.status === 401) {
-    // 리프레시 요청
-
-    // 안되면
     store.set(logoutAtom);
     throw new Error("Unauthorized");
   }

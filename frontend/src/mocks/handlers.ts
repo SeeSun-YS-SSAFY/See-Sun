@@ -280,4 +280,52 @@ export const handlers = [
       { status: 200 }
     );
   }),
+
+  // ✅ STT (webm 업로드) - MSW mock
+http.post(`${API_BASE}/users/webmstt/`, async ({ request }) => {
+  // multipart/form-data 파싱
+  const formData = await request.formData();
+
+  const file = formData.get("userinfo_stt");
+  const mode = String(formData.get("mode") ?? "form");
+
+  // 파일 검증 (서버 흉내)
+  if (!(file instanceof File)) {
+    return HttpResponse.json(
+      { error: "No audio file provided" },
+      { status: 400 }
+    );
+  }
+
+  // 👉 실제 STT 대신 mock 텍스트
+  const mockText = "123";
+
+  // listen 모드: wake 감지
+  if (mode === "listen") {
+    const wakeDetected = mockText.replace(/\s/g, "").includes("시선코치");
+    return HttpResponse.json({
+      message: mockText,
+      wake_detected: wakeDetected,
+    });
+  }
+
+  // command 모드: 명령어 매칭
+  if (mode === "command") {
+    let action: string | null = null;
+    if (mockText.includes("다음")) action = "next";
+    else if (mockText.includes("이전")) action = "previous";
+    else if (mockText.includes("멈춤")) action = "pause";
+
+    return HttpResponse.json({
+      message: mockText,
+      action,
+    });
+  }
+
+  // 기본 form 모드
+  return HttpResponse.json({
+    message: mockText,
+  });
+}),
+
 ];

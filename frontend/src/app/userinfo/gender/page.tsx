@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   recordingStatusAtom,
   sttErrorAtom,
   sttTextAtom,
   uploadStatusAtom,
+  resetSttAtom,
 } from "@/atoms/stt/sttAtoms";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
@@ -45,6 +46,17 @@ export default function Gender() {
 
   // ✅ 인풋에 표시되는 "원문" 텍스트 (입력 안되는 문제 해결 핵심)
   const [genderText, setGenderText] = useState("");
+  const resetStt = useSetAtom(resetSttAtom);
+
+  useEffect(() => {
+    resetStt();
+
+    // ✅ 이 페이지 로컬 상태도 초기화
+    setGender("");
+    setGenderText("");
+
+    return () => resetStt();
+  }, [resetStt]);
 
   // ✅ STT 성공 시 성별 판별 + 인풋 표시도 채움
   useEffect(() => {
@@ -80,12 +92,12 @@ export default function Gender() {
           {...handlers}
         />
 
-        <div className="text-white text-sm">
+        {/* <div className="text-white text-sm">
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
           {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div>
+        </div> */}
       </div>
 
       {showGenderInput && (
@@ -101,17 +113,17 @@ export default function Gender() {
             }}
           />
 
-          {!isValidGender && (
+          {/* {!isValidGender && (
             <div className="text-red-400 text-xs">
               “남성” 또는 “여성”으로 입력/말씀해주세요.
             </div>
-          )}
+          )} */}
 
-          {isValidGender && (
+          {/* {isValidGender && (
             <div className="text-white/70 text-xs">
               선택됨: {gender === "M" ? "남성" : "여성"}
             </div>
-          )}
+          )} */}
         </div>
       )}
 
