@@ -323,4 +323,35 @@ export const handlers = [
       return HttpResponse.json({});
     },
   ),
+
+  http.get(`${API_BASE}/exercises/frequent`, async () => {
+    return HttpResponse.json({
+      exercises: [
+        {
+          exercise_id: 1,
+          exercise_name: "스쿼트",
+          category_name: "근력운동",
+          count: 15,
+          last_performed_at: "2026-01-14T10:00:00Z",
+          pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+        },
+        {
+          exercise_id: 2,
+          exercise_name: "런지",
+          category_name: "근력운동",
+          count: 15,
+          last_performed_at: "2026-01-14T10:00:00Z",
+          pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+        },
+        {
+          exercise_id: 3,
+          exercise_name: "달리기",
+          category_name: "유산소",
+          count: 15,
+          last_performed_at: "2026-01-14T10:00:00Z",
+          pictogram_url: "https://dummyimage.com/165x126/000/ffffff.png",
+        },
+      ],
+    });
+  }),
 ];
