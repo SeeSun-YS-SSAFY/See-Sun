@@ -48,7 +48,8 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
     """
     category_name = serializers.CharField(source='category.display_name', read_only=True)
     exercise_guide = serializers.CharField(source='exercise_guide_text', read_only=True)
-    pictogram_url = serializers.SerializerMethodField()
+    pictograms = serializers.SerializerMethodField()
+    audios = serializers.SerializerMethodField()
 
     class Meta:
         model = Exercise
@@ -57,12 +58,24 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
             'exercise_description',
             'first_description', 'main_form', 'form_description', 
             'stay_form', 'fixed_form',
-            'exercise_guide', 'pictogram_url'
+            'exercise_guide', 'pictograms', 'audios'
         )
 
-    def get_pictogram_url(self, obj):
-        media = next((m for m in obj.media_contents.all() if m.media_type == 'PICTOGRAM'), None)
-        return media.url if media else None
+    def get_pictograms(self, obj):
+        # 픽토그램 이미지 URL 리스트 반환
+        return [
+            m.url for m in obj.media_contents.all() 
+            if m.media_type == 'PICTOGRAM'
+        ]
+
+    def get_audios(self, obj):
+        # TTS 오디오 URL 리스트 반환 (타입 포함)
+        # s3_key 필드를 오디오의 세부 타입(예: main_form)으로 사용 중
+        return [
+            {'type': m.s3_key, 'url': m.url}
+            for m in obj.media_contents.all()
+            if m.media_type == 'GUIDE_AUDIO'
+        ]
 
 # ----------------------------------------------------------------------------
 
@@ -89,14 +102,32 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
     exercise_id = serializers.UUIDField(source='exercise.exercise_id', read_only=True)
     exercise_name = serializers.CharField(source='exercise.exercise_name', read_only=True)
     exercise_guide_text = serializers.CharField(source='exercise.exercise_guide_text', read_only=True)
+    audios = serializers.SerializerMethodField()
+    pictograms = serializers.SerializerMethodField()
 
     class Meta:
         model = PlaylistItem
         fields = (
             'playlist_item_id', 'exercise_id', 'exercise_name', 'exercise_guide_text',
+            'audios', 'pictograms',
             'sequence_no', 'set_count', 'reps_count', 
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
+
+    def get_audios(self, obj):
+        # 해당 운동의 모든 TTS 오디오 URL 반환
+        return [
+            {'type': m.s3_key, 'url': m.url}
+            for m in obj.exercise.media_contents.all()
+            if m.media_type == 'GUIDE_AUDIO'
+        ]
+
+    def get_pictograms(self, obj):
+        # 해당 운동의 모든 픽토그램 URL 반환
+        return [
+            m.url for m in obj.exercise.media_contents.all()
+            if m.media_type == 'PICTOGRAM'
+        ]
 
 # ----------------------------------------------------------------------------
 
