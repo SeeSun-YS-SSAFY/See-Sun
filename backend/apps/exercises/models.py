@@ -79,7 +79,7 @@ class ExerciseMedia(models.Model):
     media_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     exercise = models.ForeignKey(Exercise, on_delete=models.CASCADE, related_name='media_contents', verbose_name="운동")
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPE_CHOICES, verbose_name="미디어 타입")
-    locale = models.CharField(max_length=10, default='ko-KR', verbose_name="로케일")
+    sequence = models.IntegerField(verbose_name="순서", default=1)
     
     s3_key = models.CharField(max_length=512, blank=True, null=True, verbose_name="S3 키")
     url = models.CharField(max_length=1024, blank=True, null=True, verbose_name="URL")
@@ -93,7 +93,7 @@ class ExerciseMedia(models.Model):
         verbose_name = '운동 미디어'
         verbose_name_plural = '운동 미디어 목록'
         indexes = [
-            models.Index(fields=['exercise', 'media_type', 'locale']),
+            models.Index(fields=['exercise', 'media_type', 'sequence']),
         ]
 
 
