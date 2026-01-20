@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button"
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_API_CLIENT_ID;
+const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
 export default function Login() {
   const router = useRouter();
@@ -15,9 +17,22 @@ export default function Login() {
 
         <Button 
           className="!bg-white enabled:active:bg-gray-100"
-          onClick={() => {
-          window.location.href = `${API_BASE}auth/google/`;
-                    }}>
+           onClick={() => {
+              const clientId = GOOGLE_CLIENT_ID ?? "";
+              const redirectUri = GOOGLE_REDIRECT_URI ?? "";
+
+              const params = new URLSearchParams({
+                client_id: clientId,
+                redirect_uri: redirectUri,
+                response_type: "code",
+                scope: "email profile",
+              });
+
+              const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+              console.log(url)
+              window.location.assign(url);
+            }}
+          >
                       <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 48 48"

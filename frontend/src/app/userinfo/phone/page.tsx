@@ -82,7 +82,7 @@ export default function Phone() {
       }
 
       // ✅ 백엔드 전송 + localStorage 저장(profileApi에서 처리)
-      await submitProfileCompletion(payload, accessToken);
+      await submitProfileCompletion(payload);
 
       // ✅ 다음 페이지 이동 (원하는 경로로 바꿔도 됨)
       router.push("/");
