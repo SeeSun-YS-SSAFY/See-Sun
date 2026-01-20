@@ -3,6 +3,7 @@ from apps.exercises.models import Exercise, ExerciseMedia
 from django.conf import settings
 import os
 import shutil
+import re
 from gtts import gTTS
 import uuid
 
@@ -56,12 +57,21 @@ class Command(BaseCommand):
         self.update_pictograms()
         self.generate_tts()
 
-    def get_english_name(self, exercise_name):
-        # 1. Direct match
+    def get_english_name(self, exercise):
+        """
+        운동의 영문명을 반환.
+        우선순위: 1. DB의 name_en 필드 -> 2. NAME_MAPPING -> 3. None
+        """
+        # 1. DB의 name_en 필드 확인
+        if exercise.name_en:
+            return exercise.name_en
+        
+        # 2. NAME_MAPPING에서 검색
+        exercise_name = exercise.exercise_name
         if exercise_name in self.NAME_MAPPING:
             return self.NAME_MAPPING[exercise_name]
         
-        # 2. Substring match
+        # 3. Substring match
         for kor, eng in self.NAME_MAPPING.items():
             if kor.split(' (')[0] in exercise_name:
                 return eng
@@ -82,7 +92,7 @@ class Command(BaseCommand):
         for exercise in exercises:
             ExerciseMedia.objects.filter(exercise=exercise, media_type='PICTOGRAM').delete()
 
-            target_keyword = self.get_english_name(exercise.exercise_name)
+            target_keyword = self.get_english_name(exercise)
             
             if not target_keyword:
                 self.stdout.write(self.style.WARNING(f"Skipping Pictogram: No mapping for {exercise.exercise_name}"))
@@ -99,7 +109,7 @@ class Command(BaseCommand):
                 if target_keyword in f and (f.endswith('.jpg') or f.endswith('.png')):
                     matched_files.append(f)
 
-            for filename in matched_files:
+            for idx, filename in enumerate(matched_files, start=1):
                 cat_dest_dir = dest_root / folder_name
                 if not os.path.exists(cat_dest_dir):
                     os.makedirs(cat_dest_dir)
@@ -108,10 +118,15 @@ class Command(BaseCommand):
                 
                 media_url = f"{settings.MEDIA_URL}exercises/pictograms/{folder_name}/{filename}"
                 
+                # 파일명에서 sequence 추출 (예: strength01_squat_01.jpg -> 1)
+                # 마지막 _숫자 패턴을 찾아서 sequence로 사용
+                seq_match = re.search(r'_(\d+)\.(jpg|png)$', filename)
+                seq_num = int(seq_match.group(1)) if seq_match else idx
+                
                 ExerciseMedia.objects.create(
                     exercise=exercise,
                     media_type='PICTOGRAM',
-                    locale='ko-KR',
+                    sequence=seq_num,
                     url=media_url
                 )
             count += 1
@@ -127,14 +142,20 @@ class Command(BaseCommand):
         exercises = Exercise.objects.all()
         tts_root = settings.MEDIA_ROOT / 'exercises' / 'audio'
 
+        # 오디오 sequence 순서:
+        # 1: exercise_description
+        # 2: first_description
+        # 3: main_form
+        # 4: stay_form
+        # 5: fixed_form
+        # 6: exercise_guide_text
         TARGET_FIELDS = [
             'exercise_description',
             'first_description', 
             'main_form', 
-            'form_description',
             'stay_form', 
             'fixed_form', 
-            'exercise_guide_text' # User called it 'exercise_guide'
+            'exercise_guide_text'
         ]
 
         count = 0
@@ -142,7 +163,7 @@ class Command(BaseCommand):
             ExerciseMedia.objects.filter(exercise=exercise, media_type='GUIDE_AUDIO').delete()
             
             # Determine folder name: Use English Name
-            eng_name = self.get_english_name(exercise.exercise_name)
+            eng_name = self.get_english_name(exercise)
             if not eng_name:
                 self.stdout.write(self.style.WARNING(f"Skipping TTS: No English mapping for {exercise.exercise_name}"))
                 continue
@@ -153,7 +174,7 @@ class Command(BaseCommand):
 
             current_ex_generated = 0
             
-            for field in TARGET_FIELDS:
+            for field_idx, field in enumerate(TARGET_FIELDS, start=1):
                 text = getattr(exercise, field)
                 if not text or text.lower() == 'x' or text.strip() == '':
                     continue
@@ -171,7 +192,7 @@ class Command(BaseCommand):
                     ExerciseMedia.objects.create(
                         exercise=exercise,
                         media_type='GUIDE_AUDIO',
-                        locale='ko-KR',
+                        sequence=current_ex_generated + 1,  # 연속 번호 부여 (빈 필드 건너뛰어도 연속)
                         url=media_url,
                         s3_key=field
                     )
