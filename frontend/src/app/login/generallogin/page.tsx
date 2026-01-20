@@ -51,8 +51,6 @@ export default function GeneralLogin() {
       const token =
         data.accessToken ??
         data.access_token ??
-        data.token ??
-        data?.data?.accessToken ??
         null;
 
       if (!token) {
@@ -61,7 +59,13 @@ export default function GeneralLogin() {
       }
 
       // ✅ localStorage 저장 + authAtom 갱신
-      setAuthToken(token);
+      setAuthToken({
+        accessToken: token,
+        // 로그인 응답에 refresh가 있으면 넣고, 없으면 null
+        refreshToken:
+          data.refresh_token ??
+          null,
+      });
 
       // ✅ 홈으로 (홈에서 isAuthed true라서 메인 유지)
       router.replace("/");

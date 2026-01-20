@@ -7,47 +7,48 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
 import { authAtom, logoutAtom } from "@/atoms/auth/authAtoms";
+import { apiClient } from "@/lib/apiClient"; // ✅ 추가
 
 export default function MyPage() {
   const router = useRouter();
 
-  const { accessToken } = useAtomValue(authAtom);
+  const { accessToken, isAuthed } = useAtomValue(authAtom);
   const logout = useSetAtom(logoutAtom);
 
   const [userName, setUserName] = useState<string>("");
 
-  // ✅ 유저 정보 불러오기
+  // ✅ 유저 정보 불러오기 (apiClient 사용 -> 자동 refresh)
   useEffect(() => {
-    if (!accessToken) return;
+    // 로그인 안 된 상태면 바로 로그인으로
+    if (!isAuthed || !accessToken) {
+      router.replace("/login");
+      return;
+    }
+
+    let cancelled = false;
 
     const fetchMe = async () => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/profile/`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        // ✅ 여기서 access 만료되면 apiClient가 refresh 후 재시도까지 처리
+        const data = await apiClient.get<{ name: string }>("/users/profile/");
 
-        if (res.status === 401) {
-          logout();
-          router.replace("/login");
-          return;
-        }
-
-        if (!res.ok) throw new Error("유저 정보 조회 실패");
-
-        const data = await res.json();
+        if (cancelled) return;
         setUserName(data.name);
       } catch (e) {
+        // apiClient가 refresh 실패 시 logoutAtom을 이미 실행함
+        // 여기서는 화면 이동만 처리하면 됨
+        if (cancelled) return;
         console.error(e);
+        router.replace("/login");
       }
     };
 
     fetchMe();
-  }, [accessToken, logout, router]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, isAuthed, router]);
 
   const handleLogout = () => {
     if (!confirm("로그아웃 하시겠습니까?")) return;
@@ -82,9 +83,7 @@ export default function MyPage() {
 
       {/* 설정 */}
       <div className="mt-15 flex flex-col gap-2">
-        <MiniButton onClick={() => router.push("#")}>
-          건강 정보 설정
-        </MiniButton>
+        <MiniButton onClick={() => router.push("#")}>건강 정보 설정</MiniButton>
 
         <div className="flex gap-2">
           <MiniButton className="w-1/2" onClick={() => router.push("#")}>
