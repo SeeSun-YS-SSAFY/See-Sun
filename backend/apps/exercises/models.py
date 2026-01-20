@@ -37,6 +37,7 @@ class Exercise(models.Model):
     exercise_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     category = models.ForeignKey(ExerciseCategory, on_delete=models.CASCADE, related_name='exercises', verbose_name="카테고리")
     exercise_name = models.CharField(max_length=255, verbose_name="운동명")
+    name_en = models.CharField(max_length=100, blank=True, verbose_name="영문명")
     exercise_description = models.TextField(blank=True, null=True, verbose_name="운동 설명")
     
     # 운동 상세 가이드
