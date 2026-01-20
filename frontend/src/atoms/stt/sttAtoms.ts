@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import type { PrimitiveAtom } from "jotai";
 
 export type RecordingStatus = "off" | "recording";
 export type UploadStatus = "idle" | "uploading" | "success" | "error";
@@ -9,7 +10,9 @@ export const uploadStatusAtom = atom<UploadStatus>("idle");
 export const sttTextAtom = atom<string>("");
 export const sttErrorAtom = atom<string>("");
 
-export const lastAudioBlobAtom = atom<Blob | null>(null);
+export const lastAudioBlobAtom = atom<Blob | null>(
+  null as Blob | null
+) as PrimitiveAtom<Blob | null>;
 
 // write-only setter atoms for reliable typing with useSetAtom
 export const setRecordingStatusAtom = atom(

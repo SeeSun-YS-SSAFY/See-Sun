@@ -36,12 +36,12 @@ export default function Height() {
   const [height, setHeight] = useState("");
   const resetStt = useSetAtom(resetSttAtom);
 
-  useEffect(() => {
-  resetStt();
-  setHeight("");
+    useEffect(() => {
+    resetStt();
+    setHeight("");
 
-  return () => resetStt();
-}, [resetStt]);
+    return () => resetStt();
+  }, [resetStt]);
 
   // ✅ STT 성공 시 숫자만 뽑아서 Input에 반영
   useEffect(() => {
