@@ -163,8 +163,8 @@ export default function Phone() {
         throw new Error("필수 정보가 누락되었거나 형식이 올바르지 않습니다.");
       }
 
-      // ✅ 백엔드 전송
-      await submitProfileCompletion(payload, accessToken);
+      // ✅ 백엔드 전송 + localStorage 저장(profileApi에서 처리)
+      await submitProfileCompletion(payload);
 
       router.push("/");
     } catch (e: any) {
