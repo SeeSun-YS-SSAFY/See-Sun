@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useSetAtom } from "jotai";
 import { setAuthTokenAtom } from "@/atoms/auth/authAtoms";
 
+
 export default function GeneralLogin() {
   const [phone_number, setPhone] = useState("");
   const [pin_number, setCode] = useState("");
