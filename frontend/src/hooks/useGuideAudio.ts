@@ -23,7 +23,7 @@ type Options = {
 
 let sharedAudio: HTMLAudioElement | null = null;
 
-export function useGuideAudio(url: string, opts: Options = {}) {
+export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop : false, autoplay : false, stopPrev : false }) {
   const lastUrlRef = useRef<string>("");
 
   const play = useCallback(async () => {
@@ -63,7 +63,7 @@ export function useGuideAudio(url: string, opts: Options = {}) {
 
   // 화면 진입 시 자동 재생 시도
   useEffect(() => {
-    const autoplay = opts.autoplay !== false;
+    const { autoplay } = opts;
     if (!autoplay) return;
 
     // unlock을 강제하고 싶으면 여기서 gating 가능
