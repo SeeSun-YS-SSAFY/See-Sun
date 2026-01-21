@@ -15,15 +15,15 @@ export function isAudioUnlocked() {
 }
 
 type Options = {
-  volume?: number;
-  loop?: boolean;
-  autoplay?: boolean; // default true
-  stopPrev?: boolean; // default true
+  volume: number;
+  loop: boolean;
+  autoplay: boolean; // default true
+  stopPrev: boolean; // default true
 };
 
 let sharedAudio: HTMLAudioElement | null = null;
 
-export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop : false, autoplay : false, stopPrev : false }) {
+export function useGuideAudio(url: string, options: Options) {
   const lastUrlRef = useRef<string>("");
 
   const play = useCallback(async () => {
@@ -33,7 +33,7 @@ export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop 
     // shared audio 재사용(화면 이동에도 끊김/누적 방지)
     if (!sharedAudio) sharedAudio = new Audio();
 
-    if (opts.stopPrev !== false) {
+    if (options.stopPrev !== false) {
       sharedAudio.pause();
       sharedAudio.currentTime = 0;
     }
@@ -43,8 +43,8 @@ export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop 
       lastUrlRef.current = url;
     }
 
-    sharedAudio.volume = opts.volume ?? 1.0;
-    sharedAudio.loop = !!opts.loop;
+    sharedAudio.volume = options.volume ?? 1.0;
+    sharedAudio.loop = !!options.loop;
 
     try {
       await sharedAudio.play();
@@ -53,7 +53,7 @@ export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop 
       // 이때는 "unlock"이 필요
       // console.log("audio play blocked", e);
     }
-  }, [url, opts.volume, opts.loop, opts.stopPrev]);
+  }, [url, options.volume, options.loop, options.stopPrev]);
 
   const stop = useCallback(() => {
     if (!sharedAudio) return;
@@ -63,14 +63,14 @@ export function useGuideAudio(url: string, opts: Options = { volume : 1.0, loop 
 
   // 화면 진입 시 자동 재생 시도
   useEffect(() => {
-    const { autoplay } = opts;
+    const autoplay = options.autoplay !== false;
     if (!autoplay) return;
 
     // unlock을 강제하고 싶으면 여기서 gating 가능
     // if (!isAudioUnlocked()) return;
 
     play();
-  }, [play, opts.autoplay]);
+  }, [play, options.autoplay]);
 
   return { play, stop };
 }

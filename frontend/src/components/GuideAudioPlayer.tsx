@@ -11,6 +11,7 @@ export default function GuideAudioPlayer() {
   useGuideAudio(url ?? "", {
     autoplay: true,
     stopPrev: true,
+    loop: false,
     volume: 1,
   });
 
