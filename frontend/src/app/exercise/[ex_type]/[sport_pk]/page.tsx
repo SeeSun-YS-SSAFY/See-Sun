@@ -132,6 +132,7 @@ export default function ExerciseType() {
             src={currentPictogram}
             fill
             alt={exerciseDetail.exercise_name}
+            objectFit="cover"
           />
 
           {isExplain && (
