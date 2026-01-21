@@ -51,7 +51,7 @@ class ExerciseSessionTests(APITestCase):
         response = self.client.post(self.start_url, data)
         
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['playlist'], str(self.playlist.playlist_id))
+        self.assertEqual(str(response.data['playlist']), str(self.playlist.playlist_id))
         self.assertEqual(response.data['exercise_name'], self.playlist.title) # 이름 자동 설정 확인
         
     def test_end_session(self):
