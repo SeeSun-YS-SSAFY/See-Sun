@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   recordingStatusAtom,
   sttErrorAtom,
   sttTextAtom,
   uploadStatusAtom,
+  resetSttAtom,
 } from "@/atoms/stt/sttAtoms";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
@@ -33,6 +34,14 @@ export default function Height() {
 
   // ✅ 키 Input 상태 (string으로 관리 → Input과 궁합 좋음)
   const [height, setHeight] = useState("");
+  const resetStt = useSetAtom(resetSttAtom);
+
+    useEffect(() => {
+    resetStt();
+    setHeight("");
+
+    return () => resetStt();
+  }, [resetStt]);
 
   // ✅ STT 성공 시 숫자만 뽑아서 Input에 반영
   useEffect(() => {
@@ -71,12 +80,12 @@ export default function Height() {
           {...handlers}
         />
 
-        <div className="text-white text-sm">
+        {/* <div className="text-white text-sm">
           {recordingStatus === "recording" && "녹음 중..."}
           {uploadStatus === "uploading" && "업로드/인식 중..."}
           {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
           {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div>
+        </div> */}
       </div>
 
       {showHeightInput && (
@@ -93,11 +102,11 @@ export default function Height() {
             }}
           />
 
-          {!isValidHeight && height.length > 0 && (
+          {/* {!isValidHeight && height.length > 0 && (
             <div className="text-red-400 text-xs">
               키는 50~250cm 범위로 입력해주세요.
             </div>
-          )}
+          )} */}
         </div>
       )}
 
