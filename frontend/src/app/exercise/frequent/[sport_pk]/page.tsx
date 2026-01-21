@@ -9,7 +9,7 @@ import { ButtonHTMLAttributes, useEffect, useRef, useState } from "react";
 
 export default function ExerciseType() {
   const router = useRouter();
-  const params = useParams<{ ex_type: string; sport_pk: string }>();
+  const params = useParams<{ sport_pk: string }>();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode");
 
@@ -27,7 +27,7 @@ export default function ExerciseType() {
   // 로깅 API 연결
   useEffect(() => {
     // 현재 세션을 구분하기 위한 키 생성
-    const currentInfo = `${mode}-${params.ex_type}-${params.sport_pk}`;
+    const currentInfo = `${mode}-frequent-${params.sport_pk}`;
 
     if (lastLoggedInfo.current !== currentInfo) {
       lastLoggedInfo.current = currentInfo;
@@ -38,11 +38,12 @@ export default function ExerciseType() {
             "/log/session/start",
             {
               mode,
-              playlist_id: params.ex_type,
+              playlist_id: "frequent",
               exercise_id: params.sport_pk,
               device_hash: "mock_device_hash",
             },
           );
+
           sessionIdRef.current = data.session_id;
         } catch (error) {
           console.error("로깅 API 호출 중 오류 발생:", error);
@@ -66,7 +67,7 @@ export default function ExerciseType() {
 
       fetchLogEnd();
     };
-  }, [mode, params.ex_type, params.sport_pk]);
+  }, [mode, params.sport_pk]);
 
   return (
     <div className="h-full flex-col flex">

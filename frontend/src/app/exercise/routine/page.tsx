@@ -44,16 +44,25 @@ export default function RoutineExercise() {
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {categories.map((category) => (
-          <Button key={category.category_id}>{category.display_name}</Button>
+          <Button
+            key={category.category_id}
+            onClick={() =>
+              router.push(`/exercise/${category.category_id}?mode=routine`)
+            }
+          >
+            {category.display_name}
+          </Button>
         ))}
         <div className="flex gap-3.5">
-          <Button>개인 맞춤</Button>
+          <Button onClick={() => router.push(`/exercise/5?mode=routine`)}>
+            개인 맞춤
+          </Button>
           <Button
-              className="flex items-center w-21 h-21 shrink-0"
-              onClick={() => router.push("/exercise/custom")}
-            >
-              <Icon name="settings" filled color="#000" size={48} />
-            </Button>
+            className="flex items-center w-21 h-21 shrink-0"
+            onClick={() => router.push("/exercise/custom")}
+          >
+            <Icon name="settings" filled color="#000" size={48} />
+          </Button>
         </div>
       </div>
     </div>

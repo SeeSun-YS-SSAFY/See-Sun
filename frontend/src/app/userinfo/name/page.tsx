@@ -1,54 +1,81 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import {
   recordingStatusAtom,
-  sttErrorAtom,
   sttTextAtom,
   uploadStatusAtom,
+  resetSttAtom,
 } from "@/atoms/stt/sttAtoms";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
+import { fetchMyProfile } from "@/lib/profileApt";
+import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
 
 export default function Name() {
   const router = useRouter();
+
+  // ✅ auth에서 accessToken 가져오기
+  const { accessToken } = useAtomValue(authAtom);
+
+  // ✅ 토큰이 localStorage에 있으면 authAtom에 채우기
+  const hydrateAuth = useSetAtom(hydrateAuthFromStorageAtom);
+  useEffect(() => {
+    hydrateAuth();
+  }, [hydrateAuth]);
+
   const recordingStatus = useAtomValue(recordingStatusAtom);
   const uploadStatus = useAtomValue(uploadStatusAtom);
   const sttText = useAtomValue(sttTextAtom);
-  const sttError = useAtomValue(sttErrorAtom);
 
   const { handlers } = useVoiceRecorder();
-
-  // ✅ 이름 Input 상태
   const [name, setName] = useState("");
 
-  // ✅ STT 성공 시 Input에 자동 반영
+  const resetStt = useSetAtom(resetSttAtom);
+
+  // ✅ 프로필 조회해서 name 있으면 자동 스킵
+  const routedRef = useRef(false);
+  useEffect(() => {
+    const run = async () => {
+      if (!accessToken) return; // 토큰 없으면 STT 진행
+
+      const profile = await fetchMyProfile(accessToken);
+      const serverName = (profile?.name ?? "").trim();
+
+      if (serverName && !routedRef.current) {
+        routedRef.current = true;
+        sessionStorage.setItem("name", serverName);
+        router.replace("/userinfo/height");
+      }
+    };
+
+    run();
+  }, [accessToken, router]);
+
+  useEffect(() => {
+    resetStt();
+    setName("");
+    return () => resetStt();
+  }, [resetStt]);
+
   useEffect(() => {
     if (uploadStatus === "success" && sttText) {
       setName(sttText);
     }
   }, [uploadStatus, sttText]);
 
-  // ✅ uploadStatus가 생기면 Input 표시 (idle 제외)
   const showNameInput = uploadStatus !== "idle";
 
-  // ✅ 다음 버튼 활성화 조건: STT 성공 + 이름 존재
-  const canGoNext = uploadStatus === "success" && name.trim().length > 0;
-
   const handleNext = () => {
-
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
-    // ✅ 세션 스토리지 저장
     sessionStorage.setItem("name", trimmedName);
-
-    // ✅ 다음 페이지 이동
-    router.push("/userinfo/height"); // ← 다음 페이지 경로로 수정
+    router.push("/userinfo/height");
   };
 
   return (
@@ -65,17 +92,8 @@ export default function Name() {
           status={recordingStatus === "recording" ? "recording" : "off"}
           {...handlers}
         />
-
-        {/* 상태 표시 */}
-        <div className="text-white text-sm">
-          {recordingStatus === "recording" && "녹음 중..."}
-          {uploadStatus === "uploading" && "업로드/인식 중..."}
-          {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div>
       </div>
 
-      {/* ✅ uploadStatus가 뜨면 이름 Input 표시 */}
       {showNameInput && (
         <div className="mt-6 flex flex-col">
           <Input
@@ -87,9 +105,9 @@ export default function Name() {
           />
         </div>
       )}
-      
+
       <div className="mt-6">
-        <Button disabled={!name} onClick={handleNext}>
+        <Button disabled={!name.trim()} onClick={handleNext}>
           다음
         </Button>
       </div>

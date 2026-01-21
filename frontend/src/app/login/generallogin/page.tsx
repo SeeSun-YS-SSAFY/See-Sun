@@ -40,7 +40,7 @@ export default function GeneralLogin() {
             pin_number,
             device_hash: "1234",
           }),
-        }
+        },
       );
 
       if (!res.ok) throw new Error("인증 실패");
@@ -49,7 +49,11 @@ export default function GeneralLogin() {
 
       // ✅ 백엔드 응답 키에 맞게 토큰 뽑기 (하나만 맞아도 동작)
       const token =
-        data.accessToken ?? data.access_token ?? data.token ?? data?.data?.accessToken ?? null;
+        data.accessToken ??
+        data.access_token ??
+        data.token ??
+        data?.data?.accessToken ??
+        null;
 
       if (!token) {
         console.log("login response:", data);
@@ -70,18 +74,17 @@ export default function GeneralLogin() {
 
   return (
     <div>
-        <div className="relative flex items-center py-2.5 justify-center">
-          <button
-            type="button"
-            onClick={() => router.push("/login/")}
-            className="absolute left-0 flex items-center"
-          >
-            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
-          </button>
-  
-          <h1 className="text-title-large text-white">로그인</h1>
-        </div>
-        
+      <div className="relative flex items-center py-2.5 justify-center">
+        <button
+          type="button"
+          onClick={() => router.push("/login/")}
+          className="absolute left-0 flex items-center"
+        >
+          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+        </button>
+
+        <h1 className="text-title-large text-white">로그인</h1>
+      </div>
 
       <div className="mt-20 flex flex-col gap-10">
         <Input

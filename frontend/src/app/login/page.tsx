@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button"
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_API_CLIENT_ID;
+const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
 export default function Login() {
   const router = useRouter();
@@ -13,17 +15,30 @@ export default function Login() {
 
       <div className="mt-20 flex flex-col gap-2">
 
-        <Button 
+        <Button
           className="!bg-white enabled:active:bg-gray-100"
           onClick={() => {
-          window.location.href = `${API_BASE}/users/auth/oauth/google/`;
-                    }}>
-                      <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 48 48"
-                className="w-10 h-10 -translate-x-[10px] "
-                aria-hidden
-              >
+            const clientId = GOOGLE_CLIENT_ID ?? "";
+            const redirectUri = GOOGLE_REDIRECT_URI ?? "";
+
+            const params = new URLSearchParams({
+              client_id: clientId,
+              redirect_uri: redirectUri,
+              response_type: "code",
+              scope: "email profile",
+            });
+
+            const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+            console.log(url)
+            window.location.assign(url);
+          }}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 48 48"
+            className="w-10 h-10 -translate-x-[10px] "
+            aria-hidden
+          >
             <path
               fill="#FFC107"
               d="M43.611 20.083H42V20H24v8h11.303C33.523 32.657 29.154 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.957 3.043l5.657-5.657C34.023 6.053 29.268 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"
@@ -45,14 +60,14 @@ export default function Login() {
           구글로 로그인
         </Button>
 
-         <Button
+        <Button
           onClick={() => router.push("/login/generallogin")}
         >
           일반 로그인
         </Button>
 
         <Button onClick={() => router.push("/signup")}>
-            회원 가입
+          회원 가입
         </Button>
       </div>
     </div>

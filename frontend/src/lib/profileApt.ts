@@ -1,22 +1,26 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL; // 너가 쓰던 env 그대로 사용
-// 필요하면 NEXT_PUBLIC_API_BASE_URL로 바꿔도 됨
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type ProfileCompletionPayload = {
-  name: string;
+  // name: string;
+  birthdate: string; // YYYY-MM-DD
+  gender: "M" | "F";
   height_cm: number;
   weight_kg: number;
-  gender: "male" | "female";
-  birth: string; // YYYY-MM-DD
-  phone: string; // 숫자만(권장)
+  // phone: string; // 숫자만(권장)
 };
 
-export async function submitProfileCompletion(payload: ProfileCompletionPayload) {
-  if (!API_BASE) throw new Error("NEXT_PUBLIC_STT_URL 환경변수가 없습니다.");
+export async function submitProfileCompletion(
+  payload: ProfileCompletionPayload,
+  accessToken: string
+) {
+  if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE_URL 환경변수가 없습니다.");
+  if (!accessToken) throw new Error("accessToken이 없습니다. (로그인 상태 확인)");
 
   const res = await fetch(`${API_BASE}/users/profile/completion/`, {
-    method: "POST",
+    method: "PUT",
     headers: {
-      "userinfo_stt": "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify(payload),
   });
@@ -26,12 +30,7 @@ export async function submitProfileCompletion(payload: ProfileCompletionPayload)
     throw new Error(`Profile completion failed: HTTP ${res.status} ${msg}`);
   }
 
-  // 서버 응답이 있으면 받아두고 싶으면 사용
-  // const data = await res.json();
-
-  // ✅ 로컬스토리지 저장(원하는 키명으로)
   localStorage.setItem("user_profile_completion", JSON.stringify(payload));
-
   return true;
 }
 
@@ -43,31 +42,56 @@ async function safeReadText(res: Response) {
   }
 }
 
-// ✅ sessionStorage에 저장된 값들을 payload로 조립
 export function buildProfilePayloadFromSession(): ProfileCompletionPayload | null {
   const name = (sessionStorage.getItem("name") ?? "").trim();
   const height = Number(sessionStorage.getItem("height") ?? "");
   const weight = Number(sessionStorage.getItem("weight") ?? "");
-  const gender = (sessionStorage.getItem("gender") ?? "") as
-    | "male"
-    | "female"
-    | "";
-  const birth = (sessionStorage.getItem("birth") ?? "").trim();
+  const gender = (sessionStorage.getItem("gender") ?? "") as "M" | "F" | "";
+  const birthdate = (sessionStorage.getItem("birth") ?? "").trim();
   const phone = (sessionStorage.getItem("phone") ?? "").replace(/[^\d]/g, "");
 
   if (!name) return null;
-  if (!Number.isFinite(height)) return null;
-  if (!Number.isFinite(weight)) return null;
-  if (gender !== "male" && gender !== "female") return null;
-  if (!birth) return null;
+  if (!Number.isFinite(height) || height <= 0) return null;
+  if (!Number.isFinite(weight) || weight <= 0) return null;
+  if (gender !== "M" && gender !== "F") return null;
+  if (!birthdate) return null;
   if (!(phone.length === 10 || phone.length === 11)) return null;
 
   return {
-    name,
+    // name,
     height_cm: height,
     weight_kg: weight,
     gender,
-    birth,
-    phone,
+    birthdate,
+    // phone,
   };
+}
+
+// 🔹 추가
+export type MyProfileResponse = {
+  name?: string | null;
+  birthdate?: string | null;
+  gender?: "M" | "F" | null;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+};
+
+export async function fetchMyProfile(
+  accessToken?: string
+): Promise<MyProfileResponse | null> {
+  if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE_URL 환경변수가 없습니다.");
+
+  const res = await fetch(`${API_BASE}/users/profile/`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      ...(accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : {}),
+    },
+    credentials: accessToken ? "omit" : "include", // 쿠키 로그인 대비
+  });
+
+  if (!res.ok) return null;
+  return (await res.json()) as MyProfileResponse;
 }

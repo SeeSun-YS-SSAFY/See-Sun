@@ -31,7 +31,7 @@ export default function CustomExerciseType() {
   useEffect(() => {
     const fetchExercises = async () => {
       const data = await apiClient.get<ExerciseCategoryResponse>(
-        `/exercises/category/${exType}`
+        `/exercises/category/${exType}`,
       );
       setExercises(data);
     };
@@ -43,7 +43,9 @@ export default function CustomExerciseType() {
       <div className="relative flex items-center py-2.5 justify-center">
         <button
           type="button"
-          onClick={() => router.push("/exercise/custom/make_exercise/category/")}
+          onClick={() =>
+            router.push("/exercise/custom/make_exercise/category/")
+          }
           className="absolute left-0 flex items-center"
         >
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
@@ -57,8 +59,11 @@ export default function CustomExerciseType() {
         {exerciseCategory && (
           <ExerciseSwiper
             exercises={exerciseCategory.exercises as unknown as Exercise[]}
-            onPick={(ex) => {
-              setSelected({ exercise_id: ex.exercise_id, exercise_name: ex.exercise_name });
+            onClick={(ex) => {
+              setSelected({
+                exercise_id: ex.exercise_id,
+                exercise_name: ex.exercise_name,
+              });
               router.push("/exercise/custom/make_exercise");
             }}
           />
