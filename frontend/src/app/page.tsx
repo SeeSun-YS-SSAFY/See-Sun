@@ -17,7 +17,6 @@ type UserProfile = {
   weight_kg?: number;
 };
 
-
 function isProfileComplete(p?: UserProfile | null) {
   if (!p) return false;
 
@@ -32,10 +31,9 @@ function isProfileComplete(p?: UserProfile | null) {
 
 export default function Home() {
   const router = useRouter();
-  
 
   const hydrate = useSetAtom(hydrateAuthFromStorageAtom);
-  const { isAuthed, accessToken  } = useAtomValue(authAtom);
+  const { isAuthed, accessToken } = useAtomValue(authAtom);
   const [profileChecked, setProfileChecked] = useState(false);
 
   // ✅ hydration 끝났는지(깜빡임 방지)
@@ -53,7 +51,7 @@ export default function Home() {
     if (!isAuthed) router.replace("/login");
   }, [ready, isAuthed, router]);
 
-    useEffect(() => {
+  useEffect(() => {
     if (!ready) return;
     if (!isAuthed) return;
 
@@ -84,7 +82,6 @@ export default function Home() {
     };
   }, [ready, isAuthed, router]);
 
-
   // hydration 전/리다이렉트 직전 깜빡임 방지
   if (!ready) return null;
   if (!isAuthed) return null;
@@ -92,7 +89,7 @@ export default function Home() {
 
   // ✅ 여기부터는 "로그인 된 사용자만" 홈 UI 보임
   return (
-    <div className="bg-blue-500 h-full flex flex-col items-center justify-center py-15">
+    <div className="flex h-full flex-col items-center justify-center bg-blue-500 py-15">
       <div className="flex items-center gap-1">
         <Image
           src="/Seesunlogo_240x240.png"
@@ -103,12 +100,22 @@ export default function Home() {
         <h1 className="text-title-medium text-[#FFDB65]">See:Sun</h1>
       </div>
 
-      <div className="mt-10 flex-1 flex flex-col justify-center">
-        <div className="grid-cols-2 grid gap-4">
+      <div className="mt-10 flex flex-1 flex-col justify-center">
+        <div className="grid grid-cols-2 gap-4">
           <Card title="식단" icon="fork_spoon" />
           <Card title="운동" icon="exercise" href="/exercise" />
           <Card title="약" icon="pill" />
-          <Card title={<span>마이<br />페이지</span>} icon="person" href="/mypage" />
+          <Card
+            title={
+              <span>
+                마이
+                <br />
+                페이지
+              </span>
+            }
+            icon="person"
+            href="/mypage"
+          />
         </div>
       </div>
     </div>
@@ -126,9 +133,9 @@ function Card({ title, icon, href }: CardProps) {
   return (
     <Link
       href={href ?? "#"}
-      className="flex flex-col active:bg-yellow-700 items-center gap-3 px-10 w-full cursor-pointer rounded-[16px] shadow-100 outline-2 outline-black bg-yellow-500 h-52.5 justify-center"
+      className="shadow-100 flex h-52.5 w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-[16px] bg-yellow-500 px-10 outline-2 outline-black active:bg-yellow-700"
     >
-      <h2 className="break-keep whitespace-pre-line text-title-small text-blue-900">
+      <h2 className="text-title-small break-keep whitespace-pre-line text-blue-900">
         {title}
       </h2>
       <Icon
