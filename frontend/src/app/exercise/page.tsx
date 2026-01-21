@@ -21,7 +21,7 @@ export default function Exercise() {
 
         <h1 className="text-title-large text-white">운동 방식</h1>
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
+      <div className="mt-10 flex flex-1 flex-col justify-center gap-4 pb-25">
         <Button onClick={() => router.push("/exercise/single")}>단일</Button>
         <Button onClick={() => router.push("/exercise/routine")}>루틴</Button>
       </div>
