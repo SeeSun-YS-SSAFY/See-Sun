@@ -47,7 +47,7 @@ export default function ExerciseType() {
 
   // 픽토그램 애니메이션 (1초마다 변경)
   useEffect(() => {
-    if (!exerciseDetail || !exerciseDetail.pictograms || exerciseDetail.pictograms.length <= 1) {
+    if (!exerciseDetail || !exerciseDetail.pictograms || exerciseDetail.pictograms.length <= 1 || !isPlaying) {
       return;
     }
 
@@ -56,7 +56,7 @@ export default function ExerciseType() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [exerciseDetail]);
+  }, [exerciseDetail, isPlaying]);
 
   // 로깅 API 연결
   useEffect(() => {
