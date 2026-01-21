@@ -7,8 +7,7 @@
 from rest_framework import serializers
 from .models import (
     ExerciseCategory, Exercise, ExerciseMedia,
-    Playlist, PlaylistItem,
-    ExerciseSession, ExerciseSessionItem
+    Playlist, PlaylistItem
 )
 
 # -------------------------------------------------------------------------
@@ -201,31 +200,10 @@ class PlaylistSerializer(serializers.ModelSerializer):
 
 # -------------------------------------------------------------------------
 
-class ExerciseSessionItemSerializer(serializers.ModelSerializer):
-    """운동 세션 항목 시리얼라이저"""
-    exercise_name = serializers.CharField(source='exercise.exercise_name', read_only=True)
 
-    class Meta:
-        model = ExerciseSessionItem
-        fields = (
-            'session_item_id', 'exercise', 'exercise_name', 'playlist_item',
-            'sequence_no', 'started_at', 'ended_at', 'duration_ms',
-            'is_skipped', 'skip_reason', 'rest_sec'
-        )
 
 # -------------------------------------------------------------------------
 
-class ExerciseSessionSerializer(serializers.ModelSerializer):
-    """운동 세션 시리얼라이저"""
-    items = ExerciseSessionItemSerializer(many=True, read_only=True)
 
-    class Meta:
-        model = ExerciseSession
-        fields = (
-            'session_id', 'playlist', 'mode', 
-            'started_at', 'ended_at', 'duration_ms', 
-            'is_valid', 'abnormal_end_reason', 'items'
-        )
-        read_only_fields = ('user', 'session_id', 'items')
 
 # -------------------------------------------------------------------------
