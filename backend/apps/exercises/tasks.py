@@ -43,6 +43,44 @@ def merge_exercise_audios(category_id):
     return f"카테고리 {category_id}의 {exercises.count()}개 운동 병합 태스크 시작"
 
 
+def load_audio_without_ffprobe(file_path):
+    """
+    pydub.AudioSegment.from_mp3가 ffprobe를 필요로 하여 실패하는 경우를 대비해,
+    ffmpeg를 직접 사용하여 WAV로 디코딩 후 로드하는 함수.
+    """
+    try:
+        # 1. 시도: 기본 로드 (ffprobe가 있다면 성공)
+        return AudioSegment.from_mp3(str(file_path))
+    except Exception as e:
+        # 2. 실패 시: ffmpeg 직접 사용하여 WAV로 변환 후 로드
+        # print(f"기본 로드 실패, ffmpeg 직접 사용 시도: {e}")
+        try:
+            import subprocess
+            import io
+            import imageio_ffmpeg
+            
+            ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+            
+            # -y: overwrite, -f wav: output format, -: output to stdout
+            cmd = [ffmpeg_exe, '-i', str(file_path), '-y', '-f', 'wav', '-']
+            
+            # Windows에서 subprocess 실행 시 shell=False (기본값) 사용
+            # [WinError 2] 방지를 위해 ffmpeg_exe가 절대 경로인지 확인 (imageio_ffmpeg는 절대경로 반환함)
+            
+            process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout_data, stderr_data = process.communicate()
+            
+            if process.returncode != 0:
+                print(f"FFmpeg decode error: {stderr_data.decode('utf-8', errors='ignore')}")
+                raise e # 원래 에러 다시 발생
+                
+            return AudioSegment.from_wav(io.BytesIO(stdout_data))
+            
+        except Exception as ffmpeg_e:
+            print(f"FFmpeg 직접 로드도 실패: {ffmpeg_e}")
+            raise e  # 원래 에러 발생
+
+
 @shared_task
 def merge_single_exercise_audio(exercise_id):
     """
@@ -73,16 +111,21 @@ def merge_single_exercise_audio(exercise_id):
     for media in audio_medias:
         # URL에서 파일 경로 추출
         # URL 형식: /media/exercises/audio/{name}/{field}.mp3
-        file_path = settings.MEDIA_ROOT / media.url.lstrip('/media/')
+        # 주의: lstrip은 문자 집합을 제거하므로 replace 사용
+        relative_path = media.url.replace('/media/', '', 1)
+        file_path = settings.MEDIA_ROOT / relative_path
         
         if os.path.exists(file_path):
             try:
-                audio = AudioSegment.from_mp3(str(file_path))
+                # ffprobe 문제 해결을 위한 헬퍼 함수 사용
+                audio = load_audio_without_ffprobe(file_path)
                 combined += audio
                 # 각 오디오 사이에 0.5초 묵음 추가
                 combined += AudioSegment.silent(duration=500)
             except Exception as e:
                 print(f"오디오 로드 오류 ({file_path}): {e}")
+        else:
+            print(f"파일을 찾을 수 없음: {file_path}")
     
     # 병합된 파일 저장
     merged_dir = settings.MEDIA_ROOT / 'exercises' / 'audio_merged'

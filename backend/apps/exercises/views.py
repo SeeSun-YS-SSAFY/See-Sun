@@ -503,10 +503,31 @@ class ExerciseAudioView(APIView):
         combined = AudioSegment.empty()
         
         for media in audio_medias:
-            file_path = settings.MEDIA_ROOT / media.url.lstrip('/media/')
+            # lstrip('/media/') 버그 수정 -> replace 사용
+            relative_path = media.url.replace('/media/', '', 1)
+            file_path = settings.MEDIA_ROOT / relative_path
+            
             if os.path.exists(file_path):
                 try:
-                    audio = AudioSegment.from_mp3(str(file_path))
+                    # pydub.AudioSegment.from_mp3가 ffprobe를 필요로 하여 실패하는 경우 대비
+                    # 직접 ffmpeg로 WAV 디코딩 후 로드
+                    try:
+                        audio = AudioSegment.from_mp3(str(file_path))
+                    except Exception as e:
+                        # ffmpeg 직접 사용
+                        import subprocess
+                        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                        cmd = [ffmpeg_exe, '-i', str(file_path), '-y', '-f', 'wav', '-']
+                        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout_data, stderr_data = process.communicate()
+                        
+                        if process.returncode != 0:
+                            print(f"FFmpeg decode error ({file_path}): {stderr_data.decode('utf-8', errors='ignore')}")
+                            raise e
+                        
+                        import io
+                        audio = AudioSegment.from_wav(io.BytesIO(stdout_data))
+
                     combined += audio
                     combined += AudioSegment.silent(duration=500)
                 except Exception as e:
