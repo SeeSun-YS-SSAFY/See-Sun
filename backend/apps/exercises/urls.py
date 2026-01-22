@@ -4,7 +4,7 @@ from .views import (
     ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView,
     PlaylistCreateView, PlaylistDetailView, PlaylistListView,
     PlaylistItemAddView, PlaylistItemDetailView, TTSTestView, GoogleTTSView,
-    PlaylistAudioView
+    PlaylistAudioView, ExerciseAudioView
 )
 
 app_name = 'exercises'
@@ -25,6 +25,7 @@ urlpatterns = [
     path('playlist/<uuid:playlist_id>/', PlaylistDetailView.as_view(), name='playlist_detail'),
     path('playlist/create/', PlaylistCreateView.as_view(), name='playlist_create'),
     path('playlist/', PlaylistListView.as_view(), name='playlist_list'),
+    path('<uuid:exercise_id>/audio/', ExerciseAudioView.as_view(), name='exercise_audio'),
     path('<uuid:exercise_id>/', ExerciseDetailView.as_view(), name='exercise_detail'),
     path('', include(router.urls)),
 ]

@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.generic import TemplateView  # TemplateView 추가
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from .models import Exercise, Playlist, ExerciseCategory, PlaylistItem
 
@@ -129,6 +130,14 @@ class ExerciseListByCategoryView(APIView):
             "category_name": category.display_name,
             "exercises": exercise_data
         }
+        
+        # 백그라운드에서 해당 카테고리 운동들의 오디오 병합 태스크 시작
+        try:
+            from .tasks import merge_exercise_audios
+            merge_exercise_audios.delay(category.category_id)
+        except Exception as e:
+            # Celery 오류 시 무시 (병합 실패해도 API는 정상 동작)
+            print(f"Celery 태스크 트리거 실패: {e}")
         
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -433,5 +442,77 @@ class PlaylistAudioView(APIView):
                 {"error": f"TTS 생성 오류: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+# -----------------------------------------------------------------------
+
+class ExerciseAudioView(APIView):
+    """
+    단일 운동의 병합된 오디오 파일 반환 API
+    
+    - 병합된 파일이 있으면 반환
+    - 없으면 실시간 병합 후 반환
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, exercise_id):
+        from django.http import HttpResponse
+        from pydub import AudioSegment
+        import os
+        
+        # 1. 운동 조회
+        exercise = Exercise.objects.filter(exercise_id=exercise_id).first()
+        if not exercise:
+            return Response(
+                {"error": "해당 운동을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 2. 병합된 파일 확인
+        filename = exercise.name_en if exercise.name_en else str(exercise.exercise_id)
+        merged_path = settings.MEDIA_ROOT / 'exercises' / 'audio_merged' / f"{filename}_merged.mp3"
+        
+        if os.path.exists(merged_path):
+            # 병합된 파일 존재 → 바로 반환
+            with open(merged_path, 'rb') as f:
+                audio_content = f.read()
+            response = HttpResponse(audio_content, content_type="audio/mpeg")
+            response['Content-Disposition'] = f'inline; filename="{filename}_merged.mp3"'
+            return response
+        
+        # 3. 병합된 파일 없음 → 실시간 병합
+        from .models import ExerciseMedia
+        
+        audio_medias = ExerciseMedia.objects.filter(
+            exercise=exercise,
+            media_type='GUIDE_AUDIO'
+        ).order_by('sequence')
+        
+        if not audio_medias.exists():
+            return Response(
+                {"error": "해당 운동에 오디오가 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        combined = AudioSegment.empty()
+        
+        for media in audio_medias:
+            file_path = settings.MEDIA_ROOT / media.url.lstrip('/media/')
+            if os.path.exists(file_path):
+                try:
+                    audio = AudioSegment.from_mp3(str(file_path))
+                    combined += audio
+                    combined += AudioSegment.silent(duration=500)
+                except Exception as e:
+                    print(f"오디오 로드 오류: {e}")
+        
+        # mp3로 export
+        import io
+        buffer = io.BytesIO()
+        combined.export(buffer, format="mp3")
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer.read(), content_type="audio/mpeg")
+        response['Content-Disposition'] = f'inline; filename="{filename}_merged.mp3"'
+        return response
 
 # -----------------------------------------------------------------------
