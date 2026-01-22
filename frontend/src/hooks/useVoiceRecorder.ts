@@ -14,7 +14,6 @@ import { uploadAudioForSTT } from "@/lib/sttApi";
 function pickMimeType() {
   const candidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
   for (const type of candidates) {
-    // @ts-ignore
     if (
       typeof MediaRecorder !== "undefined" &&
       MediaRecorder.isTypeSupported?.(type)
@@ -91,7 +90,7 @@ export function useVoiceRecorder() {
           }
         };
 
-        recorder.onerror = (ev: any) => {
+        recorder.onerror = (ev: ErrorEvent) => {
           reject(ev?.error ?? new Error("녹음 중 오류가 발생했습니다."));
         };
 
@@ -127,7 +126,7 @@ export function useVoiceRecorder() {
       const { text } = await uploadAudioForSTT(audioBlob);
       setText(text);
       setUpload("success");
-    } catch (e: any) {
+    } catch (e) {
       await cleanupSilenceDetector();
 
       setRecording("off");
@@ -152,8 +151,7 @@ export function useVoiceRecorder() {
   const startSilenceDetector = useCallback(
     async (stream: MediaStream) => {
       // AudioContext는 사용자 제스처(버튼 클릭/터치) 안에서 생성되는 게 안전
-      const AudioContextCtor =
-        window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
       const audioCtx: AudioContext = new AudioContextCtor();
       audioCtxRef.current = audioCtx;
 
@@ -223,7 +221,10 @@ export function useVoiceRecorder() {
       chunksRef.current = [];
       stopCalledRef.current = false; // 시작할 때 리셋
 
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      const recorder = new MediaRecorder(
+        stream,
+        mimeType ? { mimeType } : undefined
+      );
       recorderRef.current = recorder;
 
       recorder.ondataavailable = (e) => {
@@ -289,7 +290,6 @@ export function useVoiceRecorder() {
 
   return { start, stop, handlers };
 }
-
 
 // threshold:
 

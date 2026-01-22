@@ -67,7 +67,11 @@ class ExerciseDetailAPITest(APITestCase):
         self.assertEqual(data['category_name'], "근력 운동")
         self.assertEqual(data['exercise_description'], "하체 근력 강화")
         self.assertEqual(data['exercise_guide'], "정확한 자세가 중요합니다.")
-        self.assertEqual(data['pictogram_url'], 'https://example.com/squat_pictogram.png')
+        
+        # 픽토그램 리스트 확인 (pictogram_url -> pictograms 변경됨)
+        self.assertIn('pictograms', data)
+        self.assertEqual(len(data['pictograms']), 1)
+        self.assertIn('https://example.com/squat_pictogram.png', data['pictograms'])
         
         # 상세 폼 설명 필드 확인
         self.assertEqual(data['first_description'], "다리를 어깨 너비로 벌립니다.")
@@ -81,7 +85,7 @@ class ExerciseDetailAPITest(APITestCase):
         print(f"    - 가이드: {data['exercise_guide']}")
         print(f"    - 시작 자세: {data['first_description']}")
         print(f"    - 운동 동작: {data['main_form']}")
-        print(f"    - 픽토그램 URL: {data['pictogram_url']}")
+        print(f"    - 픽토그램: {data['pictograms']}")
 
         print("  - 상세 데이터 필드 값 검증 완료")
         
