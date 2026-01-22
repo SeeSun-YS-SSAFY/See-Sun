@@ -459,6 +459,13 @@ class ExerciseAudioView(APIView):
         from pydub import AudioSegment
         import os
         
+        # imageio-ffmpeg에서 ffmpeg 경로 설정
+        try:
+            import imageio_ffmpeg
+            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+        except ImportError:
+            pass
+        
         # 1. 운동 조회
         exercise = Exercise.objects.filter(exercise_id=exercise_id).first()
         if not exercise:

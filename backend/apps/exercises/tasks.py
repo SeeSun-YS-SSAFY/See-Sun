@@ -10,6 +10,13 @@ from pydub import AudioSegment
 from pathlib import Path
 import os
 
+# imageio-ffmpeg에서 ffmpeg 경로 가져오기
+try:
+    import imageio_ffmpeg
+    AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+except ImportError:
+    pass  # imageio-ffmpeg가 없으면 시스템 ffmpeg 사용
+
 
 @shared_task
 def merge_exercise_audios(category_id):
