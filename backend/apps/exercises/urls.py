@@ -3,7 +3,8 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     ExerciseCategoryListView, ExerciseListByCategoryView, ExerciseDetailView,
     PlaylistCreateView, PlaylistDetailView, PlaylistListView,
-    PlaylistItemAddView, PlaylistItemDetailView, TTSTestView, GoogleTTSView
+    PlaylistItemAddView, PlaylistItemDetailView, TTSTestView, GoogleTTSView,
+    PlaylistAudioView
 )
 
 app_name = 'exercises'
@@ -20,6 +21,7 @@ urlpatterns = [
     path('category/', ExerciseCategoryListView.as_view(), name='category_list'),
     path('playlist/<uuid:playlist_id>/items/<uuid:item_id>/', PlaylistItemDetailView.as_view(), name='playlist_item_detail'),
     path('playlist/<uuid:playlist_id>/items/', PlaylistItemAddView.as_view(), name='playlist_item_add'),
+    path('playlist/<uuid:playlist_id>/audio/', PlaylistAudioView.as_view(), name='playlist_audio'),
     path('playlist/<uuid:playlist_id>/', PlaylistDetailView.as_view(), name='playlist_detail'),
     path('playlist/create/', PlaylistCreateView.as_view(), name='playlist_create'),
     path('playlist/', PlaylistListView.as_view(), name='playlist_list'),

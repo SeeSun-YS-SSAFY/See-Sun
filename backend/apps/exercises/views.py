@@ -385,3 +385,53 @@ class GoogleTTSView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # -----------------------------------------------------------------------
+
+class PlaylistAudioView(APIView):
+    """
+    루틴 화면 진입 시 동적 TTS 오디오 생성 API
+    
+    - 운동 목록이 없으면: "{루틴이름} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
+    - 운동 목록이 있으면: "{루틴이름} 화면입니다. 아래에 목록 중 운동을 선택해주세요."
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, playlist_id):
+        # 1. 루틴 조회
+        playlist = Playlist.objects.filter(
+            playlist_id=playlist_id,
+            user=request.user
+        ).first()
+        
+        if not playlist:
+            return Response(
+                {"error": "해당 루틴을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 2. 운동 목록 유무 확인
+        has_items = playlist.items.exists()
+        
+        # 3. 안내 텍스트 생성
+        if has_items:
+            text = f"{playlist.title} 화면입니다. 아래에 목록 중 운동을 선택해주세요."
+        else:
+            text = f"{playlist.title} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
+        
+        # 4. TTS 생성 (저장 안 함)
+        try:
+            from .google_tts import GoogleTTSClient
+            tts_client = GoogleTTSClient()
+            audio_content = tts_client.synthesize_text(text)
+            
+            from django.http import HttpResponse
+            response = HttpResponse(audio_content, content_type="audio/mpeg")
+            response['Content-Disposition'] = 'inline; filename="playlist_audio.mp3"'
+            return response
+            
+        except Exception as e:
+            return Response(
+                {"error": f"TTS 생성 오류: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# -----------------------------------------------------------------------
