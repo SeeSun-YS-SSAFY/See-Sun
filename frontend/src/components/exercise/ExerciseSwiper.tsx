@@ -114,11 +114,11 @@ export default function ExerciseSwiper({
                     (isActive || isNext || isPrev) && "translate-y-0",
                     // 나머지는 기본적으로 60px 내려가도록 (이건 CSS selector fallback과 결합)
                     !(isActive || isNext || isPrev) &&
-                      "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]",
+                    "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]",
                   );
 
                   return (
-                    <div className="flex flex-col justify-center h-full">
+                    <div className="flex flex-col justify-center h-full select-none">
                       <div
                         className={cn(
                           slideBaseStyles,
@@ -135,13 +135,14 @@ export default function ExerciseSwiper({
                             )}
                           >
                             <Image
-                              src={exercise.pictogram_url}
+                              src={`${process.env.NEXT_PUBLIC_API_MEDIA_URL}${exercise.pictogram_url}`}
                               alt={exercise.exercise_name}
                               fill
                               className={cn(
                                 "object-contain hidden",
                                 isActive && "block",
                               )}
+                              draggable={false}
                             />
                           </div>
                         )}
