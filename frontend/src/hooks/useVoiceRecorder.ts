@@ -151,7 +151,7 @@ export function useVoiceRecorder() {
   const startSilenceDetector = useCallback(
     async (stream: MediaStream) => {
       // AudioContext는 사용자 제스처(버튼 클릭/터치) 안에서 생성되는 게 안전
-      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      const AudioContextCtor = window.AudioContext;
       const audioCtx: AudioContext = new AudioContextCtor();
       audioCtxRef.current = audioCtx;
 

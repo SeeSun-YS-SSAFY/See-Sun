@@ -1,12 +1,13 @@
-"use client";
+﻿"use client";
 
 import Icon from "@/components/common/Icon";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
-import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
+import { useAtomValue } from "jotai";
+import { authAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 import { apiClient } from "@/lib/apiClient";
 
 type UserProfile = {
@@ -32,7 +33,7 @@ function isProfileComplete(p?: UserProfile | null) {
 export default function Home() {
   const router = useRouter();
 
-  const hydrate = useSetAtom(hydrateAuthFromStorageAtom);
+  const { hydrateAuthFromStorage } = useAuthActions();
   const { isAuthed, accessToken } = useAtomValue(authAtom);
   const [profileChecked, setProfileChecked] = useState(false);
 
@@ -41,9 +42,9 @@ export default function Home() {
 
   // 1) 앱 진입 시 localStorage -> jotai 반영
   useEffect(() => {
-    hydrate();
+    hydrateAuthFromStorage();
     setReady(true);
-  }, [hydrate]);
+  }, [hydrateAuthFromStorage]);
 
   // 2) auth 상태에 따라 라우팅
   useEffect(() => {

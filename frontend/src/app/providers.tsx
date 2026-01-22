@@ -1,17 +1,16 @@
-// app/providers.tsx
+﻿// app/providers.tsx
 "use client";
 
 import { ReactNode, useEffect } from "react";
-import { useSetAtom } from "jotai";
-import { hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 import MSWProvider from "./msw-provider";
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const hydrateAuth = useSetAtom(hydrateAuthFromStorageAtom);
+  const { hydrateAuthFromStorage } = useAuthActions();
 
   useEffect(() => {
-    hydrateAuth(); // ⭐ 여기서 hydrate
-  }, [hydrateAuth]);
+    hydrateAuthFromStorage(); // ⭐ 여기서 hydrate
+  }, [hydrateAuthFromStorage]);
 
   return (
     <MSWProvider>
