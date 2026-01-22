@@ -1,6 +1,11 @@
-// atoms/auth/signupAtoms.ts
+﻿// atoms/auth/signupAtoms.ts
 import { atom } from "jotai";
-import { setAuthTokenAtom } from "./authAtoms";
+import {
+  authAtom,
+  buildAuthState,
+  normalizeAuthTokens,
+  persistAuthTokens,
+} from "./authAtoms";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
@@ -64,7 +69,11 @@ export const signupRequestAtom = atom(
 
       const data: SignupResponse = await res.json().catch(() => ({}) as any);
 
-      if (data?.token) set(setAuthTokenAtom, data.token);
+      const tokens = normalizeAuthTokens(data?.token);
+      if (tokens) {
+        persistAuthTokens(tokens);
+        set(authAtom, buildAuthState(tokens));
+      }
 
       return { ok: true as const, data };
     } catch (e: any) {

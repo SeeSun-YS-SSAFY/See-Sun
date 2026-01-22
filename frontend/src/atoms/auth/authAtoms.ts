@@ -1,4 +1,4 @@
-// src/atoms/auth/authAtoms.ts
+﻿// src/atoms/auth/authAtoms.ts
 import { atom } from "jotai";
 
 const ACCESS_KEY = "accessToken";
@@ -33,54 +33,65 @@ export type AuthState = {
   isAuthed: boolean;
 };
 
+export type AuthTokens = {
+  accessToken: string | null;
+  refreshToken: string | null;
+};
+
 export const authAtom = atom<AuthState>({
   accessToken: null,
   refreshToken: null,
   isAuthed: false,
 });
 
-// 쓰기 전용 액션 atom (컴포넌트/클라이언트에서 이거만 set 하면 됨)
-export const setAuthTokenAtom = atom(
-  null,
-  (_get, set, payload: { accessToken: string | null; refreshToken: string | null }) => {
-    const { accessToken, refreshToken } = payload;
+export function buildAuthState(tokens: AuthTokens): AuthState {
+  return {
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    isAuthed: !!tokens.accessToken,
+  };
+}
 
-    if (accessToken) safeSetLS(ACCESS_KEY, accessToken);
-    else safeRemoveLS(ACCESS_KEY);
+export function persistAuthTokens(tokens: AuthTokens) {
+  if (tokens.accessToken) safeSetLS(ACCESS_KEY, tokens.accessToken);
+  else safeRemoveLS(ACCESS_KEY);
 
-    if (refreshToken) safeSetLS(REFRESH_KEY, refreshToken);
-    else safeRemoveLS(REFRESH_KEY);
+  if (tokens.refreshToken) safeSetLS(REFRESH_KEY, tokens.refreshToken);
+  else safeRemoveLS(REFRESH_KEY);
+}
 
-    set(authAtom, {
-      accessToken,
-      refreshToken,
-      isAuthed: !!accessToken,
-    });
-  }
-);
-
-// 앱 시작 시 localStorage에서 읽어서 authAtom 세팅
-export const hydrateAuthFromStorageAtom = atom(null, (_get, set) => {
-  const accessToken = safeGetLS(ACCESS_KEY);
-  const refreshToken = safeGetLS(REFRESH_KEY);
-
-  set(authAtom, {
-    accessToken,
-    refreshToken,
-    isAuthed: !!accessToken,
-  });
-});
-
-/**
- * refresh 실패/만료 시 강제 로그아웃
- */
-export const logoutAtom = atom(null, (_get, set) => {
+export function clearAuthStorage() {
   safeRemoveLS(ACCESS_KEY);
   safeRemoveLS(REFRESH_KEY);
+}
 
-  set(authAtom, {
-    accessToken: null,
-    refreshToken: null,
-    isAuthed: false,
-  });
-});
+export function readAuthTokensFromStorage(): AuthTokens {
+  return {
+    accessToken: safeGetLS(ACCESS_KEY),
+    refreshToken: safeGetLS(REFRESH_KEY),
+  };
+}
+
+export function normalizeAuthTokens(input: unknown): AuthTokens | null {
+  if (!input) return null;
+  if (typeof input === "string") {
+    return { accessToken: input, refreshToken: null };
+  }
+
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    const accessToken =
+      (record.accessToken as string | null) ??
+      (record.access_token as string | null) ??
+      null;
+    const refreshToken =
+      (record.refreshToken as string | null) ??
+      (record.refresh_token as string | null) ??
+      null;
+
+    if (!accessToken && !refreshToken) return null;
+    return { accessToken, refreshToken };
+  }
+
+  return null;
+}

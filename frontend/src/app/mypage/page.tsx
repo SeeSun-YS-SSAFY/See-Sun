@@ -1,19 +1,20 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Button from "@/components/common/Button";
 import MiniButton from "@/components/common/MiniButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useAtomValue, useSetAtom } from "jotai";
-import { authAtom, logoutAtom } from "@/atoms/auth/authAtoms";
+import { useAtomValue } from "jotai";
+import { authAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 import { apiClient } from "@/lib/apiClient"; // ✅ 추가
 
 export default function MyPage() {
   const router = useRouter();
 
   const { accessToken, isAuthed } = useAtomValue(authAtom);
-  const logout = useSetAtom(logoutAtom);
+  const { logout } = useAuthActions();
 
   const [userName, setUserName] = useState<string>("");
 
@@ -35,7 +36,7 @@ export default function MyPage() {
         if (cancelled) return;
         setUserName(data.name);
       } catch (e) {
-        // apiClient가 refresh 실패 시 logoutAtom을 이미 실행함
+        // apiClient가 refresh 실패 시 logout 액션을 이미 실행함
         // 여기서는 화면 이동만 처리하면 됨
         if (cancelled) return;
         console.error(e);
