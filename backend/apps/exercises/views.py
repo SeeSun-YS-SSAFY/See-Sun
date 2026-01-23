@@ -19,6 +19,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.views.generic import TemplateView  # TemplateView 추가
+from django.conf import settings
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
 from .models import Exercise, Playlist, ExerciseCategory, PlaylistItem
 
@@ -129,6 +130,14 @@ class ExerciseListByCategoryView(APIView):
             "category_name": category.display_name,
             "exercises": exercise_data
         }
+        
+        # 백그라운드에서 해당 카테고리 운동들의 오디오 병합 태스크 시작
+        try:
+            from .tasks import merge_exercise_audios
+            merge_exercise_audios.delay(category.category_id)
+        except Exception as e:
+            # Celery 오류 시 무시 (병합 실패해도 API는 정상 동작)
+            print(f"Celery 태스크 트리거 실패: {e}")
         
         return Response(response_data, status=status.HTTP_200_OK)
 
@@ -383,5 +392,155 @@ class GoogleTTSView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# -----------------------------------------------------------------------
+
+class PlaylistAudioView(APIView):
+    """
+    루틴 화면 진입 시 동적 TTS 오디오 생성 API
+    
+    - 운동 목록이 없으면: "{루틴이름} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
+    - 운동 목록이 있으면: "{루틴이름} 화면입니다. 아래에 목록 중 운동을 선택해주세요."
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, playlist_id):
+        # 1. 루틴 조회
+        playlist = Playlist.objects.filter(
+            playlist_id=playlist_id,
+            user=request.user
+        ).first()
+        
+        if not playlist:
+            return Response(
+                {"error": "해당 루틴을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 2. 운동 목록 유무 확인
+        has_items = playlist.items.exists()
+        
+        # 3. 안내 텍스트 생성
+        if has_items:
+            text = f"{playlist.title} 화면입니다. 아래에 목록 중 운동을 선택해주세요."
+        else:
+            text = f"{playlist.title} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
+        
+        # 4. TTS 생성 (저장 안 함)
+        try:
+            from .google_tts import GoogleTTSClient
+            tts_client = GoogleTTSClient()
+            audio_content = tts_client.synthesize_text(text)
+            
+            from django.http import HttpResponse
+            response = HttpResponse(audio_content, content_type="audio/mpeg")
+            response['Content-Disposition'] = 'inline; filename="playlist_audio.mp3"'
+            return response
+            
+        except Exception as e:
+            return Response(
+                {"error": f"TTS 생성 오류: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# -----------------------------------------------------------------------
+
+class ExerciseAudioView(APIView):
+    """
+    단일 운동의 병합된 오디오 파일 반환 API
+    
+    - 병합된 파일이 있으면 반환
+    - 없으면 실시간 병합 후 반환
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, exercise_id):
+        from django.http import HttpResponse
+        from pydub import AudioSegment
+        import os
+        
+        # imageio-ffmpeg에서 ffmpeg 경로 설정
+        try:
+            import imageio_ffmpeg
+            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+        except ImportError:
+            pass
+        
+        # 1. 운동 조회
+        exercise = Exercise.objects.filter(exercise_id=exercise_id).first()
+        if not exercise:
+            return Response(
+                {"error": "해당 운동을 찾을 수 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # 2. 병합된 파일 확인
+        filename = exercise.name_en if exercise.name_en else str(exercise.exercise_id)
+        merged_path = settings.MEDIA_ROOT / 'exercises' / 'audio_merged' / f"{filename}_merged.mp3"
+        
+        if os.path.exists(merged_path):
+            # 병합된 파일 존재 → 바로 반환
+            with open(merged_path, 'rb') as f:
+                audio_content = f.read()
+            response = HttpResponse(audio_content, content_type="audio/mpeg")
+            response['Content-Disposition'] = f'inline; filename="{filename}_merged.mp3"'
+            return response
+        
+        # 3. 병합된 파일 없음 → 실시간 병합
+        from .models import ExerciseMedia
+        
+        audio_medias = ExerciseMedia.objects.filter(
+            exercise=exercise,
+            media_type='GUIDE_AUDIO'
+        ).order_by('sequence')
+        
+        if not audio_medias.exists():
+            return Response(
+                {"error": "해당 운동에 오디오가 없습니다."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        combined = AudioSegment.empty()
+        
+        for media in audio_medias:
+            # lstrip('/media/') 버그 수정 -> replace 사용
+            relative_path = media.url.replace('/media/', '', 1)
+            file_path = settings.MEDIA_ROOT / relative_path
+            
+            if os.path.exists(file_path):
+                try:
+                    # pydub.AudioSegment.from_mp3가 ffprobe를 필요로 하여 실패하는 경우 대비
+                    # 직접 ffmpeg로 WAV 디코딩 후 로드
+                    try:
+                        audio = AudioSegment.from_mp3(str(file_path))
+                    except Exception as e:
+                        # ffmpeg 직접 사용
+                        import subprocess
+                        ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
+                        cmd = [ffmpeg_exe, '-i', str(file_path), '-y', '-f', 'wav', '-']
+                        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout_data, stderr_data = process.communicate()
+                        
+                        if process.returncode != 0:
+                            print(f"FFmpeg decode error ({file_path}): {stderr_data.decode('utf-8', errors='ignore')}")
+                            raise e
+                        
+                        import io
+                        audio = AudioSegment.from_wav(io.BytesIO(stdout_data))
+
+                    combined += audio
+                    combined += AudioSegment.silent(duration=500)
+                except Exception as e:
+                    print(f"오디오 로드 오류: {e}")
+        
+        # mp3로 export
+        import io
+        buffer = io.BytesIO()
+        combined.export(buffer, format="mp3")
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer.read(), content_type="audio/mpeg")
+        response['Content-Disposition'] = f'inline; filename="{filename}_merged.mp3"'
+        return response
 
 # -----------------------------------------------------------------------

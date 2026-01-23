@@ -49,7 +49,7 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.display_name', read_only=True)
     exercise_guide = serializers.CharField(source='exercise_guide_text', read_only=True)
     pictograms = serializers.SerializerMethodField()
-    audios = serializers.SerializerMethodField()
+    merged_audio_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Exercise
@@ -58,7 +58,7 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
             'exercise_description',
             'first_description', 'main_form', 'form_description', 
             'stay_form', 'fixed_form',
-            'exercise_guide', 'pictograms', 'audios'
+            'exercise_guide', 'pictograms', 'merged_audio_url'
         )
 
     def get_pictograms(self, obj):
@@ -68,14 +68,9 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
             if m.media_type == 'PICTOGRAM'
         ]
 
-    def get_audios(self, obj):
-        # TTS 오디오 URL 리스트 반환 (타입 포함)
-        # s3_key 필드를 오디오의 세부 타입(예: main_form)으로 사용 중
-        return [
-            {'type': m.s3_key, 'url': m.url}
-            for m in obj.media_contents.all()
-            if m.media_type == 'GUIDE_AUDIO'
-        ]
+    def get_merged_audio_url(self, obj):
+        # 병합된 오디오 URL 반환
+        return f"/api/v1/exercises/{obj.exercise_id}/audio/"
 
 # ----------------------------------------------------------------------------
 
