@@ -36,6 +36,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI 서버 (반드시 맨 위)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -46,11 +47,13 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',  # 로그아웃 블랙리스트
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
+    'channels',  # WebSocket
     # Local
     'apps.users.apps.UsersConfig',
     'apps.exercises.apps.ExercisesConfig',
+    'apps.stt.apps.SttConfig',
     'apps.logs.apps.LogsConfig',
 ]
 
@@ -83,6 +86,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database

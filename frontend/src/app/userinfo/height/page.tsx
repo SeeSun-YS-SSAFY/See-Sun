@@ -2,57 +2,35 @@
 
 import { useEffect, useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue, useSetAtom } from "jotai";
-import {
-  recordingStatusAtom,
-  sttErrorAtom,
-  sttTextAtom,
-  uploadStatusAtom,
-  resetSttAtom,
-} from "@/atoms/stt/sttAtoms";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 
-function extractNumber(text: string) {
-  // "키 175", "175cm", "일칠오" 같은 건 완벽 대응 어렵고,
-  // 최소한 숫자 포함 케이스(175, 175cm)는 잡아줌
-  const m = text.match(/\d+/);
-  return m ? m[0] : "";
-}
-
 export default function Height() {
   const router = useRouter();
 
-  const recordingStatus = useAtomValue(recordingStatusAtom);
-  const uploadStatus = useAtomValue(uploadStatusAtom);
-  const sttText = useAtomValue(sttTextAtom);
-  const sttError = useAtomValue(sttErrorAtom);
-
-  const { handlers } = useVoiceRecorder();
-
   // ✅ 키 Input 상태 (string으로 관리 → Input과 궁합 좋음)
   const [height, setHeight] = useState("");
-  const resetStt = useSetAtom(resetSttAtom);
 
-    useEffect(() => {
-    resetStt();
-    setHeight("");
-
-    return () => resetStt();
-  }, [resetStt]);
-
-  // ✅ STT 성공 시 숫자만 뽑아서 Input에 반영
-  useEffect(() => {
-    if (uploadStatus === "success" && sttText) {
-      const num = extractNumber(sttText);
+  const {
+    isActive,
+    isProcessing,
+    toggleRecording,
+    result,
+  } = useFormSTT({
+    field: "height",
+    onResult: (res) => {
+      // Gemini 정규화 결과가 숫자 문자열이면 바로 사용
+      const num = res.normalized.replace(/[^\d]/g, "");
       if (num) setHeight(num);
-    }
-  }, [uploadStatus, sttText]);
+    },
+  });
 
   // ✅ uploadStatus가 생기면 Input 표시 (idle 제외)
-  const showHeightInput = uploadStatus !== "idle";
+  // useFormSTT에서는 result가 있거나 isActive/isProcessing 등으로 판단 가능
+  // 여기서는 값이 있으면 표시
+  const showHeightInput = height.length > 0;
 
   const heightNum = useMemo(() => Number(height), [height]);
   const isValidHeight =
@@ -62,7 +40,7 @@ export default function Height() {
     if (!isValidHeight) return;
 
     sessionStorage.setItem("height", String(heightNum));
-    router.push("/userinfo/weight"); // 다음 단계 경로로 바꿔줘
+    router.push("/userinfo/weight");
   };
 
   return (
@@ -76,39 +54,25 @@ export default function Height() {
 
       <div className="mt-10 flex flex-col items-center gap-4">
         <MicButton
-          status={recordingStatus === "recording" ? "recording" : "off"}
-          {...handlers}
+          isRecording={isActive}
+          isProcessing={isProcessing}
+          onClick={toggleRecording}
         />
-
-        {/* <div className="text-white text-sm">
-          {recordingStatus === "recording" && "녹음 중..."}
-          {uploadStatus === "uploading" && "업로드/인식 중..."}
-          {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div> */}
       </div>
 
-      {showHeightInput && (
-        <div className="mt-6 flex flex-col gap-2">
-          <Input
-            placeholder="키 (cm)"
-            inputMode="numeric"
-            maxLength={3}
-            value={height}
-            onChange={(e) => {
-              // 숫자만 허용
-              const onlyNum = e.target.value.replace(/[^\d]/g, "");
-              setHeight(onlyNum);
-            }}
-          />
-
-          {/* {!isValidHeight && height.length > 0 && (
-            <div className="text-red-400 text-xs">
-              키는 50~250cm 범위로 입력해주세요.
-            </div>
-          )} */}
-        </div>
-      )}
+      <div className="mt-6 flex flex-col gap-2">
+        <Input
+          placeholder="키 (cm)"
+          inputMode="numeric"
+          maxLength={3}
+          value={height}
+          onChange={(e) => {
+            // 숫자만 허용
+            const onlyNum = e.target.value.replace(/[^\d]/g, "");
+            setHeight(onlyNum);
+          }}
+        />
+      </div>
 
       <div className="mt-6">
         <Button disabled={!isValidHeight} onClick={handleNext}>

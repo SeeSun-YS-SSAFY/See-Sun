@@ -1,20 +1,15 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import MicButton from "@/components/common/MicButton";
 import { useAtomValue, useSetAtom } from "jotai";
-import {
-  recordingStatusAtom,
-  sttTextAtom,
-  uploadStatusAtom,
-  resetSttAtom,
-} from "@/atoms/stt/sttAtoms";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 import { fetchMyProfile } from "@/lib/profileApt";
-import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
+import { authAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 
 export default function Name() {
   const router = useRouter();
@@ -23,19 +18,27 @@ export default function Name() {
   const { accessToken } = useAtomValue(authAtom);
 
   // ✅ 토큰이 localStorage에 있으면 authAtom에 채우기
-  const hydrateAuth = useSetAtom(hydrateAuthFromStorageAtom);
+  const { hydrateAuthFromStorage } = useAuthActions();
   useEffect(() => {
-    hydrateAuth();
-  }, [hydrateAuth]);
+    hydrateAuthFromStorage();
+  }, [hydrateAuthFromStorage]);
 
-  const recordingStatus = useAtomValue(recordingStatusAtom);
-  const uploadStatus = useAtomValue(uploadStatusAtom);
-  const sttText = useAtomValue(sttTextAtom);
-
-  const { handlers } = useVoiceRecorder();
   const [name, setName] = useState("");
 
-  const resetStt = useSetAtom(resetSttAtom);
+  const {
+    isActive,
+    isProcessing,
+    toggleRecording,
+  } = useFormSTT({
+    field: "name",
+    onResult: (res) => {
+      setName(res.normalized);
+    },
+    onError: (err) => {
+      console.error("STT Error:", err);
+      // alert or TTS?
+    },
+  });
 
   // ✅ 프로필 조회해서 name 있으면 자동 스킵
   const routedRef = useRef(false);
@@ -56,19 +59,7 @@ export default function Name() {
     run();
   }, [accessToken, router]);
 
-  useEffect(() => {
-    resetStt();
-    setName("");
-    return () => resetStt();
-  }, [resetStt]);
-
-  useEffect(() => {
-    if (uploadStatus === "success" && sttText) {
-      setName(sttText);
-    }
-  }, [uploadStatus, sttText]);
-
-  const showNameInput = uploadStatus !== "idle";
+  const showNameInput = name.length > 0;
 
   const handleNext = () => {
     const trimmedName = name.trim();
@@ -89,22 +80,21 @@ export default function Name() {
 
       <div className="mt-10 flex flex-col items-center gap-4">
         <MicButton
-          status={recordingStatus === "recording" ? "recording" : "off"}
-          {...handlers}
+          isRecording={isActive}
+          isProcessing={isProcessing}
+          onClick={toggleRecording}
         />
       </div>
 
-      {showNameInput && (
-        <div className="mt-6 flex flex-col">
-          <Input
-            placeholder="이름"
-            inputMode="text"
-            maxLength={20}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-      )}
+      <div className="mt-6 flex flex-col">
+        <Input
+          placeholder="이름"
+          inputMode="text"
+          maxLength={20}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
 
       <div className="mt-6">
         <Button disabled={!name.trim()} onClick={handleNext}>
