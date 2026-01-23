@@ -32,7 +32,7 @@ export default function AuthCallbackPage() {
 
     (async () => {
       try {
-        const res = await fetch(`${API_BASE}/users/auth/oauth/google`, {
+        const res = await fetch(`${API_BASE}/users/auth/oauth/google/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code, redirect_uri: REDIRECT_URL }),
