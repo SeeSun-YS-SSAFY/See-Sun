@@ -226,3 +226,6 @@ service-account.json
 
 ## 구글 STT 사용할 때 필요한 키json
 google-credentials.json
+
+# Exception: Allow frontend lib directory
+!frontend/src/lib/
