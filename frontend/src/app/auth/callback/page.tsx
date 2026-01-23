@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useSetAtom } from "jotai";
-import { setAuthTokenAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const REDIRECT_URL = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
@@ -13,7 +12,7 @@ type OAuthResponse = { access_token?: string };
 export default function AuthCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const setAuthToken = useSetAtom(setAuthTokenAtom);
+  const { setAuthTokens } = useAuthActions();
   const [msg, setMsg] = useState("로그인 처리 중...");
 
   const sentRef = useRef(false); // ✅ 컴포넌트 바디에서만!
@@ -46,7 +45,7 @@ export default function AuthCallbackPage() {
         const data = (await res.json()) as OAuthResponse;
         if (!data.access_token) throw new Error("No access_token in response");
 
-        setAuthToken(data.access_token);
+        setAuthTokens({ accessToken: data.access_token, refreshToken: null });
         router.replace("/");
       } catch (e) {
         console.error(e);
@@ -54,7 +53,7 @@ export default function AuthCallbackPage() {
         router.replace("/login");
       }
     })();
-  }, [router, searchParams, setAuthToken]);
+  }, [router, searchParams, setAuthTokens]);
 
   return <div className="flex h-screen items-center justify-center text-white">{msg}</div>;
 }

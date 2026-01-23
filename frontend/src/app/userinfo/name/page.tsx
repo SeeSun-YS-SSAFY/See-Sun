@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import MicButton from "@/components/common/MicButton";
@@ -8,7 +8,8 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 import { fetchMyProfile } from "@/lib/profileApt";
-import { authAtom, hydrateAuthFromStorageAtom } from "@/atoms/auth/authAtoms";
+import { authAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
 
 export default function Name() {
   const router = useRouter();
@@ -17,10 +18,10 @@ export default function Name() {
   const { accessToken } = useAtomValue(authAtom);
 
   // ✅ 토큰이 localStorage에 있으면 authAtom에 채우기
-  const hydrateAuth = useSetAtom(hydrateAuthFromStorageAtom);
+  const { hydrateAuthFromStorage } = useAuthActions();
   useEffect(() => {
-    hydrateAuth();
-  }, [hydrateAuth]);
+    hydrateAuthFromStorage();
+  }, [hydrateAuthFromStorage]);
 
   const [name, setName] = useState("");
 

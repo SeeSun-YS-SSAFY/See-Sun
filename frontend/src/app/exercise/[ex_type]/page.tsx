@@ -31,7 +31,7 @@ export default function ExerciseType() {
   useEffect(() => {
     const fetchExercises = async () => {
       const data = await apiClient.get<ExerciseCategoryResponse>(
-        `/exercises/category/${exType}`,
+        `/exercises/category/${exType}/`,
       );
       setExercises(data);
     };

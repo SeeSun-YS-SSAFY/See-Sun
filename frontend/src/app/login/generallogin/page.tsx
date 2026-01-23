@@ -1,12 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { useSetAtom } from "jotai";
-import { setAuthTokenAtom } from "@/atoms/auth/authAtoms";
+import { useAuthActions } from "@/hooks/useAuthActions";
+
 
 export default function GeneralLogin() {
   const [phone_number, setPhone] = useState("");
@@ -14,7 +14,7 @@ export default function GeneralLogin() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const setAuthToken = useSetAtom(setAuthTokenAtom);
+  const { setAuthTokens } = useAuthActions();
 
   const handleLogin = async () => {
     if (!/^01[0-9]{8,9}$/.test(phone_number)) {
@@ -31,7 +31,7 @@ export default function GeneralLogin() {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login`,  // TODO: 아직 trailing slash 적용 안돼서 나중에 고쳐야 함
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -51,8 +51,6 @@ export default function GeneralLogin() {
       const token =
         data.accessToken ??
         data.access_token ??
-        data.token ??
-        data?.data?.accessToken ??
         null;
 
       if (!token) {
@@ -61,7 +59,13 @@ export default function GeneralLogin() {
       }
 
       // ✅ localStorage 저장 + authAtom 갱신
-      setAuthToken(token);
+      setAuthTokens({
+        accessToken: token,
+        // 로그인 응답에 refresh가 있으면 넣고, 없으면 null
+        refreshToken:
+          data.refresh_token ??
+          null,
+      });
 
       // ✅ 홈으로 (홈에서 isAuthed true라서 메인 유지)
       router.replace("/");
