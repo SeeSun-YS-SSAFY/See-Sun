@@ -59,6 +59,9 @@
 
   /* letter-spacings */
   --tracking-0: 0rem;
+
+  /* font-family */
+  --font-koddiud-ongothic: var(--font-koddiud-ongothic);
 }
 
 /* Fonts Semantics */
@@ -66,27 +69,27 @@
 /* heading */
 @layer components {
   .text-title-large {
-    @apply text-48 font-800 tracking-0;
+    @apply text-48 font-800 tracking-0 font-koddiud-ongothic;
   }
 
   .text-title-medium {
-    @apply text-40 font-800 tracking-0;
+    @apply text-40 font-800 tracking-0 font-koddiud-ongothic;
   }
 
   .text-title-small {
-    @apply text-32 font-800 tracking-0;
+    @apply text-32 font-800 tracking-0 font-koddiud-ongothic;
   }
 
   /* body */
   .text-body-large {
-    @apply text-32 font-800 tracking-0;
+    @apply text-32 font-800 tracking-0 font-koddiud-ongothic;
   }
 
   .text-body-medium {
-    @apply text-24 font-800 tracking-0;
+    @apply text-24 font-800 tracking-0 font-koddiud-ongothic;
   }
 
   .text-body-small {
-    @apply text-16 font-800 tracking-0;
+    @apply text-16 font-800 tracking-0 font-koddiud-ongothic;
   }
 }
