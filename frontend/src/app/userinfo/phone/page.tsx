@@ -2,15 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue, useSetAtom } from "jotai";
-import {
-  recordingStatusAtom,
-  sttErrorAtom,
-  sttTextAtom,
-  uploadStatusAtom,
-  resetSttAtom,
-} from "@/atoms/stt/sttAtoms";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useAtomValue } from "jotai";
+import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
@@ -57,26 +50,30 @@ function pickServerPhone(profile: any): string {
 export default function Phone() {
   const router = useRouter();
 
-  const recordingStatus = useAtomValue(recordingStatusAtom);
-  const uploadStatus = useAtomValue(uploadStatusAtom);
-  const sttText = useAtomValue(sttTextAtom);
-  const sttError = useAtomValue(sttErrorAtom);
-
-  const { handlers } = useVoiceRecorder();
-
   // ✅ 입력은 digits로 보관
   const [phoneDigits, setPhoneDigits] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const { accessToken } = useAtomValue(authAtom);
-  const resetStt = useSetAtom(resetSttAtom);
+
+  const {
+    isActive,
+    isProcessing,
+    toggleRecording,
+  } = useFormSTT({
+    field: "phone",
+    onResult: (res) => {
+      // Gemini 정규화 결과 사용
+      const digits = extractDigits(res.normalized);
+      if (digits) setPhoneDigits(digits.slice(0, 11));
+    },
+  });
 
   // ✅ 중복 실행 방지 (자동 submit + 수동 submit)
   const didAutoSubmitRef = useRef(false);
 
   // ✅ 들어오자마자 프로필 조회
-  //    phone이 있으면 sessionStorage 채우고 -> payload 만들고 -> PUT까지 수행 -> 홈 이동
   useEffect(() => {
     const run = async () => {
       if (!accessToken) return;
@@ -120,25 +117,7 @@ export default function Phone() {
     run();
   }, [accessToken, router]);
 
-  useEffect(() => {
-    resetStt();
-    setPhoneDigits("");
-    setSubmitError("");
-
-    return () => {
-      resetStt();
-    };
-  }, [resetStt]);
-
-  // ✅ STT 성공 시 숫자만 뽑아서 반영
-  useEffect(() => {
-    if (uploadStatus === "success" && sttText) {
-      const digits = extractDigits(sttText);
-      if (digits) setPhoneDigits(digits.slice(0, 11));
-    }
-  }, [uploadStatus, sttText]);
-
-  const showPhoneInput = uploadStatus !== "idle";
+  const showPhoneInput = phoneDigits.length > 0;
 
   const isValidPhone = useMemo(() => {
     const len = phoneDigits.length;
@@ -164,7 +143,7 @@ export default function Phone() {
       }
 
       // ✅ 백엔드 전송 + localStorage 저장(profileApi에서 처리)
-      await submitProfileCompletion(payload);
+      await submitProfileCompletion(payload, accessToken);
 
       router.push("/");
     } catch (e: any) {
@@ -185,40 +164,24 @@ export default function Phone() {
 
       <div className="mt-10 flex flex-col items-center gap-4">
         <MicButton
-          status={recordingStatus === "recording" ? "recording" : "off"}
-          {...handlers}
+          isRecording={isActive}
+          isProcessing={isProcessing}
+          onClick={toggleRecording}
         />
-{/* 
-        <div className="text-white text-sm">
-          {recordingStatus === "recording" && "녹음 중..."}
-          {uploadStatus === "uploading" && "업로드/인식 중..."}
-          {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div> */}
       </div>
 
-      {showPhoneInput && (
-        <div className="mt-6 flex flex-col gap-2">
-          <Input
-            placeholder="휴대폰 번호"
-            inputMode="numeric"
-            maxLength={13}
-            value={formatPhone(phoneDigits)}
-            onChange={(e) => {
-              const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 11);
-              setPhoneDigits(digits);
-            }}
-          />
-
-          {/* {!isValidPhone && phoneDigits.length > 0 && (
-            <div className="text-red-400 text-xs">
-              휴대폰 번호는 10~11자리 숫자로 입력해주세요.
-            </div>
-          )}
-
-          {submitError && <div className="text-red-400 text-xs">{submitError}</div>} */}
-        </div>
-      )}
+      <div className="mt-6 flex flex-col gap-2">
+        <Input
+          placeholder="휴대폰 번호"
+          inputMode="numeric"
+          maxLength={13}
+          value={formatPhone(phoneDigits)}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/[^\d]/g, "").slice(0, 11);
+            setPhoneDigits(digits);
+          }}
+        />
+      </div>
 
       <div className="mt-6">
         <Button disabled={!isValidPhone || submitting} onClick={handleNext}>

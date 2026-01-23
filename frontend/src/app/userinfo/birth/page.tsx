@@ -2,15 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue, useSetAtom } from "jotai";
-import {
-  recordingStatusAtom,
-  sttErrorAtom,
-  sttTextAtom,
-  uploadStatusAtom,
-  resetSttAtom,
-} from "@/atoms/stt/sttAtoms";
-import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { useRouter } from "next/navigation";
@@ -73,35 +65,29 @@ function toISO(y: number, m: number, d: number) {
 export default function Birth() {
   const router = useRouter();
 
-  const recordingStatus = useAtomValue(recordingStatusAtom);
-  const uploadStatus = useAtomValue(uploadStatusAtom);
-  const sttText = useAtomValue(sttTextAtom);
-  const sttError = useAtomValue(sttErrorAtom);
-
-  const { handlers } = useVoiceRecorder();
-
-  const resetStt = useSetAtom(resetSttAtom);
-
-  useEffect(() => {
-  resetStt();
-  setBirth("");
-
-  return () => resetStt();
-}, [resetStt]);
-
-
   // ✅ 입력값(표시용): YYYY-MM-DD
   const [birth, setBirth] = useState("");
 
-  // ✅ STT 성공 시 생년월일 파싱해서 Input에 반영
-  useEffect(() => {
-    if (uploadStatus === "success" && sttText) {
-      const parsed = parseBirth(sttText);
+  const {
+    isActive,
+    isProcessing,
+    toggleRecording,
+  } = useFormSTT({
+    field: "birthdate",
+    onResult: (res) => {
+      // Gemini가 YYYY-MM-DD로 줄 것.
+      // 그래도 안전하게 parseBirth 한번 태우기
+      const parsed = parseBirth(res.normalized);
       if (parsed) setBirth(parsed.iso);
-    }
-  }, [uploadStatus, sttText]);
+      else {
+        // 정규화 실패 시 원문 시도
+        const parsedRaw = parseBirth(res.raw);
+        if (parsedRaw) setBirth(parsedRaw.iso);
+      }
+    },
+  });
 
-  const showBirthInput = uploadStatus !== "idle";
+  const showBirthInput = birth.length > 0;
 
   // ✅ 입력값 검증
   const parsedBirth = useMemo(() => parseBirth(birth), [birth]);
@@ -126,48 +112,34 @@ export default function Birth() {
 
       <div className="mt-10 flex flex-col items-center gap-4">
         <MicButton
-          status={recordingStatus === "recording" ? "recording" : "off"}
-          {...handlers}
+          isRecording={isActive}
+          isProcessing={isProcessing}
+          onClick={toggleRecording}
         />
-
-        {/* <div className="text-white text-sm">
-          {recordingStatus === "recording" && "녹음 중..."}
-          {uploadStatus === "uploading" && "업로드/인식 중..."}
-          {uploadStatus === "success" && sttText && `인식 결과: ${sttText}`}
-          {uploadStatus === "error" && sttError && `오류: 연결오류`}
-        </div> */}
       </div>
 
-      {showBirthInput && (
-        <div className="mt-6 flex flex-col gap-2">
-          <Input
-            placeholder="생년월일"
-            inputMode="numeric"
-            maxLength={10}
-            value={birth}
-            onChange={(e) => {
-              // 숫자/하이픈만 허용
-              const v = e.target.value.replace(/[^\d-]/g, "");
+      <div className="mt-6 flex flex-col gap-2">
+        <Input
+          placeholder="생년월일"
+          inputMode="numeric"
+          maxLength={10}
+          value={birth}
+          onChange={(e) => {
+            // 숫자/하이픈만 허용
+            const v = e.target.value.replace(/[^\d-]/g, "");
 
-              // 자동 하이픈 보정(선택): 19980312 -> 1998-03-12
-              const digits = v.replace(/[^\d]/g, "");
-              if (digits.length === 8 && !v.includes("-")) {
-                const iso = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
-                setBirth(iso);
-                return;
-              }
+            // 자동 하이픈 보정(선택): 19980312 -> 1998-03-12
+            const digits = v.replace(/[^\d]/g, "");
+            if (digits.length === 8 && !v.includes("-")) {
+              const iso = `${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}`;
+              setBirth(iso);
+              return;
+            }
 
-              setBirth(v);
-            }}
-          />
-
-          {/* {!isValidBirth && birth.length > 0 && (
-            <div className="text-red-400 text-xs">
-              예) 1998년 3월 12일 / 1998-03-12 / 19980312 형태로 입력해주세요.
-            </div>
-          )} */}
-        </div>
-      )}
+            setBirth(v);
+          }}
+        />
+      </div>
 
       <div className="mt-6">
         <Button disabled={!isValidBirth} onClick={handleNext}>
