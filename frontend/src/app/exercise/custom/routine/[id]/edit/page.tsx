@@ -65,7 +65,7 @@ export default function CustomMake() {
           {exercises.length > 0 && (
             <ul className="mt-2 mb-2 flex flex-col gap-2 list-none pl-0">
               {exercises.map((item) => (
-                <li key={item.id}>
+                <li key={item.exercise_id}>
                   <Button onClick={() => router.push("#")}>
                     {item.exercise_name}
                   </Button>
