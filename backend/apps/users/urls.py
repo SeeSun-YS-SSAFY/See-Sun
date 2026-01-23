@@ -5,7 +5,6 @@ from .views import (
     GoogleLoginView, SignupView, LoginView, LogoutView,
     UserProfileView, UserProfileCompletionView, UserProfileUpdateView
 )
-from apps.stt.views import WebmSTTView
 
 app_name = 'users'
 
@@ -18,6 +17,5 @@ urlpatterns = [
     path('profile/completion/', UserProfileCompletionView.as_view(), name='profile_complete'),
     path('profile/edit/', UserProfileUpdateView.as_view(), name='profile_update'),
     path('profile/', UserProfileView.as_view(), name='profile_detail'),  # GET, DELETE
-    path('webmstt/', WebmSTTView.as_view(), name='webm_stt'),
 ]
 

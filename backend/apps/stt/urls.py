@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import WebmSTTView
+from .views import STTView
 
 urlpatterns = [
-    path('transcribe/', WebmSTTView.as_view(), name='transcribe'),
+    path('<str:mode>/', STTView.as_view(), name='stt_unified'),
 ]

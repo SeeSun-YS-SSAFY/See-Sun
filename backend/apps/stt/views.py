@@ -2,70 +2,36 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from drf_spectacular.utils import extend_schema
-import subprocess
-import tempfile
-import os
+from .services.audio_processor import AudioProcessor
+from .services.stt_engine import STTEngine
+from .services.gemini_service import GeminiService
+import logging
 
+logger = logging.getLogger(__name__)
 
-class WebmSTTView(APIView):
+class STTView(APIView):
     """
-    음성 파일을 텍스트로 변환하는 STT API (faster-whisper 사용)
-    mode에 따라 다른 응답 형식 제공
+    통합 STT API
+    - Faster-Whisper: 음성 → 텍스트
+    - Gemini 1.5 Flash: 텍스트 → 구조화된 데이터 (NLU)
     """
     parser_classes = [MultiPartParser]
-    
-    # 모델 싱글톤
-    _model = None
-    
-    # 명령어 매핑 (우선순위: action 명령어 먼저, wake는 마지막)
-    COMMAND_PATTERNS = [
-        ('pause', ['멈춤', '정지', '스톱', '스탑']),
-        ('resume', ['시작', '재시작', '재시적', '다시 시작', '플레이', '재생']),
-        ('next', ['다음', '다음 동작', '넘어가', '넘겨']),
-        ('previous', ['이전', '이전 동작', '뒤로']),
-        ('faster', ['빠르게', '더 빠르게', '속도 올려', '빨리']),
-        ('slower', ['느리게', '더 느리게', '속도 내려', '천천히']),
-    ]
-    
-    WAKE_PATTERNS = ['시선 코치', '시선코치', '시선 고치', '시선고치']
-    
-    @classmethod
-    def get_model(cls):
-        """모델을 한 번만 로드 (싱글톤)"""
-        if cls._model is None:
-            from faster_whisper import WhisperModel
-            cls._model = WhisperModel("small", device="cpu", compute_type="int8")
-        return cls._model
-    
-    @classmethod
-    def detect_wake(cls, text: str) -> bool:
-        """웨이크워드 감지"""
-        text_clean = text.replace(" ", "").lower()
-        for pattern in cls.WAKE_PATTERNS:
-            if pattern.replace(" ", "") in text_clean:
-                return True
-        return False
-    
-    @classmethod
-    def match_command(cls, text: str) -> str:
-        """텍스트에서 명령어 매칭"""
-        text_clean = text.replace(" ", "").lower()
-        
-        for command, patterns in cls.COMMAND_PATTERNS:
-            for pattern in patterns:
-                if pattern.replace(" ", "") in text_clean:
-                    return command
-        return None
-    
+
     @extend_schema(
-        summary="음성 → 텍스트 변환 (STT)",
-        description="webm 오디오 파일을 받아 텍스트로 변환. mode에 따라 다른 응답.",
+        summary="통합 STT API",
+        description="""
+        mode에 따라 다른 처리 로직 수행:
+        - form: 텍스트 정규화 (이름, 키, 몸무게 등 추출)
+        - listen: 로컬 웨이크워드 감지 (Gemini 미사용)
+        - command: 일반 시스템 명령 해석
+        - full_command: 운동 제어 명령 해석
+        """,
         request={
             'multipart/form-data': {
                 'type': 'object',
                 'properties': {
                     'userinfo_stt': {'type': 'string', 'format': 'binary'},
-                    'mode': {'type': 'string', 'enum': ['form', 'listen', 'command']}
+                    'field': {'type': 'string', 'description': 'form 모드일 때 필드명 (height, weight 등)'}
                 },
                 'required': ['userinfo_stt']
             }
@@ -74,67 +40,83 @@ class WebmSTTView(APIView):
             200: {
                 'type': 'object',
                 'properties': {
-                    'message': {'type': 'string'},
-                    'wake_detected': {'type': 'boolean'},
-                    'action': {'type': 'string'},
+                    'mode': {'type': 'string'},
+                    'stt_raw': {'type': 'string'},
+                    'normalized': {'type': 'string', 'nullable': True},
+                    'raw': {'type': 'string', 'nullable': True},
+                    'wake_detected': {'type': 'boolean', 'nullable': True},
+                    'action': {'type': 'string', 'nullable': True},
                 }
             }
         }
     )
-    def post(self, request):
+    def post(self, request, mode):
         audio_file = request.FILES.get('userinfo_stt')
-        mode = request.data.get('mode', 'form')
-        
+        field = request.data.get('field', None)
+
         if not audio_file:
             return Response({'error': 'No audio file provided'}, status=400)
         
-        # 1. webm을 임시 파일로 저장
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as webm_temp:
-            for chunk in audio_file.chunks():
-                webm_temp.write(chunk)
-            webm_path = webm_temp.name
-        
-        wav_path = None
+        ALLOWED_MODES = ['form', 'listen', 'command', 'full_command', 'stt']
+        if mode not in ALLOWED_MODES:
+            return Response({'error': f'Invalid mode. Allowed: {ALLOWED_MODES}'}, status=400)
+
+        temp_webm = None
+        temp_wav = None
+
         try:
-            # 2. ffmpeg로 WAV 변환
-            wav_path = tempfile.mktemp(suffix='.wav')
-            subprocess.run([
-                'ffmpeg', '-i', webm_path,
-                '-ar', '16000', '-ac', '1', '-c:a', 'pcm_s16le', '-y', wav_path
-            ], check=True, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            # 1. 파일 전처리
+            temp_webm = AudioProcessor.save_temp_file(audio_file)
+            temp_wav = AudioProcessor.convert_to_wav(temp_webm)
             
-            # 3. STT 인식
-            model = self.get_model()
-            segments, info = model.transcribe(wav_path, language="ko")
-            text = "".join([segment.text for segment in segments]).strip()
+            # 2. STT (Whisper) - 모든 모드 공통
+            raw_text = STTEngine.transcribe(temp_wav)
             
-            # 4. 모드별 응답
+            # 아무 말도 안 했을 경우
+            if not raw_text:
+                return Response({'error': 'No speech detected'}, status=200)
+
+            result = {
+                'mode': mode,
+                'stt_raw': raw_text
+            }
+
+            # 3. 모드별 NLU logic
             if mode == 'listen':
-                # 웨이크워드 감지 모드
-                wake_detected = self.detect_wake(text)
-                return Response({
-                    'message': text,
-                    'wake_detected': wake_detected
-                })
+                # Listen: 로컬에서 빠르게 감지
+                wake_detected = STTEngine.detect_wake_word(raw_text)
+                result['wake_detected'] = wake_detected
+                result['message'] = raw_text # Legacy response compat
+
+            elif mode == 'form':
+                # Form: Gemini 정규화
+                if not field:
+                    # 필드가 없으면 raw만 반환
+                    result['normalized'] = None
+                    result['raw'] = raw_text
+                else:
+                    nlu_result = GeminiService.normalize(raw_text, field)
+                    result.update(nlu_result)
+
             elif mode == 'command':
-                # 명령어 실행 모드
-                action = self.match_command(text)
-                return Response({
-                    'message': text,
-                    'action': action
-                })
-            else:
-                # 기본 form 모드
-                return Response({
-                    'message': text
-                })
+                # Command: 일반 명령 정규화
+                nlu_result = GeminiService.parse_command(raw_text)
+                result.update(nlu_result)
+                result['message'] = raw_text # Legacy response compat
+
+            elif mode == 'full_command':
+                # Full Command: 운동 명령 정규화
+                nlu_result = GeminiService.parse_full_command(raw_text)
+                result.update(nlu_result)
             
-        except subprocess.CalledProcessError as e:
-            return Response({'error': f'ffmpeg error: {str(e)}'}, status=500)
+            else: # stt (debug)
+                result['message'] = raw_text
+
+            return Response(result)
+
         except Exception as e:
-            return Response({'error': f'STT error: {str(e)}'}, status=500)
+            logger.error(f"STT Error: {str(e)}", exc_info=True)
+            return Response({'error': str(e)}, status=500)
+        
         finally:
-            if os.path.exists(webm_path):
-                os.unlink(webm_path)
-            if wav_path and os.path.exists(wav_path):
-                os.unlink(wav_path)
+            AudioProcessor.cleanup(temp_webm, temp_wav)
