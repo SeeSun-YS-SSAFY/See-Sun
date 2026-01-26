@@ -79,16 +79,23 @@ class ExerciseSimpleSerializer(serializers.ModelSerializer):
     운동 목록 조회용 간략한 정보 시리얼라이저 (픽토그램 포함)
     """
     pictogram_url = serializers.SerializerMethodField()
+    name_audio_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Exercise
-        fields = ('exercise_id', 'exercise_name', 'pictogram_url')
+        fields = ('exercise_id', 'exercise_name', 'pictogram_url', 'name_audio_url')
 
     def get_pictogram_url(self, obj):
         # media_contents는 prefetch_related로 가져올 예정
         # media_type='PICTOGRAM'인 첫 번째 미디어의 url 반환
         media = next((m for m in obj.media_contents.all() if m.media_type == 'PICTOGRAM'), None)
         return media.url if media else None
+
+    def get_name_audio_url(self, obj):
+        # 운동 영문명 기반 음성 파일 URL 반환
+        if obj.name_en:
+            return f"/media/prefix/navigation/exercise/{obj.name_en}.mp3"
+        return None
 
 # ----------------------------------------------------------------------------
 
