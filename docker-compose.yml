@@ -1,17 +1,111 @@
 version: '3.8'
 
 services:
+  # PostgreSQL 데이터베이스
   db:
     image: postgres:15-alpine
-    container_name: see-sun-db
+    container_name: seesun-db
     environment:
+      POSTGRES_DB: seesun
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "15432:5432"  # Windows 포트 충돌 방지
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis (Celery 브로커)
+  redis:
+    image: redis:alpine
+    container_name: seesun-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Django Backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: seesun-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - ./backend/media:/app/media
+    environment:
+      - DEBUG=True
       - POSTGRES_DB=seesun
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-    ports:
-      - "5432:5432"
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # service-accounts.json 파일이 존재한다고 가정
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  # Celery Worker
+  celery:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: seesun-celery
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./backend:/app
+      - ./backend/media:/app/media
+    environment:
+      - DEBUG=True
+      - POSTGRES_DB=seesun
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A config worker -l info --pool=solo
+
+  # Next.js Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: seesun-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NEXT_PUBLIC_API_MOCKING=disabled
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+      - NEXT_PUBLIC_API_MEDIA_URL=
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

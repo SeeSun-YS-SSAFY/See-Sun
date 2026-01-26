@@ -31,7 +31,7 @@ export default function GeneralLogin() {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login`,  // TODO: 아직 trailing slash 적용 안돼서 나중에 고쳐야 함
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login/`,  // TODO: 아직 trailing slash 적용 안돼서 나중에 고쳐야 함
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

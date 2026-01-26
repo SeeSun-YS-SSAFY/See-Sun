@@ -81,7 +81,7 @@ export default function ExerciseType() {
   useEffect(() => {
     if (!exerciseDetail || !exerciseDetail.audios) return;
 
-    const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
+    const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL || "";
 
     // 모든 오디오 파일을 prefetch
     audioRefs.current = exerciseDetail.audios.map(({ url }) => {
@@ -221,7 +221,7 @@ export default function ExerciseType() {
   }
 
   // 픽토그램 현재 이미지 가져오기 (없으면 더미 이미지)
-  const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
+  const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL || "";
   const currentPictogram =
     exerciseDetail.pictograms && exerciseDetail.pictograms.length > 0
       ? `${API_MEDIA_URL}${exerciseDetail.pictograms[currentImageIndex]}`
