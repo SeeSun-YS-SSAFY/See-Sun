@@ -30,8 +30,8 @@ export default function RoutineExercise() {
   }, []);
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.push("/exercise/")}
@@ -47,18 +47,16 @@ export default function RoutineExercise() {
           <Button
             key={category.category_id}
             onClick={() =>
-              router.push(`/exercise/${category.category_id}?mode=routine`)
+              router.push(`/exercise/routine/${category.category_id}`)
             }
           >
             {category.display_name}
           </Button>
         ))}
         <div className="flex gap-3.5">
-          <Button onClick={() => router.push(`/exercise/5?mode=routine`)}>
-            개인 맞춤
-          </Button>
+          <Button onClick={() => router.push(`/exercise/5`)}>개인 맞춤</Button>
           <Button
-            className="flex items-center w-21 h-21 shrink-0"
+            className="flex h-21 w-21 shrink-0 items-center"
             onClick={() => router.push("/exercise/custom")}
           >
             <Icon name="settings" filled color="#000" size={48} />

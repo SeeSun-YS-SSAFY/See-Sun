@@ -29,8 +29,8 @@ export default function SingleExercise() {
   }, []);
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.back()}
@@ -46,13 +46,13 @@ export default function SingleExercise() {
           <Button
             key={category.category_id}
             onClick={() =>
-              router.push(`/exercise/${category.category_id}?mode=single`)
+              router.push(`/exercise/single/${category.category_id}`)
             }
           >
             {category.display_name}
           </Button>
         ))}
-        <Button onClick={() => router.push(`/exercise/frequent?mode=single`)}>
+        <Button onClick={() => router.push(`/exercise/frequent`)}>
           자주하는 운동
         </Button>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import AutoScrollText from "@/components/common/AutoScrollText";
 import Icon from "@/components/common/Icon";
 import ProgressBar from "@/components/common/ProgressBar";
 import { apiClient } from "@/lib/apiClient";
@@ -22,7 +23,7 @@ export default function ExerciseType() {
   const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
 
   const [exerciseDetail, setExerciseDetail] = useState<ExerciseDetail | null>(
-    null,
+    null
   );
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const audioRefs = useRef<HTMLAudioElement[]>([]);
@@ -64,7 +65,7 @@ export default function ExerciseType() {
     const fetchExerciseDetail = async () => {
       try {
         const data = await apiClient.get<ExerciseDetail>(
-          `/exercises/${params.sport_pk}`,
+          `/exercises/${params.sport_pk}`
         );
         setExerciseDetail(data);
       } catch (error) {
@@ -126,7 +127,7 @@ export default function ExerciseType() {
 
     const interval = setInterval(() => {
       setCurrentImageIndex(
-        (prev) => (prev + 1) % exerciseDetail.pictograms.length,
+        (prev) => (prev + 1) % exerciseDetail.pictograms.length
       );
     }, 1000);
 
@@ -228,8 +229,8 @@ export default function ExerciseType() {
       : "https://dummyimage.com/296x296";
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.back()}
@@ -238,12 +239,14 @@ export default function ExerciseType() {
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
         </button>
 
-        <h1 className="text-title-large text-white">
+        <AutoScrollText className="text-title-large text-white">
           {exerciseDetail.exercise_name}
-        </h1>
+        </AutoScrollText>
+
+        {/* <h1 className="text-title-large text-white"></h1> */}
       </div>
-      <div className="flex flex-1 flex-col justify-center items-center">
-        <div className="relative w-full aspect-square bg-white max-w-[296px] rounded-[20px]">
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="relative aspect-square w-full max-w-[296px] rounded-[20px] bg-white">
           <Image
             className="rounded-[20px] object-cover"
             src={currentPictogram}
@@ -252,15 +255,15 @@ export default function ExerciseType() {
           />
 
           {isExplain && (
-            <div className="absolute -inset-4 bg-white/80 rounded-[20px] flex justify-center overflow-auto">
-              <h2 className="text-body-medium text-gray-800 whitespace-pre-wrap text-center p-4 h-fit break-keep">
+            <div className="absolute -inset-4 flex justify-center overflow-auto rounded-[20px] bg-white/80">
+              <h2 className="text-body-medium h-fit p-4 text-center break-keep whitespace-pre-wrap text-gray-800">
                 {getCurrentAudioDescription()}
               </h2>
             </div>
           )}
         </div>
 
-        <div className="flex w-full items-center justify-between max-w-[296px] mt-[36px]">
+        <div className="mt-[36px] flex w-full max-w-[296px] items-center justify-between">
           <ControlButton name="volume_up" />
           <ControlButton
             name={isPlaying ? "pause" : "play_arrow"}
@@ -311,7 +314,7 @@ type ControlButtonProps = {
 function ControlButton({ name, ...props }: ControlButtonProps) {
   return (
     <button
-      className="p-4 bg-yellow-300 rounded-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.48)] inline-flex justify-start items-center gap-2.5 overflow-hidden"
+      className="inline-flex items-center justify-start gap-2.5 overflow-hidden rounded-[80px] bg-yellow-300 p-4 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.48)]"
       {...props}
     >
       <Icon name={name} size={42} filled color="#002173" />
