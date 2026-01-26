@@ -4,7 +4,7 @@ import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import type { Exercise } from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSetAtom } from "jotai";
 import { setSelectedExerciseAtom } from "@/atoms/exercise/makeExerciseAtoms";
@@ -23,6 +23,13 @@ export default function CustomExerciseType() {
   const router = useRouter();
   const params = useParams<{ custom_ex_type: string }>();
   const exType = params.custom_ex_type;
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const playlistId = searchParams.get("playlistId");
+  const query =
+    from === "edit" && playlistId
+      ? `?from=edit&playlistId=${playlistId}`
+      : "";
   const setSelected = useSetAtom(setSelectedExerciseAtom);
 
   const [exerciseCategory, setExercises] =
@@ -44,7 +51,7 @@ export default function CustomExerciseType() {
         <button
           type="button"
           onClick={() =>
-            router.push("/exercise/custom/make_exercise/category/")
+            router.push(`/exercise/custom/make_exercise/category/${query}`)
           }
           className="absolute left-0 flex items-center"
         >
@@ -64,7 +71,7 @@ export default function CustomExerciseType() {
                 exercise_id: ex.exercise_id,
                 exercise_name: ex.exercise_name,
               });
-              router.push("/exercise/custom/make_exercise");
+              router.push(`/exercise/custom/make_exercise${query}`);
             }}
           />
         )}

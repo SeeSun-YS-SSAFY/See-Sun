@@ -3,7 +3,7 @@
 import Button from "@/components/common/Button";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type Category = {
@@ -13,6 +13,13 @@ type Category = {
 
 export default function SingleExercise() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get("from");
+  const playlistId = searchParams.get("playlistId");
+  const query =
+    from === "edit" && playlistId
+      ? `?from=edit&playlistId=${playlistId}`
+      : "";
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -33,7 +40,9 @@ export default function SingleExercise() {
       <div className="relative flex items-center py-2.5 justify-center">
         <button
           type="button"
-          onClick={() => router.push("/exercise/custom/make_exercise/")}
+          onClick={() =>
+            router.push(`/exercise/custom/make_exercise/${query}`)
+          }
           className="absolute left-0 flex items-center"
         >
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
@@ -43,7 +52,14 @@ export default function SingleExercise() {
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {categories.map((category) => (
-          <Button key={category.category_id} onClick={() => router.push(`/exercise/custom/make_exercise/category/${category.category_id}`)}>
+          <Button
+            key={category.category_id}
+            onClick={() =>
+              router.push(
+                `/exercise/custom/make_exercise/category/${category.category_id}${query}`
+              )
+            }
+          >
             {category.display_name}
           </Button>
         ))}
