@@ -59,9 +59,6 @@
 
   /* letter-spacings */
   --tracking-0: 0rem;
-
-  /* font-family */
-  --font-koddiud-ongothic: var(--font-koddiud-ongothic);
 }
 
 /* Fonts Semantics */
@@ -69,27 +66,40 @@
 /* heading */
 @layer components {
   .text-title-large {
-    @apply text-48 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-48 font-800 tracking-0;
   }
 
   .text-title-medium {
-    @apply text-40 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-40 font-800 tracking-0;
   }
 
   .text-title-small {
-    @apply text-32 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-32 font-800 tracking-0;
   }
 
   /* body */
   .text-body-large {
-    @apply text-32 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-32 font-800 tracking-0;
   }
 
   .text-body-medium {
-    @apply text-24 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-24 font-800 tracking-0;
   }
 
   .text-body-small {
-    @apply text-16 font-800 tracking-0 font-koddiud-ongothic;
+    @apply text-16 font-800 tracking-0;
+  }
+  @keyframes marquee-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(var(--marquee-scroll-offset));
+    }
+  }
+
+  .animate-marquee-scroll {
+    animation: marquee-scroll linear infinite alternate;
+    animation-duration: 5s;
   }
 }
