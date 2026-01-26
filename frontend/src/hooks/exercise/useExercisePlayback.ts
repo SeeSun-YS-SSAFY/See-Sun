@@ -13,7 +13,6 @@ export type ExerciseDetail = {
   fixed_form: string;
   exercise_guide: string;
   pictograms: string[];
-  audios: { type: string; url: string }[];
   merged_audio_url: string;
 };
 
@@ -30,12 +29,12 @@ export function useExercisePlayback({
     null
   );
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(0); // 현재 재생 시간 (초)
+  const [duration, setDuration] = useState(0); // 총 재생 시간 (초)
   const [isExplain, setIsExplain] = useState(false);
-  const [currentAudioIndex, setCurrentAudioIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const audioRefs = useRef<HTMLAudioElement[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const onPlaybackEndRef = useRef(onPlaybackEnd);
 
   // Keep the callback ref in sync
@@ -48,50 +47,15 @@ export function useExercisePlayback({
   }, []);
 
   const togglePlay = useCallback(() => {
-    if (currentAudioIndex >= audioRefs.current.length) {
-      return;
-    }
     setIsPlaying((prev) => !prev);
-  }, [currentAudioIndex]);
+  }, []);
 
-  const handleProgressChange = useCallback(
-    (newValue: number) => {
+  const handleProgressChange = useCallback((newValue: number) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = newValue;
       setProgress(newValue);
-      setCurrentAudioIndex(newValue);
-
-      if (exerciseDetail?.audios && newValue >= exerciseDetail.audios.length) {
-        setIsPlaying(false);
-      }
-    },
-    [exerciseDetail]
-  );
-
-  // 현재 재생 중인 오디오의 설명 가져오기
-  const getCurrentAudioDescription = useCallback((): string => {
-    if (!exerciseDetail || !exerciseDetail.audios[currentAudioIndex]) {
-      return "";
     }
-
-    const currentAudioType = exerciseDetail.audios[currentAudioIndex].type;
-
-    const typeToFieldMap: Record<string, keyof ExerciseDetail> = {
-      exercise_description: "exercise_description",
-      first_description: "first_description",
-      main_form: "main_form",
-      form_description: "form_description",
-      stay_form: "stay_form",
-      fixed_form: "fixed_form",
-      exercise_guide: "exercise_guide",
-      exercise_guide_text: "exercise_guide",
-    };
-
-    const fieldName = typeToFieldMap[currentAudioType];
-    if (fieldName && typeof exerciseDetail[fieldName] === "string") {
-      return exerciseDetail[fieldName] as string;
-    }
-
-    return "";
-  }, [exerciseDetail, currentAudioIndex]);
+  }, []);
 
   // 운동 상세 정보 조회 API 연결
   useEffect(() => {
@@ -111,42 +75,44 @@ export function useExercisePlayback({
     }
   }, [sport_pk]);
 
-  // 오디오 파일 prefetch
+  // 오디오 파일 로드
   useEffect(() => {
-    if (!exerciseDetail || !exerciseDetail.audios) return;
+    if (!exerciseDetail?.merged_audio_url) return;
 
     const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
+    const audio = new Audio(
+      `${API_MEDIA_URL}${exerciseDetail.merged_audio_url}`
+    );
+    audio.preload = "auto";
+    audioRef.current = audio;
 
-    // 모든 오디오 파일을 prefetch
-    audioRefs.current = exerciseDetail.audios.map(({ url }) => {
-      const audio = new Audio(`${API_MEDIA_URL}${url}`);
-      audio.preload = "auto";
+    // 오디오 메타데이터 로드 시 duration 설정
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration);
+    };
 
-      // 오디오 종료 시 다음 오디오로 이동
-      audio.addEventListener("ended", () => {
-        setCurrentAudioIndex((prev) => {
-          const nextIndex = prev + 1;
-          setProgress(nextIndex);
-          if (nextIndex === exerciseDetail.audios.length) {
-            // 모든 오디오 재생 완료
-            setIsPlaying(false);
-            onPlaybackEndRef.current?.();
-          }
-          return nextIndex;
-        });
-      });
+    // 재생 시간 업데이트
+    const handleTimeUpdate = () => {
+      setProgress(audio.currentTime);
+    };
 
-      return audio;
-    });
+    // 오디오 종료 시
+    const handleEnded = () => {
+      setIsPlaying(false);
+      onPlaybackEndRef.current?.();
+    };
+
+    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+    audio.addEventListener("timeupdate", handleTimeUpdate);
+    audio.addEventListener("ended", handleEnded);
 
     return () => {
-      // cleanup: 모든 오디오 정지 및 이벤트 리스너 제거
-      audioRefs.current.forEach((audio) => {
-        audio.pause();
-        audio.removeEventListener("ended", () => {});
-      });
+      audio.pause();
+      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      audio.removeEventListener("timeupdate", handleTimeUpdate);
+      audio.removeEventListener("ended", handleEnded);
     };
-  }, [exerciseDetail]);
+  }, [exerciseDetail?.merged_audio_url]);
 
   // 픽토그램 애니메이션 (1초마다 변경)
   useEffect(() => {
@@ -170,41 +136,16 @@ export function useExercisePlayback({
 
   // 오디오 재생 제어
   useEffect(() => {
-    if (!audioRefs.current.length) return;
+    if (!audioRef.current) return;
 
-    // 배열의 끝에 도달했으면 재생 불가
-    if (currentAudioIndex >= audioRefs.current.length) {
-      return;
-    }
-
-    const currentAudio = audioRefs.current[currentAudioIndex];
-
-    if (isPlaying && currentAudio) {
-      // 모든 오디오 정지
-      audioRefs.current.forEach((audio, index) => {
-        if (index !== currentAudioIndex) {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-      });
-
-      // 현재 오디오 재생
-      currentAudio.play().catch((error) => {
+    if (isPlaying) {
+      audioRef.current.play().catch((error) => {
         console.error("오디오 재생 실패:", error);
       });
     } else {
-      // 모든 오디오 일시정지
-      audioRefs.current.forEach((audio) => {
-        audio.pause();
-      });
+      audioRef.current.pause();
     }
-
-    return () => {
-      audioRefs.current.forEach((audio) => {
-        audio.pause();
-      });
-    };
-  }, [isPlaying, currentAudioIndex]);
+  }, [isPlaying]);
 
   // 픽토그램 현재 이미지 가져오기 (없으면 더미 이미지)
   const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
@@ -213,19 +154,15 @@ export function useExercisePlayback({
       ? `${API_MEDIA_URL}${exerciseDetail.pictograms[currentImageIndex]}`
       : "https://dummyimage.com/296x296";
 
-  const isPlaybackComplete =
-    exerciseDetail?.audios && currentAudioIndex >= exerciseDetail.audios.length;
-
   return {
     exerciseDetail,
     isPlaying,
     progress,
+    duration,
     isExplain,
     currentPictogram,
-    isPlaybackComplete,
     toggleExplain,
     togglePlay,
     handleProgressChange,
-    getCurrentAudioDescription,
   };
 }

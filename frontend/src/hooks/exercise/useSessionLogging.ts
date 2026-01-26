@@ -10,6 +10,11 @@ type UseSessionLoggingOptions = {
   sessionType: SessionType;
 };
 
+const SESSION_TYPE_MAP = {
+  single: "exercise_id",
+  routine: "playlist_id",
+};
+
 export function useSessionLogging({
   sport_pk,
   ex_type,
@@ -31,7 +36,7 @@ export function useSessionLogging({
           const data = await apiClient.post<{ session_id: string }>(
             "/log/session/start/",
             {
-              playlist_id: sport_pk,
+              [SESSION_TYPE_MAP[sessionType]]: sport_pk,
               exercise_name: exerciseName,
             }
           );

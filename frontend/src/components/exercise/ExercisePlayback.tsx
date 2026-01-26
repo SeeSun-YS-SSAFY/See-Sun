@@ -10,11 +10,11 @@ type ExercisePlaybackProps = {
   currentPictogram: string;
   isPlaying: boolean;
   progress: number;
+  duration: number;
   isExplain: boolean;
   toggleExplain: () => void;
   togglePlay: () => void;
   handleProgressChange: (newValue: number) => void;
-  getCurrentAudioDescription: () => string;
   onBack: () => void;
   onPlaybackEnd?: () => void;
 };
@@ -24,16 +24,16 @@ export default function ExercisePlayback({
   currentPictogram,
   isPlaying,
   progress,
-  isExplain,
-  toggleExplain,
+  duration,
   togglePlay,
   handleProgressChange,
-  getCurrentAudioDescription,
   onBack,
 }: ExercisePlaybackProps) {
   if (!exerciseDetail) {
     return <div>Loading...</div>;
   }
+
+  console.log(progress, duration);
 
   return (
     <div className="flex h-full flex-col">
@@ -58,14 +58,6 @@ export default function ExercisePlayback({
             fill
             alt={exerciseDetail.exercise_name}
           />
-
-          {isExplain && (
-            <div className="absolute -inset-4 flex justify-center overflow-auto rounded-[20px] bg-white/80">
-              <h2 className="text-body-medium h-fit p-4 text-center break-keep whitespace-pre-wrap text-gray-800">
-                {getCurrentAudioDescription()}
-              </h2>
-            </div>
-          )}
         </div>
 
         <div className="mt-[36px] flex w-full max-w-[296px] items-center justify-between">
@@ -74,14 +66,14 @@ export default function ExercisePlayback({
             name={isPlaying ? "pause" : "play_arrow"}
             onClick={togglePlay}
           />
-          <ControlButton name="title" onClick={toggleExplain} />
+          <ControlButton name="title" />
         </div>
 
         <div className="mt-[24px]">
           <ProgressBar
             value={progress}
             onChange={handleProgressChange}
-            max={exerciseDetail.audios?.length || 0}
+            max={duration}
           />
         </div>
       </div>
