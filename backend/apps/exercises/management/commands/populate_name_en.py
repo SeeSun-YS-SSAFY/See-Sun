@@ -63,9 +63,9 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR('google-generativeai 모듈이 설치되지 않았습니다. pip install google-generativeai'))
                 return
             
-            api_key = os.environ.get('GOOGLE_API_KEY') or getattr(settings, 'GOOGLE_API_KEY', None)
+            api_key = os.environ.get('GOOGLE_API_KEY') or os.environ.get('GEMINI_API_KEY') or getattr(settings, 'GOOGLE_API_KEY', None)
             if not api_key:
-                self.stdout.write(self.style.ERROR('GOOGLE_API_KEY가 설정되지 않았습니다.'))
+                self.stdout.write(self.style.ERROR('GOOGLE_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.'))
                 return
             genai.configure(api_key=api_key)
             model = genai.GenerativeModel('gemini-2.0-flash')
