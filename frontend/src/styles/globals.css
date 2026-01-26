@@ -65,28 +65,34 @@
 
 /* heading */
 @layer components {
-  .text-title-large {
+  .text-title-large,
+  .title-large {
     @apply text-48 font-800 tracking-0;
   }
 
-  .text-title-medium {
+  .text-title-medium,
+  .title-medium {
     @apply text-40 font-800 tracking-0;
   }
 
-  .text-title-small {
+  .text-title-small,
+  .title-small {
     @apply text-32 font-800 tracking-0;
   }
 
   /* body */
-  .text-body-large {
+  .text-body-large,
+  .body-large {
     @apply text-32 font-800 tracking-0;
   }
 
-  .text-body-medium {
+  .text-body-medium,
+  .body-medium {
     @apply text-24 font-800 tracking-0;
   }
 
-  .text-body-small {
+  .text-body-small,
+  .body-small {
     @apply text-16 font-800 tracking-0;
   }
   @keyframes marquee-scroll {
