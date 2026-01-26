@@ -51,7 +51,7 @@ class STTView(APIView):
         }
     )
     def post(self, request, mode):
-        audio_file = request.FILES.get('userinfo_stt')
+        audio_file = request.FILES.get('audio')
         field = request.data.get('field', None)
 
         if not audio_file:
