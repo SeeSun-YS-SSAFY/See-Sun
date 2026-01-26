@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button"
+import { useHoverTTSRemote } from "@/hooks/useHoverTTSRemote";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_API_CLIENT_ID;
@@ -9,7 +10,12 @@ const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
 export default function Login() {
   const router = useRouter();
-
+  const { bind } = useHoverTTSRemote({
+    debounceMs: 150,
+    stopPrev: true,
+    volume: 1,
+    cache: true,
+  });
 
   return (
     <div>
@@ -18,6 +24,7 @@ export default function Login() {
       <div className="mt-20 flex flex-col gap-2">
 
         <Button
+          {...bind("구글로 로그인")}
           className="!bg-white enabled:active:bg-gray-100"
           onClick={() => {
             const clientId = GOOGLE_CLIENT_ID ?? "";
@@ -63,12 +70,15 @@ export default function Login() {
         </Button>
 
         <Button
+          {...bind("일반 로그인")}
           onClick={() => router.push("/login/generallogin")}
         >
           일반 로그인
         </Button>
 
-        <Button onClick={() => router.push("/signup")}>
+        <Button 
+          {...bind("회원 가입")}
+          onClick={() => router.push("/signup")}>
           회원 가입
         </Button>
       </div>
