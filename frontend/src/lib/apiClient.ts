@@ -12,7 +12,10 @@ if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 
 const store = getDefaultStore();
 
-function applyTokens(payload: { accessToken: string | null; refreshToken: string | null }) {
+function applyTokens(payload: {
+  accessToken: string | null;
+  refreshToken: string | null;
+}) {
   persistAuthTokens(payload);
   store.set(authAtom, buildAuthState(payload));
 }
@@ -24,7 +27,7 @@ function forceLogout() {
     buildAuthState({
       accessToken: null,
       refreshToken: null,
-    }),
+    })
   );
 }
 
@@ -45,7 +48,7 @@ async function requestRefreshToken(): Promise<string | null> {
     hasRefreshToken: !!refreshToken,
     refreshPromiseExists: !!refreshPromise,
   });
-  
+
   if (!refreshToken) return null;
 
   if (refreshPromise) return refreshPromise;
@@ -85,7 +88,8 @@ async function fetchWithAuth(input: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
 
   if (init.body !== undefined && init.body !== null) {
-    if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+    if (!headers.has("Content-Type"))
+      headers.set("Content-Type", "application/json");
   }
 
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
@@ -102,16 +106,20 @@ async function fetchWithAuth(input: string, init: RequestInit = {}) {
 
     const retryHeaders = new Headers(init.headers);
     if (init.body !== undefined && init.body !== null) {
-      if (!retryHeaders.has("Content-Type")) retryHeaders.set("Content-Type", "application/json");
+      if (!retryHeaders.has("Content-Type"))
+        retryHeaders.set("Content-Type", "application/json");
     }
     retryHeaders.set("Authorization", `Bearer ${newAccess}`);
 
-    res = await fetch(`${API_BASE}${input}`, { ...init, headers: retryHeaders });
+    res = await fetch(`${API_BASE}${input}`, {
+      ...init,
+      headers: retryHeaders,
+    });
 
     if (res.status === 401) {
       console.warn("[apiClient] 401 received → try refresh", {
-      url: input,
-    }); 
+        url: input,
+      });
       forceLogout();
       throw new Error("Unauthorized");
     }
@@ -130,10 +138,20 @@ async function fetchWithAuth(input: string, init: RequestInit = {}) {
 }
 
 export const apiClient = {
-  get: async <T>(url: string): Promise<T> => fetchWithAuth(url, { method: "GET" }),
-  post: async <T>(url: string, body?: any): Promise<T> =>
-    fetchWithAuth(url, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) }),
-  put: async <T>(url: string, body?: any): Promise<T> =>
-    fetchWithAuth(url, { method: "PUT", body: body === undefined ? undefined : JSON.stringify(body) }),
-  delete: async <T>(url: string): Promise<T> => fetchWithAuth(url, { method: "DELETE" }),
+  get: async <T>(url: string, init?: RequestInit): Promise<T> =>
+    fetchWithAuth(url, { method: "GET", ...init }),
+  post: async <T>(url: string, body?: any, init?: RequestInit): Promise<T> =>
+    fetchWithAuth(url, {
+      method: "POST",
+      body: body === undefined ? undefined : JSON.stringify(body),
+      ...init,
+    }),
+  put: async <T>(url: string, body?: any, init?: RequestInit): Promise<T> =>
+    fetchWithAuth(url, {
+      method: "PUT",
+      body: body === undefined ? undefined : JSON.stringify(body),
+      ...init,
+    }),
+  delete: async <T>(url: string, init?: RequestInit): Promise<T> =>
+    fetchWithAuth(url, { method: "DELETE", ...init }),
 };
