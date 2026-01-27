@@ -3,7 +3,7 @@
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type ExerciseCategoryResponse = {
@@ -19,9 +19,6 @@ type ExerciseCategoryResponse = {
 export default function ExerciseType() {
   const router = useRouter();
   const params = useParams<{ ex_type: string }>();
-  const searchParams = useSearchParams();
-
-  const mode = searchParams.get("mode");
 
   const { ex_type: exType } = params;
 
@@ -31,7 +28,7 @@ export default function ExerciseType() {
   useEffect(() => {
     const fetchExercises = async () => {
       const data = await apiClient.get<ExerciseCategoryResponse>(
-        `/exercises/category/${exType}/`,
+        `/exercises/category/${exType}/`
       );
       setExercises(data);
     };
@@ -39,8 +36,8 @@ export default function ExerciseType() {
   }, [exType]);
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.back()}
@@ -58,7 +55,8 @@ export default function ExerciseType() {
           <ExerciseSwiper
             exercises={exerciseCategory.exercises}
             onClick={(exercise) =>
-              router.push(`${exType}/${exercise.exercise_id}?mode=${mode}`)
+              router.push(`${exType}/${exercise.exercise_id}
+                `)
             }
           />
         )}

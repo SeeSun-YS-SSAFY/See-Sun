@@ -80,37 +80,69 @@ export function useExercisePlayback({
     if (!exerciseDetail?.merged_audio_url) return;
 
     const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
-    const audio = new Audio(
-      `${API_MEDIA_URL}${exerciseDetail.merged_audio_url}`
-    );
-    audio.preload = "auto";
-    audioRef.current = audio;
+    let objectUrl: string | null = null;
 
-    // 오디오 메타데이터 로드 시 duration 설정
-    const handleLoadedMetadata = () => {
-      setDuration(audio.duration);
+    // 인증된 요청으로 오디오 파일 가져오기
+    const loadAudio = async () => {
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const response = await fetch(
+          `${API_MEDIA_URL}${exerciseDetail.merged_audio_url}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`Failed to load audio: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        objectUrl = URL.createObjectURL(blob);
+
+        const audio = new Audio(objectUrl);
+        audio.preload = "auto";
+        audioRef.current = audio;
+
+        // 오디오 메타데이터 로드 시 duration 설정
+        const handleLoadedMetadata = () => {
+          setDuration(audio.duration);
+        };
+
+        // 재생 시간 업데이트
+        const handleTimeUpdate = () => {
+          setProgress(audio.currentTime);
+        };
+
+        // 오디오 종료 시
+        const handleEnded = () => {
+          setIsPlaying(false);
+          onPlaybackEndRef.current?.();
+        };
+
+        audio.addEventListener("loadedmetadata", handleLoadedMetadata);
+        audio.addEventListener("timeupdate", handleTimeUpdate);
+        audio.addEventListener("ended", handleEnded);
+      } catch (error) {
+        console.error("오디오 로드 실패:", error);
+      }
     };
 
-    // 재생 시간 업데이트
-    const handleTimeUpdate = () => {
-      setProgress(audio.currentTime);
-    };
-
-    // 오디오 종료 시
-    const handleEnded = () => {
-      setIsPlaying(false);
-      onPlaybackEndRef.current?.();
-    };
-
-    audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-    audio.addEventListener("timeupdate", handleTimeUpdate);
-    audio.addEventListener("ended", handleEnded);
+    loadAudio();
 
     return () => {
-      audio.pause();
-      audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      audio.removeEventListener("timeupdate", handleTimeUpdate);
-      audio.removeEventListener("ended", handleEnded);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener("loadedmetadata", () => {});
+        audioRef.current.removeEventListener("timeupdate", () => {});
+        audioRef.current.removeEventListener("ended", () => {});
+      }
+      // Blob URL 정리
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
     };
   }, [exerciseDetail?.merged_audio_url]);
 

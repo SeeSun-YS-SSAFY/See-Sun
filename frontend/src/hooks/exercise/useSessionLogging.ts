@@ -53,7 +53,7 @@ export function useSessionLogging({
       const fetchLogEnd = async () => {
         try {
           if (sessionIdRef.current) {
-            await apiClient.post(`/log/session/${sessionIdRef.current}/end`);
+            await apiClient.post(`/log/session/${sessionIdRef.current}/end/`);
             sessionIdRef.current = null;
           }
         } catch (error) {
