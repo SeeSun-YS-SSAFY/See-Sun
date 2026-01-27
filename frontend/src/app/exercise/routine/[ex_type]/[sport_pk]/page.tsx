@@ -20,6 +20,8 @@ export default function ExerciseType() {
         (ex) => ex.exercise_id === params.sport_pk
       );
 
+      console.log(currentIndex);
+
       // 다음 운동이 있으면 이동
       if (currentIndex !== -1 && currentIndex < category.exercises.length - 1) {
         const nextExerciseId = category.exercises[currentIndex + 1].exercise_id;

@@ -29,15 +29,17 @@ export function useExercisePlayback({
     null
   );
   const [isPlaying, setIsPlaying] = useState(false);
-  const [progress, setProgress] = useState(0); // 현재 재생 시간 (초)
-  const [duration, setDuration] = useState(0); // 총 재생 시간 (초)
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
   const [isExplain, setIsExplain] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const onPlaybackEndRef = useRef(onPlaybackEnd);
 
-  // Keep the callback ref in sync
+  // URL Cleanup 관리
+  const activeUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     onPlaybackEndRef.current = onPlaybackEnd;
   }, [onPlaybackEnd]);
@@ -57,7 +59,6 @@ export function useExercisePlayback({
     }
   }, []);
 
-  // 운동 상세 정보 조회 API 연결
   useEffect(() => {
     const fetchExerciseDetail = async () => {
       try {
@@ -69,122 +70,180 @@ export function useExercisePlayback({
         console.error("운동 상세 정보 조회 실패:", error);
       }
     };
-
-    if (sport_pk) {
-      fetchExerciseDetail();
-    }
+    if (sport_pk) fetchExerciseDetail();
   }, [sport_pk]);
 
-  // 오디오 파일 로드
+  // Audio Blob Load Logic with Retry
   useEffect(() => {
     if (!exerciseDetail?.merged_audio_url) return;
 
     const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
-    let objectUrl: string | null = null;
+    const controller = new AbortController();
+    const { signal } = controller;
 
-    // 인증된 요청으로 오디오 파일 가져오기
+    // Reset State
+    setIsPlaying(false);
+    setProgress(0);
+    setDuration(0);
+
+    // Audio Element Init
+    const audio = new Audio();
+    audioRef.current = audio;
+
     const loadAudio = async () => {
       try {
         const accessToken = localStorage.getItem("accessToken");
-        const response = await fetch(
-          `${API_MEDIA_URL}${exerciseDetail.merged_audio_url}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+        const url = `${API_MEDIA_URL}${exerciseDetail.merged_audio_url}`;
 
-        if (!response.ok) {
-          throw new Error(`Failed to load audio: ${response.status}`);
+        let blob: Blob | null = null;
+        let retryCount = 0;
+        const maxRetries = 5;
+
+        // Blob size 0일 경우 재시도 로직
+        while (retryCount <= maxRetries) {
+          if (signal.aborted) return;
+          console.log(`Audio fetch attempt ${retryCount + 1}`);
+          try {
+            const response = await fetch(url, {
+              headers: { Authorization: `Bearer ${accessToken}` },
+              signal,
+            });
+
+            if (!response.ok)
+              throw new Error(`HTTP error! status: ${response.status}`);
+
+            const tempBlob = await response.blob();
+            console.log(
+              `Audio fetch attempt ${retryCount + 1}: size=${tempBlob.size}`
+            );
+
+            if (tempBlob.size > 0) {
+              blob = tempBlob;
+              break;
+            } else {
+              console.warn(`Attempt ${retryCount + 1}: Received empty blob.`);
+            }
+          } catch (err) {
+            if (err.name === "AbortError") return;
+            console.warn(`Attempt ${retryCount + 1} failed:`, err);
+          }
+
+          retryCount++;
+          if (retryCount <= maxRetries) {
+            // 재시도 전 0.5초 대기
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
         }
 
-        const blob = await response.blob();
-        objectUrl = URL.createObjectURL(blob);
+        if (!blob || blob.size === 0) {
+          throw new Error(
+            "Failed to load valid audio file (empty blob) after retries."
+          );
+        }
 
-        const audio = new Audio(objectUrl);
+        if (signal.aborted) return;
+
+        // Cleanup Prev
+        if (activeUrlRef.current) {
+          URL.revokeObjectURL(activeUrlRef.current);
+          activeUrlRef.current = null;
+        }
+
+        const objectUrl = URL.createObjectURL(blob);
+        activeUrlRef.current = objectUrl;
+
+        // Append UUID for uniqueness
+        const uniqueUrl = `${objectUrl}#${crypto.randomUUID()}`;
+
+        audio.src = uniqueUrl;
         audio.preload = "auto";
-        audioRef.current = audio;
 
-        // 오디오 메타데이터 로드 시 duration 설정
-        const handleLoadedMetadata = () => {
+        // Listeners
+        const onMetadata = () => {
+          if (signal.aborted) return;
           setDuration(audio.duration);
+          audio.play().catch((e) => {
+            if (e.name !== "AbortError") console.log("Autoplay blocked:", e);
+          });
         };
-
-        // 재생 시간 업데이트
-        const handleTimeUpdate = () => {
+        const onTimeUpdate = () => {
+          if (signal.aborted) return;
           setProgress(audio.currentTime);
         };
-
-        // 오디오 종료 시
-        const handleEnded = () => {
+        const onEnded = () => {
+          if (signal.aborted) return;
           setIsPlaying(false);
           onPlaybackEndRef.current?.();
         };
+        const onPlay = () => {
+          if (!signal.aborted) setIsPlaying(true);
+        };
+        const onPause = () => {
+          if (!signal.aborted) setIsPlaying(false);
+        };
 
-        audio.addEventListener("loadedmetadata", handleLoadedMetadata);
-        audio.addEventListener("timeupdate", handleTimeUpdate);
-        audio.addEventListener("ended", handleEnded);
+        audio.addEventListener("loadedmetadata", onMetadata, { signal });
+        audio.addEventListener("timeupdate", onTimeUpdate, { signal });
+        audio.addEventListener("ended", onEnded, { signal });
+        audio.addEventListener("play", onPlay, { signal });
+        audio.addEventListener("pause", onPause, { signal });
       } catch (error) {
-        console.error("오디오 로드 실패:", error);
+        if (error.name !== "AbortError")
+          console.error("Audio Load Error:", error);
       }
     };
 
     loadAudio();
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener("loadedmetadata", () => {});
-        audioRef.current.removeEventListener("timeupdate", () => {});
-        audioRef.current.removeEventListener("ended", () => {});
-      }
-      // Blob URL 정리
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
+      controller.abort();
+      if (audio) {
+        audio.pause();
+        audio.src = "";
+        audio.load();
       }
     };
   }, [exerciseDetail?.merged_audio_url]);
 
-  // 픽토그램 애니메이션 (1초마다 변경)
+  // Unmount Cleanup
+  useEffect(() => {
+    return () => {
+      if (activeUrlRef.current) {
+        URL.revokeObjectURL(activeUrlRef.current);
+      }
+    };
+  }, []);
+
+  // Pictogram
   useEffect(() => {
     if (
-      !exerciseDetail ||
-      !exerciseDetail.pictograms ||
+      !exerciseDetail?.pictograms ||
       exerciseDetail.pictograms.length <= 1 ||
       !isPlaying
-    ) {
+    )
       return;
-    }
-
     const interval = setInterval(() => {
       setCurrentImageIndex(
         (prev) => (prev + 1) % exerciseDetail.pictograms.length
       );
     }, 1000);
-
     return () => clearInterval(interval);
   }, [exerciseDetail, isPlaying]);
 
-  // 오디오 재생 제어
+  // UI Control
   useEffect(() => {
     if (!audioRef.current) return;
-
     if (isPlaying) {
-      audioRef.current.play().catch((error) => {
-        console.error("오디오 재생 실패:", error);
-      });
+      audioRef.current.play().catch(() => setIsPlaying(false));
     } else {
       audioRef.current.pause();
     }
   }, [isPlaying]);
 
-  // 픽토그램 현재 이미지 가져오기 (없으면 더미 이미지)
   const API_MEDIA_URL = process.env.NEXT_PUBLIC_API_MEDIA_URL;
-  const currentPictogram =
-    exerciseDetail?.pictograms && exerciseDetail.pictograms.length > 0
-      ? `${API_MEDIA_URL}${exerciseDetail.pictograms[currentImageIndex]}`
-      : "https://dummyimage.com/296x296";
+  const currentPictogram = exerciseDetail?.pictograms?.length
+    ? `${API_MEDIA_URL}${exerciseDetail.pictograms[currentImageIndex]}`
+    : "https://dummyimage.com/296x296";
 
   return {
     exerciseDetail,
