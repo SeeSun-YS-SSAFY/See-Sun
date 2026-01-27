@@ -13,7 +13,7 @@ import AutoScrollText from "@/components/common/AutoScrollText";
 import { useSwipe } from "./ExerciseSwiper.hooks";
 
 export type Exercise = {
-  exercise_id: number;
+  exercise_id: string;
   exercise_name: string;
   pictogram_url: string;
 };

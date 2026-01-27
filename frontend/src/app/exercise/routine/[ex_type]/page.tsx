@@ -2,15 +2,18 @@
 
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
+import { atom, useAtom } from "jotai";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+
+export const categoryAtom = atom<ExerciseCategoryResponse>();
 
 type ExerciseCategoryResponse = {
   category_id: number;
   category_name: string;
   exercises: {
-    exercise_id: number;
+    exercise_id: string;
     exercise_name: string;
     pictogram_url: string;
   }[];
@@ -22,18 +25,17 @@ export default function ExerciseType() {
 
   const { ex_type: exType } = params;
 
-  const [exerciseCategory, setExercises] =
-    useState<ExerciseCategoryResponse | null>(null);
+  const [category, setCategory] = useAtom(categoryAtom);
 
   useEffect(() => {
     const fetchExercises = async () => {
       const data = await apiClient.get<ExerciseCategoryResponse>(
         `/exercises/category/${exType}/`
       );
-      setExercises(data);
+      setCategory(data);
     };
     if (exType) fetchExercises();
-  }, [exType]);
+  }, [exType, setCategory]);
 
   return (
     <div className="flex h-full flex-col">
@@ -47,15 +49,15 @@ export default function ExerciseType() {
         </button>
 
         <h1 className="text-title-large text-white">
-          {exerciseCategory?.category_name ?? "로딩 중"}
+          {category?.category_name ?? "로딩 중"}
         </h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        {exerciseCategory && (
+        {category && (
           <ExerciseSwiper
-            exercises={exerciseCategory.exercises}
-            onClick={(exercise) =>
-              router.push(`${exType}/${exercise.exercise_id}`)
+            exercises={category.exercises}
+            onClick={() =>
+              router.push(`${exType}/${category.exercises[0].exercise_id}`)
             }
           />
         )}

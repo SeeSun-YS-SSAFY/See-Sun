@@ -33,8 +33,6 @@ export default function ExercisePlayback({
     return <div>Loading...</div>;
   }
 
-  console.log(progress, duration);
-
   return (
     <div className="flex h-full flex-col">
       <div className="relative flex items-center justify-center py-2.5">
