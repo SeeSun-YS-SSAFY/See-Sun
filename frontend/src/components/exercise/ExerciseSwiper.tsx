@@ -136,7 +136,7 @@ export default function ExerciseSwiper({
                             )}
                           >
                             <Image
-                              src={`${process.env.NEXT_PUBLIC_API_MEDIA_URL}${exercise.pictogram_url}`}
+                              src={`${process.env.NEXT_PUBLIC_API_MEDIA_URL || ""}${exercise.pictogram_url}`}
                               alt={exercise.exercise_name}
                               fill
                               className={cn(
