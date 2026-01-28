@@ -1,23 +1,15 @@
 "use client";
 
+import {
+  CategoryDetail,
+  categoryDetailAtom,
+} from "@/atoms/exercise/categoryDetailAtoms";
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
-import { atom, useAtom } from "jotai";
+import { useAtom } from "jotai";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-export const categoryAtom = atom<ExerciseCategoryResponse>();
-
-type ExerciseCategoryResponse = {
-  category_id: number;
-  category_name: string;
-  exercises: {
-    exercise_id: string;
-    exercise_name: string;
-    pictogram_url: string;
-  }[];
-};
 
 export default function ExerciseType() {
   const router = useRouter();
@@ -25,17 +17,23 @@ export default function ExerciseType() {
 
   const { ex_type: exType } = params;
 
-  const [category, setCategory] = useAtom(categoryAtom);
+  const [categoryDetail, setCategoryDetail] = useAtom(categoryDetailAtom);
 
   useEffect(() => {
-    const fetchExercises = async () => {
-      const data = await apiClient.get<ExerciseCategoryResponse>(
-        `/exercises/category/${exType}/`
+    // ADD ABORTCONTROLLER
+    const abortController = new AbortController();
+
+    const fetchCategoryDetail = async () => {
+      const data = await apiClient.get<CategoryDetail>(
+        `/exercises/category/${exType}/`,
+        { signal: abortController.signal }
       );
-      setCategory(data);
+      setCategoryDetail(data);
     };
-    if (exType) fetchExercises();
-  }, [exType, setCategory]);
+    if (exType) fetchCategoryDetail();
+
+    return () => abortController.abort();
+  }, [exType, setCategoryDetail]);
 
   return (
     <div className="flex h-full flex-col">
@@ -49,15 +47,17 @@ export default function ExerciseType() {
         </button>
 
         <h1 className="text-title-large text-white">
-          {category?.category_name ?? "로딩 중"}
+          {categoryDetail?.category_name ?? "로딩 중"}
         </h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        {category && (
+        {categoryDetail && (
           <ExerciseSwiper
-            exercises={category.exercises}
+            exercises={categoryDetail.exercises}
             onClick={() =>
-              router.push(`${exType}/${category.exercises[0].exercise_id}`)
+              router.push(
+                `${exType}/${categoryDetail.exercises[0].exercise_id}`
+              )
             }
           />
         )}

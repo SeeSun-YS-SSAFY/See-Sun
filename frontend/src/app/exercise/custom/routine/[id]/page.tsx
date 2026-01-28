@@ -1,31 +1,23 @@
 "use client";
 
+import {
+  RoutineDetail,
+  routineDetailAtom,
+} from "@/atoms/exercise/routineDetailAtoms";
 import Button from "@/components/common/Button";
+import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
+import { useAtom } from "jotai";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-type RoutineItem = {
-  exercise_id: number;
-  exercise_name: string;
-  sequence_no: number;
-  set_count: number;
-  reps_count: number;
-};
-
-type RoutineDetail = {
-  playlist_id: string;
-  title: string;
-  items: RoutineItem[];
-};
 
 export default function CustomRoutineDetail() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const routineId = params.id;
 
-  const [data, setData] = useState<RoutineDetail | null>(null);
+  const [routineDetail, setRoutineDetail] = useAtom(routineDetailAtom);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,11 +26,11 @@ export default function CustomRoutineDetail() {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        const res = await apiClient.get<RoutineDetail>(
-          `/exercise/playlist/${routineId}`
+        const data = await apiClient.get<RoutineDetail>(
+          `/exercises/playlist/${routineId}`
         );
-        if (mounted) setData(res);
-      } catch (e: any) {
+        if (mounted) setRoutineDetail(data);
+      } catch (e) {
         if (mounted) setError(e?.message ?? "Failed to load routine");
       } finally {
         if (mounted) setLoading(false);
@@ -48,11 +40,11 @@ export default function CustomRoutineDetail() {
     return () => {
       mounted = false;
     };
-  }, [routineId]);
+  }, [routineId, setRoutineDetail]);
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.back()}
@@ -64,40 +56,34 @@ export default function CustomRoutineDetail() {
         <h1 className="text-title-large text-white">루틴 상세</h1>
       </div>
 
-      <div className="flex flex-1 flex-col gap-4 pb-25 px-6 text-white">
+      <div className="flex flex-1 flex-col gap-4 px-6 pb-25">
         {loading && <div className="text-white/70">불러오는 중…</div>}
-        {!loading && error && (
-          <div className="text-red-400">{error}</div>
-        )}
-        {!loading && !error && data && (
+        {!loading && error && <div className="text-red-400">{error}</div>}
+        {!loading && !error && routineDetail && (
           <>
-            <div className="text-title-medium">{data.title}</div>
-            {data.items.length === 0 && (
+            <div className="text-title-medium text-white">
+              {routineDetail.title}
+            </div>
+            {routineDetail?.items?.length === 0 && (
               <div className="text-white/70">등록된 운동이 없어요.</div>
             )}
-            {data.items.length > 0 && (
-              <ul className="flex flex-col gap-2 list-none pl-0">
-                {data.items
-                  .slice()
-                  .sort((a, b) => a.sequence_no - b.sequence_no)
-                  .map((item) => (
-                    <li key={`${item.exercise_id}-${item.sequence_no}`}>
-                      <Button className="justify-between w-full">
-                        <span>
-                          {item.sequence_no}. {item.exercise_name}
-                        </span>
-                        <span className="text-white/80">
-                          {item.set_count} x {item.reps_count}
-                        </span>
-                      </Button>
-                    </li>
-                  ))}
-              </ul>
-            )}
+            <ExerciseSwiper
+              exercises={
+                routineDetail.items.map((item) => ({
+                  exercise_id: item.exercise_id,
+                  exercise_name: item.exercise_name,
+                  pictogram_url: item.pictograms[0],
+                })) ?? []
+              }
+              onClick={() => {
+                router.push(
+                  `/exercise/custom/routine/${routineId}/${routineDetail.items[0].exercise_id}`
+                );
+              }}
+            />
           </>
         )}
       </div>
     </div>
   );
 }
-
