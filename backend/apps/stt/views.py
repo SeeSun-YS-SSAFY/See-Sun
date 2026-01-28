@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from drf_spectacular.utils import extend_schema
 from .services.audio_processor import AudioProcessor
-from .services.stt_engine import STTEngine
+from .services.google_stt_service import GoogleSTTService, GoogleSTTServiceException
 from .services.gemini_service import GeminiService
+from .services.wake_word import detect_wake_word
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,8 +13,8 @@ logger = logging.getLogger(__name__)
 class STTView(APIView):
     """
     통합 STT API
-    - Faster-Whisper: 음성 → 텍스트
-    - Gemini 1.5 Flash: 텍스트 → 구조화된 데이터 (NLU)
+    - Google STT: 음성 → 텍스트
+    - Gemini: 텍스트 → 구조화된 데이터 (NLU)
     """
     parser_classes = [MultiPartParser]
 
@@ -51,30 +52,36 @@ class STTView(APIView):
         }
     )
     def post(self, request, mode):
-        audio_file = request.FILES.get('audio')
+        # 프론트/기존 연동 호환: userinfo_stt(권장) 또는 audio(레거시)를 모두 허용합니다.
+        audio_file = request.FILES.get('userinfo_stt') or request.FILES.get('audio')
         field = request.data.get('field', None)
 
         if not audio_file:
-            return Response({'error': 'No audio file provided'}, status=400)
+            return Response({'error': '오디오 파일이 없습니다.'}, status=400)
+
+        # Google STT 동기 요청은 약 10MB 제한이 있어, 과도한 업로드는 사전에 차단합니다.
+        if getattr(audio_file, "size", 0) and audio_file.size > 10 * 1024 * 1024:
+            return Response({'error': '오디오 파일이 너무 큽니다. (최대 10MB)'}, status=400)
         
         ALLOWED_MODES = ['form', 'listen', 'command', 'full_command', 'stt']
         if mode not in ALLOWED_MODES:
-            return Response({'error': f'Invalid mode. Allowed: {ALLOWED_MODES}'}, status=400)
-
-        temp_webm = None
-        temp_wav = None
+            return Response({'error': f'유효하지 않은 mode 입니다. 허용: {ALLOWED_MODES}'}, status=400)
 
         try:
-            # 1. 파일 전처리
-            temp_webm = AudioProcessor.save_temp_file(audio_file)
-            temp_wav = AudioProcessor.convert_to_wav(temp_webm)
-            
-            # 2. STT (Whisper) - 모든 모드 공통
-            raw_text = STTEngine.transcribe(temp_wav)
+            # 1. 파일 -> 바이트 변환 (변환 스킵, WEBM_OPUS)
+            audio_bytes, sample_rate, encoding = AudioProcessor.convert_webm_to_bytes(audio_file)
+            logger.info(f"[STTView] 업로드 오디오 처리: sample_rate={sample_rate}, encoding={encoding}")
+
+            # 2. STT (Google) - 모든 모드 공통
+            try:
+                raw_text = GoogleSTTService.transcribe(audio_bytes, sample_rate, encoding)
+            except GoogleSTTServiceException as e:
+                logger.error(f"[STTView] Google STT 에러: {e}", exc_info=True)
+                return Response({'error': str(e)}, status=503)
             
             # 아무 말도 안 했을 경우
             if not raw_text:
-                return Response({'error': 'No speech detected'}, status=200)
+                return Response({'error': '음성을 감지할 수 없습니다.'}, status=200)
 
             result = {
                 'mode': mode,
@@ -84,7 +91,7 @@ class STTView(APIView):
             # 3. 모드별 NLU logic
             if mode == 'listen':
                 # Listen: 로컬에서 빠르게 감지
-                wake_detected = STTEngine.detect_wake_word(raw_text)
+                wake_detected = detect_wake_word(raw_text)
                 result['wake_detected'] = wake_detected
                 result['message'] = raw_text # Legacy response compat
 
@@ -115,8 +122,5 @@ class STTView(APIView):
             return Response(result)
 
         except Exception as e:
-            logger.error(f"STT Error: {str(e)}", exc_info=True)
-            return Response({'error': str(e)}, status=500)
-        
-        finally:
-            AudioProcessor.cleanup(temp_webm, temp_wav)
+            logger.error(f"[STTView] STT 처리 오류: {str(e)}", exc_info=True)
+            return Response({'error': '서버 오류가 발생했습니다.'}, status=500)
