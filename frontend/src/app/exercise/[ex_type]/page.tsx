@@ -13,6 +13,7 @@ type ExerciseCategoryResponse = {
     exercise_id: number;
     exercise_name: string;
     pictogram_url: string;
+    name_audio_url?: string;
   }[];
 };
 
