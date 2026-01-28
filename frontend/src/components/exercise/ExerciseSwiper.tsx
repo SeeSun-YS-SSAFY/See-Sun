@@ -53,7 +53,7 @@ export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperPro
       if (!src) return;
 
       // ✅ lib 유틸 사용
-      playUrl(src, String(exercise.exercise_id));
+      playUrl(src, { dedupeKey: String(exercise.exercise_id) });
     },
     [toAbsAudioUrl],
   );
