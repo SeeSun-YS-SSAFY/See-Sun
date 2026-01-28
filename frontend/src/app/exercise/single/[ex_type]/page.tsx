@@ -3,14 +3,14 @@
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type ExerciseCategoryResponse = {
-  category_id: number;
+type CategoryDetail = {
+  category_id: string;
   category_name: string;
   exercises: {
-    exercise_id: number;
+    exercise_id: string;
     exercise_name: string;
     pictogram_url: string;
   }[];
@@ -19,28 +19,26 @@ type ExerciseCategoryResponse = {
 export default function ExerciseType() {
   const router = useRouter();
   const params = useParams<{ ex_type: string }>();
-  const searchParams = useSearchParams();
-
-  const mode = searchParams.get("mode");
 
   const { ex_type: exType } = params;
 
-  const [exerciseCategory, setExercises] =
-    useState<ExerciseCategoryResponse | null>(null);
+  const [categoryDetail, setCategoryDetail] = useState<CategoryDetail | null>(
+    null
+  );
 
   useEffect(() => {
-    const fetchExercises = async () => {
-      const data = await apiClient.get<ExerciseCategoryResponse>(
-        `/exercises/category/${exType}/`,
+    const fetchCategoryDetail = async () => {
+      const data = await apiClient.get<CategoryDetail>(
+        `/exercises/category/${exType}/`
       );
-      setExercises(data);
+      setCategoryDetail(data);
     };
-    if (exType) fetchExercises();
+    if (exType) fetchCategoryDetail();
   }, [exType]);
 
   return (
-    <div className="h-full flex-col flex">
-      <div className="relative flex items-center py-2.5 justify-center">
+    <div className="flex h-full flex-col">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.back()}
@@ -50,15 +48,16 @@ export default function ExerciseType() {
         </button>
 
         <h1 className="text-title-large text-white">
-          {exerciseCategory?.category_name ?? "로딩 중"}
+          {categoryDetail?.category_name ?? "로딩 중"}
         </h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        {exerciseCategory && (
+        {categoryDetail && (
           <ExerciseSwiper
-            exercises={exerciseCategory.exercises}
+            exercises={categoryDetail.exercises}
             onClick={(exercise) =>
-              router.push(`${exType}/${exercise.exercise_id}?mode=${mode}`)
+              router.push(`${exType}/${exercise.exercise_id}
+                `)
             }
           />
         )}

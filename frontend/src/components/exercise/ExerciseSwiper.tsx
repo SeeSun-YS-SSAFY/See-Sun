@@ -9,10 +9,11 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
+import AutoScrollText from "@/components/common/AutoScrollText";
 import { useSwipe } from "./ExerciseSwiper.hooks";
 
 export type Exercise = {
-  exercise_id: number;
+  exercise_id: string;
   exercise_name: string;
   pictogram_url: string;
 };
@@ -34,8 +35,8 @@ export default function ExerciseSwiper({
   });
 
   return (
-    <div className="h-full w-full flex items-center justify-center">
-      <div className="w-full max-w-sm h-[428px]" {...swipeHandlers}>
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="h-[428px] w-full max-w-sm" {...swipeHandlers}>
         <Swiper
           onSwiper={(swiper) => (swiperRef.current = swiper)}
           effect={"creative"}
@@ -59,7 +60,7 @@ export default function ExerciseSwiper({
             return (
               <SwiperSlide
                 key={exercise.exercise_id}
-                className="w-full my-auto transition-all duration-300 group"
+                className="group my-auto w-full transition-all duration-300"
                 onClick={() => onClick(exercise)}
               >
                 {({ isActive, isNext, isPrev }) => {
@@ -68,7 +69,7 @@ export default function ExerciseSwiper({
                     "self-stretch inline-flex mx-auto flex-col justify-center items-center gap-2.5 transition-all duration-300 outline-2 -outline-offset-2 outline-black shadow-100",
                     isActive
                       ? "bg-yellow-300 rounded-[20px]"
-                      : "bg-yellow-800 rounded-[16px]",
+                      : "bg-yellow-800 rounded-[16px]"
                   );
 
                   // 높이 스타일: Active(212px), Next/Prev(52px), 나머지(40px)
@@ -114,24 +115,24 @@ export default function ExerciseSwiper({
                     (isActive || isNext || isPrev) && "translate-y-0",
                     // 나머지는 기본적으로 60px 내려가도록 (이건 CSS selector fallback과 결합)
                     !(isActive || isNext || isPrev) &&
-                    "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]",
+                      "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]"
                   );
 
                   return (
-                    <div className="flex flex-col justify-center h-full select-none">
+                    <div className="flex h-full flex-col justify-center select-none">
                       <div
                         className={cn(
                           slideBaseStyles,
                           slideHeightStyles,
                           slideWidthStyles,
-                          slideTranslateStyles,
+                          slideTranslateStyles
                         )}
                       >
                         {isActive && (
                           <div
                             className={cn(
-                              "relative w-40 h-0",
-                              isActive && "h-32",
+                              "relative h-0 w-40",
+                              isActive && "h-32"
                             )}
                           >
                             <Image
@@ -139,8 +140,8 @@ export default function ExerciseSwiper({
                               alt={exercise.exercise_name}
                               fill
                               className={cn(
-                                "object-contain hidden",
-                                isActive && "block",
+                                "hidden object-contain",
+                                isActive && "block"
                               )}
                               draggable={false}
                             />
@@ -148,17 +149,28 @@ export default function ExerciseSwiper({
                         )}
 
                         {/* Text area */}
-                        <div
-                          className={cn(
-                            "text-center text-black transition-all duration-300",
-                            isActive
-                              ? "text-body-large"
-                              : isNext || isPrev
-                                ? "text-body-medium"
-                                : "text-body-small",
+                        <div className="w-full px-5">
+                          {isActive ? (
+                            <AutoScrollText
+                              className={cn(
+                                "w-full text-center text-black transition-all duration-300",
+                                "text-body-large"
+                              )}
+                            >
+                              {exercise.exercise_name}
+                            </AutoScrollText>
+                          ) : (
+                            <p
+                              className={cn(
+                                "w-full truncate overflow-hidden text-center text-black",
+                                isNext || isPrev
+                                  ? "text-body-medium"
+                                  : "text-body-small"
+                              )}
+                            >
+                              {exercise.exercise_name}
+                            </p>
                           )}
-                        >
-                          {exercise.exercise_name}
                         </div>
                       </div>
                     </div>
