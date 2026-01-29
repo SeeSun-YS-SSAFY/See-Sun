@@ -77,12 +77,18 @@ export default function Birth() {
     onResult: (res) => {
       // Gemini가 YYYY-MM-DD로 줄 것.
       // 그래도 안전하게 parseBirth 한번 태우기
-      const parsed = parseBirth(res.normalized);
-      if (parsed) setBirth(parsed.iso);
-      else {
-        // 정규화 실패 시 원문 시도
-        const parsedRaw = parseBirth(res.raw);
-        if (parsedRaw) setBirth(parsedRaw.iso);
+      if (res.normalized) {
+        const parsed = parseBirth(res.normalized);
+        if (parsed) setBirth(parsed.iso);
+        else if (res.raw) {
+            // 정규화 실패 시 원문 시도
+            const parsedRaw = parseBirth(res.raw);
+            if (parsedRaw) setBirth(parsedRaw.iso);
+        }
+      } else if (res.raw) {
+         // normalized가 없는 경우
+         const parsedRaw = parseBirth(res.raw);
+         if (parsedRaw) setBirth(parsedRaw.iso);
       }
     },
   });

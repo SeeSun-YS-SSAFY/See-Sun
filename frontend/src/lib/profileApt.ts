@@ -50,12 +50,30 @@ export function buildProfilePayloadFromSession(): ProfileCompletionPayload | nul
   const birthdate = (sessionStorage.getItem("birth") ?? "").trim();
   const phone = (sessionStorage.getItem("phone") ?? "").replace(/[^\d]/g, "");
 
-  if (!name) return null;
-  if (!Number.isFinite(height) || height <= 0) return null;
-  if (!Number.isFinite(weight) || weight <= 0) return null;
-  if (gender !== "M" && gender !== "F") return null;
-  if (!birthdate) return null;
-  if (!(phone.length === 10 || phone.length === 11)) return null;
+  // 🔍 디버깅: 원본 데이터 확인
+  console.log("[ProfileDebug] Raw Session Data:", {
+    name, height_raw: sessionStorage.getItem("height"), weight_raw: sessionStorage.getItem("weight"), gender, birthdate, phone_raw: sessionStorage.getItem("phone")
+  });
+
+  if (!name) throw new Error("이름(name) 정보가 누락되었습니다.");
+  
+  if (!Number.isFinite(height) || height <= 0) {
+    throw new Error(`키(height) 정보가 올바르지 않습니다. (값: ${height})`);
+  }
+  
+  if (!Number.isFinite(weight) || weight <= 0) {
+    throw new Error(`몸무게(weight) 정보가 올바르지 않습니다. (값: ${weight})`);
+  }
+  
+  if (gender !== "M" && gender !== "F") {
+    throw new Error(`성별(gender) 정보가 누락되었거나 올바르지 않습니다. (값: ${gender})`);
+  }
+  
+  if (!birthdate) throw new Error("생년월일(birthdate) 정보가 누락되었습니다.");
+  
+  if (!(phone.length === 10 || phone.length === 11)) {
+    throw new Error(`휴대폰 번호 길이가 올바르지 않습니다. (입력된 숫자 개수: ${phone.length})`);
+  }
 
   return {
     // name,

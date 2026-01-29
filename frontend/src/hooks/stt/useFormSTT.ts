@@ -173,7 +173,7 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
         onSpeechStart,
         onSpeechEnd,
         silenceThresholdMs = 1200,  // 1.2초 무음 시 음성 종료로 판정
-        volumeThreshold = 0.02,     // RMS 임계값
+        volumeThreshold = 0.035,     // RMS 임계값 (상향 조정: 0.02 -> 0.035)
     } = options;
 
     // -------------------------------------------------------------------------
@@ -332,10 +332,18 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
             // API 호출
             console.log(`[useFormSTT] API 호출: field=${field}`);
             const response = await transcribeForm(audioBlob, field);
-
-            setResult(response);
-            setError(null);
-            onResult?.(response);
+            
+            // 안전장치: 결과에 error가 있으면 정상 결과가 아님
+            if ((response as any).error) {
+                const errMsg = (response as any).error;
+                console.warn("[useFormSTT] 서버 응답 에러:", errMsg);
+                setError(errMsg);
+                onError?.(errMsg);
+            } else {
+                setResult(response);
+                setError(null);
+                onResult?.(response);
+            }
 
         } catch (err: any) {
             const errMsg = err?.message || "음성 인식 실패";
@@ -346,15 +354,43 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
             setIsProcessing(false);
             isProcessingRef.current = false;
 
-            // 녹음 리소스 정리
+            // 녹음 리소스 정리 및 재시작 (연속 녹음 대기)
             chunksRef.current = [];
-            recorderRef.current = null;
+            
+            // 스트림이 살아있고 활성 상태라면 레코더 재성성
+            if (streamRef.current && streamRef.current.active) {
+                try {
+                    const mimeType = mimeTypeRef.current;
+                    const newRecorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
+                    
+                    newRecorder.ondataavailable = (e) => {
+                        if (e.data && e.data.size > 0) {
+                            chunksRef.current.push(e.data);
+                        }
+                    };
+                    
+                    newRecorder.start();
+                    recorderRef.current = newRecorder;
+                    console.log("[useFormSTT] 레코더 재시작 (다음 입력 대기)");
+                } catch (recErr) {
+                    console.error("[useFormSTT] 레코더 재시작 실패:", recErr);
+                    recorderRef.current = null;
+                }
+            } else {
+                recorderRef.current = null;
+            }
         }
     }, [field, onResult, onError, onSpeechEnd]);
 
     // -------------------------------------------------------------------------
     // VAD 루프 (볼륨 분석)
     // -------------------------------------------------------------------------
+
+    // -------------------------------------------------------------------------
+    // VAD 루프 (볼륨 분석)
+    // -------------------------------------------------------------------------
+
+    const isCoolingDownRef = useRef(false);
 
     /**
      * VAD 분석 루프 시작
@@ -393,6 +429,12 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
             // 녹음이 비활성화되면 중지
             if (!streamRef.current) {
                 return;
+            }
+
+            // 쿨다운 중이면 감지 생략 (루프는 유지)
+            if (isCoolingDownRef.current) {
+                 rafRef.current = requestAnimationFrame(tick);
+                 return;
             }
 
             // 현재 오디오 볼륨 분석
@@ -443,12 +485,18 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
                     silenceStartRef.current = null;
 
                     // 음성 구간 처리 (API 호출)
-                    handleSpeechSegment(elapsedMs);
-
+                    // 쿨다운 시작
+                    isCoolingDownRef.current = true;
+                    handleSpeechSegment(elapsedMs).finally(() => {
+                        // 0.5초 후 쿨다운 해제 (과도한 요청 방지 + 실시간성 확보)
+                        setTimeout(() => {
+                            isCoolingDownRef.current = false;
+                            console.log("[useFormSTT] 쿨다운 해제, 다시 듣기 시작");
+                        }, 500);
+                    });
+                    
                     // VAD는 계속 동작 (다음 음성 대기)
-                    // 단, 현재는 한 번 인식 후 새 녹음 시작이 필요할 수 있음
-                    // 이 로직은 추후 확장 가능
-                    return; // 이번 tick 종료
+                    // return 제거됨 -> 루프 계속 돔
                 }
             }
 
@@ -617,12 +665,44 @@ export function useFormSTT(options: UseFormSTTOptions): UseFormSTTReturn {
     // -------------------------------------------------------------------------
     // 자동 시작 (마운트 시)
     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    // 자동 시작 (마운트 시 1회만)
+    // -------------------------------------------------------------------------
+    const mountedRef = useRef(false);
+
     useEffect(() => {
-        // 컴포넌트 마운트 시 자동으로 녹음 시작
-        startRecording();
-        
-        // 언마운트 또는 재시작 시 정리 로직은 기존 useEffect(line 604)에서 처리됨
-    }, [startRecording]);
+        if (!mountedRef.current) {
+            mountedRef.current = true;
+            // 권한 거부 시 무한 루프 방지를 위해 의존성 없이 실행
+            // 실패해도 조용히 넘어감 (수동 버튼으로 재시도 가능)
+            startRecording().catch(() => {});
+        }
+    }, []); // 빈 의존성 배열: 마운트 시 1회만 실행
+
+    // -------------------------------------------------------------------------
+    // 연속 녹음 처리를 위한 재시작 로직
+    // handleSpeechSegment 내에서 호출
+    // -------------------------------------------------------------------------
+    const restartRecorder = useCallback(async () => {
+        if (!streamRef.current || !isActive) return;
+
+        try {
+           const mimeType = mimeTypeRef.current;
+           const recorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
+           recorderRef.current = recorder;
+
+           recorder.ondataavailable = (e) => {
+               if (e.data && e.data.size > 0) {
+                   chunksRef.current.push(e.data);
+               }
+           };
+
+           recorder.start();
+           // VAD는 이미 돌고 있음
+        } catch (err) {
+            console.error("[useFormSTT] 레코더 재시작 실패:", err);
+        }
+    }, [isActive]);
 
     return {
         isActive,

@@ -37,16 +37,25 @@ export default function Gender() {
     onResult: (res) => {
       // Gemini 정규화 결과를 사용할 수도 있지만, 
       // 현재 extractGender 로직이 잘 되어 있으므로 원문/정규화 값 모두 활용 가능
-      // 여기서는 normalized 사용 (Gemini 프롬프트가 M/F로 줄 것이므로)
-      const g = res.normalized as Gender;
-      if (g === "M" || g === "F") {
-        setGender(g);
-        setGenderText(res.raw); // 원문 표시
-      } else {
-        // 정규화 실패 시 원문에서 재시도 (fallback)
-        const g2 = extractGender(res.raw);
-        setGenderText(res.raw);
-        if (g2) setGender(g2);
+      // 여기서는 normalized 사용 (Gemini 프롬프트가 M/F로 줄 것으므로)
+      if (res.normalized) {
+        const g = res.normalized as Gender;
+        if (g === "M" || g === "F") {
+          setGender(g);
+          setGenderText(res.raw || ""); // 원문 표시 (raw도 체크)
+        } else {
+            // 정규화 실패 시 원문에서 재시도 (fallback)
+            if (res.raw) {
+                const g2 = extractGender(res.raw);
+                setGenderText(res.raw);
+                if (g2) setGender(g2);
+            }
+        }
+      } else if (res.raw) {
+         // normalized가 없고 raw만 있는 경우
+         const g2 = extractGender(res.raw);
+         setGenderText(res.raw);
+         if (g2) setGender(g2);
       }
     },
   });

@@ -486,6 +486,23 @@ class ExerciseAudioView(APIView):
             response['Content-Disposition'] = f'inline; filename="{filename}_merged.mp3"'
             return response
         
+        # 2-1. 파일명 정규화 (Space -> Underscore, Lowercase) 후 재시도
+        # 예: "Push Up" -> "push_up"
+        try:
+            normalized_name = filename.lower().replace(' ', '_')
+            normalized_filename = f"{normalized_name}_merged.mp3"
+            normalized_path = settings.MEDIA_ROOT / 'exercises' / 'audio_merged' / normalized_filename
+            
+            if os.path.exists(normalized_path):
+                with open(normalized_path, 'rb') as f:
+                    audio_content = f.read()
+                response = HttpResponse(audio_content, content_type="audio/mpeg")
+                response['Content-Disposition'] = f'inline; filename="{normalized_filename}"'
+                return response
+        except Exception as e:
+            print(f"파일명 정규화 조회 실패: {e}")
+            pass
+        
         # 3. 병합된 파일 없음 → 실시간 병합
         from .models import ExerciseMedia
         

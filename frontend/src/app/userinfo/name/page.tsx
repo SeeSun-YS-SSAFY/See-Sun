@@ -32,7 +32,10 @@ export default function Name() {
   } = useFormSTT({
     field: "name",
     onResult: (res) => {
-      setName(res.normalized);
+      // res.normalized가 없을 수 있으므로 체크 (에러 상황 등)
+      if (res.normalized) {
+        setName(res.normalized);
+      }
     },
     onError: (err) => {
       console.error("STT Error:", err);
