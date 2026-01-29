@@ -55,8 +55,6 @@ export function buildProfilePayloadFromSession(): ProfileCompletionPayload | nul
     name, height_raw: sessionStorage.getItem("height"), weight_raw: sessionStorage.getItem("weight"), gender, birthdate, phone_raw: sessionStorage.getItem("phone")
   });
 
-  if (!name) throw new Error("이름(name) 정보가 누락되었습니다.");
-  
   if (!Number.isFinite(height) || height <= 0) {
     throw new Error(`키(height) 정보가 올바르지 않습니다. (값: ${height})`);
   }
