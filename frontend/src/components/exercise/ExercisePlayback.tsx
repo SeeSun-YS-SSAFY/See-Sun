@@ -3,7 +3,7 @@ import Icon from "@/components/common/Icon";
 import ProgressBar from "@/components/common/ProgressBar";
 import { ExerciseDetail } from "@/hooks/exercise/useExercisePlayback";
 import Image from "next/image";
-import { ButtonHTMLAttributes } from "react";
+import { ButtonHTMLAttributes, useState } from "react";
 
 type ExercisePlaybackProps = {
   exerciseDetail: ExerciseDetail | null;
@@ -29,6 +29,12 @@ export default function ExercisePlayback({
   handleProgressChange,
   onBack,
 }: ExercisePlaybackProps) {
+  const [isExplain, setIsExplain] = useState(false);
+
+  const toggleExplain = () => {
+    setIsExplain((prev) => !prev);
+  };
+
   if (!exerciseDetail) {
     return <div>Loading...</div>;
   }
@@ -56,6 +62,29 @@ export default function ExercisePlayback({
             fill
             alt={exerciseDetail.exercise_name}
           />
+
+          {isExplain && (
+            <div className="absolute -inset-4 bg-white/80 rounded-[20px] flex flex-col overflow-y-auto snap-y snap-mandatory">
+              {[
+                exerciseDetail.exercise_description,
+                exerciseDetail.first_description,
+                exerciseDetail.main_form,
+                exerciseDetail.form_description,
+                exerciseDetail.stay_form,
+                exerciseDetail.fixed_form,
+                exerciseDetail.exercise_guide,
+              ].filter(Boolean).map(description => description?.replace(/((?<!\d)\.\s|:\s)/g, "$1\n")).map((description, index) => (
+                <div
+                  key={index}
+                  className="shrink-0 snap-start overflow-auto h-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+                >
+                  <h2 className="text-body-medium text-gray-800 whitespace-pre-wrap text-center p-4 h-fit break-keep">
+                    {description}
+                  </h2>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-[36px] flex w-full max-w-[296px] items-center justify-between">
@@ -64,7 +93,7 @@ export default function ExercisePlayback({
             name={isPlaying ? "pause" : "play_arrow"}
             onClick={togglePlay}
           />
-          <ControlButton name="title" />
+          <ControlButton name="title" onClick={toggleExplain} />
         </div>
 
         <div className="mt-[24px]">
