@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import Button from "@/components/common/Button"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_API_CLIENT_ID;
 const GOOGLE_REDIRECT_URI = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
