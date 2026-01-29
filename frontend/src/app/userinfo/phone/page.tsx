@@ -65,8 +65,10 @@ export default function Phone() {
     field: "phone",
     onResult: (res) => {
       // Gemini 정규화 결과 사용
-      const digits = extractDigits(res.normalized);
-      if (digits) setPhoneDigits(digits.slice(0, 11));
+      if (res.normalized) {
+        const digits = extractDigits(res.normalized);
+        if (digits) setPhoneDigits(digits.slice(0, 11));
+      }
     },
   });
 
@@ -108,6 +110,7 @@ export default function Phone() {
         router.replace("/");
       } catch (e: any) {
         // 자동 submit 실패해도 사용자가 직접 입력/제출할 수 있게 둠
+        console.warn("[Phone] Auto-submit failed:", e);
         setSubmitError(e?.message ?? "프로필 조회/저장 중 오류가 발생했습니다.");
       } finally {
         setSubmitting(false);
@@ -137,16 +140,18 @@ export default function Phone() {
       sessionStorage.setItem("phone", phoneDigits);
 
       // ✅ payload 생성
+      // ✅ payload 생성
+      // 실패 시 내부에서 구체적인 Error를 throw 함
       const payload = buildProfilePayloadFromSession();
-      if (!payload) {
-        throw new Error("필수 정보가 누락되었거나 형식이 올바르지 않습니다.");
-      }
+      // (타입 가드용: throw로 인해 여기 도달하면 payload는 null이 아님)
+      if (!payload) throw new Error("알 수 없는 오류로 데이터 생성에 실패했습니다.");
 
       // ✅ 백엔드 전송 + localStorage 저장(profileApi에서 처리)
       await submitProfileCompletion(payload, accessToken);
 
       router.push("/");
     } catch (e: any) {
+      console.error("[Phone] Submission Error:", e);
       setSubmitError(e?.message ?? "전송 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
