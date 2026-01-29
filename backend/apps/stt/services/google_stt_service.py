@@ -100,6 +100,15 @@ class GoogleSTTService:
 
         except GoogleSTTServiceException:
             raise
+        except exceptions.PermissionDenied as e:
+            # Google 콘솔에서 Speech-to-Text API가 비활성화된 경우가 가장 흔합니다.
+            error_text = str(e)
+            if "SERVICE_DISABLED" in error_text or "speech.googleapis.com" in error_text:
+                logger.error(f"[GoogleSTTService] Speech-to-Text API 비활성화 또는 권한 오류: {e}", exc_info=True)
+                raise GoogleSTTServiceException("Cloud Speech-to-Text API가 비활성화되어 있거나 권한이 없습니다. 콘솔에서 API 활성화/권한을 확인해주세요.") from e
+
+            logger.error(f"[GoogleSTTService] 권한 오류: {e}", exc_info=True)
+            raise GoogleSTTServiceException("음성 인식 권한이 없습니다. 관리자에게 문의해주세요.") from e
         except exceptions.GoogleAPIError as e:
             logger.error(f"[GoogleSTTService] Google API 오류: {e}", exc_info=True)
             raise GoogleSTTServiceException("음성 인식 서버 오류가 발생했습니다.") from e

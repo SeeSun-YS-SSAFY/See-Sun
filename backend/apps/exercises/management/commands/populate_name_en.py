@@ -10,6 +10,8 @@ from django.conf import settings
 import os
 import time
 
+from apps.stt.utils.gemini import gemini_client
+
 class Command(BaseCommand):
     help = 'Gemini API를 사용하여 Exercise.name_en 필드를 자동으로 채웁니다.'
 
@@ -57,20 +59,15 @@ class Command(BaseCommand):
         use_gemini = options['use_gemini']
         
         if use_gemini:
-            try:
-                import google.generativeai as genai
-            except ImportError:
-                self.stdout.write(self.style.ERROR('google-generativeai 모듈이 설치되지 않았습니다. pip install google-generativeai'))
-                return
-            
             api_key = os.environ.get('GOOGLE_API_KEY') or os.environ.get('GEMINI_API_KEY') or getattr(settings, 'GOOGLE_API_KEY', None)
             if not api_key:
                 self.stdout.write(self.style.ERROR('GOOGLE_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.'))
                 return
-            genai.configure(api_key=api_key)
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            client = gemini_client.get_client(api_key=api_key)
+            model_name = "gemini-2.0-flash"
         else:
-            model = None
+            client = None
+            model_name = None
         
         exercises = Exercise.objects.filter(name_en='')
         self.stdout.write(f"name_en이 비어있는 운동: {exercises.count()}개")
@@ -101,7 +98,7 @@ class Command(BaseCommand):
 입력: {korean_name}
 출력 (영문 스네이크케이스만):"""
                     
-                    response = model.generate_content(prompt)
+                    response = client.models.generate_content(model=model_name, contents=prompt)
                     english_name = response.text.strip().lower().replace(' ', '_')
                     english_name = ''.join(c for c in english_name if c.isalnum() or c == '_')
                     

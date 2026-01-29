@@ -13,6 +13,7 @@ from django.core.management.base import BaseCommand
 from django.conf import settings
 from apps.exercises.models import Exercise, ExerciseCategory, Playlist
 from apps.exercises.google_tts import GoogleTTSClient
+from apps.stt.utils.gemini import gemini_client
 import os
 import re
 import time
@@ -61,19 +62,15 @@ class Command(BaseCommand):
         
         # Gemini API 설정
         if use_gemini:
-            try:
-                import google.generativeai as genai
-                api_key = os.environ.get('GOOGLE_API_KEY') or os.environ.get('GEMINI_API_KEY') or getattr(settings, 'GOOGLE_API_KEY', None)
-                if not api_key:
-                    self.stdout.write(self.style.ERROR('GOOGLE_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.'))
-                    return
-                genai.configure(api_key=api_key)
-                self.gemini_model = genai.GenerativeModel('gemini-2.0-flash')
-            except ImportError:
-                self.stdout.write(self.style.ERROR('google-generativeai 모듈이 설치되지 않았습니다.'))
+            api_key = os.environ.get('GOOGLE_API_KEY') or os.environ.get('GEMINI_API_KEY') or getattr(settings, 'GOOGLE_API_KEY', None)
+            if not api_key:
+                self.stdout.write(self.style.ERROR('GOOGLE_API_KEY 또는 GEMINI_API_KEY가 설정되지 않았습니다.'))
                 return
+            self._gemini_client = gemini_client.get_client(api_key=api_key)
+            self._gemini_model_name = "gemini-2.0-flash"
         else:
-            self.gemini_model = None
+            self._gemini_client = None
+            self._gemini_model_name = None
 
         # 기본 디렉토리 생성
         base_dir = settings.MEDIA_ROOT / 'prefix' / 'navigation'
@@ -106,7 +103,7 @@ class Command(BaseCommand):
             return fallback_mapping[korean_text]
         
         # 2. Gemini API 사용
-        if self.gemini_model:
+        if self._gemini_client:
             try:
                 prompt = f"""
 다음 한글 텍스트를 영문 스네이크케이스 파일명으로 변환해주세요.
@@ -119,7 +116,10 @@ class Command(BaseCommand):
 입력: {korean_text}
 출력 (영문 스네이크케이스만):"""
                 
-                response = self.gemini_model.generate_content(prompt)
+                response = self._gemini_client.models.generate_content(
+                    model=self._gemini_model_name,
+                    contents=prompt,
+                )
                 result = response.text.strip().lower().replace(' ', '_')
                 result = re.sub(r'[^a-z0-9_]', '', result)
                 time.sleep(0.3)  # Rate limit 방지
