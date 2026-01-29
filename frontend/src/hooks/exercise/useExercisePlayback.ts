@@ -109,8 +109,14 @@ export function useExercisePlayback({
               signal,
             });
 
-            if (!response.ok)
+            if (!response.ok) {
+              if (response.status === 404) {
+                console.warn(`Audio source not found (404). Stopping retries.`);
+                // 404일 경우 재시도 의미가 없으므로 루프 탈출
+                break;
+              }
               throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const tempBlob = await response.blob();
             console.log(
