@@ -229,3 +229,8 @@ google-credentials.json
 
 # Exception: Allow frontend lib directory
 !frontend/src/lib/
+
+docs/plans/
+docs/results/
+backend/media/
+testfiles/
