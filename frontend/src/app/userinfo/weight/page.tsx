@@ -20,8 +20,9 @@ export default function Weight() {
   } = useFormSTT({
     field: "weight",
     onResult: (res) => {
-      if (res.normalized) {
-        const num = res.normalized.replace(/[^\d]/g, "");
+      const value = res.normalized || res.raw || res.stt_raw;
+      if (value) {
+        const num = value.replace(/[^\d]/g, "");
         if (num) setWeight(num);
       }
     },

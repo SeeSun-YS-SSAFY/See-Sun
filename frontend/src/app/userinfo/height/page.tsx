@@ -21,9 +21,11 @@ export default function Height() {
   } = useFormSTT({
     field: "height",
     onResult: (res) => {
-      // Gemini 정규화 결과가 숫자 문자열이면 바로 사용
-      if (res.normalized) {
-        const num = res.normalized.replace(/[^\d]/g, "");
+      // 1. Gemini 정규화 결과 우선 사용
+      // 2. 실패 시 원문(raw)에서 숫자만 추출하여 사용 (Backup)
+      const value = res.normalized || res.raw || res.stt_raw;
+      if (value) {
+        const num = value.replace(/[^\d]/g, "");
         if (num) setHeight(num);
       }
     },

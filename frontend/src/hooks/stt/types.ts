@@ -40,6 +40,9 @@ export type FormField =
 export interface FormSTTResponse {
     /** 원본 인식 텍스트 */
     raw: string;
+    
+    /** Google STT 원본 반환값 (raw의 별칭, 호환성용) */
+    stt_raw?: string;
 
     /** Gemini로 정규화된 값 */
     normalized: string;

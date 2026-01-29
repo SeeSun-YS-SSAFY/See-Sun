@@ -64,9 +64,11 @@ export default function Phone() {
   } = useFormSTT({
     field: "phone",
     onResult: (res) => {
-      // Gemini 정규화 결과 사용
-      if (res.normalized) {
-        const digits = extractDigits(res.normalized);
+      // 1. Gemini 정규화 결과 우선 사용
+      // 2. 실패 시 원문(raw)에서 숫자만 추출하여 사용 (Backup)
+      const value = res.normalized || res.raw || res.stt_raw;
+      if (value) {
+        const digits = extractDigits(value);
         if (digits) setPhoneDigits(digits.slice(0, 11));
       }
     },
