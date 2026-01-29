@@ -13,6 +13,7 @@ type CategoryDetail = {
     exercise_id: string;
     exercise_name: string;
     pictogram_url: string;
+    name_audio_url?: string;
   }[];
 };
 

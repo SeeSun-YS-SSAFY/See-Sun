@@ -66,7 +66,7 @@ export default function Home() {
         if (cancelled) return;
 
         if (!isProfileComplete(profile)) {
-          router.replace("/userinfo/name");
+          router.replace("/userinfo/height");
           return;
         }
 
