@@ -9,13 +9,14 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
+import AutoScrollText from "@/components/common/AutoScrollText";
 import { useSwipe } from "./ExerciseSwiper.hooks";
 
 // ✅ 만든 audioPlayer 유틸로 교체
 import { playUrl, stopUrl } from "@/lib/audioPlayer";
 
 export type Exercise = {
-  exercise_id: number;
+  exercise_id: string;
   exercise_name: string;
   pictogram_url: string;
   name_audio_url?: string;
@@ -30,7 +31,7 @@ export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperPro
   const swiperRef = useRef<SwiperType | null>(null);
 
   // ✅ 중복 재생 방지는 컴포넌트에서만 관리(전역 플레이어는 lib에서)
-  const lastPlayedIdRef = useRef<number | null>(null);
+  const lastPlayedIdRef = useRef<string | null>(null);
 
   const toAbsAudioUrl = useCallback((url?: string) => {
     if (!url) return undefined;
@@ -75,8 +76,8 @@ export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperPro
   }, [exercises, playActiveAudio]);
 
   return (
-    <div className="h-full w-full flex items-center justify-center">
-      <div className="w-full max-w-sm h-[428px]" {...swipeHandlers}>
+    <div className="flex h-full w-full items-center justify-center">
+      <div className="h-[428px] w-full max-w-sm" {...swipeHandlers}>
         <Swiper
           onSwiper={(swiper) => {
             swiperRef.current = swiper;

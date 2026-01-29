@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuthActions } from "@/hooks/useAuthActions";
 
-
 export default function GeneralLogin() {
   const [phone_number, setPhone] = useState("");
   const [pin_number, setCode] = useState("");
@@ -31,7 +30,7 @@ export default function GeneralLogin() {
       setLoading(true);
 
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login/`,  // TODO: 아직 trailing slash 적용 안돼서 나중에 고쳐야 함
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/users/auth/login/`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -40,7 +39,7 @@ export default function GeneralLogin() {
             pin_number,
             device_hash: "1234",
           }),
-        },
+        }
       );
 
       if (!res.ok) throw new Error("인증 실패");
@@ -48,10 +47,7 @@ export default function GeneralLogin() {
       const data = await res.json();
 
       // ✅ 백엔드 응답 키에 맞게 토큰 뽑기 (하나만 맞아도 동작)
-      const token =
-        data.accessToken ??
-        data.access_token ??
-        null;
+      const token = data.accessToken ?? data.access_token ?? null;
 
       if (!token) {
         console.log("login response:", data);
@@ -62,9 +58,7 @@ export default function GeneralLogin() {
       setAuthTokens({
         accessToken: token,
         // 로그인 응답에 refresh가 있으면 넣고, 없으면 null
-        refreshToken:
-          data.refresh_token ??
-          null,
+        refreshToken: data.refresh_token ?? null,
       });
 
       // ✅ 홈으로 (홈에서 isAuthed true라서 메인 유지)
@@ -78,7 +72,7 @@ export default function GeneralLogin() {
 
   return (
     <div>
-      <div className="relative flex items-center py-2.5 justify-center">
+      <div className="relative flex items-center justify-center py-2.5">
         <button
           type="button"
           onClick={() => router.push("/login/")}

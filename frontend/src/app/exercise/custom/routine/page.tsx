@@ -6,27 +6,30 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-type Category = {
-  category_id: number;
-  display_name: string;
-};
+type Playlist = {
+  playlist_id: string;
+  title: string;
+}[];
 
-export default function SingleExercise() {
+export default function RoutineCustom() {
   const router = useRouter();
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [playlist, setPlaylist] = useState<Playlist>([]);
 
   useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const data = await apiClient.get<Category[]>("/exercises/category");
-        setCategories(data);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      }
+    // ADD ABORTCONTROLLER
+    const abortController = new AbortController();
+
+    const fetchPlaylist = async () => {
+      const data = await apiClient.get<Playlist>(`/exercises/playlist`, {
+        signal: abortController.signal,
+      });
+      setPlaylist(data);
     };
-    fetchCategories();
-  }, []);
+    fetchPlaylist();
+
+    return () => abortController.abort();
+  }, [setPlaylist]);
 
   return (
     <div className="flex h-full flex-col">
@@ -39,21 +42,21 @@ export default function SingleExercise() {
           <Image src="/arrow_back.png" width={60} height={60} alt="back" />
         </button>
 
-        <h1 className="text-title-large text-white">단일</h1>
+        <h1 className="text-title-large text-white">루틴</h1>
       </div>
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
-        {categories.map((category) => (
+        {playlist.map((item) => (
           <Button
-            key={category.category_id}
+            key={item.playlist_id}
             onClick={() =>
-              router.push(`/exercise/single/${category.category_id}`)
+              router.push(`/exercise/custom/routine/${item.playlist_id}`)
             }
           >
-            {category.display_name}
+            {item.title}
           </Button>
         ))}
-        <Button onClick={() => router.push(`/exercise/frequent`)}>
-          자주하는 운동
+        <Button onClick={() => router.push(`/exercise/custom/make_routine`)}>
+          루틴 추가
         </Button>
       </div>
     </div>
