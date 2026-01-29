@@ -69,7 +69,6 @@ class GoogleSTTService:
             audio = speech.RecognitionAudio(content=audio_bytes)
 
             config_kwargs = {
-                "sample_rate_hertz": sample_rate,
                 "language_code": "ko-KR",
                 "enable_automatic_punctuation": True,
             }
@@ -80,6 +79,13 @@ class GoogleSTTService:
                     config_kwargs["encoding"] = speech.RecognitionConfig.AudioEncoding[encoding]
                 except KeyError as e:
                     raise GoogleSTTServiceException("지원하지 않는 오디오 인코딩입니다.") from e
+
+            # 샘플레이트 설정
+            # WEBM_OPUS는 브라우저에서 기본적으로 48000Hz로 녹음됨
+            if encoding == "WEBM_OPUS":
+                config_kwargs["sample_rate_hertz"] = 48000
+            elif sample_rate:
+                config_kwargs["sample_rate_hertz"] = sample_rate
 
             config = speech.RecognitionConfig(**config_kwargs)
             response = client.recognize(config=config, audio=audio)
@@ -100,6 +106,15 @@ class GoogleSTTService:
 
         except GoogleSTTServiceException:
             raise
+        except exceptions.PermissionDenied as e:
+            # Google 콘솔에서 Speech-to-Text API가 비활성화된 경우가 가장 흔합니다.
+            error_text = str(e)
+            if "SERVICE_DISABLED" in error_text or "speech.googleapis.com" in error_text:
+                logger.error(f"[GoogleSTTService] Speech-to-Text API 비활성화 또는 권한 오류: {e}", exc_info=True)
+                raise GoogleSTTServiceException("Cloud Speech-to-Text API가 비활성화되어 있거나 권한이 없습니다. 콘솔에서 API 활성화/권한을 확인해주세요.") from e
+
+            logger.error(f"[GoogleSTTService] 권한 오류: {e}", exc_info=True)
+            raise GoogleSTTServiceException("음성 인식 권한이 없습니다. 관리자에게 문의해주세요.") from e
         except exceptions.GoogleAPIError as e:
             logger.error(f"[GoogleSTTService] Google API 오류: {e}", exc_info=True)
             raise GoogleSTTServiceException("음성 인식 서버 오류가 발생했습니다.") from e

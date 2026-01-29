@@ -175,9 +175,19 @@ GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
 GOOGLE_USER_INFO_URI = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
 # Google Cloud Credentials
-# service-account.json 파일이 프로젝트 루트(backend/)에 있다고 가정
-GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, 'service-account.json')
+# 환경 변수 우선, 없으면 기본 경로 사용
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
+    'GOOGLE_APPLICATION_CREDENTIALS',
+    os.path.join(BASE_DIR, 'google-credentials.json')
+)
+# 상대 경로인 경우 절대 경로로 변환
+if not os.path.isabs(GOOGLE_APPLICATION_CREDENTIALS):
+    GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, GOOGLE_APPLICATION_CREDENTIALS)
 os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
+
+# Gemini API 키
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY') or GEMINI_API_KEY
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'See:Sun API',
