@@ -69,7 +69,6 @@ class GoogleSTTService:
             audio = speech.RecognitionAudio(content=audio_bytes)
 
             config_kwargs = {
-                "sample_rate_hertz": sample_rate,
                 "language_code": "ko-KR",
                 "enable_automatic_punctuation": True,
             }
@@ -80,6 +79,13 @@ class GoogleSTTService:
                     config_kwargs["encoding"] = speech.RecognitionConfig.AudioEncoding[encoding]
                 except KeyError as e:
                     raise GoogleSTTServiceException("지원하지 않는 오디오 인코딩입니다.") from e
+
+            # 샘플레이트 설정
+            # WEBM_OPUS는 브라우저에서 기본적으로 48000Hz로 녹음됨
+            if encoding == "WEBM_OPUS":
+                config_kwargs["sample_rate_hertz"] = 48000
+            elif sample_rate:
+                config_kwargs["sample_rate_hertz"] = sample_rate
 
             config = speech.RecognitionConfig(**config_kwargs)
             response = client.recognize(config=config, audio=audio)
