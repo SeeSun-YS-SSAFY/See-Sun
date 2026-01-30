@@ -40,6 +40,11 @@ export default function Signin() {
       return;
     }
 
+    setName("");
+    setPhone_number("");
+    setPin_number("");
+
+
     router.push("/login");
     };
   return (
