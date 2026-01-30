@@ -47,7 +47,8 @@ export default function GeneralLogin() {
       const data = await res.json();
 
       // ✅ 백엔드 응답 키에 맞게 토큰 뽑기 (하나만 맞아도 동작)
-      const token = data.accessToken ?? data.access_token ?? null;
+      const token = data.access_token ?? null;
+      const refresh = data.refresh_token ?? null;
 
       if (!token) {
         console.log("login response:", data);
@@ -58,7 +59,7 @@ export default function GeneralLogin() {
       setAuthTokens({
         accessToken: token,
         // 로그인 응답에 refresh가 있으면 넣고, 없으면 null
-        refreshToken: data.refresh_token ?? null,
+        refreshToken: refresh
       });
 
       // ✅ 홈으로 (홈에서 isAuthed true라서 메인 유지)

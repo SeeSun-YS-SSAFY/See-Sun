@@ -40,7 +40,6 @@ export default function Signin() {
       return;
     }
 
-    alert("회원가입 성공");
     router.push("/login");
     };
   return (
