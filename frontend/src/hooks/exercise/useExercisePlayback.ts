@@ -5,13 +5,13 @@ export type ExerciseDetail = {
   exercise_id: string;
   exercise_name: string;
   category_name: string;
-  exercise_description: string;
-  first_description: string;
-  main_form: string;
-  form_description: string;
-  stay_form: string;
-  fixed_form: string;
-  exercise_guide: string;
+  exercise_description: string; // 1
+  first_description: string; // 2
+  main_form: string; // 3
+  form_description: string; // 4
+  stay_form: string; // 5
+  fixed_form: string; // 6
+  exercise_guide: string; // 7
   pictograms: string[];
   merged_audio_url: string;
 };
