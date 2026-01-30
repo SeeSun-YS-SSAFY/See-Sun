@@ -90,7 +90,7 @@ export default function Home() {
 
   // ✅ 여기부터는 "로그인 된 사용자만" 홈 UI 보임
   return (
-    <div className="flex h-full flex-col items-center justify-center bg-blue-500 py-15">
+    <div className="flex h-full flex-col items-center justify-center bg-blue-500 ">
       <div className="flex items-center gap-1">
         <Image
           src="/Seesunlogo_240x240.png"

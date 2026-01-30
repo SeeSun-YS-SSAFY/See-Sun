@@ -58,7 +58,7 @@ export default function MyPage() {
   };
 
   return (
-    <div className="mt-10 relative">
+    <div className="relative">
       {/* 뒤로가기 */}
       <button
         type="button"
@@ -83,7 +83,7 @@ export default function MyPage() {
       </div>
 
       {/* 설정 */}
-      <div className="mt-15 flex flex-col gap-2">
+      <div className="mt-10 flex flex-col gap-2">
         <MiniButton onClick={() => router.push("#")}>건강 정보 설정</MiniButton>
 
         <div className="flex gap-2">

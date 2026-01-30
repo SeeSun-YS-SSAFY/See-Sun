@@ -50,7 +50,7 @@ export default function ExerciseType() {
           {categoryDetail?.category_name ?? "로딩 중"}
         </h1>
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
+      <div className="flex flex-1 flex-col justify-center gap-4">
         {categoryDetail && (
           <ExerciseSwiper
             exercises={categoryDetail.exercises}

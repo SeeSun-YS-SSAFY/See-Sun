@@ -42,7 +42,7 @@ export default function RoutineExercise() {
 
         <h1 className="text-title-large text-white">루틴</h1>
       </div>
-      <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
+      <div className="flex flex-1 flex-col justify-center gap-4">
         {categories.map((category) => (
           <Button
             key={category.category_id}
