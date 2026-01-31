@@ -7,7 +7,10 @@ import { useAuthActions } from "@/hooks/useAuthActions";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 const REDIRECT_URL = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI;
 
-type OAuthResponse = { access_token?: string };
+type OAuthResponse = {
+  access_token?: string;
+  refresh_token?: string;  // ✅ 추가
+};
 
 export default function AuthCallbackPage() {
   const router = useRouter();
@@ -43,9 +46,12 @@ export default function AuthCallbackPage() {
         }
 
         const data = (await res.json()) as OAuthResponse;
+        const access = data.access_token ?? null;
+        const refresh = data.refresh_token ?? null;
+
         if (!data.access_token) throw new Error("No access_token in response");
 
-        setAuthTokens({ accessToken: data.access_token, refreshToken: null });
+        setAuthTokens({ accessToken: access, refreshToken: refresh });
         router.replace("/");
       } catch (e) {
         console.error(e);

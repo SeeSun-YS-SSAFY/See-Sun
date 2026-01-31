@@ -40,7 +40,11 @@ export default function Signin() {
       return;
     }
 
-    alert("회원가입 성공");
+    setName("");
+    setPhone_number("");
+    setPin_number("");
+
+
     router.push("/login");
     };
   return (
