@@ -100,12 +100,12 @@
       transform: translateX(0);
     }
     100% {
-      transform: translateX(var(--marquee-scroll-offset));
+      transform: translateX(calc(-1 * (var(--marquee-text-width) + 2rem)));
     }
   }
 
   .animate-marquee-scroll {
-    animation: marquee-scroll linear infinite alternate;
+    animation: marquee-scroll linear infinite;
     animation-duration: 5s;
   }
 }

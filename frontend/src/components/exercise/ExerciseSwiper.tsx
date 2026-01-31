@@ -27,7 +27,10 @@ type ExerciseSwiperProps = {
   onClick: (exercise: Exercise) => void;
 };
 
-export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperProps) {
+export default function ExerciseSwiper({
+  exercises,
+  onClick,
+}: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
 
   // ✅ 중복 재생 방지는 컴포넌트에서만 관리(전역 플레이어는 lib에서)
@@ -56,7 +59,7 @@ export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperPro
       // ✅ lib 유틸 사용
       playUrl(src, { dedupeKey: String(exercise.exercise_id) });
     },
-    [toAbsAudioUrl],
+    [toAbsAudioUrl]
   );
 
   const swipeHandlers = useSwipe({
@@ -106,46 +109,86 @@ export default function ExerciseSwiper({ exercises, onClick }: ExerciseSwiperPro
           {exercises.map((exercise) => (
             <SwiperSlide
               key={exercise.exercise_id}
-              className="w-full my-auto transition-all duration-300 group"
+              className="group my-auto w-full transition-all duration-300"
               onClick={() => onClick(exercise)}
             >
               {({ isActive, isNext, isPrev }) => {
                 const slideBaseStyles = cn(
                   "self-stretch inline-flex mx-auto flex-col justify-center items-center gap-2.5 transition-all duration-300 outline-2 -outline-offset-2 outline-black shadow-100",
-                  isActive ? "bg-yellow-300 rounded-[20px]" : "bg-yellow-800 rounded-[16px]",
+                  isActive
+                    ? "bg-yellow-300 rounded-[20px]"
+                    : "bg-yellow-800 rounded-[16px]"
                 );
 
-                const height = isActive ? "h-[212px]" : isNext || isPrev ? "h-[52px]" : "h-[40px]";
-                const width = isActive ? "w-full" : isNext || isPrev ? "w-[84%]" : "w-[68%]";
+                const height = isActive
+                  ? "h-[212px]"
+                  : isNext || isPrev
+                    ? "h-[52px]"
+                    : "h-[40px]";
+                const width = isActive
+                  ? "w-full"
+                  : isNext || isPrev
+                    ? "w-[84%]"
+                    : "w-[68%]";
 
                 const slideTranslateStyles = cn(
                   (isActive || isNext || isPrev) && "translate-y-0",
                   !(isActive || isNext || isPrev) &&
-                    "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]",
+                    "translate-y-[60px] group-[&:has(~_.swiper-slide-active):not(.swiper-slide-prev)]:-translate-y-[60px]"
                 );
 
                 return (
-                  <div className="flex flex-col justify-center h-full select-none">
-                    <div className={cn(slideBaseStyles, height, width, slideTranslateStyles)}>
+                  <div className="flex h-full flex-col justify-center select-none">
+                    <div
+                      className={cn(
+                        slideBaseStyles,
+                        height,
+                        width,
+                        slideTranslateStyles
+                      )}
+                    >
                       {isActive && (
-                        <div className={cn("relative w-40 h-0", isActive && "h-32")}>
+                        <div
+                          className={cn(
+                            "relative h-0 w-40",
+                            isActive && "h-32"
+                          )}
+                        >
                           <Image
                             src={`${process.env.NEXT_PUBLIC_API_MEDIA_URL || ""}${exercise.pictogram_url}`}
                             alt={exercise.exercise_name}
                             fill
-                            className={cn("object-contain hidden", isActive && "block")}
+                            className={cn(
+                              "hidden object-contain",
+                              isActive && "block"
+                            )}
                             draggable={false}
                           />
                         </div>
                       )}
 
-                      <div
-                        className={cn(
-                          "text-center text-black transition-all duration-300",
-                          isActive ? "text-body-large" : isNext || isPrev ? "text-body-medium" : "text-body-small",
+                      <div className="w-full px-5">
+                        {isActive ? (
+                          <AutoScrollText
+                            className={cn(
+                              "w-full text-center text-black transition-all duration-300",
+                              "text-body-large"
+                            )}
+                          >
+                            {exercise.exercise_name}
+                          </AutoScrollText>
+                        ) : (
+                          <p
+                            className={cn(
+                              "w-full truncate overflow-hidden text-center text-black",
+                              isNext || isPrev
+                                ? "text-body-medium"
+                                : "text-body-small"
+                            )}
+                          >
+                            {exercise.exercise_name}
+                          </p>
                         )}
-                      >
-                        {exercise.exercise_name}
                       </div>
                     </div>
                   </div>

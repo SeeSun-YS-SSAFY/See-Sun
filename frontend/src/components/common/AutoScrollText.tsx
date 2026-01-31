@@ -14,23 +14,22 @@ export default function AutoScrollText({
 }: AutoScrollTextProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
+  const [textWidth, setTextWidth] = useState(0);
   const [isOverflowing, setIsOverflowing] = useState(false);
 
   useEffect(() => {
     const checkOverflow = () => {
       if (containerRef.current && textRef.current) {
         const containerWidth = containerRef.current.clientWidth;
-        const textWidth = textRef.current.scrollWidth;
+        const actualTextWidth = textRef.current.scrollWidth;
 
-        // Force wrap check: if textWidth is significantly larger than container
-        if (textWidth > containerWidth) {
+        // Check if text overflows the container
+        if (actualTextWidth > containerWidth) {
           setIsOverflowing(true);
-          // Calculate offset to scroll to the end
-          setOffset(-(textWidth - containerWidth));
+          setTextWidth(actualTextWidth);
         } else {
           setIsOverflowing(false);
-          setOffset(0);
+          setTextWidth(0);
         }
       }
     };
@@ -46,9 +45,9 @@ export default function AutoScrollText({
     return () => resizeObserver.disconnect();
   }, [children, className]);
 
-  // Calculate duration: ~50px per second, min 2s
-  // Adjust speed as needed
-  const duration = Math.max(3, Math.abs(offset) / 30);
+  // Calculate duration: ~50px per second for smooth scrolling
+  // Add gap width (32px) to the total distance
+  const duration = Math.max(5, (textWidth + 32) / 50);
 
   return (
     <div
@@ -56,7 +55,6 @@ export default function AutoScrollText({
       className={cn("w-full overflow-hidden whitespace-nowrap", className)}
     >
       <div
-        ref={textRef}
         className={cn(
           "inline-block",
           isOverflowing ? "animate-marquee-scroll" : "min-w-full text-center"
@@ -64,14 +62,23 @@ export default function AutoScrollText({
         style={
           isOverflowing
             ? ({
-                "--marquee-scroll-offset": `${offset}px`,
+                "--marquee-text-width": `${textWidth}px`,
                 animationDuration: `${duration}s`,
-                width: "max-content",
               } as React.CSSProperties)
             : undefined
         }
       >
-        {children}
+        <span ref={textRef} className="inline-block">
+          {children}
+        </span>
+        {isOverflowing && (
+          <>
+            <span className="inline-block w-8" aria-hidden="true" />
+            <span className="inline-block" aria-hidden="true">
+              {children}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );
