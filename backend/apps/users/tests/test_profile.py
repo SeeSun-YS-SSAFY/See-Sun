@@ -102,8 +102,8 @@ class UserProfileCompletionViewTests(TestCase):
         response = self.client.put(self.completion_url, data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('gender', response.data)
-        self.assertIn('birthdate', response.data)
+        self.assertIn('gender', response.data['errors'])
+        self.assertIn('birthdate', response.data['errors'])
     
     def test_profile_completion_invalid_gender(self):
         """잘못된 성별 값 테스트"""

@@ -47,7 +47,7 @@ class ProfileCompletionFlowTests(TestCase):
             'pin_number': '1234'
         }
         
-        response = self.client.post('/api/v1/users/auth/login', data, format='json')
+        response = self.client.post('/api/v1/users/auth/login/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertFalse(response.data['user']['profile_completed'])
@@ -64,7 +64,7 @@ class ProfileCompletionFlowTests(TestCase):
             'pin_number': '1234'
         }
         
-        response = self.client.post('/api/v1/users/auth/login', data, format='json')
+        response = self.client.post('/api/v1/users/auth/login/', data, format='json')
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['user']['profile_completed'])
@@ -77,7 +77,7 @@ class ProfileCompletionFlowTests(TestCase):
             'phone_number': '01012345678',
             'pin_number': '1234'
         }
-        login_response = self.client.post('/api/v1/users/auth/login', login_data, format='json')
+        login_response = self.client.post('/api/v1/users/auth/login/', login_data, format='json')
         self.assertFalse(login_response.data['user']['profile_completed'])
         
         # 2. 프로필 완성 API 호출
@@ -109,7 +109,7 @@ class ProfileCompletionFlowTests(TestCase):
         self.assertEqual(self.incomplete_user.gender, 'M')
         
         # 4. 재로그인 시 profile_completed = True
-        login_response2 = self.client.post('/api/v1/users/auth/login', login_data, format='json')
+        login_response2 = self.client.post('/api/v1/users/auth/login/', login_data, format='json')
         self.assertTrue(login_response2.data['user']['profile_completed'])
         self.assertIn('메인 페이지로 이동', login_response2.data['tts_message'])
     

@@ -15,7 +15,7 @@ class SignupNameValidationTests(TestCase):
     def setUp(self):
         """테스트 초기화"""
         self.client = APIClient()
-        self.signup_url = '/api/v1/users/auth/signup'
+        self.signup_url = '/api/v1/users/auth/signup/'
     
     def test_signup_empty_name(self):
         """이름이 빈 문자열인 경우 테스트"""

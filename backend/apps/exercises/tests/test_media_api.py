@@ -55,13 +55,9 @@ class ExerciseMediaAPITest(APITestCase):
         self.assertEqual(len(data['pictograms']), 2)
         self.assertIn('/media/pic1.jpg', data['pictograms'])
         
-        # Audios Check
-        self.assertIn('audios', data)
-        self.assertEqual(len(data['audios']), 2)
-        # Check structure: {'type': '...', 'url': '...'}
-        types = [a['type'] for a in data['audios']]
-        self.assertIn('first_description', types)
-        self.assertIn('main_form', types)
+        # Audio Check: 운동 상세는 구간별 오디오 대신 병합 오디오 URL을 제공합니다.
+        self.assertIn('merged_audio_url', data)
+        self.assertTrue(data['merged_audio_url'].endswith('/audio/'))
 
         print("\n[테스트] 운동 상세 미디어 필드 검증: 성공 (PASS)")
 

@@ -17,7 +17,7 @@ class TokenRefreshViewTests(TestCase):
     def setUp(self):
         """테스트 초기화"""
         self.client = APIClient()
-        self.refresh_url = '/api/v1/users/auth/token/refresh'
+        self.refresh_url = '/api/v1/users/auth/token/refresh/'
         
         # 테스트용 사용자 생성
         self.test_user = User.objects.create(
