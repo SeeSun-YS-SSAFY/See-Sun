@@ -16,6 +16,8 @@ from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from .containers import Container
+from . import throttles
+from .throttles import LoginRateThrottle, SignupRateThrottle
 
 User = get_user_model()
 
@@ -25,6 +27,7 @@ class SignupView(APIView):
     회원가입 API (BE_V1_AUTH_001)
     """
     permission_classes = [AllowAny]
+    throttle_classes = [SignupRateThrottle]
     
     @extend_schema(
         summary="회원가입",
@@ -133,6 +136,7 @@ class LoginView(APIView):
     PIN 기반 로그인 API (BE_V1_AUTH_002)
     """
     permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
     
     @extend_schema(
         summary="로그인",
@@ -209,21 +213,30 @@ class LoginView(APIView):
         pin_number = serializer.validated_data['pin_number']
         device_hash = serializer.validated_data.get('device_hash', '')
         
-        # 1. 사용자 조회
-        try:
-            user = User.objects.get(phone_number=phone_number)
-        except User.DoesNotExist:
+        invalid = Response({
+            'error': 'INVALID_CREDENTIALS',
+            'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
+        }, status=status.HTTP_401_UNAUTHORIZED)
+
+        # 0. 연속 실패 잠금 확인
+        if throttles.is_locked(phone_number):
             return Response({
-                'error': 'INVALID_CREDENTIALS',
-                'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
-            }, status=status.HTTP_401_UNAUTHORIZED)
-        
+                'error': 'TOO_MANY_ATTEMPTS',
+                'tts_message': '로그인 시도가 너무 많습니다. 15분 후에 다시 시도해주세요.'
+            }, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        # 1. 사용자 조회 (탈퇴·비활성 계정은 로그인 불가)
+        user = User.objects.filter(phone_number=phone_number, is_active=True).first()
+        if user is None:
+            throttles.record_failure(phone_number)
+            return invalid
+
         # 2. PIN 검증
         if not user.pin_hash or not check_password(pin_number, user.pin_hash):
-            return Response({
-                'error': 'INVALID_CREDENTIALS',
-                'tts_message': '로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.'
-            }, status=status.HTTP_401_UNAUTHORIZED)
+            throttles.record_failure(phone_number)
+            return invalid
+
+        throttles.reset_failures(phone_number)
         
         # 3. JWT 토큰 발급
         refresh = RefreshToken.for_user(user)
@@ -350,6 +363,8 @@ class GoogleLoginView(APIView):
     """
     Google OAuth2 로그인 API VIEW
     """
+    permission_classes = [AllowAny]
+    throttle_classes = [LoginRateThrottle]
     
     @extend_schema(
         summary="Google 소셜 로그인",
@@ -491,19 +506,8 @@ class UserProfileView(APIView):
             )
         
         try:
-            user = request.user
-            from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-            from django.utils import timezone
-            
-            # 모든 Refresh Token 블랙리스트 등록
-            for token in OutstandingToken.objects.filter(user=user):
-                BlacklistedToken.objects.get_or_create(token=token)
-            
-            # Soft Delete
-            user.is_deleted = True
-            user.deleted_at = timezone.now()
-            user.is_active = False
-            user.save()
+            # 토큰 폐기 + 개인정보 파기 + 비활성화
+            request.user.withdraw()
             
             return Response({
                 'message': '회원탈퇴가 완료되었습니다.',
@@ -646,23 +650,8 @@ class UserDeleteView(APIView):
             )
         
         try:
-            user = request.user
-            
-            # 모든 Refresh Token 블랙리스트 등록
-            from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-            
-            for token in OutstandingToken.objects.filter(user=user):
-                try:
-                    BlacklistedToken.objects.get_or_create(token=token)
-                except Exception:
-                    pass  # 이미 블랙리스트에 있는 경우 무시
-            
-            # Soft Delete: is_deleted=True, deleted_at 설정
-            from django.utils import timezone
-            user.is_deleted = True
-            user.deleted_at = timezone.now()
-            user.is_active = False  # 로그인 불가 처리
-            user.save()
+            # 토큰 폐기 + 개인정보 파기 + 비활성화
+            request.user.withdraw()
             
             return Response({
                 'message': '회원탈퇴가 완료되었습니다.',
@@ -672,6 +661,5 @@ class UserDeleteView(APIView):
         except Exception as e:
             return Response({
                 'error': 'DELETE_FAILED',
-                'tts_message': '회원탈퇴 중 오류가 발생했습니다. 다시 시도해 주세요.',
-                'detail': str(e)
+                'tts_message': '회원탈퇴 중 오류가 발생했습니다. 다시 시도해 주세요.'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

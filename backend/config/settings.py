@@ -25,12 +25,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-3^208ncj#r1fa%pfh!^^l6s#$jachl4sw$_vl(h_1c%j*-pa#('
+def _env_bool(name, default=False):
+    return os.environ.get(name, str(default)).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _env_list(name, default=''):
+    return [v.strip() for v in os.environ.get(name, default).split(',') if v.strip()]
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# 기본값은 운영 안전값(DEBUG 꺼짐). 로컬 개발은 .env에 DJANGO_DEBUG=true
+DEBUG = _env_bool('DJANGO_DEBUG', False)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'backend']
+# 과거 커밋된 키는 폐기. 운영은 반드시 DJANGO_SECRET_KEY 환경변수로 주입
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
+if not SECRET_KEY:
+    if DEBUG:
+        SECRET_KEY = 'django-insecure-local-dev-only-do-not-use-in-production'
+    else:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured('DJANGO_SECRET_KEY 환경변수가 필요합니다.')
+
+ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,[::1],testserver,backend')
+CSRF_TRUSTED_ORIGINS = _env_list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 
 # Application definition
@@ -159,7 +176,31 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # 기본은 인증 필요. 공개 API는 뷰에서 AllowAny를 명시
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'login': os.environ.get('THROTTLE_LOGIN', '10/min'),
+        'signup': os.environ.get('THROTTLE_SIGNUP', '5/min'),
+        'stt': os.environ.get('THROTTLE_STT', '30/min'),
+    },
 }
+
+# 로그인 실패 잠금(4자리 PIN 무차별 대입 방지)
+LOGIN_MAX_FAILURES = int(os.environ.get('LOGIN_MAX_FAILURES', '5'))
+LOGIN_LOCKOUT_SECONDS = int(os.environ.get('LOGIN_LOCKOUT_SECONDS', '900'))
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+if os.environ.get('REDIS_URL'):
+    CACHES['default'] = {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.environ['REDIS_URL'],
+    }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
@@ -196,7 +237,29 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-CORS_ALLOW_ALL_ORIGINS = True
+# 개발에서만 전체 허용, 운영은 CORS_ALLOWED_ORIGINS로 명시
+CORS_ALLOW_ALL_ORIGINS = _env_bool('CORS_ALLOW_ALL_ORIGINS', DEBUG)
+CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS')
+
+# STT 업로드·WebSocket 버퍼 상한
+STT_MAX_UPLOAD_BYTES = int(os.environ.get('STT_MAX_UPLOAD_BYTES', str(10 * 1024 * 1024)))
+STT_WS_MAX_BUFFER_BYTES = int(os.environ.get('STT_WS_MAX_BUFFER_BYTES', str(16000 * 2 * 30)))  # 16kHz PCM16 30초
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = _env_bool('DJANGO_SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '0'))
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# 개인정보(이름·전화·전사문)는 로그에 남기지 않음. 레벨만 환경변수로 조정
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'console': {'class': 'logging.StreamHandler'}},
+    'root': {'handlers': ['console'], 'level': os.environ.get('LOG_LEVEL', 'INFO')},
+}
 
 
 # -----------------------------------------------------------------------

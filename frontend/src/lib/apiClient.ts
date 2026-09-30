@@ -7,10 +7,19 @@ import {
   persistAuthTokens,
 } from "@/atoms/auth/authAtoms";
 
+// 예: http://localhost:8000/api/v1 (끝에 /api/v1 포함, 호출 경로는 /users/... 형태)
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
-if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 
 const store = getDefaultStore();
+
+// HTTP 상태코드를 보존하는 에러 (401/429 등 분기용)
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
 function applyTokens(payload: {
   accessToken: string | null;
@@ -55,7 +64,8 @@ async function requestRefreshToken(): Promise<string | null> {
 
   refreshPromise = (async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/v1/users/auth/token/refresh/`, {
+      // API_BASE 에 이미 /api/v1 이 포함되어 있으므로 중복 prefix 금지
+      const res = await fetch(`${API_BASE}/users/auth/token/refresh/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh: refreshToken }),
@@ -65,8 +75,9 @@ async function requestRefreshToken(): Promise<string | null> {
 
       const data = (await res.json()) as RefreshResponse;
 
-      const newAccess = data.access_token ?? data.access ?? null;
-      const newRefresh = data.refresh_token ?? data.refresh ?? refreshToken;
+      const newAccess = data.access ?? data.access_token ?? null;
+      // ROTATE_REFRESH_TOKENS=True → 응답의 새 refresh 를 반드시 저장 (기존 토큰은 블랙리스트 처리됨)
+      const newRefresh = data.refresh ?? data.refresh_token ?? refreshToken;
 
       if (!newAccess) return null;
 
@@ -83,11 +94,16 @@ async function requestRefreshToken(): Promise<string | null> {
 }
 
 async function fetchWithAuth(input: string, init: RequestInit = {}) {
+  // 모듈 로드 시점이 아닌 호출 시점에 검사 (빌드/프리렌더 시 import 만으로 실패하지 않도록)
+  if (!API_BASE) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
   const { accessToken } = store.get(authAtom);
 
   const headers = new Headers(init.headers);
 
-  if (init.body !== undefined && init.body !== null) {
+  // FormData 는 브라우저가 boundary 포함 Content-Type 을 설정하므로 건드리지 않음
+  const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
+
+  if (init.body !== undefined && init.body !== null && !isForm) {
     if (!headers.has("Content-Type"))
       headers.set("Content-Type", "application/json");
   }
@@ -101,11 +117,11 @@ async function fetchWithAuth(input: string, init: RequestInit = {}) {
 
     if (!newAccess) {
       forceLogout();
-      throw new Error("Unauthorized");
+      throw new ApiError(401, "Unauthorized");
     }
 
     const retryHeaders = new Headers(init.headers);
-    if (init.body !== undefined && init.body !== null) {
+    if (init.body !== undefined && init.body !== null && !isForm) {
       if (!retryHeaders.has("Content-Type"))
         retryHeaders.set("Content-Type", "application/json");
     }
@@ -121,13 +137,13 @@ async function fetchWithAuth(input: string, init: RequestInit = {}) {
         url: input,
       });
       forceLogout();
-      throw new Error("Unauthorized");
+      throw new ApiError(401, "Unauthorized");
     }
   }
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(text || `HTTP ${res.status}`);
+    throw new ApiError(res.status, text || `HTTP ${res.status}`);
   }
 
   if (res.status === 204) return null as any;
@@ -152,6 +168,9 @@ export const apiClient = {
       body: body === undefined ? undefined : JSON.stringify(body),
       ...init,
     }),
+  // multipart 업로드 (STT 등) — 인증 헤더·401 refresh 동일 적용
+  postForm: async <T>(url: string, form: FormData, init?: RequestInit): Promise<T> =>
+    fetchWithAuth(url, { method: "POST", body: form, ...init }),
   delete: async <T>(url: string, init?: RequestInit): Promise<T> =>
     fetchWithAuth(url, { method: "DELETE", ...init }),
 };

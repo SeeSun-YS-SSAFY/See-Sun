@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { Swiper as SwiperType } from "swiper";
 import { EffectCreative } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -10,6 +10,7 @@ import "swiper/css";
 import "swiper/css/effect-creative";
 import { cn } from "@/utils/cn";
 import AutoScrollText from "@/components/common/AutoScrollText";
+import MiniButton from "@/components/common/MiniButton";
 import { useSwipe } from "./ExerciseSwiper.hooks";
 
 // ✅ 만든 audioPlayer 유틸로 교체
@@ -32,6 +33,9 @@ export default function ExerciseSwiper({
   onClick,
 }: ExerciseSwiperProps) {
   const swiperRef = useRef<SwiperType | null>(null);
+  // 버튼 대안(A4)·현재 항목 안내용
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeExercise = exercises[activeIndex];
 
   // ✅ 중복 재생 방지는 컴포넌트에서만 관리(전역 플레이어는 lib에서)
   const lastPlayedIdRef = useRef<string | null>(null);
@@ -79,8 +83,9 @@ export default function ExerciseSwiper({
   }, [exercises, playActiveAudio]);
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
-      <div className="h-[428px] w-full max-w-sm" {...swipeHandlers}>
+    <div className="flex h-full w-full flex-col items-center justify-center gap-4">
+      {/* 스와이프 영역은 시각용 — 스크린리더는 아래 버튼/안내로 탐색 */}
+      <div className="h-[428px] w-full max-w-sm" aria-hidden="true" {...swipeHandlers}>
         <Swiper
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
@@ -90,6 +95,7 @@ export default function ExerciseSwiper({
             playActiveAudio(ex);
           }}
           onSlideChange={(swiper) => {
+            setActiveIndex(swiper.activeIndex);
             const ex = exercises[swiper.activeIndex];
             playActiveAudio(ex);
           }}
@@ -197,6 +203,40 @@ export default function ExerciseSwiper({
             </SwiperSlide>
           ))}
         </Swiper>
+      </div>
+
+      {/* 스와이프 대체 버튼 (A4: 키보드·TalkBack 으로 이전/다음/선택) */}
+      <p aria-live="polite" className="sr-only">
+        {activeExercise
+          ? `${exercises.length}개 중 ${activeIndex + 1}번째, ${activeExercise.exercise_name}`
+          : ""}
+      </p>
+      <div className="flex w-full max-w-sm gap-2">
+        <MiniButton
+          type="button"
+          className="w-1/3"
+          disabled={activeIndex <= 0}
+          onClick={() => swiperRef.current?.slidePrev()}
+        >
+          이전
+        </MiniButton>
+        <MiniButton
+          type="button"
+          className="w-1/3"
+          disabled={!activeExercise}
+          aria-label={activeExercise ? `${activeExercise.exercise_name} 선택` : "선택"}
+          onClick={() => activeExercise && onClick(activeExercise)}
+        >
+          선택
+        </MiniButton>
+        <MiniButton
+          type="button"
+          className="w-1/3"
+          disabled={activeIndex >= exercises.length - 1}
+          onClick={() => swiperRef.current?.slideNext()}
+        >
+          다음
+        </MiniButton>
       </div>
     </div>
   );

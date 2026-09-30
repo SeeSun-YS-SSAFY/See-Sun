@@ -235,7 +235,7 @@ export default function ExerciseType() {
           onClick={() => router.back()}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">
@@ -261,9 +261,10 @@ export default function ExerciseType() {
         </div>
 
         <div className="flex w-full items-center justify-between max-w-[296px] mt-[36px]">
-          <ControlButton name="volume_up" />
+          <ControlButton name="volume_up" aria-label="음량" />
           <ControlButton
             name={isPlaying ? "pause" : "play_arrow"}
+            aria-label={isPlaying ? "일시정지" : "재생"}
             onClick={() => {
               // 배열의 끝에 도달했으면 재생 불가
               if (currentAudioIndex >= audioRefs.current.length) {
@@ -272,7 +273,7 @@ export default function ExerciseType() {
               setIsPlaying((prev) => !prev);
             }}
           />
-          <ControlButton name="title" onClick={toggleExplain} />
+          <ControlButton name="title" aria-label="설명 보기" onClick={toggleExplain} />
         </div>
 
         <div className="mt-[24px]">
@@ -311,6 +312,7 @@ type ControlButtonProps = {
 function ControlButton({ name, ...props }: ControlButtonProps) {
   return (
     <button
+      type="button"
       className="p-4 bg-yellow-300 rounded-[80px] shadow-[0px_4px_4px_0px_rgba(0,0,0,0.48)] inline-flex justify-start items-center gap-2.5 overflow-hidden"
       {...props}
     >

@@ -51,7 +51,7 @@ export default function ExercisePlayback({
           onClick={onBack}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
       </div>
       <div className="flex flex-1 flex-col items-center justify-center">
@@ -88,12 +88,13 @@ export default function ExercisePlayback({
         </div>
 
         <div className="mt-[36px] flex w-full max-w-[296px] items-center justify-between">
-          <ControlButton name="volume_up" />
+          <ControlButton name="volume_up" aria-label="음량" />
           <ControlButton
             name={isPlaying ? "pause" : "play_arrow"}
+            aria-label={isPlaying ? "일시정지" : "재생"}
             onClick={togglePlay}
           />
-          <ControlButton name="title" onClick={toggleExplain} />
+          <ControlButton name="title" aria-label="설명 보기" onClick={toggleExplain} />
         </div>
 
         <div className="mt-[24px]">
@@ -115,6 +116,7 @@ type ControlButtonProps = {
 function ControlButton({ name, ...props }: ControlButtonProps) {
   return (
     <button
+      type="button"
       className="inline-flex items-center justify-start gap-2.5 overflow-hidden rounded-[80px] bg-yellow-300 p-4 shadow-[0px_4px_4px_0px_rgba(0,0,0,0.48)]"
       {...props}
     >

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import Button from "@/components/common/Button";
+import MiniButton from "@/components/common/MiniButton";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -44,7 +45,7 @@ export default function Custom() {
           onClick={() => router.push("/exercise/routine/")}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">개인설정</h1>
@@ -62,18 +63,26 @@ export default function Custom() {
 
         {!loading && !error && routines.length > 0 && (
           <div className="flex flex-col gap-2">
-            {routines.map((r) => {
-              console.log("routine item:", r);
-              return (
+            {routines.map((r) => (
+              <div key={r.playlist_id} className="flex gap-2">
+                {/* onClick 사용: 키보드·TalkBack 활성화도 동작 (싱글=열기, 더블=편집 유지) */}
                 <Button
-                  key={r.playlist_id}
                   type="button"
-                  onTouchStart={() => handleTouchStart(r.playlist_id)}
+                  onClick={() => handleTouchStart(r.playlist_id)}
                 >
                   {r.title}
                 </Button>
-              );
-            })}
+                {/* 더블탭 제스처 대체 버튼 (A5) */}
+                <MiniButton
+                  type="button"
+                  className="w-auto shrink-0 px-4"
+                  aria-label={`${r.title} 편집`}
+                  onClick={() => router.push(`/exercise/custom/edit/${r.playlist_id}`)}
+                >
+                  편집
+                </MiniButton>
+              </div>
+            ))}
           </div>
         )}
       </div>

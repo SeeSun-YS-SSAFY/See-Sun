@@ -36,7 +36,7 @@ export default function SingleExercise() {
           onClick={() => router.back()}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">단일</h1>

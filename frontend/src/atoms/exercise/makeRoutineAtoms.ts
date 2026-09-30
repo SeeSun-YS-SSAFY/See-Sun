@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { routinesAtom } from "./routineAtoms";
+import { routinesAtom, type Routine } from "./routineAtoms";
 import { exerciseListAtom } from "./makeExerciseAtoms";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -72,9 +72,7 @@ export const addRoutineAtom = atom(
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        console.log("STATUS:", res.status);
-        console.log("RAW:", text);
-        console.log(payload);
+        console.warn("[makeRoutine] 저장 실패", res.status, text);
         let msg = "루틴 저장에 실패했습니다.";
         try {
           const err = await res.json();
@@ -88,8 +86,8 @@ export const addRoutineAtom = atom(
         title?: string;
       };
 
-      const newRoutine = {
-        id: data.playlist_id ?? Date.now(),
+      const newRoutine: Routine = {
+        playlist_id: String(data.playlist_id ?? Date.now()),
         title: data.title ?? title,
       };
 

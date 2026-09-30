@@ -15,10 +15,11 @@ django_asgi_app = get_asgi_application()
 
 # WebSocket 라우팅 import (Django 앱 초기화 후)
 from apps.stt.routing import websocket_urlpatterns
+from apps.stt.middleware import JWTQueryAuthMiddleware
 
 application = ProtocolTypeRouter({
     "http": django_asgi_app,
     "websocket": AuthMiddlewareStack(
-        URLRouter(websocket_urlpatterns)
+        JWTQueryAuthMiddleware(URLRouter(websocket_urlpatterns))
     ),
 })

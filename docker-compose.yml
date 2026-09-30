@@ -43,7 +43,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DEBUG=True
+      - DJANGO_DEBUG=true
       - POSTGRES_DB=seesun
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -74,7 +74,7 @@ services:
     env_file:
       - ./backend/.env
     environment:
-      - DEBUG=True
+      - DJANGO_DEBUG=true
       - POSTGRES_DB=seesun
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -95,6 +95,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: dev  # 개발 서버 스테이지 (운영 이미지는 기본 타겟 runner)
     container_name: seesun-frontend
     ports:
       - "3000:3000"

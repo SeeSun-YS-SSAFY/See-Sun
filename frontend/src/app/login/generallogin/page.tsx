@@ -51,7 +51,6 @@ export default function GeneralLogin() {
       const refresh = data.refresh_token ?? null;
 
       if (!token) {
-        console.log("login response:", data);
         throw new Error("토큰이 응답에 없음");
       }
 
@@ -79,7 +78,7 @@ export default function GeneralLogin() {
           onClick={() => router.push("/login/")}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">로그인</h1>

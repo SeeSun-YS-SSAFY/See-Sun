@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
 import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
@@ -18,6 +18,7 @@ export default function Height() {
     isProcessing,
     toggleRecording,
     result,
+    error: sttError,
   } = useFormSTT({
     field: "height",
     onResult: (res) => {
@@ -60,6 +61,7 @@ export default function Height() {
         <MicButton
           isRecording={isActive}
           isProcessing={isProcessing}
+          error={sttError}
           onClick={toggleRecording}
         />
       </div>

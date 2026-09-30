@@ -23,7 +23,7 @@ export const setCountAtom = atom(initialSetCount);
 export const repsCountAtom = atom(initialRepsCount);
 
 // selected exercise state (id + name)
-export type SelectedExercise = { exercise_id: number; exercise_name: string } | null;
+export type SelectedExercise = { exercise_id: string; exercise_name: string } | null;
 const initialSelectedExercise: SelectedExercise = null;
 export const selectedExerciseAtom = atom(initialSelectedExercise);
 

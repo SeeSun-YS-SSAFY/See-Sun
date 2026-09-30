@@ -56,7 +56,7 @@ export default function Signin() {
             onClick={() => router.push("/login/")}
             className="absolute left-0 flex items-center"
           >
-            <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+            <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
           </button>
   
           <h1 className="text-title-large text-white">회원가입</h1>

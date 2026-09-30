@@ -21,7 +21,8 @@ const nextConfig = {
     return [
       {
         source: '/media/:path*',
-        destination: 'http://backend:8000/media/:path*',
+        // 서버 측 프록시 대상 (docker-compose 서비스명 기본값)
+        destination: `${process.env.BACKEND_INTERNAL_URL || 'http://backend:8000'}/media/:path*`,
       },
     ];
   },

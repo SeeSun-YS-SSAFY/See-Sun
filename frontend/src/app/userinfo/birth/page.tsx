@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import MicButton from "@/components/common/MicButton";
 import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
@@ -72,6 +72,7 @@ export default function Birth() {
     isActive,
     isProcessing,
     toggleRecording,
+    error: sttError,
   } = useFormSTT({
     field: "birthdate",
     onResult: (res) => {
@@ -120,6 +121,7 @@ export default function Birth() {
         <MicButton
           isRecording={isActive}
           isProcessing={isProcessing}
+          error={sttError}
           onClick={toggleRecording}
         />
       </div>

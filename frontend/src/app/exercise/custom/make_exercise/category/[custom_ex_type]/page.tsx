@@ -1,7 +1,6 @@
 "use client";
 
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
-import type { Exercise } from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -13,7 +12,7 @@ type ExerciseCategoryResponse = {
   category_id: number;
   category_name: string;
   exercises: {
-    exercise_id: number;
+    exercise_id: string; // UUID
     exercise_name: string;
     pictogram_url: string;
   }[];
@@ -55,7 +54,7 @@ export default function CustomExerciseType() {
           }
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">
@@ -65,7 +64,7 @@ export default function CustomExerciseType() {
       <div className="flex flex-1 flex-col justify-center gap-4 pb-25">
         {exerciseCategory && (
           <ExerciseSwiper
-            exercises={exerciseCategory.exercises as unknown as Exercise[]}
+            exercises={exerciseCategory.exercises}
             onClick={(ex) => {
               setSelected({
                 exercise_id: ex.exercise_id,

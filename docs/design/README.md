@@ -60,5 +60,6 @@
 
 - [ ] 내부 문서에 평문으로 보관된 자격증명 **재발급**·삭제, 비밀 관리 도구로 이전
 - [ ] Gemini 키가 무료 티어라면 사용 중지 또는 유료 전환(사용자 데이터가 학습에 쓰일 수 있음)
-- [ ] 공개 레포에 있는 Django `SECRET_KEY` 폐기(운영에 쓰지 않기), `backend/get_test_token.py` 삭제
-- [ ] 1차 서버를 외부에 띄운 적이 있다면 STT 엔드포인트 비공개 처리(무인증 → 요금 남용 가능)
+- [x] 공개 레포에 있는 Django `SECRET_KEY` 폐기(환경변수 전환), `backend/get_test_token.py` 삭제 — 01 문서 §9
+- [x] STT HTTP·WebSocket 인증·요청 제한 적용(코드) — 이미 띄운 서버가 있다면 새 코드로 교체 필요
+- [ ] AWS·Google Cloud 계정 점검(`ops/infra-audit/`) — 계정 소유자가 CloudShell에서 실행하거나 읽기 전용 자격증명 제공

@@ -1,9 +1,12 @@
 from urllib.parse import unquote
+import logging
 import requests
 from django.conf import settings
 from rest_framework.exceptions import AuthenticationFailed
 from .interfaces import ISocialAuthProvider
 from .dtos import SocialUserDTO
+
+logger = logging.getLogger(__name__)
 
 class GoogleAuthProvider(ISocialAuthProvider):
     """
@@ -25,12 +28,11 @@ class GoogleAuthProvider(ISocialAuthProvider):
             'redirect_uri': redirect_uri,
         }
         
-        response = requests.post(token_uri, data=data)
+        response = requests.post(token_uri, data=data, timeout=10)
         
         if not response.ok:
-            # 디버깅을 위해 에러 내용 로깅 필요 (실제 운영 시에는 logger 사용)
             error_details = response.json()
-            print(f"Google Token Exchange Error: {error_details}")
+            logger.warning("Google token exchange failed: %s", error_details.get('error'))
             raise AuthenticationFailed(f"Google server could not validate the code. Details: {error_details.get('error_description')}")
             
         return response.json().get('access_token')
@@ -40,7 +42,8 @@ class GoogleAuthProvider(ISocialAuthProvider):
         
         response = requests.get(
             user_info_uri,
-            headers={'Authorization': f'Bearer {access_token}'}
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10,
         )
         
         if not response.ok:

@@ -1,6 +1,7 @@
 from typing import Optional
 from .interfaces import ISocialAuthProvider, IUserRepository
 from .dtos import AuthTokensDTO
+from rest_framework.exceptions import AuthenticationFailed
 
 class SocialLoginUseCase:
     """
@@ -24,6 +25,9 @@ class SocialLoginUseCase:
             provider_subject=social_user_dto.provider_subject
         )
         
+        if user is not None and not user.is_active:
+            raise AuthenticationFailed('탈퇴했거나 이용이 중지된 계정입니다.')
+
         is_new_user = False
         if not user:
             # 4. Create User if not exists

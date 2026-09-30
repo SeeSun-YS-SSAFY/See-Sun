@@ -3,6 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
 from rest_framework.test import APIClient
 from unittest.mock import patch
+from django.contrib.auth import get_user_model
 
 
 @pytest.mark.django_db
@@ -10,6 +11,13 @@ class TestSTTView:
     def setup_method(self):
         self.client = APIClient()
         self.url_base = "/api/v1/stt/"
+        user = get_user_model().objects.create_user(username="stt_tester", password="pw")
+        self.client.force_authenticate(user=user)
+
+    def test_인증_없이_호출하면_401(self):
+        audio_file = SimpleUploadedFile("test.webm", b"x", content_type="audio/webm")
+        response = APIClient().post(self.url_base + "form/", {"userinfo_stt": audio_file}, format="multipart")
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @patch("apps.stt.services.audio_processor.AudioProcessor.convert_webm_to_bytes")
     @patch("apps.stt.services.google_stt_service.GoogleSTTService.transcribe")

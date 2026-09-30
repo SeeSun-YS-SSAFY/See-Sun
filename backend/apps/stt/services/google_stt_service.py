@@ -101,7 +101,8 @@ class GoogleSTTService:
                     transcript += result.alternatives[0].transcript
 
             recognized = transcript.strip()
-            logger.info(f"[GoogleSTTService] 인식 결과: \"{recognized}\"")
+            # 전사문은 개인정보(이름·전화·건강정보)를 포함할 수 있어 길이만 기록
+            logger.debug(f"[GoogleSTTService] 인식 결과 길이: {len(recognized)}")
             return recognized
 
         except GoogleSTTServiceException:

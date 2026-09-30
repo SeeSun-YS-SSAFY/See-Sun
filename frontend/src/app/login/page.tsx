@@ -30,7 +30,6 @@ export default function Login() {
             });
 
             const url = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-            console.log(url)
             window.location.assign(url);
           }}
         >

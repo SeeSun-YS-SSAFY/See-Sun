@@ -3,7 +3,10 @@
 운동 관련 음성 명령을 Gemini로 분석하여 정규화된 action 반환
 """
 import json
+import logging
 from ..utils.gemini import gemini_client
+
+logger = logging.getLogger(__name__)
 
 
 # 지원하는 명령어 목록
@@ -68,5 +71,5 @@ JSON만 출력:"""
             'confidence': result.get('confidence', 0.0)
         }
     except Exception as e:
-        print(f"[Command Handler] 오류: {e}")
+        logger.error(f"[Command Handler] 오류: {e}", exc_info=True)
         return {'action': None, 'confidence': 0.0}

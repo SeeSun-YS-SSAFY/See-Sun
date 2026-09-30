@@ -143,6 +143,48 @@ class ExerciseListByCategoryView(APIView):
 
 # -----------------------------------------------------------------------------------------------
 
+class FrequentExerciseListView(APIView):
+    """
+    자주 하는 운동 목록 API (SETUP_002)
+    본인의 완료된 유효 세션(10초 이상)을 운동 이름 기준으로 집계해 많이 한 순서로 반환
+    """
+    permission_classes = [IsAuthenticated]
+    LIMIT = 10
+
+    @extend_schema(summary="자주 하는 운동 목록", tags=['Exercises'])
+    def get(self, request):
+        from django.db.models import Count, Max
+        from apps.logs.models import ExerciseSession
+
+        stats = (
+            ExerciseSession.objects
+            .filter(user=request.user, status='COMPLETED', is_valid=True)
+            .exclude(exercise_name__isnull=True).exclude(exercise_name='')
+            .values('exercise_name')
+            .annotate(count=Count('session_id'), last_performed_at=Max('started_at'))
+            .order_by('-count', '-last_performed_at')
+        )
+        stat_by_name = {row['exercise_name']: row for row in stats[:self.LIMIT * 3]}
+        exercises = (
+            Exercise.objects
+            .filter(exercise_name__in=stat_by_name.keys(), is_active=True)
+            .select_related('category')
+            .prefetch_related('media_contents')
+        )
+        items = []
+        for exercise, data in zip(exercises, ExerciseSimpleSerializer(exercises, many=True).data):
+            row = stat_by_name[exercise.exercise_name]
+            items.append({
+                **data,
+                'category_name': exercise.category.display_name,
+                'count': row['count'],
+                'last_performed_at': row['last_performed_at'],
+            })
+        items.sort(key=lambda x: (-x['count'], -(x['last_performed_at'].timestamp() if x['last_performed_at'] else 0)))
+        return Response({'exercises': items[:self.LIMIT]}, status=status.HTTP_200_OK)
+
+# -----------------------------------------------------------------------
+
 class ExerciseDetailView(APIView):
     """
     운동 상세 정보 조회 API

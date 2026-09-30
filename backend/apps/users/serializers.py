@@ -210,13 +210,29 @@ class UserProfileCompletionSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = User
-        fields = ('height_cm', 'weight_kg', 'gender', 'birthdate')
+        fields = ('height_cm', 'weight_kg', 'gender', 'birthdate', 'name', 'phone_number')
         extra_kwargs = {
             'height_cm': {'required': True},
             'weight_kg': {'required': True},
             'gender': {'required': True},
             'birthdate': {'required': True},
+            # 소셜 가입자는 온보딩에서 이름·전화번호를 받으므로 선택 입력으로 함께 저장
+            'name': {'required': False},
+            'phone_number': {'required': False, 'validators': []},
         }
+
+    def validate_name(self, value):
+        return value.strip() if value else value
+
+    def validate_phone_number(self, value):
+        if not value:
+            return None
+        phone = re.sub(r'[^0-9]', '', value)
+        if len(phone) not in (10, 11):
+            raise serializers.ValidationError('올바른 전화번호 형식이 아닙니다.')
+        if User.objects.filter(phone_number=phone).exclude(pk=self.instance.pk).exists():
+            raise serializers.ValidationError('이미 가입된 전화번호입니다.')
+        return phone
 
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)

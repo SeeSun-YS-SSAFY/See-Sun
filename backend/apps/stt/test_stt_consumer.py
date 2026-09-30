@@ -1,8 +1,18 @@
 import pytest
 from unittest.mock import AsyncMock, patch
+from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
+from django.contrib.auth import get_user_model
+from django.test import override_settings
+from rest_framework_simplejwt.tokens import AccessToken
 
 from config.asgi import application
+
+
+@database_sync_to_async
+def _ws_path():
+    user = get_user_model().objects.create_user(username="ws_tester", password="pw")
+    return f"/ws/stt/?token={AccessToken.for_user(user)}"
 
 
 @pytest.mark.asyncio
@@ -14,7 +24,7 @@ class TestSTTConsumer:
         Google STT 호출 직전에 RIFF/WAVE 헤더가 없어야 한다.
         """
         # Arrange
-        communicator = WebsocketCommunicator(application, "/ws/stt/")
+        communicator = WebsocketCommunicator(application, await _ws_path())
         connected, _ = await communicator.connect()
         assert connected is True
 
@@ -59,7 +69,7 @@ class TestSTTConsumer:
 
     async def test_audio_없이_process를_요청하면_에러를_반환해야_한다(self):
         """오디오가 없는 상태에서 process를 요청하면 에러를 반환해야 한다."""
-        communicator = WebsocketCommunicator(application, "/ws/stt/")
+        communicator = WebsocketCommunicator(application, await _ws_path())
         connected, _ = await communicator.connect()
         assert connected is True
 
@@ -71,3 +81,20 @@ class TestSTTConsumer:
 
         await communicator.disconnect()
 
+    async def test_토큰_없이_연결하면_거부해야_한다(self):
+        communicator = WebsocketCommunicator(application, "/ws/stt/")
+        connected, code = await communicator.connect()
+        assert connected is False
+        assert code == 4401
+
+    async def test_버퍼_상한을_넘으면_에러_후_연결을_종료해야_한다(self):
+        with override_settings(STT_WS_MAX_BUFFER_BYTES=1000):
+            communicator = WebsocketCommunicator(application, await _ws_path())
+            connected, _ = await communicator.connect()
+            assert connected is True
+            await communicator.send_to(bytes_data=b"\x00" * 1200)
+            response = await communicator.receive_json_from()
+            assert response["type"] == "error"
+            output = await communicator.receive_output()
+            assert output["type"] == "websocket.close"
+            assert output["code"] == 4413

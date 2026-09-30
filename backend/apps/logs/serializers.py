@@ -9,36 +9,38 @@ from apps.exercises.models import Exercise, Playlist, PlaylistItem
 class ExerciseSessionStartSerializer(serializers.ModelSerializer):
     """운동 세션 시작 요청 시리얼라이저"""
     playlist_id = serializers.UUIDField(required=False, write_only=True)
-    
+    # 단일 운동 세션에서 프론트가 함께 보냄(현재 모델에는 저장하지 않음)
+    exercise_id = serializers.UUIDField(required=False, write_only=True)
+
     class Meta:
         model = ExerciseSession
-        fields = ('exercise_name', 'playlist_id')
+        fields = ('exercise_name', 'playlist_id', 'exercise_id')
         extra_kwargs = {
             'exercise_name': {'required': False} # playlist_id가 있으면 이름 자동 설정 가능
         }
 
     def validate(self, attrs):
-        # 플레이리스트 ID가 있으면 검증
-        if 'playlist_id' in attrs:
-            try:
-                playlist = Playlist.objects.get(playlist_id=attrs['playlist_id'])
+        attrs.pop('exercise_id', None)
+        # 본인 플레이리스트만 연결. 기본 루틴(카테고리) ID 등 플레이리스트가 아닌 값이 오면
+        # 운동 이름이 있을 때는 세션을 막지 않고 플레이리스트 연결만 생략
+        playlist_id = attrs.pop('playlist_id', None)
+        if playlist_id:
+            user = self.context['request'].user
+            playlist = Playlist.objects.filter(playlist_id=playlist_id, user=user).first()
+            if playlist:
                 attrs['playlist'] = playlist
                 if not attrs.get('exercise_name'):
                     attrs['exercise_name'] = playlist.title
-            except Playlist.DoesNotExist:
+            elif not attrs.get('exercise_name'):
                 raise serializers.ValidationError({"playlist_id": "존재하지 않는 플레이리스트입니다."})
-        
+
         if not attrs.get('exercise_name') and not attrs.get('playlist'):
              raise serializers.ValidationError("exercise_name 또는 playlist_id 중 하나는 필수입니다.")
-             
+
         return attrs
 
     def create(self, validated_data):
         user = self.context['request'].user
-        # playlist_id는 모델 필드가 아니므로 pop
-        if 'playlist_id' in validated_data:
-            del validated_data['playlist_id']
-            
         return ExerciseSession.objects.create(
             user=user, 
             status='IN_PROGRESS', 

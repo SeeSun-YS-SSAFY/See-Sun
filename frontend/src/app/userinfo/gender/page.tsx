@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MicButton from "@/components/common/MicButton";
 import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
@@ -32,6 +32,7 @@ export default function Gender() {
     isActive,
     isProcessing,
     toggleRecording,
+    error: sttError,
   } = useFormSTT({
     field: "gender",
     onResult: (res) => {
@@ -82,6 +83,7 @@ export default function Gender() {
         <MicButton
           isRecording={isActive}
           isProcessing={isProcessing}
+          error={sttError}
           onClick={toggleRecording}
         />
       </div>

@@ -1,5 +1,8 @@
 
-const STT_BASE_URL = "http://127.0.0.1:8000/media/prefix/"
+// 모든 미디어 URL 은 NEXT_PUBLIC_API_MEDIA_URL 하나로 제어
+// (미설정 시 상대경로 /media/... → next.config.js rewrites 로 백엔드에 프록시)
+const MEDIA_BASE_URL = (process.env.NEXT_PUBLIC_API_MEDIA_URL || "").replace(/\/$/, "");
+const STT_BASE_URL = `${MEDIA_BASE_URL}/media/prefix/`;
 
 export const GUIDE_AUDIO: Record<string, string | undefined> = {
   "/": `${STT_BASE_URL}main.mp3`,

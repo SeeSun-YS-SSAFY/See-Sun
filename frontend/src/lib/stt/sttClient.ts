@@ -14,8 +14,8 @@ import type {
     ListenSTTResponse,
     CommandSTTResponse,
     FullCommandSTTResponse,
-    STTError,
 } from "@/hooks/stt/types";
+import { apiClient, ApiError } from "@/lib/apiClient";
 
 // ============================================================================
 // 설정
@@ -25,16 +25,16 @@ import type {
  * API 기본 URL
  * 환경변수에서 가져오거나 기본값 사용
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// base URL(NEXT_PUBLIC_API_BASE_URL, /api/v1 포함)과 JWT 인증은 apiClient 가 처리
 
 /**
  * STT API 엔드포인트 맵
  */
 const STT_ENDPOINTS: Record<STTMode, string> = {
-    form: "/api/v1/stt/form/",
-    listen: "/api/v1/stt/listen/",
-    command: "/api/v1/stt/command/",
-    full_command: "/api/v1/stt/full-command/",
+    form: "/stt/form/",
+    listen: "/stt/listen/",
+    command: "/stt/command/",
+    full_command: "/stt/full-command/",
 };
 
 // ============================================================================
@@ -47,11 +47,20 @@ const STT_ENDPOINTS: Record<STTMode, string> = {
  * @param response - fetch Response 객체
  * @returns 응답 텍스트 또는 빈 문자열
  */
-async function safeReadText(response: Response): Promise<string> {
+/**
+ * 인증 포함 STT 요청 공통 처리.
+ * 401(로그인 필요)·429(요청 과다)는 사용자에게 보여줄 한국어 메시지로 변환해 throw 합니다.
+ * (전사 결과는 개인정보를 포함할 수 있어 로그로 남기지 않음 — S9)
+ */
+async function postSTT<T>(endpoint: string, formData: FormData, label: string): Promise<T> {
     try {
-        return await response.text();
-    } catch {
-        return "";
+        return await apiClient.postForm<T>(endpoint, formData);
+    } catch (e) {
+        const status = e instanceof ApiError ? e.status : 0;
+        console.error(`[sttClient] ${label} 오류: ${status || (e as Error)?.message}`);
+        if (status === 401) throw new Error("로그인이 필요합니다. 다시 로그인해 주세요.");
+        if (status === 429) throw new Error("요청이 많습니다. 잠시 후 다시 말씀해 주세요.");
+        throw new Error("음성 인식에 실패했습니다. 다시 시도해 주세요.");
     }
 }
 
@@ -93,8 +102,6 @@ export async function transcribeForm(
     audioBlob: Blob,
     field: FormField
 ): Promise<FormSTTResponse> {
-    const url = `${API_BASE_URL}${STT_ENDPOINTS.form}`;
-
     // FormData 생성
     const formData = new FormData();
     formData.append("audio", blobToFile(audioBlob));
@@ -102,25 +109,7 @@ export async function transcribeForm(
 
     console.log(`[sttClient] Form 요청: field=${field}, size=${audioBlob.size}`);
 
-    // API 호출
-    const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-        // Content-Type은 브라우저가 자동으로 설정 (boundary 포함)
-    });
-
-    // 에러 처리
-    if (!response.ok) {
-        const errorText = await safeReadText(response);
-        console.error(`[sttClient] Form 오류: ${response.status} ${errorText}`);
-        throw new Error(`STT 요청 실패: ${response.status}`);
-    }
-
-    // 응답 파싱
-    const data = await response.json();
-    console.log(`[sttClient] Form 결과:`, data);
-
-    return data as FormSTTResponse;
+    return postSTT<FormSTTResponse>(STT_ENDPOINTS.form, formData, "Form");
 }
 
 /**
@@ -135,28 +124,12 @@ export async function transcribeForm(
 export async function transcribeListen(
     audioBlob: Blob
 ): Promise<ListenSTTResponse> {
-    const url = `${API_BASE_URL}${STT_ENDPOINTS.listen}`;
-
     const formData = new FormData();
     formData.append("audio", blobToFile(audioBlob));
 
     console.log(`[sttClient] Listen 요청: size=${audioBlob.size}`);
 
-    const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-    });
-
-    if (!response.ok) {
-        const errorText = await safeReadText(response);
-        console.error(`[sttClient] Listen 오류: ${response.status} ${errorText}`);
-        throw new Error(`STT 요청 실패: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`[sttClient] Listen 결과:`, data);
-
-    return data as ListenSTTResponse;
+    return postSTT<ListenSTTResponse>(STT_ENDPOINTS.listen, formData, "Listen");
 }
 
 /**
@@ -171,28 +144,12 @@ export async function transcribeListen(
 export async function transcribeCommand(
     audioBlob: Blob
 ): Promise<CommandSTTResponse> {
-    const url = `${API_BASE_URL}${STT_ENDPOINTS.command}`;
-
     const formData = new FormData();
     formData.append("audio", blobToFile(audioBlob));
 
     console.log(`[sttClient] Command 요청: size=${audioBlob.size}`);
 
-    const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-    });
-
-    if (!response.ok) {
-        const errorText = await safeReadText(response);
-        console.error(`[sttClient] Command 오류: ${response.status} ${errorText}`);
-        throw new Error(`STT 요청 실패: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`[sttClient] Command 결과:`, data);
-
-    return data as CommandSTTResponse;
+    return postSTT<CommandSTTResponse>(STT_ENDPOINTS.command, formData, "Command");
 }
 
 /**
@@ -207,28 +164,12 @@ export async function transcribeCommand(
 export async function transcribeFullCommand(
     audioBlob: Blob
 ): Promise<FullCommandSTTResponse> {
-    const url = `${API_BASE_URL}${STT_ENDPOINTS.full_command}`;
-
     const formData = new FormData();
     formData.append("audio", blobToFile(audioBlob));
 
     console.log(`[sttClient] FullCommand 요청: size=${audioBlob.size}`);
 
-    const response = await fetch(url, {
-        method: "POST",
-        body: formData,
-    });
-
-    if (!response.ok) {
-        const errorText = await safeReadText(response);
-        console.error(`[sttClient] FullCommand 오류: ${response.status} ${errorText}`);
-        throw new Error(`STT 요청 실패: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log(`[sttClient] FullCommand 결과:`, data);
-
-    return data as FullCommandSTTResponse;
+    return postSTT<FullCommandSTTResponse>(STT_ENDPOINTS.full_command, formData, "FullCommand");
 }
 
 // ============================================================================

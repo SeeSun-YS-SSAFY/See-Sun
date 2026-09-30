@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import MicButton from "@/components/common/MicButton";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { useFormSTT } from "@/hooks/stt";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
@@ -29,6 +29,7 @@ export default function Name() {
     isActive,
     isProcessing,
     toggleRecording,
+    error: sttError,
   } = useFormSTT({
     field: "name",
     onResult: (res) => {
@@ -85,6 +86,7 @@ export default function Name() {
         <MicButton
           isRecording={isActive}
           isProcessing={isProcessing}
+          error={sttError}
           onClick={toggleRecording}
         />
       </div>

@@ -3,10 +3,12 @@ from rest_framework.test import APIClient
 from rest_framework import status
 from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.auth import get_user_model
 
 class STTViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.client.force_authenticate(get_user_model().objects.create_user(username='stt_tester', password='pw'))
         self.url_base = '/api/v1/stt/'
         # 가짜 오디오 파일 생성
         self.audio_file = SimpleUploadedFile("test.webm", b"file_content", content_type="audio/webm")

@@ -37,7 +37,7 @@ export default function RoutineExercise() {
           onClick={() => router.push("/exercise/")}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">루틴</h1>
@@ -59,6 +59,7 @@ export default function RoutineExercise() {
           </Button>
           <Button
             className="flex h-21 w-21 shrink-0 items-center"
+            aria-label="개인 맞춤 설정"
             onClick={() => router.push("/exercise/custom")}
           >
             <Icon name="settings" filled color="#000" size={48} />

@@ -51,8 +51,8 @@ export default function MyPage() {
     };
   }, [accessToken, isAuthed, router]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.replace("/login");
   };
 
@@ -69,7 +69,7 @@ export default function MyPage() {
 
       {/* 프로필 */}
       <div className="flex flex-col items-center gap-2">
-        <Image src="/User.png" width={80} height={80} alt="User" />
+        <Image src="/User.png" width={80} height={80} alt="" />
         <h1 className="text-title-small text-white">
           {userName || "불러오는 중..."}
         </h1>

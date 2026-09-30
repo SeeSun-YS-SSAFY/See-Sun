@@ -2,7 +2,7 @@
 
 import Input from "@/components/common/Input";
 import Button from "@/components/common/Button";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -52,7 +52,7 @@ export default function CustomMake() {
           }}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">루틴추가</h1>

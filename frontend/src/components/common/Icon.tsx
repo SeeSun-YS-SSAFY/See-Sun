@@ -38,6 +38,8 @@ export default function Icon({
         fontVariationSettings: getFontVariationSettings(filled, weight),
         color: color,
       }}
+      // 리거처 텍스트("play_arrow" 등)를 스크린리더가 읽지 않도록 숨김 (의미는 버튼 aria-label 로 전달)
+      aria-hidden="true"
     >
       {name}
     </span>

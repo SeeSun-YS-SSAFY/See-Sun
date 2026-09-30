@@ -61,6 +61,7 @@ export default function Phone() {
     isActive,
     isProcessing,
     toggleRecording,
+    error: sttError,
   } = useFormSTT({
     field: "phone",
     onResult: (res) => {
@@ -112,7 +113,7 @@ export default function Phone() {
         router.replace("/");
       } catch (e: any) {
         // 자동 submit 실패해도 사용자가 직접 입력/제출할 수 있게 둠
-        console.warn("[Phone] Auto-submit failed:", e);
+        console.warn("[Phone] Auto-submit failed:", e?.message);
         setSubmitError(e?.message ?? "프로필 조회/저장 중 오류가 발생했습니다.");
       } finally {
         setSubmitting(false);
@@ -153,7 +154,7 @@ export default function Phone() {
 
       router.push("/");
     } catch (e: any) {
-      console.error("[Phone] Submission Error:", e);
+      console.error("[Phone] Submission Error:", e?.message);
       setSubmitError(e?.message ?? "전송 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
@@ -173,6 +174,7 @@ export default function Phone() {
         <MicButton
           isRecording={isActive}
           isProcessing={isProcessing}
+          error={sttError}
           onClick={toggleRecording}
         />
       </div>
@@ -188,6 +190,11 @@ export default function Phone() {
             setPhoneDigits(digits);
           }}
         />
+        {submitError && (
+          <p role="alert" className="text-red-500">
+            {submitError}
+          </p>
+        )}
       </div>
 
       <div className="mt-6">

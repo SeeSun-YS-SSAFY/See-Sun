@@ -60,6 +60,34 @@ class User(AbstractUser):
     is_deleted = models.BooleanField(default=False, verbose_name='탈퇴 여부')
     deleted_at = models.DateTimeField(null=True, blank=True, verbose_name='탈퇴 일시')
 
+    def withdraw(self):
+        """
+        회원탈퇴: 토큰 폐기 + 개인정보 즉시 파기(비식별화) 후 비활성화.
+        운동 기록 등 연결 데이터 보존을 위해 행은 남기고 식별 정보만 지운다.
+        """
+        from django.utils import timezone
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+
+        for token in OutstandingToken.objects.filter(user=self):
+            BlacklistedToken.objects.get_or_create(token=token)
+        self.auth_providers.all().delete()
+
+        self.username = f'deleted_{self.id}'
+        self.email = ''
+        self.name = None
+        self.phone_number = None
+        self.pin_hash = None
+        self.birthdate = None
+        self.gender = None
+        self.height_cm = None
+        self.weight_kg = None
+        self.is_profile_completed = False
+        self.set_unusable_password()
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.is_active = False
+        self.save()
+
     class Meta:
         db_table = 'users'
         verbose_name = '사용자'

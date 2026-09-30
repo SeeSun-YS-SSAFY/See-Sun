@@ -3,12 +3,12 @@
 import ExerciseSwiper from "@/components/exercise/ExerciseSwiper";
 import { apiClient } from "@/lib/apiClient";
 import Image from "next/image";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type ExerciseCategoryResponse = {
   exercises: {
-    exercise_id: number;
+    exercise_id: string; // UUID
     exercise_name: string;
     category_name: string;
     count: number;
@@ -43,7 +43,7 @@ export default function ExerciseType() {
           onClick={() => router.back()}
           className="absolute left-0 flex items-center"
         >
-          <Image src="/arrow_back.png" width={60} height={60} alt="back" />
+          <Image src="/arrow_back.png" width={60} height={60} alt="뒤로가기" />
         </button>
 
         <h1 className="text-title-large text-white">자주하는 운동</h1>

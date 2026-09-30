@@ -1,12 +1,12 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export type ProfileCompletionPayload = {
-  // name: string;
+  name?: string; // 비어 있으면 전송하지 않음
   birthdate: string; // YYYY-MM-DD
   gender: "M" | "F";
   height_cm: number;
   weight_kg: number;
-  // phone: string; // 숫자만(권장)
+  phone_number: string; // 숫자만 10~11자리
 };
 
 export async function submitProfileCompletion(
@@ -27,11 +27,31 @@ export async function submitProfileCompletion(
 
   if (!res.ok) {
     const msg = await safeReadText(res);
-    throw new Error(`Profile completion failed: HTTP ${res.status} ${msg}`);
+    // 휴대폰 번호 중복 등 필드 오류 → 사용자에게 보여줄 한국어 메시지
+    if (res.status === 400 && hasFieldError(msg, "phone_number")) {
+      throw new Error("이미 다른 계정에서 사용 중인 휴대폰 번호입니다. 번호를 확인해 주세요.");
+    }
+    throw new Error(`프로필 저장에 실패했습니다. (HTTP ${res.status})`);
   }
 
-  localStorage.setItem("user_profile_completion", JSON.stringify(payload));
+  // 개인정보(이름·전화번호)는 localStorage 에 남기지 않음
+  const { birthdate, gender, height_cm, weight_kg } = payload;
+  localStorage.setItem(
+    "user_profile_completion",
+    JSON.stringify({ birthdate, gender, height_cm, weight_kg }),
+  );
   return true;
+}
+
+function hasFieldError(body: string, field: string) {
+  try {
+    const json = JSON.parse(body) as {
+      errors?: Record<string, unknown>;
+    } & Record<string, unknown>;
+    return !!(json?.errors?.[field] ?? json?.[field]);
+  } catch {
+    return false;
+  }
 }
 
 async function safeReadText(res: Response) {
@@ -49,11 +69,6 @@ export function buildProfilePayloadFromSession(): ProfileCompletionPayload | nul
   const gender = (sessionStorage.getItem("gender") ?? "") as "M" | "F" | "";
   const birthdate = (sessionStorage.getItem("birth") ?? "").trim();
   const phone = (sessionStorage.getItem("phone") ?? "").replace(/[^\d]/g, "");
-
-  // 🔍 디버깅: 원본 데이터 확인
-  console.log("[ProfileDebug] Raw Session Data:", {
-    name, height_raw: sessionStorage.getItem("height"), weight_raw: sessionStorage.getItem("weight"), gender, birthdate, phone_raw: sessionStorage.getItem("phone")
-  });
 
   if (!Number.isFinite(height) || height <= 0) {
     throw new Error(`키(height) 정보가 올바르지 않습니다. (값: ${height})`);
@@ -74,12 +89,12 @@ export function buildProfilePayloadFromSession(): ProfileCompletionPayload | nul
   }
 
   return {
-    // name,
+    ...(name ? { name } : {}),
     height_cm: height,
     weight_kg: weight,
     gender,
     birthdate,
-    // phone,
+    phone_number: phone,
   };
 }
 

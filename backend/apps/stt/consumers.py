@@ -6,6 +6,7 @@ import json
 import asyncio
 import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
 
 from .services.google_stt_service import GoogleSTTService, GoogleSTTServiceException
 
@@ -33,7 +34,11 @@ class STTConsumer(AsyncWebsocketConsumer):
             return {"action": None, "confidence": 0.0}
 
     async def connect(self):
-        """WebSocket 연결"""
+        """WebSocket 연결 (인증 사용자만)"""
+        user = self.scope.get('user')
+        if not (user and user.is_authenticated):
+            await self.close(code=4401)
+            return
         await self.accept()
         # 프론트에서 PCM이 청크 단위로 들어올 수 있어 누적 버퍼로 관리합니다.
         self.audio_buffer = bytearray()
@@ -70,9 +75,17 @@ class STTConsumer(AsyncWebsocketConsumer):
                         }))
             
             elif bytes_data:
-                # PCM 데이터 수신
+                # PCM 데이터 수신 (상한 초과 시 버퍼 폐기·연결 종료로 메모리 남용 방지)
+                if len(self.audio_buffer) + len(bytes_data) > settings.STT_WS_MAX_BUFFER_BYTES:
+                    self.audio_buffer = bytearray()
+                    await self.send(json.dumps({
+                        'type': 'error',
+                        'message': '오디오가 너무 깁니다.'
+                    }))
+                    await self.close(code=4413)
+                    return
                 self.audio_buffer.extend(bytes_data)
-                logger.info(f"[WS STT] PCM 청크 수신: {len(bytes_data)} bytes (누적: {len(self.audio_buffer)} bytes)")
+                logger.debug(f"[WS STT] PCM 청크 수신: {len(bytes_data)} bytes (누적: {len(self.audio_buffer)} bytes)")
                     
         except Exception as e:
             logger.error(f"[WS STT] receive 오류: {e}", exc_info=True)
@@ -101,15 +114,15 @@ class STTConsumer(AsyncWebsocketConsumer):
             prefix_hex = prefix.hex()
             has_riff = prefix.startswith(b"RIFF")
             has_wave = b"WAVE" in pcm_data[:64]
-            logger.info(f"[WS STT] STT 전송 직전 PCM prefix(hex): {prefix_hex}")
-            logger.info(f"[WS STT] 헤더 검사: RIFF={has_riff}, WAVE={has_wave}")
+            logger.debug(f"[WS STT] STT 전송 직전 PCM prefix(hex): {prefix_hex}")
+            logger.debug(f"[WS STT] 헤더 검사: RIFF={has_riff}, WAVE={has_wave}")
 
             text = await GoogleSTTService.transcribe_async(
                 pcm_data,
                 self.sample_rate,
                 encoding="LINEAR16",
             )
-            logger.info(f"[WS STT] 인식 결과: '{text}'")
+            logger.debug(f"[WS STT] 인식 결과 길이: {len(text or '')}")
             
             # 명령어 분석 (Gemini)
             loop = asyncio.get_event_loop()

@@ -1,6 +1,9 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
+from django.conf import settings
 from drf_spectacular.utils import extend_schema
 from .services.audio_processor import AudioProcessor
 from .services.google_stt_service import GoogleSTTService, GoogleSTTServiceException
@@ -10,6 +13,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+class STTRateThrottle(UserRateThrottle):
+    scope = 'stt'
+
+
 class STTView(APIView):
     """
     통합 STT API
@@ -17,6 +25,9 @@ class STTView(APIView):
     - Gemini: 텍스트 → 구조화된 데이터 (NLU)
     """
     parser_classes = [MultiPartParser]
+    # 유료 Google STT 호출이므로 무인증·무제한 호출 차단
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [STTRateThrottle]
 
     @extend_schema(
         summary="통합 STT API",
@@ -60,9 +71,11 @@ class STTView(APIView):
             return Response({'error': '오디오 파일이 없습니다.'}, status=400)
 
         # Google STT 동기 요청은 약 10MB 제한이 있어, 과도한 업로드는 사전에 차단합니다.
-        if getattr(audio_file, "size", 0) and audio_file.size > 10 * 1024 * 1024:
+        if getattr(audio_file, "size", 0) and audio_file.size > settings.STT_MAX_UPLOAD_BYTES:
             return Response({'error': '오디오 파일이 너무 큽니다. (최대 10MB)'}, status=400)
         
+        # 프론트는 'full-command'(하이픈)로 호출하므로 같은 모드로 취급
+        mode = mode.replace('-', '_')
         ALLOWED_MODES = ['form', 'listen', 'command', 'full_command', 'stt']
         if mode not in ALLOWED_MODES:
             return Response({'error': f'유효하지 않은 mode 입니다. 허용: {ALLOWED_MODES}'}, status=400)
