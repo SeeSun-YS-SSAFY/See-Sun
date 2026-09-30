@@ -1,0 +1,1 @@
+# STT app initialization

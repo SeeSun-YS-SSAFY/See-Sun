@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,12 +30,13 @@ SECRET_KEY = 'django-insecure-3^208ncj#r1fa%pfh!^^l6s#$jachl4sw$_vl(h_1c%j*-pa#(
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'backend']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # ASGI 서버 (반드시 맨 위)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,14 +44,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
+    'corsheaders',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
+    'channels',  # WebSocket
     # Local
     'apps.users.apps.UsersConfig',
     'apps.exercises.apps.ExercisesConfig',
+    'apps.stt.apps.SttConfig',
+    'apps.logs.apps.LogsConfig',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -73,15 +86,21 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# PostgreSQL 설정 (Docker 또는 환경변수 기반)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('POSTGRES_DB', 'seesun'),
+        'USER': os.environ.get('POSTGRES_USER', 'postgres'),
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('POSTGRES_HOST', 'localhost'),
+        'PORT': os.environ.get('POSTGRES_PORT', '5432'),
     }
 }
 
@@ -121,6 +140,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'apps' / 'exercises' / 'pictogram',
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -131,7 +156,38 @@ AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,  # Refresh Token Rotation 활성화
+    'BLACKLIST_AFTER_ROTATION': True,  # 로그아웃 시 블랙리스트 활성화
+}
+
+# Google OAuth Settings
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+GOOGLE_CLIENT_SECRET = os.getenv('GOOGLE_CLIENT_SECRET')
+GOOGLE_TOKEN_URI = 'https://oauth2.googleapis.com/token'
+GOOGLE_USER_INFO_URI = 'https://www.googleapis.com/oauth2/v3/userinfo'
+
+# Google Cloud Credentials
+# 환경 변수 우선, 없으면 기본 경로 사용
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv(
+    'GOOGLE_APPLICATION_CREDENTIALS',
+    os.path.join(BASE_DIR, 'google-credentials.json')
+)
+# 상대 경로인 경우 절대 경로로 변환
+if not os.path.isabs(GOOGLE_APPLICATION_CREDENTIALS):
+    GOOGLE_APPLICATION_CREDENTIALS = os.path.join(BASE_DIR, GOOGLE_APPLICATION_CREDENTIALS)
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = GOOGLE_APPLICATION_CREDENTIALS
+
+# Gemini API 키
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY') or GEMINI_API_KEY
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'See:Sun API',
@@ -140,3 +196,15 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
+CORS_ALLOW_ALL_ORIGINS = True
+
+
+# -----------------------------------------------------------------------
+# Celery 설정 (Redis 브로커)
+# -----------------------------------------------------------------------
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Seoul'
