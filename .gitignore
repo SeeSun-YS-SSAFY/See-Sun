@@ -234,3 +234,5 @@ docs/plans/
 docs/results/
 backend/media/
 testfiles/
+# 인프라 점검 결과 파일(계정 정보 포함 가능)
+ops/infra-audit/*_audit_*.txt
