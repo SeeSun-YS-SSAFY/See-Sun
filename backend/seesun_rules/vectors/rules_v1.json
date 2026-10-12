@@ -1,0 +1,110 @@
+{
+  "_comment": "산식 테스트 벡터 rules-v1 — 손으로 계산한 기대값. 서버(pytest)와 Android(core:domain 단위 테스트)가 같은 파일을 쓴다.",
+  "target_kcal": [
+    {"name": "남 36세 70kg 176cm 감량", "input": {"sex": "M", "weight_kg": 70, "height_cm": 176, "age": 36, "goal": "LOSE_WEIGHT"},
+     "expected": {"bmr": 1625.0, "tdee": 2112.5, "adjustment": -500, "target_kcal": 1613, "minor": false}},
+    {"name": "여 30세 55kg 160cm 유지", "input": {"sex": "F", "weight_kg": 55, "height_cm": 160, "age": 30, "goal": "MAINTAIN"},
+     "expected": {"bmr": 1239.0, "tdee": 1610.7, "adjustment": 0, "target_kcal": 1611, "minor": false}},
+    {"name": "남 25세 80kg 180cm 근육", "input": {"sex": "M", "weight_kg": 80, "height_cm": 180, "age": 25, "goal": "GAIN_MUSCLE"},
+     "expected": {"bmr": 1805.0, "tdee": 2346.5, "adjustment": 300, "target_kcal": 2647, "minor": false}},
+    {"name": "여 16세 60kg 165cm 유지(미성년 표시)", "input": {"sex": "F", "weight_kg": 60, "height_cm": 165, "age": 16, "goal": "MAINTAIN"},
+     "expected": {"bmr": 1390.3, "tdee": 1807.3, "adjustment": 0, "target_kcal": 1807, "minor": true}},
+    {"name": "목표 미설정은 유지와 같음", "input": {"sex": "M", "weight_kg": 70, "height_cm": 176, "age": 36, "goal": null},
+     "expected": {"target_kcal": 2113}},
+    {"name": "성별 미선택은 계산 불가", "input": {"sex": "U", "weight_kg": 70, "height_cm": 176, "age": 36, "goal": "MAINTAIN"},
+     "expected": null}
+  ],
+  "sugar_index": [
+    {"name": "의뢰서 예시 사과 150g", "input": {"sugar_g": 16, "carb_g": 20, "fiber_g": 4, "is_beverage": false},
+     "expected": {"score": 70, "grade": "MODERATE", "label": "보통", "components": {"sugar": 15, "carb": 40, "fiber": 15}}},
+    {"name": "의뢰서 예시 당류 8g 음료는 3단계 15점", "input": {"sugar_g": 8, "carb_g": 8, "fiber_g": 0, "is_beverage": true},
+     "expected": {"score": 50, "grade": "HIGH", "label": "높음", "components": {"sugar": 15, "carb": 30, "fiber": 5}}},
+    {"name": "같은 값 음료 아님", "input": {"sugar_g": 8, "carb_g": 8, "fiber_g": 0, "is_beverage": false},
+     "expected": {"score": 60, "grade": "HIGH", "components": {"sugar": 25, "carb": 30, "fiber": 5}}},
+    {"name": "모두 1단계", "input": {"sugar_g": 3, "carb_g": 25, "fiber_g": 6, "is_beverage": false},
+     "expected": {"score": 100, "grade": "LOW", "label": "낮음", "components": {"sugar": 35, "carb": 40, "fiber": 25}}},
+    {"name": "모두 최하 단계", "input": {"sugar_g": 25, "carb_g": 70, "fiber_g": 1, "is_beverage": false},
+     "expected": {"score": 20, "grade": "VERY_HIGH", "label": "매우 높음", "components": {"sugar": 5, "carb": 10, "fiber": 5}}},
+    {"name": "경계값 당류 10 탄수 45 섬유 3", "input": {"sugar_g": 10, "carb_g": 45, "fiber_g": 3, "is_beverage": false},
+     "expected": {"score": 70, "grade": "MODERATE", "components": {"sugar": 25, "carb": 30, "fiber": 15}}},
+    {"name": "경계값 당류 20 탄수 60 섬유 2.9", "input": {"sugar_g": 20, "carb_g": 60, "fiber_g": 2.9, "is_beverage": false},
+     "expected": {"score": 40, "grade": "VERY_HIGH", "components": {"sugar": 15, "carb": 20, "fiber": 5}}},
+    {"name": "경계값 당류 5 탄수 15 섬유 5", "input": {"sugar_g": 5, "carb_g": 15, "fiber_g": 5, "is_beverage": false},
+     "expected": {"score": 100, "grade": "LOW", "components": {"sugar": 35, "carb": 40, "fiber": 25}}},
+    {"name": "경계 바로 위 당류 5.1 탄수 14.9 섬유 4.99", "input": {"sugar_g": 5.1, "carb_g": 14.9, "fiber_g": 4.99, "is_beverage": false},
+     "expected": {"score": 70, "grade": "MODERATE", "components": {"sugar": 25, "carb": 30, "fiber": 15}}},
+    {"name": "경계 바로 위 당류 20.1 탄수 30.1", "input": {"sugar_g": 20.1, "carb_g": 30.1, "fiber_g": 10, "is_beverage": false},
+     "expected": {"score": 60, "grade": "HIGH", "components": {"sugar": 5, "carb": 30, "fiber": 25}}},
+    {"name": "4단계 음료는 그대로", "input": {"sugar_g": 25, "carb_g": 30, "fiber_g": 5, "is_beverage": true},
+     "expected": {"score": 70, "grade": "MODERATE", "components": {"sugar": 5, "carb": 40, "fiber": 25}}},
+    {"name": "식이섬유 없음은 5점 + 안내", "input": {"sugar_g": 5, "carb_g": 30, "fiber_g": null, "is_beverage": false},
+     "expected": {"score": 80, "grade": "MODERATE", "components": {"sugar": 35, "carb": 40, "fiber": 5}, "notes": ["NO_FIBER"]}},
+    {"name": "당류 없음은 산출 불가", "input": {"sugar_g": null, "carb_g": 30, "fiber_g": 5, "is_beverage": false},
+     "expected": {"computable": false}},
+    {"name": "탄수화물 없음은 산출 불가", "input": {"sugar_g": 3, "carb_g": null, "fiber_g": 5, "is_beverage": false},
+     "expected": {"computable": false}}
+  ],
+  "kcal_component": [
+    {"name": "달성률 89.495% → 89 → 24점", "input": {"intake": 1789.9, "target": 2000}, "expected": {"rate": 89, "score": 24, "suggest_exercise": false}},
+    {"name": "달성률 89.55% → 90 → 30점", "input": {"intake": 1791, "target": 2000}, "expected": {"rate": 90, "score": 30, "suggest_exercise": false}},
+    {"name": "달성률 110.4% → 110 → 30점, 110% 초과라 운동 권유", "input": {"intake": 2208, "target": 2000}, "expected": {"rate": 110, "score": 30, "suggest_exercise": true}},
+    {"name": "달성률 140% → 8점", "input": {"intake": 2800, "target": 2000}, "expected": {"rate": 140, "score": 8, "suggest_exercise": true}},
+    {"name": "달성률 141% → 0점", "input": {"intake": 2820, "target": 2000}, "expected": {"rate": 141, "score": 0, "suggest_exercise": true}},
+    {"name": "달성률 59% → 0점", "input": {"intake": 1180, "target": 2000}, "expected": {"rate": 59, "score": 0, "suggest_exercise": false}},
+    {"name": "달성률 75% → 16점", "input": {"intake": 1500, "target": 2000}, "expected": {"rate": 75, "score": 16, "suggest_exercise": false}}
+  ],
+  "diet_score": [
+    {"name": "균형 좋음 + 고혈압·당뇨 + 알레르기 없음",
+     "context": {"target_kcal": 2000, "diseases": ["HYPERTENSION", "DIABETES"], "allergens": ["PEANUT"]},
+     "items": [
+       {"name": "A", "meal_type": "BREAKFAST", "kcal": 600, "carb_g": 90, "protein_g": 25, "fat_g": 15, "sodium_mg": 800, "sugar_grade": "MODERATE", "allergen_statuses": {"PEANUT": "NONE"}},
+       {"name": "B", "meal_type": "LUNCH", "kcal": 700, "carb_g": 95, "protein_g": 30, "fat_g": 20, "sodium_mg": 900, "sugar_grade": "HIGH", "allergen_statuses": {"PEANUT": "NONE"}},
+       {"name": "C", "meal_type": "DINNER", "kcal": 500, "carb_g": 60, "protein_g": 25, "fat_g": 18, "sodium_mg": 500, "sugar_grade": "LOW", "allergen_statuses": {"PEANUT": "NONE"}}
+     ],
+     "expected": {"status": "OK", "total": 92.0, "total_display": 92, "grade": "VERY_GOOD",
+                  "scores": {"macro": 50.0, "kcal": 30, "disease": 2, "allergy": 10},
+                  "hypertension_score": 2, "diabetes_score": 5,
+                  "one_liner": "아주 잘 드셨어요. 나트륨을 줄여 보세요.", "reliability": "OK", "suggest_exercise": false, "has_notice": true}},
+    {"name": "지방 과다·칼로리 120%",
+     "context": {"target_kcal": 2000, "diseases": [], "allergens": []},
+     "items": [
+       {"name": "점심", "meal_type": "LUNCH", "kcal": 1000, "carb_g": 50, "protein_g": 20, "fat_g": 60, "sodium_mg": 1000},
+       {"name": "저녁", "meal_type": "DINNER", "kcal": 1400, "carb_g": 150, "protein_g": 30, "fat_g": 40, "sodium_mg": 1000}
+     ],
+     "expected": {"status": "OK", "total": 81.7, "total_display": 82, "grade": "GOOD",
+                  "scores": {"macro": 37.7, "kcal": 24, "disease": 10, "allergy": 10},
+                  "ratios": {"carb": 42.1, "protein": 10.5, "fat": 47.4},
+                  "one_liner": "잘 드셨어요. 지방 비율을 조금 줄여 보세요.", "reliability": "OK", "suggest_exercise": true, "has_notice": false}},
+    {"name": "알레르기 포함 + 영양 정보 없는 음식 + 끼니 부족",
+     "context": {"target_kcal": 1500, "diseases": [], "allergens": ["MILK"]},
+     "items": [
+       {"name": "X", "meal_type": "LUNCH", "kcal": 500, "carb_g": 70, "protein_g": 20, "fat_g": 15, "sodium_mg": 300, "allergen_statuses": {"MILK": "CONFIRMED"}},
+       {"name": "Y", "meal_type": "LUNCH", "kcal": null, "allergen_statuses": {"MILK": "UNKNOWN"}}
+     ],
+     "expected": {"status": "OK", "total": 60.0, "total_display": 60, "grade": "NEEDS_IMPROVEMENT",
+                  "scores": {"macro": 50.0, "kcal": 0, "disease": 10, "allergy": 0},
+                  "one_liner": "조금 조정이 필요해요. 알레르기 성분이 포함될 수 있는 음식이 있어요.",
+                  "reliability": "LOW", "reliability_reasons": ["MISSING_NUTRITION", "FEW_MEALS"], "suggest_exercise": false, "has_notice": false}},
+    {"name": "알레르기 확인 불가만 있으면 5점",
+     "context": {"target_kcal": 1500, "diseases": [], "allergens": ["MILK"]},
+     "items": [
+       {"name": "X", "meal_type": "LUNCH", "kcal": 750, "carb_g": 105, "protein_g": 30, "fat_g": 22.5, "sodium_mg": 300, "allergen_statuses": {"MILK": "UNKNOWN"}},
+       {"name": "Z", "meal_type": "DINNER", "kcal": 750, "carb_g": 105, "protein_g": 30, "fat_g": 22.5, "sodium_mg": 300, "allergen_statuses": {"MILK": "NONE"}}
+     ],
+     "expected": {"status": "OK", "total": 95.0, "total_display": 95, "grade": "VERY_GOOD",
+                  "scores": {"macro": 50.0, "kcal": 30, "disease": 10, "allergy": 5},
+                  "one_liner": "아주 잘 드셨어요. 알레르기 정보를 확인할 수 없는 음식이 있어요.", "reliability": "OK", "suggest_exercise": false, "has_notice": false}},
+    {"name": "기록 없음", "context": {"target_kcal": 2000, "diseases": [], "allergens": []}, "items": [],
+     "expected": {"status": "NO_RECORD", "total": null}}
+  ],
+  "classify": [
+    {"name": "탄수화물 식품·당류 지표 높음", "input": {"carb_g": 95, "protein_g": 10, "fat_g": 6, "sodium_mg": 1200, "sugar_g": 18, "fiber_g": 2, "is_beverage": false},
+     "expected": {"tags": ["CARB", "DIABETES_CAUTION", "HYPERTENSION_CAUTION"]}},
+    {"name": "단백질 식품", "input": {"carb_g": 0, "protein_g": 30, "fat_g": 5, "sodium_mg": 100, "sugar_g": 0, "fiber_g": 0, "is_beverage": false},
+     "expected": {"tags": ["PROTEIN"]}},
+    {"name": "지방 식품(지방 에너지 30% 이상)", "input": {"carb_g": 10, "protein_g": 10, "fat_g": 20, "sodium_mg": 100, "sugar_g": 1, "fiber_g": 3, "is_beverage": false},
+     "expected": {"tags": ["FAT"]}},
+    {"name": "나트륨 600mg 경계", "input": {"carb_g": 20, "protein_g": 5, "fat_g": 2, "sodium_mg": 600, "sugar_g": 2, "fiber_g": 6, "is_beverage": false},
+     "expected": {"tags": ["CARB", "HYPERTENSION_CAUTION"]}}
+  ]
+}
