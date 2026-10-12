@@ -1,0 +1,21 @@
+{
+  "description": "확인·경고 팝업 음성 답변(COM-06): YES/NO/EDIT/REPEAT, 모르면 null.",
+  "cases": [
+    {"input": "네", "expected": "YES"},
+    {"input": "예", "expected": "YES"},
+    {"input": "응 맞아", "expected": "YES"},
+    {"input": "확인", "expected": "YES"},
+    {"input": "기록해 줘", "expected": "YES"},
+    {"input": "맞습니다", "expected": "YES"},
+    {"input": "아니요", "expected": "NO"},
+    {"input": "아뇨", "expected": "NO"},
+    {"input": "취소", "expected": "NO"},
+    {"input": "수정", "expected": "EDIT"},
+    {"input": "고쳐 줘", "expected": "EDIT"},
+    {"input": "아니 수정할래", "expected": "EDIT"},
+    {"input": "네 수정할게요", "expected": "EDIT"},
+    {"input": "다시 들려줘", "expected": "REPEAT"},
+    {"input": "한 번 더 말해 줘", "expected": "REPEAT"},
+    {"input": "음", "expected": null}
+  ]
+}

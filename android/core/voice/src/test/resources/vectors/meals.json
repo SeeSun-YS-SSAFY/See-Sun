@@ -1,0 +1,26 @@
+{
+  "description": "식사 기록 한 문장(DREC-02): 날짜·끼니·음식·섭취량. 기준일 2026-10-12. matched=false면 사전 밖 음식(들은 그대로 서버 검색).",
+  "today": "2026-10-12",
+  "cases": [
+    {"input": "어제 점심에 김치찌개 한 그릇이랑 밥 반 공기 먹었어",
+     "expected": {"date": "2026-10-11", "meal_type": "LUNCH", "foods": [{"name": "김치찌개", "ratio": 1.0}, {"name": "밥", "ratio": 0.5}]}},
+    {"input": "오늘 아침 사과 두 개랑 우유 한 컵",
+     "expected": {"date": "2026-10-12", "meal_type": "BREAKFAST", "foods": [{"name": "사과", "ratio": 2.0}, {"name": "우유", "ratio": 1.0}]}},
+    {"input": "점심에 비빔밥 먹었어요",
+     "expected": {"date": null, "meal_type": "LUNCH", "foods": [{"name": "비빔밥", "ratio": 1.0, "confirm": true}]}},
+    {"input": "저녁 떡뽁이 많이",
+     "expected": {"date": null, "meal_type": "DINNER", "foods": [{"name": "떡볶이", "ratio": 1.5}]}},
+    {"input": "10월 5일 저녁에 된장찌개를 반 그릇 먹었어",
+     "expected": {"date": "2026-10-05", "meal_type": "DINNER", "foods": [{"name": "된장찌개", "ratio": 0.5}]}},
+    {"input": "간식으로 고구마 이백 그램",
+     "expected": {"date": null, "meal_type": "SNACK", "foods": [{"name": "고구마", "grams": 200.0}]}},
+    {"input": "오이 하나하고 삶은 계란 두 개",
+     "expected": {"date": null, "meal_type": null, "foods": [{"name": "오이", "ratio": 1.0}, {"name": "삶은 달걀", "ratio": 2.0}]}},
+    {"input": "아메리카노 한 잔 그리고 샌드위치 반",
+     "expected": {"date": null, "meal_type": null, "foods": [{"name": "커피", "ratio": 1.0}, {"name": "샌드위치", "ratio": 0.5}]}},
+    {"input": "어제 저녁 마라탕 일 인분",
+     "expected": {"date": "2026-10-11", "meal_type": "DINNER", "foods": [{"name": "마라탕", "matched": false, "ratio": 1.0}]}},
+    {"input": "지난주 금요일 점심 김치 찌게 두 그릇",
+     "expected": {"date": "2026-10-09", "meal_type": "LUNCH", "foods": [{"name": "김치찌개", "ratio": 2.0}]}}
+  ]
+}

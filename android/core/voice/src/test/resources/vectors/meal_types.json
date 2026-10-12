@@ -1,0 +1,14 @@
+{
+  "description": "끼니(API meal_type). 여럿이 섞이면 null.",
+  "cases": [
+    {"input": "아침", "expected": "BREAKFAST"},
+    {"input": "아침에 먹었어", "expected": "BREAKFAST"},
+    {"input": "점심이요", "expected": "LUNCH"},
+    {"input": "저녁", "expected": "DINNER"},
+    {"input": "간식", "expected": "SNACK"},
+    {"input": "야식으로 먹었어요", "expected": "SNACK"},
+    {"input": "조식", "expected": "BREAKFAST"},
+    {"input": "아침 겸 점심", "expected": null},
+    {"input": "모르겠어요", "expected": null}
+  ]
+}

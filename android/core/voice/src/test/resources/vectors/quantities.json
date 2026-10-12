@@ -1,0 +1,30 @@
+{
+  "description": "섭취량(DREC-04): 한 그릇=1, 반=0.5, 두=2, 많이=1.5, 200g=그대로. 불명확하면 1인분 + 확인 질문(confirm).",
+  "cases": [
+    {"input": "한 그릇", "expected": {"ratio": 1.0}},
+    {"input": "한그릇", "expected": {"ratio": 1.0}},
+    {"input": "1인분", "expected": {"ratio": 1.0}},
+    {"input": "일 인분", "expected": {"ratio": 1.0}},
+    {"input": "반 그릇", "expected": {"ratio": 0.5}},
+    {"input": "반그릇", "expected": {"ratio": 0.5}},
+    {"input": "반 공기", "expected": {"ratio": 0.5}},
+    {"input": "반", "expected": {"ratio": 0.5}},
+    {"input": "절반", "expected": {"ratio": 0.5}},
+    {"input": "두 그릇", "expected": {"ratio": 2.0}},
+    {"input": "세 개", "expected": {"ratio": 3.0}},
+    {"input": "두개", "expected": {"ratio": 2.0}},
+    {"input": "한 그릇 반", "expected": {"ratio": 1.5}},
+    {"input": "1.5인분", "expected": {"ratio": 1.5}},
+    {"input": "일 점 오 인분", "expected": {"ratio": 1.5}},
+    {"input": "많이", "expected": {"ratio": 1.5}},
+    {"input": "곱빼기", "expected": {"ratio": 1.5}},
+    {"input": "커피 한 잔", "expected": {"ratio": 1.0}},
+    {"input": "200g", "expected": {"grams": 200.0}},
+    {"input": "200 그램", "expected": {"grams": 200.0}},
+    {"input": "이백 그램", "expected": {"grams": 200.0}},
+    {"input": "삼백 밀리리터", "expected": {"grams": 300.0}},
+    {"input": "조금", "expected": {"ratio": 1.0, "confirm": true}},
+    {"input": "적당히", "expected": {"ratio": 1.0, "confirm": true}},
+    {"input": "", "expected": {"ratio": 1.0, "confirm": true}}
+  ]
+}

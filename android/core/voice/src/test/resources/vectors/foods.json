@@ -1,0 +1,20 @@
+{
+  "description": "음식 이름 매칭(사전 + 자모 유사도). 사전에 없으면 null(서버 검색으로 넘김).",
+  "cases": [
+    {"input": "떡볶이", "expected": "떡볶이"},
+    {"input": "떡뽁이", "expected": "떡볶이"},
+    {"input": "떡보끼", "expected": "떡볶이"},
+    {"input": "김치 찌개", "expected": "김치찌개"},
+    {"input": "김치 찌게", "expected": "김치찌개"},
+    {"input": "된장찌게", "expected": "된장찌개"},
+    {"input": "비빔빱", "expected": "비빔밥"},
+    {"input": "자장면", "expected": "짜장면"},
+    {"input": "삶은 계란", "expected": "삶은 달걀"},
+    {"input": "아메리카노", "expected": "커피"},
+    {"input": "공기밥", "expected": "밥"},
+    {"input": "돈까스", "expected": "돈가스"},
+    {"input": "고구마", "expected": "고구마"},
+    {"input": "마라탕", "expected": null},
+    {"input": "스테이크", "expected": null}
+  ]
+}

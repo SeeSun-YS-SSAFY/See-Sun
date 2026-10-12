@@ -1,0 +1,30 @@
+{
+  "description": "기본 신체정보(ONB-03): 키 100~250cm, 몸무게 20~300kg, 성별 M/F, 이름 1~20자. 범위 밖이면 null.",
+  "cases": [
+    {"field": "height", "input": "백칠십육", "expected": 176},
+    {"field": "height", "input": "백칠십육 센티미터예요", "expected": 176},
+    {"field": "height", "input": "176cm", "expected": 176},
+    {"field": "height", "input": "키는 백 육십 이 센티", "expected": 162},
+    {"field": "height", "input": "일 미터 칠십육", "expected": 176},
+    {"field": "height", "input": "1미터 65", "expected": 165},
+    {"field": "height", "input": "오십", "expected": null},
+    {"field": "height", "input": "삼백", "expected": null},
+    {"field": "weight", "input": "칠십오", "expected": 75},
+    {"field": "weight", "input": "칠십오 킬로", "expected": 75},
+    {"field": "weight", "input": "칠십오킬로그램이에요", "expected": 75},
+    {"field": "weight", "input": "70.5kg", "expected": 70.5},
+    {"field": "weight", "input": "칠십 점 오 키로", "expected": 70.5},
+    {"field": "weight", "input": "육십 킬로 반", "expected": 60.5},
+    {"field": "weight", "input": "십오", "expected": null},
+    {"field": "gender", "input": "남자", "expected": "M"},
+    {"field": "gender", "input": "남성입니다", "expected": "M"},
+    {"field": "gender", "input": "저는 여자예요", "expected": "F"},
+    {"field": "gender", "input": "여", "expected": "F"},
+    {"field": "gender", "input": "잘 모르겠어요", "expected": null},
+    {"field": "name", "input": "홍길동", "expected": "홍길동"},
+    {"field": "name", "input": "제 이름은 홍길동입니다", "expected": "홍길동"},
+    {"field": "name", "input": "김영희예요", "expected": "김영희"},
+    {"field": "name", "input": "이철수라고 합니다", "expected": "이철수"},
+    {"field": "name", "input": "", "expected": null}
+  ]
+}

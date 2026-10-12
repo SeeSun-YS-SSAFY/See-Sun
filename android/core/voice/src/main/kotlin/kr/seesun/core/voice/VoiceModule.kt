@@ -1,0 +1,35 @@
+package kr.seesun.core.voice
+
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import kr.seesun.core.voice.parse.FoodMatcher
+import kr.seesun.core.voice.parse.MealUtteranceParser
+import kr.seesun.core.voice.recognition.AndroidSpeechInput
+import kr.seesun.core.voice.recognition.SpeechInput
+import kr.seesun.core.voice.tts.AndroidGuidanceSpeaker
+import kr.seesun.core.voice.tts.Speaker
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal abstract class VoiceBindings {
+    @Binds
+    abstract fun bindSpeechInput(impl: AndroidSpeechInput): SpeechInput
+
+    @Binds
+    abstract fun bindSpeaker(impl: AndroidGuidanceSpeaker): Speaker
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal object VoiceProviders {
+    @Provides
+    @Singleton
+    fun foodMatcher(): FoodMatcher = FoodMatcher()
+
+    @Provides
+    fun mealUtteranceParser(matcher: FoodMatcher): MealUtteranceParser = MealUtteranceParser(matcher)
+}

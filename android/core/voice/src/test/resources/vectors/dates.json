@@ -1,0 +1,30 @@
+{
+  "description": "날짜(03 §5). 기준일 2026-10-12(월). 실존하지 않는 날짜는 null.",
+  "today": "2026-10-12",
+  "cases": [
+    {"input": "오늘", "expected": "2026-10-12"},
+    {"input": "어제", "expected": "2026-10-11"},
+    {"input": "어저께", "expected": "2026-10-11"},
+    {"input": "그제", "expected": "2026-10-10"},
+    {"input": "그저께", "expected": "2026-10-10"},
+    {"input": "내일", "expected": "2026-10-13"},
+    {"input": "모레", "expected": "2026-10-14"},
+    {"input": "삼일 전", "expected": "2026-10-09"},
+    {"input": "3일 전", "expected": "2026-10-09"},
+    {"input": "지난주 금요일", "expected": "2026-10-09"},
+    {"input": "이번 주 수요일", "expected": "2026-10-14"},
+    {"input": "10월 5일", "expected": "2026-10-05"},
+    {"input": "시월 오일", "expected": "2026-10-05"},
+    {"input": "유월 이십일", "expected": "2026-06-20"},
+    {"input": "1990년 5월 1일", "expected": "1990-05-01"},
+    {"input": "천구백구십년 오월 일일", "expected": "1990-05-01"},
+    {"input": "구십년 오월 일일", "expected": "1990-05-01"},
+    {"input": "이천오년 삼월 십일일", "expected": "2005-03-11"},
+    {"input": "1990-05-01", "expected": "1990-05-01"},
+    {"input": "1990.5.1", "expected": "1990-05-01"},
+    {"input": "19900501", "expected": "1990-05-01"},
+    {"input": "2월 30일", "expected": null},
+    {"input": "1999년 12월 34일", "expected": null},
+    {"input": "점심", "expected": null}
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "description": "한국어 수사 해석(03 §5). 띄어 말한 수도 하나로 합친다. 수가 아니면 null.",
+  "cases": [
+    {"input": "176", "expected": 176},
+    {"input": "70.5", "expected": 70.5},
+    {"input": "1,200", "expected": 1200},
+    {"input": "백칠십육", "expected": 176},
+    {"input": "백 칠십 육", "expected": 176},
+    {"input": "칠십오", "expected": 75},
+    {"input": "삼백", "expected": 300},
+    {"input": "천이백", "expected": 1200},
+    {"input": "이만삼천", "expected": 23000},
+    {"input": "십일", "expected": 11},
+    {"input": "1천2백", "expected": 1200},
+    {"input": "영", "expected": 0},
+    {"input": "칠십 점 오", "expected": 70.5},
+    {"input": "칠십점오", "expected": 70.5},
+    {"input": "일 점 오", "expected": 1.5},
+    {"input": "하나", "expected": 1},
+    {"input": "한", "expected": 1},
+    {"input": "두", "expected": 2},
+    {"input": "세", "expected": 3},
+    {"input": "열두", "expected": 12},
+    {"input": "스물다섯", "expected": 25},
+    {"input": "서른", "expected": 30},
+    {"input": "아흔아홉", "expected": 99},
+    {"input": "일이삼", "expected": null},
+    {"input": "오이", "expected": null},
+    {"input": "사과", "expected": null},
+    {"input": "오늘", "expected": null},
+    {"input": "삼겹살", "expected": null}
+  ]
+}
