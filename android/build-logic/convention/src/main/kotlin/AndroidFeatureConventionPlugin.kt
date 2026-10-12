@@ -7,6 +7,8 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
         with(target) {
             pluginManager.apply("seesun.android.library.compose")
             pluginManager.apply("seesun.hilt")
+            // 타입 안전 내비게이션 경로(@Serializable)
+            pluginManager.apply("org.jetbrains.kotlin.plugin.serialization")
             dependencies.apply {
                 add("implementation", project(":core:designsystem"))
                 add("implementation", project(":core:a11y"))
@@ -14,6 +16,7 @@ class AndroidFeatureConventionPlugin : Plugin<Project> {
                 add("implementation", libs.lib("androidx-lifecycle-viewmodel-compose"))
                 add("implementation", libs.lib("androidx-hilt-navigation-compose"))
                 add("implementation", libs.lib("androidx-navigation-compose"))
+                add("implementation", libs.lib("kotlinx-serialization-json"))
             }
         }
     }

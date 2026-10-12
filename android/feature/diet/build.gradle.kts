@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "kr.seesun.feature.diet"
 }
+
+dependencies {
+    implementation(project(":core:data"))
+}

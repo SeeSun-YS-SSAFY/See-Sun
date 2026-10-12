@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import kr.seesun.core.a11y.politeLiveRegion
 import kr.seesun.core.a11y.screenHeading
 import kr.seesun.core.a11y.screenPane
 import kr.seesun.core.designsystem.R
@@ -111,5 +113,18 @@ fun BodyText(text: String, modifier: Modifier = Modifier, emphasis: Boolean = fa
         style = SeeSunTheme.typography.body,
         color = if (emphasis) SeeSunTheme.colors.emphasis else SeeSunTheme.colors.onBackground,
         modifier = modifier.fillMaxWidth(),
+    )
+}
+
+/**
+ * 상태 안내 글자(저장 완료·인식 실패 등). 값이 바뀌면 TalkBack이 읽는다(liveRegion).
+ * 비어 있을 때는 낭독 대상에서 빠진다(레이블 없는 빈 항목을 만들지 않음).
+ */
+@Composable
+fun LiveStatusText(text: String, modifier: Modifier = Modifier, emphasis: Boolean = true) {
+    BodyText(
+        text = text,
+        emphasis = emphasis,
+        modifier = modifier.then(if (text.isEmpty()) Modifier.clearAndSetSemantics { } else Modifier.politeLiveRegion()),
     )
 }
