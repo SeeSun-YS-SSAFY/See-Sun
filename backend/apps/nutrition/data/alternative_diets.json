@@ -1,0 +1,25 @@
+{
+  "_comment": "알레르기 대체 식단 19종 — 2차 의뢰서 §5-2 표(원문 19행). TODO(client-data): 첨부「알레르기 대체 식단」 원본 수령 시 교체·보완(영양사 검수 권장).",
+  "notice": "개인의 알레르기 진단 결과를 우선 확인하세요.",
+  "diets": [
+    {"allergen": "EGG", "caution_foods": ["달걀 요리"], "substitutes": ["두부", "황태", "연어", "고등어"], "menus": ["황태 두부국", "생선구이"]},
+    {"allergen": "MILK", "caution_foods": ["우유", "요거트"], "substitutes": ["두유", "오트밀크", "아몬드밀크", "락토프리 우유"], "menus": ["두유 크림 파스타", "코코넛밀크 커리"]},
+    {"allergen": "BUCKWHEAT", "caution_foods": ["막국수", "소바", "메밀전병"], "substitutes": ["쌀", "감자", "고구마", "도토리묵"], "menus": ["쌀국수", "잔치국수", "감자전"]},
+    {"allergen": "PEANUT", "caution_foods": ["땅콩버터", "땅콩소스", "마라탕"], "substitutes": ["병아리콩", "검은콩", "두부", "참깨"], "menus": ["병아리콩 샐러드", "두부구이"]},
+    {"allergen": "SOYBEAN", "caution_foods": ["두부조림", "된장국", "두유"], "substitutes": ["닭가슴살", "소고기", "생선", "달걀"], "menus": ["소고기무국", "오트밀크"]},
+    {"allergen": "WHEAT", "caution_foods": ["빵", "면류", "양념장"], "substitutes": ["쌀국수면", "라이스페이퍼", "감자", "고구마"], "menus": ["쌀국수", "찐 감자"]},
+    {"allergen": "PINE_NUT", "caution_foods": ["잣죽", "잣 페스토"], "substitutes": ["해바라기씨", "호박씨", "참깨"], "menus": ["호박죽", "해바라기씨 페스토 파스타"]},
+    {"allergen": "WALNUT", "caution_foods": ["호두과자", "견과류 믹스", "그래놀라"], "substitutes": ["들깨", "참깨", "해바라기씨"], "menus": ["들깨버섯탕", "참깨소스 샐러드"]},
+    {"allergen": "CRAB", "caution_foods": ["게장", "게살볶음밥", "게맛살"], "substitutes": ["닭가슴살", "연어", "두부", "버섯"], "menus": ["닭가슴살 볶음밥", "연어덮밥"]},
+    {"allergen": "SHRIMP", "caution_foods": ["새우볶음밥", "새우파스타"], "substitutes": ["닭고기", "흰살생선", "버섯"], "menus": ["닭가슴살볶음밥", "닭고기크림파스타"]},
+    {"allergen": "SQUID", "caution_foods": ["오징어 요리"], "substitutes": ["흰살생선", "바지락", "홍합", "새우"], "menus": ["흰살생선 전", "어패류 된장찌개"]},
+    {"allergen": "MACKEREL", "caution_foods": ["고등어구이", "고등어조림"], "substitutes": ["닭고기", "두부", "콩류"], "menus": ["두부조림", "닭가슴살 구이"]},
+    {"allergen": "SHELLFISH", "caution_foods": ["굴", "홍합", "바지락", "굴소스", "해물칼국수"], "substitutes": ["흰살생선", "닭고기", "두부", "버섯"], "menus": ["닭칼국수", "버섯두부전골"]},
+    {"allergen": "PEACH", "caution_foods": ["복숭아 요거트", "복숭아 음료", "복숭아잼"], "substitutes": ["사과", "배", "바나나", "블루베리"], "menus": ["바나나 팬케이크", "블루베리 오트밀"]},
+    {"allergen": "TOMATO", "caution_foods": ["토마토샐러드", "토마토소스"], "substitutes": ["파프리카", "당근", "비트"], "menus": ["파프리카샐러드", "비트소스"]},
+    {"allergen": "CHICKEN", "caution_foods": ["닭고기 요리"], "substitutes": ["돼지고기 안심", "소고기 우둔살"], "menus": ["돼지 안심 장조림", "맑은 소고기무국"]},
+    {"allergen": "PORK", "caution_foods": ["제육볶음", "삼겹살"], "substitutes": ["소고기", "닭고기", "두부", "버섯"], "menus": ["닭볶음탕", "소불고기"]},
+    {"allergen": "BEEF", "caution_foods": ["사골육수", "불고기", "장조림"], "substitutes": ["닭고기", "돼지고기", "생선", "두부"], "menus": ["닭가슴살 덮밥", "두부조림"]},
+    {"allergen": "SULFITE", "caution_foods": ["와인", "건조과일", "절임류"], "substitutes": ["신선한 과일", "신선한 채소", "무첨가 건과일"], "menus": ["구운 채소", "생과일 샌드위치"]}
+  ]
+}
