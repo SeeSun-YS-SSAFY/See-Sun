@@ -1,0 +1,3985 @@
+openapi: 3.0.3
+info:
+  title: See:Sun API
+  version: 2.0.0
+  description: 시각장애인·저시력인을 위한 웰니스 앱 See:Sun(시선) 백엔드 API. 2차(식단·온보딩) 기준.
+paths:
+  /api/v1/allergens/:
+    get:
+      operationId: allergens_list
+      description: 알레르기 마스터 19종(지정 순서)
+      summary: 알레르기 목록
+      tags:
+      - Health
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Allergen'
+          description: ''
+  /api/v1/auth/firebase/:
+    post:
+      operationId: auth_firebase_create
+      description: '오류: 400 VALIDATION_ERROR/BIRTHDATE_REQUIRED/PHONE_REQUIRED · 401
+        INVALID_ID_TOKEN · 403 AGE_RESTRICTED/ACCOUNT_DISABLED · 503 AUTH_NOT_CONFIGURED'
+      summary: Firebase 전화번호 인증 → 앱 JWT
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FirebaseExchangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FirebaseExchangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FirebaseExchangeRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FirebaseExchangeResponse'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      description: Refresh Token을 블랙리스트에 등록하여 로그아웃합니다.
+      summary: 로그아웃
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                Success:
+                  value:
+                    message: 로그아웃이 완료되었습니다.
+                    tts_message: 로그아웃이 완료되었습니다. 다시 로그인해주세요.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                InvalidToken:
+                  value:
+                    error: INVALID_TOKEN
+                    tts_message: 유효하지 않은 토큰입니다.
+                  summary: Invalid Token
+          description: ''
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/consents/documents/:
+    get:
+      operationId: consents_documents_list
+      description: 현재 동의 문서 목록(가입 전 화면에서 읽으므로 인증 불필요)
+      summary: 동의 문서 목록
+      tags:
+      - Consents
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsentDocument'
+          description: ''
+  /api/v1/diet/evaluate/:
+    post:
+      operationId: diet_evaluate_create
+      description: '확인 화면용 평가(저장 안 함): 섭취량 환산·당류·탄수화물 지표·알레르기·경고'
+      summary: 식사 평가(경고·지표)
+      tags:
+      - Meals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EvaluateRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EvaluateRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EvaluateRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvaluateResponse'
+          description: ''
+  /api/v1/diet/score/:
+    get:
+      operationId: diet_score_retrieve
+      summary: 오늘의 식단 점수(일별 리포트)
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: YYYY-MM-DD, 기본 오늘
+      tags:
+      - Diet
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyReport'
+          description: ''
+  /api/v1/diet/stats/:
+    get:
+      operationId: diet_stats_retrieve
+      summary: 주간·월간 리포트
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: YYYY-MM-DD (주간은 그 주 월요일로 맞춤)
+      - in: query
+        name: period
+        schema:
+          type: string
+          enum:
+          - month
+          - week
+      tags:
+      - Diet
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+          description: ''
+  /api/v1/exercise-sessions/bulk/:
+    post:
+      operationId: exercise_sessions_bulk_create
+      description: sessions[] = {client_uuid, exercise_name|playlist_id, mode, started_at,
+        ended_at, status, items[]}. 10초 미만이거나 완료되지 않은 세션은 is_valid=false로 저장합니다.
+      summary: 운동 세션 일괄 업로드(멱등)
+      tags:
+      - Exercise
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionBulkRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SessionBulkRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SessionBulkRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionBulkResponse'
+          description: ''
+  /api/v1/exercise/weekly/:
+    get:
+      operationId: exercise_weekly_retrieve
+      summary: 주간 운동 리포트
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: YYYY-MM-DD(그 주 월요일로 맞춤), 기본 이번 주
+      tags:
+      - Exercise
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyExercise'
+          description: ''
+  /api/v1/exercises/{exercise_id}/:
+    get:
+      operationId: exercises_retrieve
+      description: 운동 ID를 받아 상세 정보를 반환합니다.
+      summary: 운동 상세 정보 조회
+      parameters:
+      - in: path
+        name: exercise_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseDetail'
+          description: ''
+        '404':
+          description: Exercise not found
+  /api/v1/exercises/{exercise_id}/audio/:
+    get:
+      operationId: exercises_audio_retrieve
+      description: |-
+        단일 운동의 병합된 오디오 파일 반환 API
+
+        - 병합된 파일이 있으면 반환
+        - 없으면 실시간 병합 후 반환
+      summary: 운동 안내 병합 음성(1차)
+      parameters:
+      - in: path
+        name: exercise_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/exercises/category/:
+    get:
+      operationId: exercises_category_retrieve
+      description: 모든 운동 카테고리 목록을 반환합니다.
+      summary: 운동 카테고리 목록 조회
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExerciseCategory'
+              examples:
+                Success:
+                  value:
+                  - - category_id: '1'
+                      display_name: 근력 운동
+                    - category_id: '2'
+                      display_name: 유산소 운동
+          description: ''
+  /api/v1/exercises/category/{category_id}/:
+    get:
+      operationId: exercises_category_exercises
+      description: 특정 카테고리 ID를 받아 해당 카테고리 정보와 운동 목록(픽토그램 포함)을 반환합니다.
+      summary: 카테고리별 운동 목록 조회
+      parameters:
+      - in: path
+        name: category_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: Category not found
+  /api/v1/exercises/frequent/:
+    get:
+      operationId: exercises_frequent_retrieve
+      description: |-
+        자주 하는 운동 목록 API (SETUP_002)
+        본인의 완료된 유효 세션(10초 이상)을 운동 이름 기준으로 집계해 많이 한 순서로 반환
+      summary: 자주 하는 운동 목록
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FrequentExerciseList'
+          description: ''
+  /api/v1/exercises/google-tts/:
+    post:
+      operationId: exercises_google_tts_create
+      description: Google Cloud TTS를 이용하여 텍스트를 오디오로 변환하여 반환하는 API
+      summary: 텍스트 음성 변환(1차)
+      tags:
+      - Exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TTSTextRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TTSTextRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TTSTextRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/exercises/playlist/:
+    get:
+      operationId: exercises_playlist_list
+      description: 사용자가 생성한 모든 활성 플레이리스트 목록을 반환합니다.
+      summary: 내 플레이리스트 목록 조회
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Playlist'
+          description: ''
+  /api/v1/exercises/playlist/{playlist_id}/:
+    get:
+      operationId: exercises_playlist_retrieve
+      description: 플레이리스트 ID를 받아 상세 정보(운동 목록 포함)를 반환합니다. 본인의 플레이리스트만 조회 가능합니다.
+      summary: 플레이리스트 상세 조회
+      parameters:
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+          description: ''
+        '404':
+          description: Playlist not found or permission denied
+    patch:
+      operationId: exercises_playlist_partial_update
+      description: 플레이리스트의 제목 등을 수정합니다. (운동 목록 수정 아님)
+      summary: 플레이리스트 기본 정보 수정
+      parameters:
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+          description: ''
+        '404':
+          description: Playlist not found
+    delete:
+      operationId: exercises_playlist_destroy
+      description: 플레이리스트를 삭제합니다.
+      summary: 플레이리스트 삭제
+      parameters:
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Playlist deleted
+        '404':
+          description: Playlist not found
+  /api/v1/exercises/playlist/{playlist_id}/audio/:
+    get:
+      operationId: exercises_playlist_audio_retrieve
+      description: |-
+        루틴 화면 진입 시 동적 TTS 오디오 생성 API
+
+        - 운동 목록이 없으면: "{루틴이름} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
+        - 운동 목록이 있으면: "{루틴이름} 화면입니다. 아래에 목록 중 운동을 선택해주세요."
+      summary: 루틴 화면 안내 음성(1차)
+      parameters:
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/exercises/playlist/{playlist_id}/items/:
+    post:
+      operationId: exercises_playlist_items_create
+      description: 특정 플레이리스트에 운동을 추가합니다.
+      summary: 플레이리스트에 운동 추가
+      parameters:
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistItemAddRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlaylistItemAddRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlaylistItemAddRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+          description: ''
+        '404':
+          description: Playlist not found
+  /api/v1/exercises/playlist/{playlist_id}/items/{item_id}/:
+    patch:
+      operationId: exercises_playlist_items_partial_update
+      description: 운동 항목의 세트 수, 횟수, 순서 등을 수정합니다.
+      summary: 플레이리스트 항목 상세 수정
+      parameters:
+      - in: path
+        name: item_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistItemUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistItemUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPlaylistItemUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+          description: ''
+        '404':
+          description: Item not found
+    delete:
+      operationId: exercises_playlist_items_destroy
+      description: 플레이리스트에서 특정 운동 항목을 삭제합니다.
+      summary: 플레이리스트 항목 삭제
+      parameters:
+      - in: path
+        name: item_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: playlist_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Playlist'
+          description: ''
+        '404':
+          description: Item not found
+  /api/v1/exercises/playlist/create/:
+    post:
+      operationId: exercises_playlist_create_create
+      description: 제목과 운동 목록을 받아 새로운 루틴을 생성합니다.
+      summary: 운동 루틴 생성
+      tags:
+      - Exercises
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaylistCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlaylistCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlaylistCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlaylistCreate'
+          description: ''
+  /api/v1/favorites/foods/:
+    get:
+      operationId: favorites_foods_list
+      summary: 선호 식단 목록
+      tags:
+      - Recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FoodSummary'
+          description: ''
+  /api/v1/favorites/foods/{food_id}/:
+    post:
+      operationId: favorites_foods_create
+      summary: 선호 식단 저장
+      parameters:
+      - in: path
+        name: food_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodSummary'
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodSummary'
+          description: ''
+    delete:
+      operationId: favorites_foods_destroy
+      summary: 선호 식단 삭제
+      parameters:
+      - in: path
+        name: food_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/foods/{food_id}/:
+    get:
+      operationId: foods_retrieve
+      summary: 음식 상세
+      parameters:
+      - in: path
+        name: food_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Foods
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodDetail'
+          description: ''
+  /api/v1/foods/barcode/{code}/:
+    get:
+      operationId: foods_barcode_retrieve
+      description: 바코드 연계 정보가 적재된 음식만 조회됩니다(식품안전나라 C005 연계는 후속). 없으면 404 → 영양성분표 촬영
+        안내.
+      summary: 바코드로 음식 조회
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+        required: true
+      tags:
+      - Foods
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodDetail'
+          description: ''
+  /api/v1/foods/search/:
+    get:
+      operationId: foods_search_retrieve
+      description: 음식 이름 검색(영양 DB)
+      summary: 음식 검색
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: 최대 50, 기본 20
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: 음식 이름(음성 인식 결과)
+        required: true
+      tags:
+      - Foods
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FoodSearchResult'
+          description: ''
+  /api/v1/log/session/{session_id}/end/:
+    post:
+      operationId: log_session_end_create
+      description: 진행 중인 운동 세션을 종료하고 결과(소수점 시간 포함)를 저장합니다. 10초 미만인 경우 유효하지 않은 세션으로
+        표시됩니다.
+      summary: 운동 세션 종료
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Logs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseSession'
+          description: ''
+        '404':
+          description: Session not found
+  /api/v1/log/session/{session_id}/ping/:
+    post:
+      operationId: log_session_ping_create
+      description: 앱이 실행 중임을 알리기 위해 주기적으로 호출합니다. last_ping_at을 갱신합니다.
+      summary: 세션 Ping
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Logs
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: Ping Success
+  /api/v1/log/session/start/:
+    post:
+      operationId: log_session_start_create
+      description: 새로운 운동 세션을 시작하고 session_id를 발급받습니다.
+      summary: 운동 세션 시작
+      tags:
+      - Logs
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseSessionStartRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ExerciseSessionStartRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ExerciseSessionStartRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExerciseSession'
+          description: Session Created
+  /api/v1/me/:
+    get:
+      operationId: me_retrieve
+      summary: 내 정보
+      tags:
+      - Me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+    patch:
+      operationId: me_partial_update
+      description: 키·몸무게·성별·생년월일·목표가 바뀌면 목표 칼로리를 다시 계산합니다.
+      summary: 내 정보 수정
+      tags:
+      - Me
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMeUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Me'
+          description: ''
+    delete:
+      operationId: me_destroy
+      summary: 회원 탈퇴(전체 파기)
+      tags:
+      - Me
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/me/consents/:
+    get:
+      operationId: me_consents_retrieve
+      description: 내 동의 상태 조회·기록·철회
+      summary: 내 동의 상태
+      tags:
+      - Consents
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentStatus'
+          description: ''
+    post:
+      operationId: me_consents_create
+      description: 철회는 agreed=false. 민감정보(SENSITIVE) 철회 시 건강정보와 질환 기반 점수를 즉시 삭제합니다.
+      summary: 동의·철회 기록
+      tags:
+      - Consents
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsentDecisionListRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ConsentDecisionListRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ConsentDecisionListRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConsentStatus'
+          description: ''
+  /api/v1/me/health/:
+    get:
+      operationId: me_health_retrieve
+      description: 질환·알레르기·목표(민감정보 동의 필요)
+      summary: 건강 설정 조회
+      tags:
+      - Health
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthProfile'
+          description: ''
+    put:
+      operationId: me_health_update
+      description: diseases·allergens·other_allergies를 통째로 바꿉니다. 값은 암호화 저장.
+      summary: 건강 설정 저장
+      tags:
+      - Health
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/HealthProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/HealthProfileRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthProfile'
+          description: ''
+  /api/v1/meals/:
+    get:
+      operationId: meals_list
+      summary: 식사 기록 조회
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: YYYY-MM-DD (date 대신 기간)
+      - in: query
+        name: to
+        schema:
+          type: string
+        description: YYYY-MM-DD (최대 31일)
+      tags:
+      - Meals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Meal'
+          description: ''
+  /api/v1/meals/{meal_id}/:
+    get:
+      operationId: meals_retrieve
+      summary: 식사 기록 상세
+      parameters:
+      - in: path
+        name: meal_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Meals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meal'
+          description: ''
+    patch:
+      operationId: meals_partial_update
+      summary: 식사 기록 수정
+      parameters:
+      - in: path
+        name: meal_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Meals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedMealUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedMealUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedMealUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meal'
+          description: ''
+    delete:
+      operationId: meals_destroy
+      summary: 식사 기록 삭제
+      parameters:
+      - in: path
+        name: meal_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Meals
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/meals/bulk/:
+    post:
+      operationId: meals_bulk_create
+      description: meals[]는 MealInput(client_uuid, date, meal_type, input_method,
+        recorded_at, items[]) 목록. 건별로 created/duplicate/invalid를 돌려줍니다.
+      summary: 식사 기록 일괄 저장(멱등)
+      tags:
+      - Meals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MealBulkRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MealBulkRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MealBulkRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MealBulkResponse'
+          description: ''
+  /api/v1/recommendations/:
+    get:
+      operationId: recommendations_retrieve
+      summary: 추천 카드
+      parameters:
+      - in: query
+        name: key
+        schema:
+          type: string
+        description: CARB|PROTEIN|FAT · 알레르기 코드 · DIABETES|HYPERTENSION
+      - in: query
+        name: type
+        schema:
+          type: string
+          enum:
+          - allergy
+          - disease
+          - favorite
+          - nutrient
+      tags:
+      - Recommendations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecommendationResponse'
+          description: ''
+  /api/v1/stt/{mode}/:
+    post:
+      operationId: stt_create
+      description: "\n        mode에 따라 다른 처리 로직 수행:\n        - form: 텍스트 정규화 (이름,
+        키, 몸무게 등 추출)\n        - listen: 로컬 웨이크워드 감지 (Gemini 미사용)\n        - command:
+        일반 시스템 명령 해석\n        - full_command: 운동 제어 명령 해석\n        "
+      summary: 통합 STT API
+      parameters:
+      - in: path
+        name: mode
+        schema:
+          type: string
+        required: true
+      tags:
+      - stt
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                userinfo_stt:
+                  type: string
+                  format: binary
+                field:
+                  type: string
+                  description: form 모드일 때 필드명 (height, weight 등)
+              required:
+              - userinfo_stt
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mode:
+                    type: string
+                  stt_raw:
+                    type: string
+                  normalized:
+                    type: string
+                    nullable: true
+                  raw:
+                    type: string
+                    nullable: true
+                  wake_detected:
+                    type: boolean
+                    nullable: true
+                  action:
+                    type: string
+                    nullable: true
+          description: ''
+  /api/v1/users/auth/login/:
+    post:
+      operationId: users_auth_login_create
+      description: 전화번호와 PIN 번호로 로그인합니다.
+      summary: 로그인
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  user:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        format: uuid
+                      display_name:
+                        type: string
+                      profile_completed:
+                        type: boolean
+                  tts_message:
+                    type: string
+              examples:
+                Success:
+                  value:
+                    access_token: eyJ0eXAiOiJKV1QiLCJhbGc...
+                    refresh_token: eyJ0eXAiOiJKV1QiLCJhbGc...
+                    expires_in: 900
+                    user:
+                      user_id: 550e8400-e29b-41d4-a716-446655440000
+                      display_name: 홍길동
+                      profile_completed: true
+                    tts_message: 로그인이 완료되었습니다. 메인 페이지로 이동합니다.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                InvalidCredentials:
+                  value:
+                    error: INVALID_CREDENTIALS
+                    tts_message: 로그인이 실패했습니다. 전화번호 또는 PIN 번호를 확인해주세요.
+                  summary: Invalid Credentials
+          description: ''
+  /api/v1/users/auth/logout/:
+    post:
+      operationId: users_auth_logout_create
+      description: Refresh Token을 블랙리스트에 등록하여 로그아웃합니다.
+      summary: 로그아웃
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                Success:
+                  value:
+                    message: 로그아웃이 완료되었습니다.
+                    tts_message: 로그아웃이 완료되었습니다. 다시 로그인해주세요.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                InvalidToken:
+                  value:
+                    error: INVALID_TOKEN
+                    tts_message: 유효하지 않은 토큰입니다.
+                  summary: Invalid Token
+          description: ''
+  /api/v1/users/auth/oauth/google/:
+    post:
+      operationId: users_auth_oauth_google_create
+      description: Google OAuth2 Code를 받아 JWT 토큰을 발급합니다. 'code'는 필수이며, 테스트 환경에 따라
+        'redirect_uri'를 설정할 수 있습니다.
+      summary: Google 소셜 로그인
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Google Authorization Code
+                device_hash:
+                  type: string
+                  description: 기기 식별 해시 (선택)
+                redirect_uri:
+                  type: string
+                  description: 'Code 발급에 사용된 Redirect URI (기본값: postmessage)'
+              required:
+              - code
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  is_new_user:
+                    type: boolean
+                  user:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      display_name:
+                        type: string
+                      email:
+                        type: string
+                      profile_completed:
+                        type: boolean
+                  tts_message:
+                    type: string
+                example:
+                  access_token: jwt_token_example
+                  refresh_token: jwt_token_example
+                  expires_in: 900
+                  is_new_user: true
+                  user:
+                    user_id: uuid-string
+                    display_name: 홍길동
+                    email: user@gmail.com
+                    profile_completed: false
+                  tts_message: Google 로그인이 완료되었습니다.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  tts_message:
+                    type: string
+                example:
+                  error: OAUTH_FAILED
+                  tts_message: Google 계정 인증에 실패했습니다. 다시 시도해 주세요.
+          description: ''
+  /api/v1/users/auth/signup/:
+    post:
+      operationId: users_auth_signup_create
+      description: 이름, 전화번호, PIN 번호로 회원가입을 진행합니다.
+      summary: 회원가입
+      tags:
+      - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                  phone_number_masked:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                Success:
+                  value:
+                    user_id: 550e8400-e29b-41d4-a716-446655440000
+                    name: 홍길동
+                    phone_number_masked: 010-****-1234
+                    tts_message: 회원가입이 완료되었습니다. 로그인 화면으로 이동합니다.
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: object
+                    additionalProperties:
+                      type: array
+                      items:
+                        type: string
+              examples:
+                ValidationError:
+                  value:
+                    errors:
+                      name:
+                      - 이름을 입력해주세요.
+                      phone_number:
+                      - 올바른 전화번호 형식이 아닙니다.
+                      pin_number:
+                      - PIN 번호는 4자리 숫자여야 합니다.
+                  summary: Validation Error
+          description: ''
+        '409':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  tts_message:
+                    type: string
+              examples:
+                PhoneNumberAlreadyExists:
+                  value:
+                    error: PHONE_NUMBER_ALREADY_EXISTS
+                    tts_message: 이미 가입된 전화번호입니다.
+                  summary: Phone Number Already Exists
+          description: ''
+  /api/v1/users/auth/token/refresh/:
+    post:
+      operationId: users_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/users/profile/:
+    get:
+      operationId: users_profile_retrieve
+      description: 현재 로그인된 사용자의 프로필 정보를 조회합니다.
+      summary: 내 프로필 조회
+      tags:
+      - Profile
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    delete:
+      operationId: users_profile_destroy
+      description: 사용자 계정을 탈퇴 처리합니다 (Soft Delete).
+      summary: 회원탈퇴
+      tags:
+      - Profile
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: 탈퇴 완료
+  /api/v1/users/profile/completion/:
+    put:
+      operationId: users_profile_completion_update
+      description: 회원가입 후 키, 몸무게, 성별, 생년월일 등 필수 정보를 입력하여 프로필을 완성합니다.
+      summary: 프로필 필수 정보 입력 (완성)
+      tags:
+      - Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileCompletionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileCompletionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileCompletionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileCompletion'
+          description: ''
+  /api/v1/users/profile/edit/:
+    patch:
+      operationId: users_profile_edit_partial_update
+      description: 프로필 정보를 부분적으로 수정합니다.
+      summary: 프로필 정보 수정
+      tags:
+      - Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfileUpdate'
+          description: ''
+components:
+  schemas:
+    AbnormalEndReasonEnum:
+      enum:
+      - NORMAL
+      - APP_KILLED
+      - CRASH
+      - UNKNOWN
+      type: string
+      description: |-
+        * `NORMAL` - 정상 종료
+        * `APP_KILLED` - 앱 종료됨
+        * `CRASH` - 충돌
+        * `UNKNOWN` - 알 수 없음
+    Allergen:
+      type: object
+      properties:
+        code:
+          type: string
+          title: 코드
+          maxLength: 30
+        name_ko:
+          type: string
+          title: 이름
+          maxLength: 50
+        display_order:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: 표시 순서
+      required:
+      - code
+      - display_order
+      - name_ko
+    AmountRequest:
+      type: object
+      properties:
+        ratio:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          description: 1회 제공량 배수(한 그릇=1, 반=0.5, 두=2, 많이=1.5)
+        grams:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+        text:
+          type: string
+          description: '예: 반 그릇'
+          maxLength: 50
+    AppSettings:
+      type: object
+      properties:
+        voice_guide:
+          type: boolean
+        voice_speed:
+          $ref: '#/components/schemas/VoiceSpeedEnum'
+        hw_button_voice:
+          type: boolean
+    AppSettingsRequest:
+      type: object
+      properties:
+        voice_guide:
+          type: boolean
+        voice_speed:
+          $ref: '#/components/schemas/VoiceSpeedEnum'
+        hw_button_voice:
+          type: boolean
+    BlankEnum:
+      enum:
+      - ''
+    BulkResult:
+      type: object
+      properties:
+        client_uuid:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: created|duplicate|invalid
+        id:
+          type: string
+          nullable: true
+        errors:
+          type: object
+          additionalProperties: {}
+      required:
+      - client_uuid
+      - status
+    ConsentDecisionListRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentDecisionRequest'
+      required:
+      - items
+    ConsentDecisionRequest:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConsentTypeEnum'
+        version:
+          type: string
+          minLength: 1
+          maxLength: 32
+        agreed:
+          type: boolean
+        method:
+          $ref: '#/components/schemas/MethodEnum'
+      required:
+      - agreed
+      - method
+      - type
+      - version
+    ConsentDocument:
+      type: object
+      properties:
+        type:
+          allOf:
+          - $ref: '#/components/schemas/ConsentTypeEnum'
+          title: 동의 항목
+        version:
+          type: string
+          title: 버전
+          maxLength: 32
+        title:
+          type: string
+          title: 제목
+          maxLength: 200
+        required:
+          type: boolean
+          title: 필수 여부
+        url:
+          type: string
+          format: uri
+          title: 전문 주소
+          maxLength: 200
+        summary:
+          type: string
+          title: 낭독용 요약
+        effective_at:
+          type: string
+          format: date
+          title: 시행일
+      required:
+      - effective_at
+      - title
+      - type
+      - version
+    ConsentStatus:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConsentStatusItem'
+        all_required_agreed:
+          type: boolean
+        deleted:
+          type: array
+          items:
+            type: string
+          description: 철회로 삭제한 데이터 종류(health_profile, diet_scores)
+      required:
+      - all_required_agreed
+      - items
+    ConsentStatusItem:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/ConsentTypeEnum'
+        title:
+          type: string
+        required:
+          type: boolean
+        current_version:
+          type: string
+        agreed:
+          type: boolean
+        agreed_version:
+          type: string
+          nullable: true
+        agreed_at:
+          type: string
+          format: date-time
+          nullable: true
+        method:
+          type: string
+          nullable: true
+        needs_reconsent:
+          type: boolean
+      required:
+      - agreed
+      - agreed_at
+      - agreed_version
+      - current_version
+      - method
+      - needs_reconsent
+      - required
+      - title
+      - type
+    ConsentTypeEnum:
+      enum:
+      - TOS
+      - PRIVACY
+      - OVERSEAS
+      - SENSITIVE
+      - MARKETING
+      type: string
+      description: |-
+        * `TOS` - 이용약관
+        * `PRIVACY` - 개인정보 수집·이용
+        * `OVERSEAS` - 국외이전 고지
+        * `SENSITIVE` - 건강정보(민감정보) 처리
+        * `MARKETING` - 광고성 정보 수신
+    DailyReport:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        status:
+          type: string
+          description: OK|NO_RECORD|NO_TARGET|INSUFFICIENT_DATA
+        total:
+          type: number
+          format: double
+          nullable: true
+        total_display:
+          type: integer
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+          description: VERY_GOOD|GOOD|FAIR|NEEDS_IMPROVEMENT|CAUTION
+        grade_label:
+          type: string
+        one_liner:
+          type: string
+        components:
+          type: object
+          additionalProperties: {}
+          nullable: true
+          description: macro·kcal·disease·allergy 항목별 점수와 근거
+        reliability:
+          type: string
+          description: OK|LOW|NO_RECORD
+        reliability_reasons:
+          type: array
+          items:
+            type: string
+        suggest_exercise:
+          type: boolean
+        notice:
+          type: string
+          nullable: true
+        algo_version:
+          type: string
+        rules_version:
+          type: string
+        tts_message:
+          type: string
+      required:
+      - algo_version
+      - components
+      - date
+      - grade
+      - grade_label
+      - notice
+      - one_liner
+      - reliability
+      - reliability_reasons
+      - rules_version
+      - status
+      - suggest_exercise
+      - total
+      - total_display
+      - tts_message
+    DayScore:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        total:
+          type: integer
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+      required:
+      - date
+      - grade
+      - total
+    DiseasesEnum:
+      enum:
+      - DIABETES
+      - HYPERTENSION
+      type: string
+      description: |-
+        * `DIABETES` - 당뇨
+        * `HYPERTENSION` - 고혈압
+    EvaluateRequestRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealItemInputRequest'
+      required:
+      - items
+    EvaluateResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvaluatedItem'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        tts_message:
+          type: string
+      required:
+      - items
+      - tts_message
+      - warnings
+    EvaluatedItem:
+      type: object
+      properties:
+        food_id:
+          type: integer
+          nullable: true
+        food_name:
+          type: string
+        amount_ratio:
+          type: number
+          format: double
+        grams:
+          type: number
+          format: double
+          nullable: true
+        amount_text:
+          type: string
+        nutrition_source:
+          type: string
+        is_beverage:
+          type: boolean
+        nutrition:
+          $ref: '#/components/schemas/Nutrition'
+        sugar_index:
+          $ref: '#/components/schemas/SugarIndex'
+        allergens:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoodAllergen'
+      required:
+      - allergens
+      - amount_ratio
+      - amount_text
+      - food_id
+      - food_name
+      - grams
+      - is_beverage
+      - nutrition
+      - nutrition_source
+      - sugar_index
+    ExerciseCategory:
+      type: object
+      description: 운동 카테고리 정보 시리얼라이저
+      properties:
+        category_id:
+          type: string
+          title: 카테고리 ID
+          maxLength: 50
+        display_name:
+          type: string
+          title: 표시 이름
+          maxLength: 255
+      required:
+      - category_id
+      - display_name
+    ExerciseDetail:
+      type: object
+      description: 운동 상세 정보 시리얼라이저 (픽토그램 및 상세 가이드 포함)
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+          readOnly: true
+        exercise_name:
+          type: string
+          title: 운동명
+          maxLength: 255
+        category_name:
+          type: string
+          readOnly: true
+        exercise_description:
+          type: string
+          nullable: true
+          title: 운동 설명
+        first_description:
+          type: string
+          nullable: true
+          title: 준비 자세 설명
+        main_form:
+          type: string
+          nullable: true
+          title: 주요 동작 설명
+        form_description:
+          type: string
+          nullable: true
+          title: 동작 상세 설명
+        stay_form:
+          type: string
+          nullable: true
+          title: 유지 동작 설명
+        fixed_form:
+          type: string
+          nullable: true
+          title: 고정 동작 설명
+        exercise_guide:
+          type: string
+          readOnly: true
+        pictograms:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        merged_audio_url:
+          type: string
+          readOnly: true
+      required:
+      - category_name
+      - exercise_guide
+      - exercise_id
+      - exercise_name
+      - merged_audio_url
+      - pictograms
+    ExerciseSession:
+      type: object
+      description: 운동 세션 시리얼라이저 (조회용)
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+          title: 사용자
+        playlist:
+          type: string
+          format: uuid
+          nullable: true
+          title: 플레이리스트
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/SessionModeEnum'
+          title: 모드
+        exercise_name:
+          type: string
+          nullable: true
+          description: 운동 또는 플레이리스트 이름
+          maxLength: 255
+        started_at:
+          type: string
+          format: date-time
+          title: 시작 시간
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 종료 시간
+        duration_ms:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 소요 시간(ms)
+        duration:
+          type: string
+          nullable: true
+          description: 운동 지속 시간
+        duration_seconds:
+          type: number
+          format: double
+          nullable: true
+          title: 소요 시간(초, 소수점)
+        is_valid:
+          type: boolean
+          title: 유효 여부
+        status:
+          allOf:
+          - $ref: '#/components/schemas/SessionStatusEnum'
+          title: 상태
+        abnormal_end_reason:
+          nullable: true
+          title: 비정상 종료 사유
+          oneOf:
+          - $ref: '#/components/schemas/AbnormalEndReasonEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        segments:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExerciseSessionItem'
+          readOnly: true
+      required:
+      - mode
+      - segments
+      - session_id
+      - user
+    ExerciseSessionItem:
+      type: object
+      description: 운동 세션 항목 시리얼라이저
+      properties:
+        session_item_id:
+          type: string
+          format: uuid
+          readOnly: true
+        exercise:
+          type: string
+          format: uuid
+          title: 운동
+        exercise_name:
+          type: string
+          readOnly: true
+        playlist_item:
+          type: string
+          format: uuid
+          nullable: true
+          title: 플레이리스트 항목
+        sequence_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 순서
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 시작 시간
+        ended_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 종료 시간
+        duration_ms:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 소요 시간(ms)
+        is_skipped:
+          type: boolean
+          title: 스킵 여부
+        skip_reason:
+          nullable: true
+          title: 스킵 사유
+          oneOf:
+          - $ref: '#/components/schemas/SkipReasonEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        rest_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 휴식 시간(초)
+      required:
+      - exercise
+      - exercise_name
+      - sequence_no
+      - session_item_id
+    ExerciseSessionStartRequest:
+      type: object
+      description: 운동 세션 시작 요청 시리얼라이저
+      properties:
+        exercise_name:
+          type: string
+          nullable: true
+          description: 운동 또는 플레이리스트 이름
+          maxLength: 255
+        playlist_id:
+          type: string
+          format: uuid
+          writeOnly: true
+        exercise_id:
+          type: string
+          format: uuid
+          writeOnly: true
+    FirebaseExchangeRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          minLength: 1
+          maxLength: 4096
+        birthdate:
+          type: string
+          format: date
+          description: 신규 가입일 때 필수(만 14세 미만이면 403)
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+      required:
+      - id_token
+    FirebaseExchangeResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_in:
+          type: integer
+        is_new_user:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/Me'
+        onboarding:
+          $ref: '#/components/schemas/Onboarding'
+        tts_message:
+          type: string
+      required:
+      - access_token
+      - expires_in
+      - is_new_user
+      - onboarding
+      - refresh_token
+      - tts_message
+      - user
+    FoodAllergen:
+      type: object
+      properties:
+        code:
+          type: string
+        name_ko:
+          type: string
+        status:
+          type: string
+          description: CONFIRMED|NONE|UNKNOWN
+        basis:
+          type: string
+          nullable: true
+          description: LABEL|KEYWORD
+      required:
+      - basis
+      - code
+      - name_ko
+      - status
+    FoodDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 식품명
+          maxLength: 255
+        display_name:
+          type: string
+          readOnly: true
+        maker:
+          type: string
+          nullable: true
+          readOnly: true
+        category:
+          type: string
+          title: 식품 대분류
+          maxLength: 100
+        is_beverage:
+          type: boolean
+          title: 음료 여부
+        serving:
+          allOf:
+          - $ref: '#/components/schemas/Serving'
+          readOnly: true
+        per_serving:
+          allOf:
+          - $ref: '#/components/schemas/Nutrition'
+          readOnly: true
+        source:
+          allOf:
+          - $ref: '#/components/schemas/SourceEnum'
+          title: 출처
+        basis:
+          allOf:
+          - $ref: '#/components/schemas/Serving'
+          readOnly: true
+        per_basis:
+          allOf:
+          - $ref: '#/components/schemas/Nutrition'
+          readOnly: true
+        allergens:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoodAllergen'
+          readOnly: true
+        sugar_index:
+          allOf:
+          - $ref: '#/components/schemas/SugarIndex'
+          readOnly: true
+        tags:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        is_favorite:
+          type: boolean
+          readOnly: true
+        data_date:
+          type: string
+          format: date
+          nullable: true
+          title: 데이터 기준일자
+      required:
+      - allergens
+      - basis
+      - display_name
+      - id
+      - is_favorite
+      - maker
+      - name
+      - per_basis
+      - per_serving
+      - serving
+      - source
+      - sugar_index
+      - tags
+    FoodSearchResult:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FoodSummary'
+      required:
+      - count
+      - results
+    FoodSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: 식품명
+          maxLength: 255
+        display_name:
+          type: string
+          readOnly: true
+        maker:
+          type: string
+          nullable: true
+          readOnly: true
+        category:
+          type: string
+          title: 식품 대분류
+          maxLength: 100
+        is_beverage:
+          type: boolean
+          title: 음료 여부
+        serving:
+          allOf:
+          - $ref: '#/components/schemas/Serving'
+          readOnly: true
+        per_serving:
+          allOf:
+          - $ref: '#/components/schemas/Nutrition'
+          readOnly: true
+        source:
+          allOf:
+          - $ref: '#/components/schemas/SourceEnum'
+          title: 출처
+      required:
+      - display_name
+      - id
+      - maker
+      - name
+      - per_serving
+      - serving
+      - source
+    FrequentExerciseList:
+      type: object
+      properties:
+        exercises:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - exercises
+    GenderEnum:
+      enum:
+      - M
+      - F
+      type: string
+      description: |-
+        * `M` - 남성
+        * `F` - 여성
+    GoalEnum:
+      enum:
+      - LOSE_WEIGHT
+      - GAIN_MUSCLE
+      - MAINTAIN
+      type: string
+      description: |-
+        * `LOSE_WEIGHT` - 체중 감량
+        * `GAIN_MUSCLE` - 근육 증진
+        * `MAINTAIN` - 건강 유지
+    HealthProfile:
+      type: object
+      properties:
+        diseases:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiseasesEnum'
+          description: 빈 목록 = 질환 없음
+        allergens:
+          type: array
+          items:
+            type: string
+            maxLength: 30
+          description: /allergens/ 코드 목록
+        other_allergies:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+        goal:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GoalEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - allergens
+      - diseases
+      - updated_at
+    HealthProfileRequest:
+      type: object
+      properties:
+        diseases:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiseasesEnum'
+          description: 빈 목록 = 질환 없음
+        allergens:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 30
+          description: /allergens/ 코드 목록
+        other_allergies:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+        goal:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GoalEnum'
+          - $ref: '#/components/schemas/NullEnum'
+      required:
+      - allergens
+      - diseases
+    InputMethodEnum:
+      enum:
+      - VOICE
+      - PHOTO
+      - MANUAL
+      type: string
+      description: |-
+        * `VOICE` - 음성
+        * `PHOTO` - 촬영
+        * `MANUAL` - 직접 입력
+    LegacyGenderEnum:
+      enum:
+      - M
+      - F
+      - U
+      type: string
+      description: |-
+        * `M` - 남성
+        * `F` - 여성
+        * `U` - 미선택
+    LoginRequest:
+      type: object
+      description: PIN 기반 로그인 시리얼라이저 (BE_V1_AUTH_002)
+      properties:
+        phone_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        pin_number:
+          type: string
+          writeOnly: true
+          minLength: 4
+          maxLength: 4
+        device_hash:
+          type: string
+          maxLength: 255
+      required:
+      - phone_number
+      - pin_number
+    LogoutRequest:
+      type: object
+      description: 로그아웃 시리얼라이저 (BE_V1_AUTH_005)
+      properties:
+        refresh_token:
+          type: string
+          minLength: 1
+      required:
+      - refresh_token
+    Me:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          title: 이름
+          maxLength: 255
+        phone_number_masked:
+          type: string
+          nullable: true
+          readOnly: true
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+          title: 생년월일
+        age:
+          type: integer
+          nullable: true
+          readOnly: true
+        gender:
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        height_cm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 몸무게(kg)
+        goal:
+          nullable: true
+          title: 목표
+          oneOf:
+          - $ref: '#/components/schemas/GoalEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        target_kcal:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 목표 칼로리
+        target_kcal_detail:
+          allOf:
+          - $ref: '#/components/schemas/TargetKcalDetail'
+          nullable: true
+          readOnly: true
+        settings:
+          allOf:
+          - $ref: '#/components/schemas/AppSettings'
+          readOnly: true
+        profile_completed:
+          type: boolean
+        recommended_exercise_categories:
+          type: array
+          items:
+            type: string
+          readOnly: true
+      required:
+      - age
+      - id
+      - phone_number_masked
+      - profile_completed
+      - recommended_exercise_categories
+      - settings
+      - target_kcal_detail
+    Meal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        client_uuid:
+          type: string
+          format: uuid
+          title: 앱 멱등 키
+        date:
+          type: string
+          format: date
+          title: 식사 날짜
+        meal_type:
+          allOf:
+          - $ref: '#/components/schemas/MealTypeEnum'
+          title: 끼니
+        input_method:
+          allOf:
+          - $ref: '#/components/schemas/InputMethodEnum'
+          title: 입력 방식
+        recorded_at:
+          type: string
+          format: date-time
+          nullable: true
+          title: 앱 기록 시각
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealItem'
+          readOnly: true
+        totals:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - client_uuid
+      - created_at
+      - date
+      - id
+      - input_method
+      - items
+      - meal_type
+      - totals
+      - updated_at
+    MealBulkRequestRequest:
+      type: object
+      properties:
+        meals:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: MealInput 목록(최대 50건). 건별로 검증·저장합니다.
+      required:
+      - meals
+    MealBulkResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkResult'
+        meals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Meal'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/Warning'
+        day_scores:
+          type: array
+          items:
+            $ref: '#/components/schemas/DayScore'
+      required:
+      - day_scores
+      - meals
+      - results
+      - warnings
+    MealItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        food_id:
+          type: integer
+          nullable: true
+          readOnly: true
+        food_name:
+          type: string
+          title: 음식명
+          maxLength: 255
+        amount_ratio:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          title: 1회 제공량 배수
+        grams:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,2})?$
+          nullable: true
+          title: 섭취량(g)
+        amount_text:
+          type: string
+          title: '섭취량 표현(예: 반 그릇)'
+          maxLength: 50
+        nutrition_source:
+          $ref: '#/components/schemas/MealItemNutritionSourceEnum'
+        is_beverage:
+          type: boolean
+        nutrition:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        sugar_index:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+        label_allergens:
+          title: 원재료명에서 읽은 알레르기 코드
+      required:
+      - food_id
+      - food_name
+      - id
+      - nutrition
+      - sugar_index
+    MealItemInputNutritionSourceEnum:
+      enum:
+      - LABEL
+      - BARCODE
+      - USER
+      type: string
+      description: |-
+        * `LABEL` - LABEL
+        * `BARCODE` - BARCODE
+        * `USER` - USER
+    MealItemInputRequest:
+      type: object
+      properties:
+        food_id:
+          type: integer
+          nullable: true
+        food_name:
+          type: string
+          maxLength: 255
+        amount:
+          $ref: '#/components/schemas/AmountRequest'
+        nutrition:
+          allOf:
+          - $ref: '#/components/schemas/NutritionInputRequest'
+          nullable: true
+        nutrition_source:
+          $ref: '#/components/schemas/MealItemInputNutritionSourceEnum'
+        label_allergens:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 30
+          description: 원재료명에서 앱이 읽은 알레르기 코드(표시 정보로 확정)
+    MealItemNutritionSourceEnum:
+      enum:
+      - LABEL
+      - BARCODE
+      - DB
+      - USER
+      - NONE
+      type: string
+      description: |-
+        * `LABEL` - 영양성분표(촬영)
+        * `BARCODE` - 바코드 연계
+        * `DB` - 식약처 DB
+        * `USER` - 사용자 입력
+        * `NONE` - 정보 없음
+    MealTypeEnum:
+      enum:
+      - BREAKFAST
+      - LUNCH
+      - DINNER
+      - SNACK
+      type: string
+      description: |-
+        * `BREAKFAST` - 아침
+        * `LUNCH` - 점심
+        * `DINNER` - 저녁
+        * `SNACK` - 간식
+    MethodEnum:
+      enum:
+      - TOUCH
+      - VOICE
+      type: string
+      description: |-
+        * `TOUCH` - 터치
+        * `VOICE` - 음성
+    NullEnum:
+      enum:
+      - null
+    Nutrition:
+      type: object
+      properties:
+        kcal:
+          type: number
+          format: double
+          nullable: true
+        carb_g:
+          type: number
+          format: double
+          nullable: true
+        protein_g:
+          type: number
+          format: double
+          nullable: true
+        fat_g:
+          type: number
+          format: double
+          nullable: true
+        sodium_mg:
+          type: number
+          format: double
+          nullable: true
+        sugar_g:
+          type: number
+          format: double
+          nullable: true
+        fiber_g:
+          type: number
+          format: double
+          nullable: true
+      required:
+      - carb_g
+      - fat_g
+      - fiber_g
+      - kcal
+      - protein_g
+      - sodium_mg
+      - sugar_g
+    NutritionInputRequest:
+      type: object
+      description: 앱이 영양성분표·바코드로 읽은 값(1회 제공량 기준). 식약처 DB보다 우선한다.
+      properties:
+        kcal:
+          type: number
+          format: double
+          maximum: 10000
+          minimum: 0
+          nullable: true
+        carb_g:
+          type: number
+          format: double
+          maximum: 2000
+          minimum: 0
+          nullable: true
+        protein_g:
+          type: number
+          format: double
+          maximum: 2000
+          minimum: 0
+          nullable: true
+        fat_g:
+          type: number
+          format: double
+          maximum: 2000
+          minimum: 0
+          nullable: true
+        sodium_mg:
+          type: number
+          format: double
+          maximum: 100000
+          minimum: 0
+          nullable: true
+        sugar_g:
+          type: number
+          format: double
+          maximum: 2000
+          minimum: 0
+          nullable: true
+        fiber_g:
+          type: number
+          format: double
+          maximum: 2000
+          minimum: 0
+          nullable: true
+        serving_g:
+          type: number
+          format: double
+          maximum: 5000
+          minimum: 0.1
+          nullable: true
+        is_beverage:
+          type: boolean
+    Onboarding:
+      type: object
+      properties:
+        profile_completed:
+          type: boolean
+        consents_required:
+          type: array
+          items:
+            type: string
+        sensitive_consent:
+          type: boolean
+      required:
+      - consents_required
+      - profile_completed
+      - sensitive_consent
+    PatchedMeUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 20
+        birthdate:
+          type: string
+          format: date
+        gender:
+          $ref: '#/components/schemas/GenderEnum'
+        height_cm:
+          type: integer
+          maximum: 250
+          minimum: 100
+        weight_kg:
+          type: integer
+          maximum: 300
+          minimum: 20
+        goal:
+          nullable: true
+          oneOf:
+          - $ref: '#/components/schemas/GoalEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        settings:
+          $ref: '#/components/schemas/AppSettingsRequest'
+    PatchedMealUpdateRequest:
+      type: object
+      description: PATCH 전용(partial=True로 사용). items를 보내면 통째로 교체한다.
+      properties:
+        date:
+          type: string
+          format: date
+        meal_type:
+          $ref: '#/components/schemas/MealTypeEnum'
+        input_method:
+          $ref: '#/components/schemas/InputMethodEnum'
+        recorded_at:
+          type: string
+          format: date-time
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/MealItemInputRequest'
+    PatchedPlaylistItemUpdateRequest:
+      type: object
+      description: 플레이리스트 항목 상세 수정 시리얼라이저
+      properties:
+        sequence_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 순서
+        set_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 세트 수
+        reps_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 회수
+        duration_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 수행 시간(초)
+        rest_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 휴식 시간(초)
+        cue_overrides:
+          nullable: true
+          title: 큐 오버라이드
+    PatchedPlaylistUpdateRequest:
+      type: object
+      description: 플레이리스트 기본 정보(제목) 수정 시리얼라이저
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: 제목
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PlaylistStatusEnum'
+          title: 상태
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/PlaylistModeEnum'
+          title: 모드
+    PatchedUserProfileUpdateRequest:
+      type: object
+      description: |-
+        프로필 정보 수정 시리얼라이저.
+        원하는 필드만 선택적으로 수정할 수 있다.
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: 이름
+          maxLength: 255
+        height_cm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 몸무게(kg)
+        gender:
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+          title: 생년월일
+    Playlist:
+      type: object
+      description: 플레이리스트(루틴) 시리얼라이저
+      properties:
+        playlist_id:
+          type: string
+          format: uuid
+          readOnly: true
+        mode:
+          allOf:
+          - $ref: '#/components/schemas/PlaylistModeEnum'
+          title: 모드
+        title:
+          type: string
+          title: 제목
+          maxLength: 255
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PlaylistStatusEnum'
+          title: 상태
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaylistItem'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: 생성일
+      required:
+      - created_at
+      - items
+      - mode
+      - playlist_id
+      - title
+    PlaylistCreate:
+      type: object
+      description: 플레이리스트 생성 시리얼라이저
+      properties:
+        playlist_id:
+          type: string
+          format: uuid
+          readOnly: true
+        title:
+          type: string
+          title: 제목
+          maxLength: 255
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaylistItemCreate'
+      required:
+      - items
+      - playlist_id
+      - title
+    PlaylistCreateRequest:
+      type: object
+      description: 플레이리스트 생성 시리얼라이저
+      properties:
+        title:
+          type: string
+          minLength: 1
+          title: 제목
+          maxLength: 255
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlaylistItemCreateRequest'
+      required:
+      - items
+      - title
+    PlaylistItem:
+      type: object
+      description: 플레이리스트 항목 시리얼라이저 (Read Only)
+      properties:
+        playlist_item_id:
+          type: string
+          format: uuid
+          readOnly: true
+        exercise_id:
+          type: string
+          format: uuid
+          readOnly: true
+        exercise_name:
+          type: string
+          readOnly: true
+        exercise_guide_text:
+          type: string
+          readOnly: true
+        audios:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        pictograms:
+          type: array
+          items:
+            type: string
+          readOnly: true
+        sequence_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 순서
+        set_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 세트 수
+        reps_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 회수
+        duration_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 수행 시간(초)
+        rest_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 휴식 시간(초)
+        cue_overrides:
+          nullable: true
+          title: 큐 오버라이드
+      required:
+      - audios
+      - exercise_guide_text
+      - exercise_id
+      - exercise_name
+      - pictograms
+      - playlist_item_id
+      - sequence_no
+      - set_count
+    PlaylistItemAddRequest:
+      type: object
+      description: 플레이리스트에 운동 추가 시리얼라이저
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+        sequence_no:
+          type: integer
+        set_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 세트 수
+        reps_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 회수
+        duration_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 수행 시간(초)
+        rest_sec:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 휴식 시간(초)
+      required:
+      - exercise_id
+      - set_count
+    PlaylistItemCreate:
+      type: object
+      description: 플레이리스트 생성 시 항목 입력용 시리얼라이저
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+        sequence_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 순서
+        set_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 세트 수
+        reps_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 회수
+      required:
+      - exercise_id
+      - sequence_no
+      - set_count
+    PlaylistItemCreateRequest:
+      type: object
+      description: 플레이리스트 생성 시 항목 입력용 시리얼라이저
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+        sequence_no:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 순서
+        set_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          title: 세트 수
+        reps_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 회수
+      required:
+      - exercise_id
+      - sequence_no
+      - set_count
+    PlaylistModeEnum:
+      enum:
+      - CURRICULUM
+      - MANUAL
+      - CUSTOM
+      type: string
+      description: |-
+        * `CURRICULUM` - 커리큘럼
+        * `MANUAL` - 매뉴얼
+        * `CUSTOM` - 사용자 정의
+    PlaylistStatusEnum:
+      enum:
+      - ACTIVE
+      - ARCHIVED
+      type: string
+      description: |-
+        * `ACTIVE` - 활성
+        * `ARCHIVED` - 보관됨
+    RecommendationCard:
+      type: object
+      properties:
+        food:
+          type: object
+          additionalProperties: {}
+        reason:
+          type: string
+        tts_message:
+          type: string
+        sugar_index:
+          allOf:
+          - $ref: '#/components/schemas/SugarIndex'
+          nullable: true
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+      - food
+      - reason
+      - sugar_index
+      - tags
+      - tts_message
+    RecommendationResponse:
+      type: object
+      properties:
+        type:
+          type: string
+        key:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecommendationCard'
+        caution_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecommendationCard'
+        alternative_diet:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        notice:
+          type: string
+          nullable: true
+        generated_at:
+          type: string
+          format: date-time
+      required:
+      - alternative_diet
+      - caution_items
+      - generated_at
+      - items
+      - key
+      - notice
+      - type
+    Serving:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: double
+        unit:
+          type: string
+      required:
+      - amount
+      - unit
+    SessionBulkRequestRequest:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          description: SessionInput 목록(최대 50건)
+      required:
+      - sessions
+    SessionBulkResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionBulkResult'
+      required:
+      - results
+    SessionBulkResult:
+      type: object
+      properties:
+        client_uuid:
+          type: string
+          nullable: true
+        status:
+          type: string
+          description: created|duplicate|invalid
+        session_id:
+          type: string
+          nullable: true
+        is_valid:
+          type: boolean
+        errors:
+          type: object
+          additionalProperties: {}
+      required:
+      - client_uuid
+      - session_id
+      - status
+    SessionModeEnum:
+      enum:
+      - CURRICULUM
+      - MANUAL
+      type: string
+      description: |-
+        * `CURRICULUM` - 커리큘럼
+        * `MANUAL` - 매뉴얼
+    SessionStatusEnum:
+      enum:
+      - IN_PROGRESS
+      - COMPLETED
+      - ABORTED
+      type: string
+      description: |-
+        * `IN_PROGRESS` - 진행 중
+        * `COMPLETED` - 완료됨
+        * `ABORTED` - 중단됨
+    SignupRequest:
+      type: object
+      description: PIN 기반 회원가입 시리얼라이저 (BE_V1_AUTH_001)
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        phone_number:
+          type: string
+          minLength: 1
+          maxLength: 20
+        pin_number:
+          type: string
+          writeOnly: true
+          minLength: 4
+          maxLength: 4
+      required:
+      - name
+      - phone_number
+      - pin_number
+    SkipReasonEnum:
+      enum:
+      - LOAD_FAIL
+      - USER_SKIP
+      - UNKNOWN
+      type: string
+      description: |-
+        * `LOAD_FAIL` - 로드 실패
+        * `USER_SKIP` - 사용자 스킵
+        * `UNKNOWN` - 알 수 없음
+    SourceEnum:
+      enum:
+      - MFDS
+      - FOODSAFETY
+      - BARCODE
+      - USER
+      type: string
+      description: |-
+        * `MFDS` - 식약처 식품영양성분 DB
+        * `FOODSAFETY` - 식품안전나라
+        * `BARCODE` - 바코드 연계
+        * `USER` - 사용자 입력
+    Stats:
+      type: object
+      properties:
+        period:
+          type: string
+        to:
+          type: string
+          format: date
+        average:
+          type: number
+          format: double
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+        grade_label:
+          type: string
+        one_liner:
+          type: string
+        days:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        weeks:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        feedback:
+          type: object
+          additionalProperties: {}
+        reliability:
+          type: string
+        list_tts:
+          type: array
+          items:
+            type: string
+        tts_message:
+          type: string
+        from:
+          type: string
+          format: date
+      required:
+      - average
+      - feedback
+      - from
+      - grade
+      - grade_label
+      - list_tts
+      - one_liner
+      - period
+      - reliability
+      - to
+      - tts_message
+    SugarIndex:
+      type: object
+      properties:
+        computable:
+          type: boolean
+        score:
+          type: integer
+          nullable: true
+        grade:
+          type: string
+          nullable: true
+          description: LOW|MODERATE|HIGH|VERY_HIGH
+        label:
+          type: string
+          nullable: true
+          description: 낮음|보통|높음|매우 높음
+        components:
+          type: object
+          additionalProperties:
+            type: integer
+        notes:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+          nullable: true
+      required:
+      - components
+      - computable
+      - grade
+      - label
+      - message
+      - notes
+      - score
+    TTSTextRequestRequest:
+      type: object
+      properties:
+        text:
+          type: string
+          minLength: 1
+      required:
+      - text
+    TargetKcalDetail:
+      type: object
+      properties:
+        target_kcal:
+          type: integer
+        bmr:
+          type: number
+          format: double
+        activity_factor:
+          type: number
+          format: double
+        tdee:
+          type: number
+          format: double
+        adjustment:
+          type: integer
+        formula:
+          type: string
+        minor:
+          type: boolean
+      required:
+      - activity_factor
+      - adjustment
+      - bmr
+      - formula
+      - minor
+      - target_kcal
+      - tdee
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    UserProfile:
+      type: object
+      description: |-
+        사용자 프로필 조회 시리얼라이저.
+        민감한 정보(비밀번호 등)를 제외한 사용자 정보를 반환한다.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        name:
+          type: string
+          readOnly: true
+          nullable: true
+          title: 이름
+        phone_number:
+          type: string
+          readOnly: true
+          nullable: true
+          title: 전화번호(암호화)
+        birthdate:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          title: 생년월일
+        gender:
+          readOnly: true
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        height_cm:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          readOnly: true
+          nullable: true
+          title: 몸무게(kg)
+        is_profile_completed:
+          type: boolean
+          readOnly: true
+          title: 프로필 완성 여부
+      required:
+      - birthdate
+      - gender
+      - height_cm
+      - id
+      - is_profile_completed
+      - name
+      - phone_number
+      - username
+      - weight_kg
+    UserProfileCompletion:
+      type: object
+      description: |-
+        프로필 필수 정보 입력(완성) 시리얼라이저.
+        회원가입 후 초기 프로필 설정 시 사용된다.
+      properties:
+        height_cm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 몸무게(kg)
+        gender:
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+          title: 생년월일
+        name:
+          type: string
+          nullable: true
+          title: 이름
+          maxLength: 255
+        phone_number:
+          type: string
+          nullable: true
+          title: 전화번호(암호화)
+          maxLength: 20
+      required:
+      - birthdate
+      - gender
+      - height_cm
+      - weight_kg
+    UserProfileCompletionRequest:
+      type: object
+      description: |-
+        프로필 필수 정보 입력(완성) 시리얼라이저.
+        회원가입 후 초기 프로필 설정 시 사용된다.
+      properties:
+        height_cm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 몸무게(kg)
+        gender:
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+          title: 생년월일
+        name:
+          type: string
+          nullable: true
+          title: 이름
+          maxLength: 255
+        phone_number:
+          type: string
+          nullable: true
+          title: 전화번호(암호화)
+          maxLength: 20
+      required:
+      - birthdate
+      - gender
+      - height_cm
+      - weight_kg
+    UserProfileUpdate:
+      type: object
+      description: |-
+        프로필 정보 수정 시리얼라이저.
+        원하는 필드만 선택적으로 수정할 수 있다.
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: 이름
+          maxLength: 255
+        height_cm:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 키(cm)
+        weight_kg:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+          nullable: true
+          title: 몸무게(kg)
+        gender:
+          nullable: true
+          title: 성별
+          oneOf:
+          - $ref: '#/components/schemas/LegacyGenderEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+          - $ref: '#/components/schemas/NullEnum'
+        birthdate:
+          type: string
+          format: date
+          nullable: true
+          title: 생년월일
+    VoiceSpeedEnum:
+      enum:
+      - SLOW
+      - NORMAL
+      - FAST
+      type: string
+      description: |-
+        * `SLOW` - SLOW
+        * `NORMAL` - NORMAL
+        * `FAST` - FAST
+    Warning:
+      type: object
+      properties:
+        type:
+          type: string
+          description: ALLERGY|SUGAR_INDEX
+        level:
+          type: string
+          description: INFO|WARNING|DANGER
+        food_name:
+          type: string
+        allergen_codes:
+          type: array
+          items:
+            type: string
+        grade:
+          type: string
+        score:
+          type: integer
+        vibration:
+          type: string
+          nullable: true
+          description: ALLERGY|SUGAR_HIGH|SUGAR_VERY_HIGH
+        actions:
+          type: array
+          items:
+            type: string
+        tts_message:
+          type: string
+      required:
+      - actions
+      - food_name
+      - level
+      - tts_message
+      - type
+      - vibration
+    WeeklyExercise:
+      type: object
+      properties:
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        session_count:
+          type: integer
+        total_seconds:
+          type: integer
+        total_minutes:
+          type: integer
+        days:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        tts_message:
+          type: string
+      required:
+      - days
+      - session_count
+      - total_minutes
+      - total_seconds
+      - tts_message
+      - week_end
+      - week_start
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

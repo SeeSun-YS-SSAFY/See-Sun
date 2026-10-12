@@ -20,7 +20,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.views.generic import TemplateView  # TemplateView 추가
 from django.conf import settings
-from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, inline_serializer
+from rest_framework import serializers as drf_serializers
+
+AUDIO_RESPONSE = {(200, 'audio/mpeg'): OpenApiTypes.BINARY}
+TEXT_REQUEST = inline_serializer('TTSTextRequest', fields={'text': drf_serializers.CharField()})
 from .models import Exercise, Playlist, ExerciseCategory, PlaylistItem
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
@@ -89,6 +94,7 @@ class ExerciseListByCategoryView(APIView):
 
     @extend_schema(
         summary="카테고리별 운동 목록 조회",
+        operation_id="exercises_category_exercises",
         description="특정 카테고리 ID를 받아 해당 카테고리 정보와 운동 목록(픽토그램 포함)을 반환합니다.",
         responses={
             200: OpenApiResponse(
@@ -131,14 +137,7 @@ class ExerciseListByCategoryView(APIView):
             "exercises": exercise_data
         }
         
-        # 백그라운드에서 해당 카테고리 운동들의 오디오 병합 태스크 시작
-        try:
-            from .tasks import merge_exercise_audios
-            merge_exercise_audios.delay(category.category_id)
-        except Exception as e:
-            # Celery 오류 시 무시 (병합 실패해도 API는 정상 동작)
-            print(f"Celery 태스크 트리거 실패: {e}")
-        
+        # 2차: Celery 제거. 병합 음성은 운동 상세 음성 API가 요청 시 병합한다.
         return Response(response_data, status=status.HTTP_200_OK)
 
 # -----------------------------------------------------------------------------------------------
@@ -151,7 +150,8 @@ class FrequentExerciseListView(APIView):
     permission_classes = [IsAuthenticated]
     LIMIT = 10
 
-    @extend_schema(summary="자주 하는 운동 목록", tags=['Exercises'])
+    @extend_schema(summary="자주 하는 운동 목록", tags=['Exercises'], responses=inline_serializer(
+        'FrequentExerciseList', fields={'exercises': drf_serializers.ListField(child=drf_serializers.DictField())}))
     def get(self, request):
         from django.db.models import Count, Max
         from apps.logs.models import ExerciseSession
@@ -416,6 +416,7 @@ class GoogleTTSView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(summary="텍스트 음성 변환(1차)", tags=['Exercises'], request=TEXT_REQUEST, responses=AUDIO_RESPONSE)
     def post(self, request):
         text = request.data.get('text')
         if not text:
@@ -446,6 +447,7 @@ class PlaylistAudioView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(summary="루틴 화면 안내 음성(1차)", tags=['Exercises'], responses=AUDIO_RESPONSE)
     def get(self, request, playlist_id):
         # 1. 루틴 조회
         playlist = Playlist.objects.filter(
@@ -496,6 +498,7 @@ class ExerciseAudioView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(summary="운동 안내 병합 음성(1차)", tags=['Exercises'], responses=AUDIO_RESPONSE)
     def get(self, request, exercise_id):
         from django.http import HttpResponse
         from pydub import AudioSegment

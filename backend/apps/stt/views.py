@@ -63,6 +63,13 @@ class STTView(APIView):
         }
     )
     def post(self, request, mode):
+        # 2차(Android)는 기기 내 음성 처리. 서버 STT는 1차 웹 데모에서만 켠다(LEGACY_STT_ENABLED)
+        if not settings.LEGACY_STT_ENABLED:
+            return Response({
+                'error': 'LEGACY_STT_DISABLED',
+                'tts_message': '서버 음성 인식은 더 이상 제공하지 않습니다.',
+            }, status=410)
+
         # 프론트/기존 연동 호환: userinfo_stt(권장) 또는 audio(레거시)를 모두 허용합니다.
         audio_file = request.FILES.get('userinfo_stt') or request.FILES.get('audio')
         field = request.data.get('field', None)

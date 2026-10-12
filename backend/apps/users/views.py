@@ -3,6 +3,7 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+from django.conf import settings
 from .serializers import (
     UserSignupSerializer, SignupSerializer, LoginSerializer, LogoutSerializer,
     UserDeleteSerializer,
@@ -20,6 +21,14 @@ from . import throttles
 from .throttles import LoginRateThrottle, SignupRateThrottle
 
 User = get_user_model()
+
+
+def pin_disabled_response():
+    """2차: PIN 가입·로그인 비활성(Firebase 전화번호 인증으로 대체, 02 문서 Q-01)"""
+    return Response({
+        'error': 'PIN_LOGIN_DISABLED',
+        'tts_message': '이 로그인 방식은 더 이상 지원하지 않아요. 전화번호 인증으로 로그인해 주세요.',
+    }, status=status.HTTP_410_GONE)
 
 
 class SignupView(APIView):
@@ -102,6 +111,8 @@ class SignupView(APIView):
     )
     def post(self, request):
         """회원가입 처리"""
+        if not settings.PIN_LOGIN_ENABLED:
+            return pin_disabled_response()
         serializer = SignupSerializer(data=request.data)
         
         if not serializer.is_valid():
@@ -201,6 +212,8 @@ class LoginView(APIView):
     )
     def post(self, request):
         """로그인 처리"""
+        if not settings.PIN_LOGIN_ENABLED:
+            return pin_disabled_response()
         serializer = LoginSerializer(data=request.data)
         
         if not serializer.is_valid():

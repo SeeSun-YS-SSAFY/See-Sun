@@ -1,10 +1,9 @@
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from apps.exercises.models import Exercise, ExerciseMedia
 from django.conf import settings
 import os
 import shutil
 import re
-from gtts import gTTS
 import uuid
 
 class Command(BaseCommand):
@@ -138,6 +137,12 @@ class Command(BaseCommand):
 
     def generate_tts(self):
         self.stdout.write("--- Generating TTS Audio ---")
+        # 2차: gTTS 의존성 제거(09 문서 2-8). 1차 음성은 구 브랜치 mp3 복구본(ops/media) 사용.
+        # 재생성이 꼭 필요할 때만 `pip install gTTS` 후 실행한다.
+        try:
+            from gtts import gTTS
+        except ImportError as exc:
+            raise CommandError('gTTS가 설치되어 있지 않습니다. 2차에서는 ops/media/restore_from_git.sh 복구본을 쓰세요.') from exc
         
         exercises = Exercise.objects.all()
         tts_root = settings.MEDIA_ROOT / 'exercises' / 'audio'
@@ -194,7 +199,8 @@ class Command(BaseCommand):
                         media_type='GUIDE_AUDIO',
                         sequence=current_ex_generated + 1,  # 연속 번호 부여 (빈 필드 건너뛰어도 연속)
                         url=media_url,
-                        s3_key=field
+                        section=field,
+                        s3_key=f"exercises/audio/{eng_name}/{filename}",
                     )
                     current_ex_generated += 1
                 except Exception as e:

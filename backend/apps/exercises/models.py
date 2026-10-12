@@ -82,12 +82,32 @@ class ExerciseMedia(models.Model):
     media_type = models.CharField(max_length=20, choices=MEDIA_TYPE_CHOICES, verbose_name="미디어 타입")
     sequence = models.IntegerField(verbose_name="순서", default=1)
     
-    s3_key = models.CharField(max_length=512, blank=True, null=True, verbose_name="S3 키")
-    url = models.CharField(max_length=1024, blank=True, null=True, verbose_name="URL")
+    # 2차(09 문서 2-9): 1차에서 s3_key에 넣던 구간 이름(first_description 등)을 section으로 분리하고,
+    # s3_key는 원래 뜻(스토리지 상대키, 예: exercise-audio/plank/main_form.mp3)으로 쓴다.
+    section = models.CharField(max_length=50, blank=True, null=True, verbose_name="음성 구간")
+    s3_key = models.CharField(max_length=512, blank=True, null=True, verbose_name="스토리지 키(CDN 상대키)")
+    url = models.CharField(max_length=1024, blank=True, null=True, verbose_name="URL(1차 /media/ 경로 또는 절대 주소)")
     duration_ms = models.IntegerField(blank=True, null=True, verbose_name="재생 시간(ms)")
     checksum = models.CharField(max_length=64, blank=True, null=True, verbose_name="체크섬")
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
+
+    def _legacy_section_key(self):
+        """1차 형식: s3_key에 경로가 아닌 구간 이름이 들어 있음"""
+        return bool(self.s3_key) and '/' not in self.s3_key
+
+    @property
+    def section_name(self):
+        if self.section:
+            return self.section
+        return self.s3_key if self._legacy_section_key() else None
+
+    @property
+    def public_url(self):
+        """CDN 설정이 있으면 CDN 절대 주소, 없으면 1차와 같은 /media/ 경로"""
+        from apps.core.media import media_url
+        key = self.s3_key if (self.s3_key and not self._legacy_section_key()) else self.url
+        return media_url(key)
 
     class Meta:
         db_table = 'exercise_media'

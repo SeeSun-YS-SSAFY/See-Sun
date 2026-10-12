@@ -1,10 +1,10 @@
 """
-운동 오디오 병합 비동기 태스크
+운동 오디오 병합(1차 기능)
 
-카테고리 조회 시 해당 카테고리의 모든 운동에 대해
-개별 음성파일들을 하나로 병합하는 태스크.
+카테고리의 모든 운동에 대해 개별 음성 파일을 하나로 병합한다.
+2차에서 Celery를 제거했으므로 일반 함수로 두고, 필요하면 관리 명령·셸에서 호출한다.
+(운동 상세의 병합 음성은 ExerciseAudioView가 요청 시 직접 병합한다.)
 """
-from celery import shared_task
 from django.conf import settings
 from pydub import AudioSegment
 from pathlib import Path
@@ -18,7 +18,6 @@ except ImportError:
     pass  # imageio-ffmpeg가 없으면 시스템 ffmpeg 사용
 
 
-@shared_task
 def merge_exercise_audios(category_id):
     """
     특정 카테고리의 모든 운동에 대해 오디오 파일을 병합합니다.
@@ -81,7 +80,6 @@ def load_audio_without_ffprobe(file_path):
             raise e  # 원래 에러 발생
 
 
-@shared_task
 def merge_single_exercise_audio(exercise_id):
     """
     단일 운동의 오디오 파일들을 하나로 병합합니다.

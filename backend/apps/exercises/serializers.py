@@ -5,6 +5,8 @@
 운동 기능과 관련된 데이터의 변환 및 검증 로직을 담고 있다.
 """
 from rest_framework import serializers
+
+from apps.core.media import media_url
 from .models import (
     ExerciseCategory, Exercise, ExerciseMedia,
     Playlist, PlaylistItem
@@ -21,10 +23,13 @@ class ExerciseCategorySerializer(serializers.ModelSerializer):
 # -------------------------------------------------------------------------
 
 class ExerciseMediaSerializer(serializers.ModelSerializer):
-    """운동 미디어 정보 시리얼라이저"""
+    """운동 미디어 정보 시리얼라이저(url은 CDN 기준)"""
+    url = serializers.CharField(source='public_url', read_only=True)
+    section = serializers.CharField(source='section_name', read_only=True, allow_null=True)
+
     class Meta:
         model = ExerciseMedia
-        fields = ('media_id', 'media_type', 'locale', 'url', 'duration_ms')
+        fields = ('media_id', 'media_type', 'section', 'url', 'duration_ms')
 
 class ExerciseSerializer(serializers.ModelSerializer):
     """운동 상세 정보 시리얼라이저"""
@@ -61,14 +66,14 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
             'exercise_guide', 'pictograms', 'merged_audio_url'
         )
 
-    def get_pictograms(self, obj):
+    def get_pictograms(self, obj) -> list[str]:
         # 픽토그램 이미지 URL 리스트 반환
         return [
-            m.url for m in obj.media_contents.all() 
+            m.public_url for m in obj.media_contents.all()
             if m.media_type == 'PICTOGRAM'
         ]
 
-    def get_merged_audio_url(self, obj):
+    def get_merged_audio_url(self, obj) -> str:
         # 병합된 오디오 URL 반환
         return f"/api/v1/exercises/{obj.exercise_id}/audio/"
 
@@ -85,16 +90,16 @@ class ExerciseSimpleSerializer(serializers.ModelSerializer):
         model = Exercise
         fields = ('exercise_id', 'exercise_name', 'pictogram_url', 'name_audio_url')
 
-    def get_pictogram_url(self, obj):
+    def get_pictogram_url(self, obj) -> str | None:
         # media_contents는 prefetch_related로 가져올 예정
         # media_type='PICTOGRAM'인 첫 번째 미디어의 url 반환
         media = next((m for m in obj.media_contents.all() if m.media_type == 'PICTOGRAM'), None)
-        return media.url if media else None
+        return media.public_url if media else None
 
-    def get_name_audio_url(self, obj):
+    def get_name_audio_url(self, obj) -> str | None:
         # 운동 영문명 기반 음성 파일 URL 반환
         if obj.name_en:
-            return f"/media/prefix/navigation/exercise/{obj.name_en}.mp3"
+            return media_url(f"prefix/navigation/exercise/{obj.name_en}.mp3")
         return None
 
 # ----------------------------------------------------------------------------
@@ -116,18 +121,18 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
 
-    def get_audios(self, obj):
+    def get_audios(self, obj) -> list[dict]:
         # 해당 운동의 모든 TTS 오디오 URL 반환
         return [
-            {'type': m.s3_key, 'url': m.url}
+            {'type': m.section_name, 'section': m.section_name, 'url': m.public_url}
             for m in obj.exercise.media_contents.all()
             if m.media_type == 'GUIDE_AUDIO'
         ]
 
-    def get_pictograms(self, obj):
+    def get_pictograms(self, obj) -> list[str]:
         # 해당 운동의 모든 픽토그램 URL 반환
         return [
-            m.url for m in obj.exercise.media_contents.all()
+            m.public_url for m in obj.exercise.media_contents.all()
             if m.media_type == 'PICTOGRAM'
         ]
 

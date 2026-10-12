@@ -1,0 +1,3 @@
+# 셸 스크립트·Caddyfile은 리눅스 컨테이너·VM에서 실행되므로 항상 LF
+*.sh text eol=lf
+Caddyfile text eol=lf

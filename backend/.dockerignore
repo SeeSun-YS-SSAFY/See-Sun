@@ -1,0 +1,14 @@
+.venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+media
+staticfiles
+.env
+.env.*
+!.env.example
+*.sqlite3
+# 자격 증명 파일은 이미지에 넣지 않는다(실행 시 볼륨으로 마운트)
+google-credentials.json
+*service-account*.json
+firebase*.json

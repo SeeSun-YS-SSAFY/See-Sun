@@ -1,10 +1,12 @@
 """
-Gemini API 유틸리티
-향후 wake word 기능 추가 시에도 재사용 가능
+Gemini API 유틸리티 (1차 웹 데모 전용)
+
+2차에서는 Gemini를 쓰지 않는다(05 문서 L-03: 18세 미만 이용 금지 약관, 무료 티어 학습 사용).
+google-genai 패키지는 기본 의존성에서 제거했으므로, 클라이언트를 요청하면 RuntimeError가 난다.
+GeminiService는 이 오류를 잡아 빈 응답(→ 규칙 기반 폴백)으로 처리한다.
 """
 import os
 import logging
-from google import genai
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
@@ -35,6 +37,10 @@ class GeminiClient:
     def get_client(self, api_key: str | None = None):
         """Gemini 클라이언트를 반환합니다."""
         if self._client is None:
+            try:
+                from google import genai
+            except ImportError as exc:
+                raise RuntimeError('Gemini는 2차에서 비활성화되었습니다(google-genai 미설치).') from exc
             resolved_api_key = self._resolve_api_key(api_key=api_key)
             self._client = genai.Client(api_key=resolved_api_key)
             logger.info("[Gemini] 클라이언트 초기화 완료")

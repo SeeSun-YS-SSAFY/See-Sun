@@ -1,39 +1,34 @@
 """
-URL configuration for config project.
+URL 설정
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+- 2차(Android) API: /api/v1/auth/, /api/v1/me/, 식단·동의·건강·운동 기록 경로
+- 1차 웹 API: /api/v1/users/, /api/v1/exercises/, /api/v1/log/, /api/v1/stt/ (호환 유지)
+- 헬스체크 /healthz/ 는 apps.core.middleware.HealthCheckMiddleware가 직접 응답
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
-
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    # 2차 API
+    path('api/v1/auth/', include('apps.users.auth_urls')),
+    path('api/v1/me/', include('apps.users.me_urls')),
+    path('api/v1/', include('apps.consents.urls')),
+    path('api/v1/', include('apps.health.urls')),
+    path('api/v1/', include('apps.nutrition.urls')),
+    path('api/v1/', include('apps.diet.urls')),
+    path('api/v1/', include('apps.logs.v2_urls')),
+    # 1차 API(호환)
     path('api/v1/users/', include('apps.users.urls')),
     path('api/v1/exercises/', include('apps.exercises.urls')),
     path('api/v1/stt/', include('apps.stt.urls')),
-    path('api/v1/log/', include('apps.logs.urls')), # Log App URLs
+    path('api/v1/log/', include('apps.logs.urls')),
 ]
-
-from django.conf import settings
-from django.conf.urls.static import static
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

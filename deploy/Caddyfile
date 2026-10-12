@@ -1,0 +1,42 @@
+# See:Sun API 리버스 프록시 — HTTPS 인증서는 Caddy가 자동 발급·갱신(Let's Encrypt)
+# API_DOMAIN·ACME_EMAIL은 docker-compose.prod.yml이 .env에서 넘긴다.
+{
+	email {$ACME_EMAIL}
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+
+	# 업로드 상한(앱은 사진·음성을 서버로 보내지 않는다. JSON만)
+	request_body {
+		max_size 2MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+
+	reverse_proxy django:8000 {
+		health_uri /healthz/
+		health_interval 30s
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	# 접근 로그는 쿼리 문자열을 지우고 남긴다(검색어 등 최소화)
+	log {
+		output stdout
+		format filter {
+			wrap json
+			fields {
+				request>uri query {
+					delete q
+				}
+				request>headers>Authorization delete
+				request>headers>Cookie delete
+			}
+		}
+	}
+}
