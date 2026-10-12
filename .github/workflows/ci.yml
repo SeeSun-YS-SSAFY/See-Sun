@@ -50,3 +50,30 @@ jobs:
       # 기존 lint 오류(54건)가 남아 있어 결과만 보고하고 실패로 처리하지 않음
       - name: Lint (report only)
         run: npm run lint || true
+
+  android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      # compileSdk 37 플랫폼은 AGP가 SDK 라이선스 동의 상태에서 자동으로 내려받는다.
+      - name: Lint · 단위 테스트 · 디버그 빌드
+        run: ./gradlew lint test assembleDebug --stacktrace
+      - name: 코드 스타일(ktlint) · 정적 분석(detekt)
+        run: ./gradlew ktlintCheck detekt
+      - name: 보고서 보관
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-reports
+          path: |
+            android/**/build/reports/
+            android/**/build/test-results/
+          retention-days: 7
