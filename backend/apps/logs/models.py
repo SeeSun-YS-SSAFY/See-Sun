@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.utils import timezone
 from django.conf import settings
 from apps.exercises.models import Exercise, Playlist, PlaylistItem
 
@@ -35,7 +36,10 @@ class ExerciseSession(models.Model):
     # Simple name field added for standalone sessions
     exercise_name = models.CharField(max_length=255, help_text="운동 또는 플레이리스트 이름", blank=True, null=True)
 
-    started_at = models.DateTimeField(auto_now_add=True, verbose_name="시작 시간")
+    # 2차: 오프라인 일괄 업로드가 앱 기록 시각을 넣을 수 있게 auto_now_add 대신 기본값 사용
+    started_at = models.DateTimeField(default=timezone.now, verbose_name="시작 시간")
+    # 2차: 앱 오프라인 큐 멱등 키(사용자별 유일, 1차 세션은 비어 있음)
+    client_uuid = models.UUIDField(null=True, blank=True, verbose_name="앱 멱등 키")
     ended_at = models.DateTimeField(blank=True, null=True, verbose_name="종료 시간")
     duration = models.DurationField(null=True, blank=True, help_text="운동 지속 시간") # Added to match simplified version too
     duration_ms = models.IntegerField(blank=True, null=True, verbose_name="소요 시간(ms)")
@@ -61,6 +65,10 @@ class ExerciseSession(models.Model):
         verbose_name_plural = '운동 세션 목록'
         indexes = [
             models.Index(fields=['user', 'started_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'client_uuid'], name='uniq_session_client_uuid',
+                                    condition=models.Q(client_uuid__isnull=False)),
         ]
         ordering = ['-started_at']
 
