@@ -5,6 +5,7 @@ plugins {
 }
 
 val apiBaseUrl = providers.gradleProperty("seesun.apiBaseUrl").getOrElse("http://10.0.2.2:8000/api/v1/")
+val useFakeData = providers.gradleProperty("seesun.fakeData").map(String::toBoolean).getOrElse(false)
 val firebaseEnabled = providers.gradleProperty("seesun.firebase.enabled").map(String::toBoolean).getOrElse(false)
 
 if (firebaseEnabled) {
@@ -34,6 +35,7 @@ android {
         versionCode = 1
         versionName = "0.1.0"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        buildConfigField("boolean", "USE_FAKE_DATA", useFakeData.toString())
     }
 
     buildFeatures.buildConfig = true
