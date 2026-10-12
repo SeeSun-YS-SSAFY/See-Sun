@@ -67,8 +67,10 @@ def card(food, reason, ctx, show_sugar=False):
     if show_sugar:
         tts += f" {get_tables().SUGAR_INDEX['name']} {sugar.label}." if sugar.computable else ''
     tts += f' {reason}'
-    tags = [t for t, ok in (('CARB', (food.carb_ratio or 0) >= 50), ('PROTEIN', (food.protein_ratio or 0) >= 20),
-                             ('FAT', (food.fat_ratio or 0) >= 30)) if ok]
+    r = get_tables().RECOMMEND
+    tags = [t for t, ok in (('CARB', (food.carb_ratio or 0) >= r['carb_energy_ratio_min']),
+                             ('PROTEIN', (food.protein_ratio or 0) >= r['protein_energy_ratio_min']),
+                             ('FAT', (food.fat_ratio or 0) >= r['fat_energy_ratio_min'])) if ok]
     return {'food': summary, 'reason': reason, 'tts_message': tts.strip(),
             'sugar_index': sugar.as_dict() if (show_sugar or ctx.is_diabetic) else None, 'tags': tags}
 

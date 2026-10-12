@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date
 
 from django.conf import settings
 from django.db.models import Prefetch
