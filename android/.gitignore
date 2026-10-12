@@ -1,0 +1,17 @@
+# 루트 .gitignore의 `*.xml` 규칙을 Android 소스에서는 해제한다(매니페스트·리소스 필요).
+!*.xml
+
+.gradle/
+.kotlin/
+build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.hprof
+# Firebase 설정은 레포에 넣지 않는다(README "Firebase 전환").
+google-services.json
+# 긴 빌드·테스트 로그 보관 위치
+build-logs/

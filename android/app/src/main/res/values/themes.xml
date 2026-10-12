@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SeeSun" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/seesun_background</item>
+        <item name="android:statusBarColor">@color/seesun_background</item>
+        <item name="android:navigationBarColor">@color/seesun_background</item>
+    </style>
+    <color name="seesun_background">#FF241BA2</color>
+</resources>

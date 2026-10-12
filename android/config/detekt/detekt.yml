@@ -1,0 +1,53 @@
+# detekt 기본 규칙 위에 덮어쓰는 설정(--build-upon-default-config).
+# Compose 관례(PascalCase 함수, 긴 매개변수 목록, Modifier 기본값)에 맞춰 일부 규칙만 조정한다.
+
+build:
+  maxIssues: 0
+
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ['Composable']
+  TopLevelPropertyNaming:
+    constantPattern: '[A-Z][A-Za-z0-9_]*'
+
+complexity:
+  LongParameterList:
+    functionThreshold: 10
+    constructorThreshold: 10
+    ignoreDefaultParameters: true
+    ignoreAnnotated: ['Composable']
+  LongMethod:
+    threshold: 80
+    ignoreAnnotated: ['Composable']
+  CyclomaticComplexMethod:
+    threshold: 20
+    ignoreAnnotated: ['Composable']
+  TooManyFunctions:
+    thresholdInFiles: 25
+    thresholdInClasses: 20
+    thresholdInInterfaces: 20
+    thresholdInObjects: 20
+    ignorePrivate: true
+
+style:
+  MagicNumber:
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotated: ['Composable', 'Preview']
+    excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/**']
+  UnusedPrivateMember:
+    ignoreAnnotated: ['Preview']
+  ReturnCount:
+    max: 4
+  ForbiddenComment:
+    active: false
+  MaxLineLength:
+    maxLineLength: 140
+  WildcardImport:
+    excludeImports: []
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: false
