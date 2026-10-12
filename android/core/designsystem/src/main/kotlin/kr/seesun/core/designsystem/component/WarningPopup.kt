@@ -36,7 +36,7 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
 enum class WarningKind(val prefix: String, val vibrationCode: String) {
     ALLERGY("알레르기 주의", "ALLERGY"),
     SUGAR_HIGH("당류 지표 높음", "SUGAR_HIGH"),
-    SUGAR_VERY_HIGH("당류 지표 매우 높음", "SUGAR_VERY_HIGH"),
+    SUGAR_VERY_HIGH("당류 지표 매우 높음", "SUGAR_VERY_HIGH")
 }
 
 /** 경고 팝업의 버튼 하나. */
@@ -58,7 +58,7 @@ fun WarningPopup(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     disclaimer: String? = "영양 정보에 오차가 있을 수 있어요. 정확한 정보는 전문가와 상담하세요.",
-    onShown: (WarningKind) -> Unit = {},
+    onShown: (WarningKind) -> Unit = {}
 ) {
     val colors = SeeSunTheme.colors
     val shownCallback = rememberUpdatedState(onShown)
@@ -79,7 +79,7 @@ fun WarningPopup(
                 .padding(20.dp)
                 .screenPane(kind.prefix),
             verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Icon(painterResource(R.drawable.ic_warning), contentDescription = null, tint = content, modifier = Modifier.size(40.dp))
@@ -87,7 +87,7 @@ fun WarningPopup(
                     text = kind.prefix,
                     style = SeeSunTheme.typography.screenTitle,
                     color = content,
-                    modifier = Modifier.semantics { heading() },
+                    modifier = Modifier.semantics { heading() }
                 )
             }
             Text(text = message, style = SeeSunTheme.typography.result, color = content, modifier = Modifier.fillMaxWidth())

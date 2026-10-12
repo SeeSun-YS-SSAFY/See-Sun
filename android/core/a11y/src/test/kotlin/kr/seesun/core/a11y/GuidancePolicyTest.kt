@@ -35,7 +35,7 @@ class GuidancePolicyTest {
         "true,  false, false, false",
         "false, false, false, false",
         "false, true,  true,  false",
-        "false, true,  false, true",
+        "false, true,  false, true"
     )
     fun `마이크 자동 시작 규칙(A9)`(talkBack: Boolean, autoStart: Boolean, speaking: Boolean, expected: Boolean) {
         assertEquals(expected, GuidancePolicy.mayAutoStartMic(talkBack, autoStart, speaking))
@@ -45,7 +45,7 @@ class GuidancePolicyTest {
     fun `안내 문구는 화면·정보·다음 행동 순서로 이어 붙인다`() {
         assertEquals(
             "식사 기록, 2단계. 식사 종류를 말씀해 주세요. 아침, 점심, 저녁, 간식 중에서 고를 수 있어요.",
-            guidanceMessage("식사 기록, 2단계", "식사 종류를 말씀해 주세요.", "아침, 점심, 저녁, 간식 중에서 고를 수 있어요"),
+            guidanceMessage("식사 기록, 2단계", "식사 종류를 말씀해 주세요.", "아침, 점심, 저녁, 간식 중에서 고를 수 있어요")
         )
         assertEquals("메인.", guidanceMessage("메인"))
     }

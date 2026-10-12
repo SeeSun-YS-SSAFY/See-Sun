@@ -8,20 +8,20 @@ import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /** 음성 인식 옵션(03 §5: ko-KR, partial result, 무음 종료, 가능하면 기기 안 인식). */
 data class ListenOptions(
     val language: String = "ko-KR",
     val preferOnDevice: Boolean = true,
     val partialResults: Boolean = true,
-    val maxResults: Int = 3,
+    val maxResults: Int = 3
 )
 
 /** 인식 오류 종류와 사용자 안내 문구(오류 문구는 행동 제안 포함, 04 §4). */
@@ -33,7 +33,7 @@ enum class RecognitionError(val message: String) {
     BUSY("음성 인식이 아직 끝나지 않았어요. 잠시 후 다시 눌러 주세요."),
     LANGUAGE_UNAVAILABLE("이 기기에서 한국어 음성 인식을 쓸 수 없어요. 키보드로 입력해 주세요."),
     UNAVAILABLE("이 기기에서 음성 인식을 쓸 수 없어요. 키보드로 입력해 주세요."),
-    OTHER("음성 인식에 실패했어요. 다시 시도해 주세요."),
+    OTHER("음성 인식에 실패했어요. 다시 시도해 주세요.")
     ;
 
     companion object {
@@ -105,7 +105,7 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
             return@callbackFlow
         }
         val onDevice = options.preferOnDevice && onDeviceAvailable()
-        val recognizer = if (onDevice && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val recognizer = if (onDevice) {
             SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
         } else {
             SpeechRecognizer.createSpeechRecognizer(context)

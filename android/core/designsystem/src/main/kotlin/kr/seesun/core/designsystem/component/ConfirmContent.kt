@@ -33,7 +33,7 @@ fun ConfirmContent(
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
     confirmText: String = "확인",
-    editText: String = "수정",
+    editText: String = "수정"
 ) {
     val colors = SeeSunTheme.colors
     val shape = RoundedCornerShape(SeeSunDimens.CornerRadius)
@@ -45,7 +45,7 @@ fun ConfirmContent(
                 .border(SeeSunDimens.BorderWidth, colors.border, shape)
                 .padding(16.dp)
                 .semantics(mergeDescendants = true) { },
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             lines.forEach { line ->
                 Text(text = line, style = SeeSunTheme.typography.result, color = colors.onSurface)
@@ -66,7 +66,7 @@ fun ConfirmScreen(
     onConfirm: () -> Unit,
     onEdit: () -> Unit,
     modifier: Modifier = Modifier,
-    onBack: (() -> Unit)? = null,
+    onBack: (() -> Unit)? = null
 ) {
     ScreenScaffold(title = title, modifier = modifier, onBack = onBack) {
         ConfirmContent(lines = lines, question = question, onConfirm = onConfirm, onEdit = onEdit)

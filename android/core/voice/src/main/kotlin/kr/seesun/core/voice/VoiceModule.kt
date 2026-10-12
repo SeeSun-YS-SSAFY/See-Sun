@@ -5,13 +5,13 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Singleton
 import kr.seesun.core.voice.parse.FoodMatcher
 import kr.seesun.core.voice.parse.MealUtteranceParser
 import kr.seesun.core.voice.recognition.AndroidSpeechInput
 import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.tts.AndroidGuidanceSpeaker
 import kr.seesun.core.voice.tts.Speaker
-import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)

@@ -31,7 +31,7 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
 enum class MicState(val stateLabel: String, val actionLabel: String, val hint: String) {
     IDLE("대기 중", "음성 입력 시작", "누르고 말씀해 주세요"),
     LISTENING("녹음 중", "음성 입력 멈추기", "듣고 있어요. 다 말씀하시면 눌러 주세요"),
-    PROCESSING("인식 중", "음성 인식 중", "잠시만 기다려 주세요"),
+    PROCESSING("인식 중", "음성 인식 중", "잠시만 기다려 주세요")
 }
 
 /**
@@ -54,7 +54,7 @@ fun MicButton(state: MicState, onClick: () -> Unit, modifier: Modifier = Modifie
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Box(
             modifier = Modifier
@@ -67,7 +67,7 @@ fun MicButton(state: MicState, onClick: () -> Unit, modifier: Modifier = Modifie
                     stateDescription = state.stateLabel
                     liveRegion = LiveRegionMode.Polite
                 },
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             Icon(painter = painterResource(icon), contentDescription = null, tint = colors.onSurface, modifier = Modifier.size(96.dp))
         }
@@ -77,7 +77,7 @@ fun MicButton(state: MicState, onClick: () -> Unit, modifier: Modifier = Modifie
             style = SeeSunTheme.typography.body,
             color = if (state == MicState.LISTENING) colors.emphasis else colors.onBackground,
             textAlign = TextAlign.Center,
-            modifier = Modifier.clearAndSetSemantics { },
+            modifier = Modifier.clearAndSetSemantics { }
         )
     }
 }

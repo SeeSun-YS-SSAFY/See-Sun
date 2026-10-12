@@ -1,10 +1,10 @@
 package kr.seesun.core.auth
 
 import android.app.Activity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 /**
  * Firebase가 꺼진 빌드(`seesun.firebase.enabled=false`, 기본값)의 스텁.

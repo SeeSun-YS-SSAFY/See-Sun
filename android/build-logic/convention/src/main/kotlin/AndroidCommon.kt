@@ -35,21 +35,21 @@ internal fun Project.configureAndroidCommon(extension: CommonExtension) {
                 "GradleDependency",
                 "NewerVersionAvailable",
                 "AndroidGradlePluginVersion",
-                "OldTargetApi",
+                "OldTargetApi"
             )
             // 접근성 관련 검사는 오류로 올린다.
             error += setOf(
                 "ContentDescription",
                 "ClickableViewAccessibility",
                 "KeyboardInaccessibleWidget",
-                "LabelFor",
+                "LabelFor"
             )
         }
         packaging.resources.excludes += setOf(
             "META-INF/AL2.0",
             "META-INF/LGPL2.1",
             "META-INF/LICENSE.md",
-            "META-INF/LICENSE-notice.md",
+            "META-INF/LICENSE-notice.md"
         )
     }
 }

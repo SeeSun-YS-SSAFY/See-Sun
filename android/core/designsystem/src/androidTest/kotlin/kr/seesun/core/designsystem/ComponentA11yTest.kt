@@ -107,7 +107,7 @@ class ComponentA11yTest {
                     value = value,
                     state = state,
                     onValueChange = { value = it },
-                    onEditRequest = { state = InputState.EDITING },
+                    onEditRequest = { state = InputState.EDITING }
                 )
             }
         }

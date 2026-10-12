@@ -1,11 +1,11 @@
 package kr.seesun.core.auth
 
 import android.app.Activity
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * debug 빌드 전용 가짜 전화번호 인증. **release 소스셋에는 없다.**

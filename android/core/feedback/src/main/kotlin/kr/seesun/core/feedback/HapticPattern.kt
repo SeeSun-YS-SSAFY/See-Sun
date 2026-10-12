@@ -9,11 +9,7 @@ package kr.seesun.core.feedback
  *
  * @param apiCode 서버 응답 `warnings[].vibration` 값(API 계약 §6.1). 해당 없으면 null.
  */
-enum class HapticPattern(
-    val timingsMs: LongArray,
-    val spokenPrefix: String,
-    val apiCode: String?,
-) {
+enum class HapticPattern(val timingsMs: LongArray, val spokenPrefix: String, val apiCode: String?) {
     /** 저장 완료: 짧게 1회(50ms). */
     SAVED(longArrayOf(0, 50), "저장했어요", null),
 
@@ -27,7 +23,7 @@ enum class HapticPattern(
     SUGAR_HIGH(longArrayOf(0, 600), "당류 지표 높음", "SUGAR_HIGH"),
 
     /** 당류 지표 매우 높음: 길게 2회(600-200-600). */
-    SUGAR_VERY_HIGH(longArrayOf(0, 600, 200, 600), "당류 지표 매우 높음", "SUGAR_VERY_HIGH"),
+    SUGAR_VERY_HIGH(longArrayOf(0, 600, 200, 600), "당류 지표 매우 높음", "SUGAR_VERY_HIGH")
     ;
 
     /** 진동 횟수. */

@@ -1,5 +1,6 @@
 package kr.seesun.core.data.repository
 
+import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kr.seesun.core.data.model.MealDraft
@@ -9,12 +10,9 @@ import kr.seesun.core.data.sync.SyncOutcome
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.network.model.DietEvaluateResponse
 import kr.seesun.core.network.model.FoodSummaryDto
-import java.time.LocalDate
 
-/**
- * 기능 모듈이 쓰는 저장소 인터페이스. 서버 연결 전에도 기능을 만들 수 있도록 가짜 구현(`fake` 패키지)이 있다.
- * DataConfig.useFakeRepositories로 바꾼다.
- */
+// 기능 모듈이 쓰는 저장소 인터페이스. 서버 연결 전에도 기능을 만들 수 있도록 가짜 구현(`fake` 패키지)이 있다.
+// DataConfig.useFakeRepositories로 바꾼다.
 
 /** 식사 기록(오프라인 우선). */
 interface MealRepository {
@@ -44,7 +42,7 @@ data class SignInResult(
     val profileCompleted: Boolean,
     val consentsRequired: List<String>,
     val sensitiveConsent: Boolean,
-    val ttsMessage: String?,
+    val ttsMessage: String?
 )
 
 /** Firebase ID 토큰 → 앱 JWT 교환과 로그아웃. */

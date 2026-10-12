@@ -18,10 +18,10 @@ import kr.seesun.core.network.model.HealthProfileDto
 import kr.seesun.core.network.model.HealthzDto
 import kr.seesun.core.network.model.LogoutRequest
 import kr.seesun.core.network.model.MeDto
+import kr.seesun.core.network.model.MePatchRequest
 import kr.seesun.core.network.model.MealBulkRequest
 import kr.seesun.core.network.model.MealBulkResponse
 import kr.seesun.core.network.model.MealDto
-import kr.seesun.core.network.model.MePatchRequest
 import kr.seesun.core.network.model.TokenRefreshRequest
 import kr.seesun.core.network.model.TokenRefreshResponse
 import kr.seesun.core.network.model.WeeklyExerciseDto

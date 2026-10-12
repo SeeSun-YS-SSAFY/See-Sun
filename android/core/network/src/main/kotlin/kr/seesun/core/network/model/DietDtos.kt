@@ -20,17 +20,12 @@ data class NutritionDto(
     @SerialName("sodium_mg") val sodiumMg: Double? = null,
     @SerialName("sugar_g") val sugarG: Double? = null,
     @SerialName("fiber_g") val fiberG: Double? = null,
-    @SerialName("serving_g") val servingG: Double? = null,
+    @SerialName("serving_g") val servingG: Double? = null
 )
 
 /** status: CONFIRMED|NONE|UNKNOWN, basis: LABEL|KEYWORD */
 @Serializable
-data class FoodAllergenDto(
-    val code: String,
-    @SerialName("name_ko") val nameKo: String,
-    val status: String,
-    val basis: String? = null,
-)
+data class FoodAllergenDto(val code: String, @SerialName("name_ko") val nameKo: String, val status: String, val basis: String? = null)
 
 /** 당류·탄수화물 지표. grade: HIGH(높음)|VERY_HIGH(매우 높음) 등. */
 @Serializable
@@ -40,7 +35,7 @@ data class SugarIndexDto(
     val grade: String? = null,
     val label: String? = null,
     val components: Map<String, Double>? = null,
-    val notes: List<String> = emptyList(),
+    val notes: List<String> = emptyList()
 )
 
 /** §5 FoodSummary */
@@ -53,7 +48,7 @@ data class FoodSummaryDto(
     @SerialName("is_beverage") val isBeverage: Boolean = false,
     val serving: ServingDto? = null,
     @SerialName("per_serving") val perServing: NutritionDto? = null,
-    val source: String? = null,
+    val source: String? = null
 )
 
 /** §5 FoodDetail = FoodSummary + per_basis + allergens + sugar_index + tags + is_favorite */
@@ -71,7 +66,7 @@ data class FoodDetailDto(
     val allergens: List<FoodAllergenDto> = emptyList(),
     @SerialName("sugar_index") val sugarIndex: SugarIndexDto? = null,
     val tags: List<String> = emptyList(),
-    @SerialName("is_favorite") val isFavorite: Boolean = false,
+    @SerialName("is_favorite") val isFavorite: Boolean = false
 )
 
 @Serializable
@@ -79,11 +74,7 @@ data class FoodSearchResponse(val count: Int, val results: List<FoodSummaryDto>)
 
 /** 섭취량: ratio(한 그릇=1, 반=0.5…) 또는 grams. 둘 다 없으면 서버가 1인분으로 본다. */
 @Serializable
-data class AmountDto(
-    val ratio: Double? = null,
-    val grams: Double? = null,
-    val text: String? = null,
-)
+data class AmountDto(val ratio: Double? = null, val grams: Double? = null, val text: String? = null)
 
 /** §6.1·6.2 기록 항목. food_id 또는 food_name(+nutrition) 중 하나. nutrition_source: LABEL|BARCODE */
 @Serializable
@@ -92,7 +83,7 @@ data class MealItemInputDto(
     @SerialName("food_name") val foodName: String? = null,
     val amount: AmountDto = AmountDto(),
     @SerialName("nutrition_source") val nutritionSource: String? = null,
-    val nutrition: NutritionDto? = null,
+    val nutrition: NutritionDto? = null
 )
 
 /** §6.1 POST /diet/evaluate/ */
@@ -107,7 +98,7 @@ data class EvaluatedItemDto(
     val grams: Double? = null,
     val nutrition: NutritionDto = NutritionDto(),
     @SerialName("sugar_index") val sugarIndex: SugarIndexDto? = null,
-    val allergens: List<FoodAllergenDto> = emptyList(),
+    val allergens: List<FoodAllergenDto> = emptyList()
 )
 
 /**
@@ -124,14 +115,14 @@ data class DietWarningDto(
     val grade: String? = null,
     val vibration: String? = null,
     val actions: List<String> = emptyList(),
-    @SerialName("tts_message") val ttsMessage: String? = null,
+    @SerialName("tts_message") val ttsMessage: String? = null
 )
 
 @Serializable
 data class DietEvaluateResponse(
     val items: List<EvaluatedItemDto>,
     val warnings: List<DietWarningDto> = emptyList(),
-    @SerialName("tts_message") val ttsMessage: String? = null,
+    @SerialName("tts_message") val ttsMessage: String? = null
 )
 
 /** §6.2 한 끼. meal_type: BREAKFAST|LUNCH|DINNER|SNACK, input_method: VOICE|PHOTO|MANUAL */
@@ -142,7 +133,7 @@ data class MealInputDto(
     @SerialName("meal_type") val mealType: String,
     @SerialName("input_method") val inputMethod: String,
     @SerialName("recorded_at") val recordedAt: String,
-    val items: List<MealItemInputDto>,
+    val items: List<MealItemInputDto>
 )
 
 /** §6.2 POST /meals/bulk/ (최대 50건) */
@@ -155,7 +146,7 @@ data class MealBulkResultDto(
     @SerialName("client_uuid") val clientUuid: String,
     val status: String,
     val id: Long? = null,
-    val errors: JsonElement? = null,
+    val errors: JsonElement? = null
 )
 
 @Serializable
@@ -172,7 +163,7 @@ data class MealItemDto(
     @SerialName("nutrition_source") val nutritionSource: String? = null,
     val nutrition: NutritionDto = NutritionDto(),
     @SerialName("sugar_index") val sugarIndex: SugarIndexDto? = null,
-    val allergens: List<FoodAllergenDto> = emptyList(),
+    val allergens: List<FoodAllergenDto> = emptyList()
 )
 
 /** §6.3 Meal */
@@ -185,7 +176,7 @@ data class MealDto(
     @SerialName("input_method") val inputMethod: String,
     @SerialName("recorded_at") val recordedAt: String? = null,
     val items: List<MealItemDto> = emptyList(),
-    val totals: NutritionDto = NutritionDto(),
+    val totals: NutritionDto = NutritionDto()
 )
 
 @Serializable
@@ -193,7 +184,7 @@ data class MealBulkResponse(
     val results: List<MealBulkResultDto>,
     val meals: List<MealDto> = emptyList(),
     val warnings: List<DietWarningDto> = emptyList(),
-    @SerialName("day_scores") val dayScores: List<DayScoreDto> = emptyList(),
+    @SerialName("day_scores") val dayScores: List<DayScoreDto> = emptyList()
 )
 
 /** §7 GET /diet/score/ — 세부 구성(components)은 화면 작업(3-6) 때 형식을 고정한다. */
@@ -211,7 +202,7 @@ data class DietScoreDto(
     @SerialName("suggest_exercise") val suggestExercise: Boolean = false,
     val notice: String? = null,
     @SerialName("algo_version") val algoVersion: String? = null,
-    @SerialName("tts_message") val ttsMessage: String? = null,
+    @SerialName("tts_message") val ttsMessage: String? = null
 )
 
 /** §10 운동 세션 항목 */
@@ -220,7 +211,7 @@ data class ExerciseSessionItemDto(
     @SerialName("exercise_id") val exerciseId: String,
     @SerialName("sequence_no") val sequenceNo: Int,
     @SerialName("duration_ms") val durationMs: Long,
-    @SerialName("is_skipped") val isSkipped: Boolean = false,
+    @SerialName("is_skipped") val isSkipped: Boolean = false
 )
 
 /** §10 POST /exercise-sessions/bulk/ 한 건. mode 예: MANUAL, status 예: COMPLETED */
@@ -233,7 +224,7 @@ data class ExerciseSessionInputDto(
     @SerialName("started_at") val startedAt: String,
     @SerialName("ended_at") val endedAt: String,
     val status: String,
-    val items: List<ExerciseSessionItemDto> = emptyList(),
+    val items: List<ExerciseSessionItemDto> = emptyList()
 )
 
 @Serializable
@@ -244,7 +235,7 @@ data class ExerciseSessionBulkResultDto(
     @SerialName("client_uuid") val clientUuid: String,
     val status: String,
     @SerialName("session_id") val sessionId: String? = null,
-    val errors: JsonElement? = null,
+    val errors: JsonElement? = null
 )
 
 @Serializable
@@ -255,7 +246,7 @@ data class WeeklyExerciseDayDto(
     val date: String,
     val weekday: String? = null,
     @SerialName("session_count") val sessionCount: Int = 0,
-    val seconds: Long = 0,
+    val seconds: Long = 0
 )
 
 /** §10 GET /exercise/weekly/ */
@@ -267,5 +258,5 @@ data class WeeklyExerciseDto(
     @SerialName("total_seconds") val totalSeconds: Long,
     @SerialName("total_minutes") val totalMinutes: Int,
     val days: List<WeeklyExerciseDayDto> = emptyList(),
-    @SerialName("tts_message") val ttsMessage: String? = null,
+    @SerialName("tts_message") val ttsMessage: String? = null
 )

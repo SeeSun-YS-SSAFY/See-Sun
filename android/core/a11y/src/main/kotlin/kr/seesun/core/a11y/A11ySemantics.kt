@@ -44,13 +44,12 @@ fun LiveAnnouncement(message: String, modifier: Modifier = Modifier, assertive: 
                     contentDescription = message
                     liveRegion = if (assertive) LiveRegionMode.Assertive else LiveRegionMode.Polite
                 }
-            },
+            }
     )
 }
 
 /** 진입 안내 문구 형식: "[화면/단계] + [핵심 정보] + [다음 행동]"(04 §5). */
-fun guidanceMessage(screen: String, info: String? = null, nextAction: String? = null): String =
-    listOfNotNull(screen, info, nextAction)
-        .map { it.trim().trimEnd('.') }
-        .filter { it.isNotEmpty() }
-        .joinToString(separator = ". ", postfix = ".")
+fun guidanceMessage(screen: String, info: String? = null, nextAction: String? = null): String = listOfNotNull(screen, info, nextAction)
+    .map { it.trim().trimEnd('.') }
+    .filter { it.isNotEmpty() }
+    .joinToString(separator = ". ", postfix = ".")

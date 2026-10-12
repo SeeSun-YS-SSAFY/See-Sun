@@ -47,7 +47,7 @@ fun ListButton(
     modifier: Modifier = Modifier,
     description: String? = null,
     selected: Boolean? = null,
-    textStyle: TextStyle = SeeSunTheme.typography.listItem,
+    textStyle: TextStyle = SeeSunTheme.typography.listItem
 ) {
     val colors = SeeSunTheme.colors
     val isOn = selected == true
@@ -71,7 +71,7 @@ fun ListButton(
             .then(interaction)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Column(Modifier.weight(1f)) {
             Text(text = text, style = textStyle, color = content)
@@ -89,7 +89,7 @@ fun ListButton(
                     text = if (isOn) SELECTED_LABEL else NOT_SELECTED_LABEL,
                     style = SeeSunTheme.typography.caption,
                     color = content,
-                    modifier = Modifier.clearAndSetSemantics { },
+                    modifier = Modifier.clearAndSetSemantics { }
                 )
             }
         }
@@ -97,11 +97,7 @@ fun ListButton(
 }
 
 /** 목록형 버튼 묶음 항목. */
-data class ListButtonItem(
-    val key: String,
-    val text: String,
-    val description: String? = null,
-)
+data class ListButtonItem(val key: String, val text: String, val description: String? = null)
 
 /** 목록형 버튼을 세로로 나열한다(메뉴 화면용). */
 @Composable

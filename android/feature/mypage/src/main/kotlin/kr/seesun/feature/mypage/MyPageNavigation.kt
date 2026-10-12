@@ -24,9 +24,9 @@ fun MyPageScreen(onBack: () -> Unit) {
         ListButtonGroup(
             items = listOf(
                 ListButtonItem("health", "건강 정보 수정"),
-                ListButtonItem("report", "기록 레포트", "식단·운동"),
+                ListButtonItem("report", "기록 레포트", "식단·운동")
             ),
-            onClick = { },
+            onClick = { }
         )
     }
 }

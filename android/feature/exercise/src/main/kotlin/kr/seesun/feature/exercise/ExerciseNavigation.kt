@@ -9,9 +9,9 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import kotlinx.serialization.Serializable
 import kr.seesun.core.designsystem.component.BodyText
-import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.ListButtonGroup
 import kr.seesun.core.designsystem.component.ListButtonItem
+import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.ScreenScaffold
 
 /** EX-01 운동 방식(1차 기능 재구현은 T3 3-6). */
@@ -33,9 +33,9 @@ fun ExerciseScreen(onBack: () -> Unit) {
                 ListButtonItem("cardio", "유산소"),
                 ListButtonItem("flexibility", "유연성"),
                 ListButtonItem("balance", "균형"),
-                ListButtonItem("routine", "추천 루틴"),
+                ListButtonItem("routine", "추천 루틴")
             ),
-            onClick = { notice = "${it.text} 운동은 준비 중이에요." },
+            onClick = { notice = "${it.text} 운동은 준비 중이에요." }
         )
         // 보이는 안내 글자 자체를 liveRegion으로 둬서 TalkBack이 한 번만 읽는다.
         LiveStatusText(notice)

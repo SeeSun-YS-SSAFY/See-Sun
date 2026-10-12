@@ -18,7 +18,7 @@ enum class MainDestination(val label: String, val description: String) {
     EXERCISE("운동", "운동 방식·나만의 루틴"),
     MY_PAGE("마이페이지", "건강 정보·기록 레포트"),
     SETTINGS("설정", "음성 안내·개인정보·접근성"),
-    COMPONENTS("공통 컴포넌트 보기", "개발용: 디자인 시스템 점검"),
+    COMPONENTS("공통 컴포넌트 보기", "개발용: 디자인 시스템 점검")
 }
 
 fun NavGraphBuilder.mainScreen(onNavigate: (MainDestination) -> Unit) {

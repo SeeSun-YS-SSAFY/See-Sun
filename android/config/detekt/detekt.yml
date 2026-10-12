@@ -7,6 +7,11 @@ build:
 naming:
   FunctionNaming:
     ignoreAnnotated: ['Composable']
+    # 테스트 함수는 한국어 이름을 쓴다.
+    excludes: ['**/test/**', '**/testDebug/**', '**/androidTest/**']
+  MatchingDeclarationName:
+    # Compose 파일은 화면·컴포넌트 묶음 이름으로 짓는다.
+    active: false
   TopLevelPropertyNaming:
     constantPattern: '[A-Z][A-Za-z0-9_]*'
 
@@ -22,6 +27,10 @@ complexity:
   CyclomaticComplexMethod:
     threshold: 20
     ignoreAnnotated: ['Composable']
+    # 규칙 파서는 분기가 본질이다. 테스트 벡터(100% 통과)로 지킨다.
+    excludes: ['**/voice/parse/**']
+  NestedBlockDepth:
+    excludes: ['**/voice/parse/**']
   TooManyFunctions:
     thresholdInFiles: 25
     thresholdInClasses: 20
@@ -33,12 +42,18 @@ style:
   MagicNumber:
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
+    ignoreEnums: true
     ignoreAnnotated: ['Composable', 'Preview']
-    excludes: ['**/test/**', '**/androidTest/**', '**/designsystem/**']
+    # 파서의 수사·날짜 값, 가짜 저장소의 견본 값은 그 자체가 데이터다.
+    excludes: ['**/test/**', '**/testDebug/**', '**/androidTest/**', '**/designsystem/**', '**/voice/parse/**', '**/fake/**']
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview']
   ReturnCount:
-    max: 4
+    max: 6
+    excludeGuardClauses: true
+    excludes: ['**/voice/parse/**']
+  LoopWithTooManyJumpStatements:
+    excludes: ['**/voice/parse/**']
   ForbiddenComment:
     active: false
   MaxLineLength:

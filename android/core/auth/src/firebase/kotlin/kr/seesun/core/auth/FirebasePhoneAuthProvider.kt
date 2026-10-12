@@ -10,15 +10,15 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
+import java.util.concurrent.TimeUnit
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.coroutines.resume
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import java.util.concurrent.TimeUnit
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.coroutines.resume
 
 /**
  * Firebase 전화번호 인증 실제 구현. `-Pseesun.firebase.enabled=true`일 때만 컴파일된다.
@@ -41,7 +41,7 @@ class FirebasePhoneAuthProvider @Inject constructor() : AuthProvider {
                         when (result) {
                             is AuthResult.Success -> PhoneVerificationEvent.Verified(result)
                             is AuthResult.Failure -> PhoneVerificationEvent.Failed(result.error)
-                        },
+                        }
                     )
                     close()
                 }

@@ -18,7 +18,7 @@ if (firebaseEnabled) {
             doLast {
                 throw GradleException(
                     "seesun.firebase.enabled=true 이지만 app/google-services.json이 없습니다. " +
-                        "android/README.md의 'Firebase 전환'을 참고하세요.",
+                        "android/README.md의 'Firebase 전환'을 참고하세요."
                 )
             }
         }
@@ -46,6 +46,7 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }

@@ -1,5 +1,7 @@
 package kr.seesun.core.data.db
 
+import java.time.LocalDate
+import java.time.OffsetDateTime
 import kr.seesun.core.data.model.InputMethod
 import kr.seesun.core.data.model.MealItem
 import kr.seesun.core.data.model.MealRecord
@@ -10,8 +12,6 @@ import kr.seesun.core.network.model.AmountDto
 import kr.seesun.core.network.model.MealInputDto
 import kr.seesun.core.network.model.MealItemInputDto
 import kr.seesun.core.network.model.NutritionDto
-import java.time.LocalDate
-import java.time.OffsetDateTime
 
 internal fun MealItem.toEntity(mealUuid: String, position: Int) = MealItemEntity(
     mealUuid = mealUuid,
@@ -29,7 +29,7 @@ internal fun MealItem.toEntity(mealUuid: String, position: Int) = MealItemEntity
     sodiumMg = nutrition?.sodiumMg,
     sugarG = nutrition?.sugarG,
     fiberG = nutrition?.fiberG,
-    servingG = nutrition?.servingG,
+    servingG = nutrition?.servingG
 )
 
 internal fun MealItemEntity.toModel() = MealItem(
@@ -43,7 +43,7 @@ internal fun MealItemEntity.toModel() = MealItem(
         null
     } else {
         Nutrition(kcal, carbG, proteinG, fatG, sodiumMg, sugarG, fiberG, servingG)
-    },
+    }
 )
 
 internal fun MealWithItems.toModel() = MealRecord(
@@ -55,7 +55,7 @@ internal fun MealWithItems.toModel() = MealRecord(
     items = items.sortedBy { it.position }.map { it.toModel() },
     syncState = SyncState.valueOf(meal.syncState),
     serverId = meal.serverId,
-    lastError = meal.lastError,
+    lastError = meal.lastError
 )
 
 /** 서버 전송 형식(API 계약 §6.2). 영양값은 앱이 읽은 값(영양성분표·바코드)이 있을 때만 보낸다. */
@@ -74,7 +74,7 @@ internal fun MealWithItems.toDto() = MealInputDto(
             nutritionSource = model.nutritionSource,
             nutrition = model.nutrition?.takeIf { model.nutritionSource != null }?.let {
                 NutritionDto(it.kcal, it.carbG, it.proteinG, it.fatG, it.sodiumMg, it.sugarG, it.fiberG, it.servingG)
-            },
+            }
         )
-    },
+    }
 )

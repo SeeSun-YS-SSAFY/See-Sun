@@ -14,19 +14,19 @@ object KoreanNumbers {
 
     private val SINO_DIGITS = mapOf(
         '영' to 0, '공' to 0, '일' to 1, '이' to 2, '삼' to 3, '사' to 4,
-        '오' to 5, '육' to 6, '륙' to 6, '칠' to 7, '팔' to 8, '구' to 9,
+        '오' to 5, '육' to 6, '륙' to 6, '칠' to 7, '팔' to 8, '구' to 9
     )
     private val SMALL_UNITS = mapOf('십' to 10L, '백' to 100L, '천' to 1000L)
     private val BIG_UNITS = mapOf('만' to 10_000L, '억' to 100_000_000L)
 
     private val NATIVE_TENS = linkedMapOf(
         "스물" to 20, "스무" to 20, "서른" to 30, "마흔" to 40, "예순" to 60,
-        "일흔" to 70, "여든" to 80, "아흔" to 90, "열" to 10, "쉰" to 50,
+        "일흔" to 70, "여든" to 80, "아흔" to 90, "열" to 10, "쉰" to 50
     )
     private val NATIVE_ONES = linkedMapOf(
         "하나" to 1, "다섯" to 5, "여섯" to 6, "일곱" to 7, "여덟" to 8, "아홉" to 9,
         "한" to 1, "둘" to 2, "두" to 2, "셋" to 3, "세" to 3, "석" to 3,
-        "넷" to 4, "네" to 4, "넉" to 4, "닷" to 5, "엿" to 6,
+        "넷" to 4, "네" to 4, "넉" to 4, "닷" to 5, "엿" to 6
     )
 
     private val ARABIC = Regex("""^\d{1,3}(,\d{3})+(\.\d+)?$|^\d+(\.\d+)?$""")
@@ -55,8 +55,7 @@ object KoreanNumbers {
         return "$whole.${digits.joinToString("")}".toDouble()
     }
 
-    private fun parseInteger(t: String): Long? =
-        if (t.all(Char::isDigit)) t.toLongOrNull() else parseSino(t) ?: parseNative(t)?.toLong()
+    private fun parseInteger(t: String): Long? = if (t.all(Char::isDigit)) t.toLongOrNull() else parseSino(t) ?: parseNative(t)?.toLong()
 
     /** 한자어 수(아라비아 숫자 섞임 허용). 자릿값 없이 숫자가 연달아 나오면 null. */
     internal fun parseSino(t: String): Long? {
@@ -75,20 +74,24 @@ object KoreanNumbers {
                     current = t.substring(i, j).toLong()
                     i = j - 1
                 }
+
                 ch in SINO_DIGITS -> {
                     if (current >= 0) return null
                     current = SINO_DIGITS.getValue(ch).toLong()
                 }
+
                 ch in SMALL_UNITS -> {
                     section += (if (current >= 0) current else 1L) * SMALL_UNITS.getValue(ch)
                     current = -1
                 }
+
                 ch in BIG_UNITS -> {
                     section += current.coerceAtLeast(0)
                     total += (if (section > 0) section else 1L) * BIG_UNITS.getValue(ch)
                     section = 0
                     current = -1
                 }
+
                 else -> return null
             }
             sawAny = true

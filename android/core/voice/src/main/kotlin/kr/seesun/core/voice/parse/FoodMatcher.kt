@@ -49,9 +49,9 @@ object Jamo {
     private const val LAST = 0xD7A3
     private const val JUNG_COUNT = 21
     private const val JONG_COUNT = 28
-    private val CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
-    private val JUNG = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"
-    private val JONG = " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
+    private const val CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+    private const val JUNG = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"
+    private const val JONG = " ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ"
 
     fun decompose(text: String): String = buildString {
         text.forEach { ch ->
@@ -160,6 +160,6 @@ object DefaultFoodLexicon {
         FoodEntry("만두", listOf("군만두", "물만두")),
         FoodEntry("돈가스", listOf("돈까스")),
         FoodEntry("우동"),
-        FoodEntry("잔치국수", listOf("국수")),
+        FoodEntry("잔치국수", listOf("국수"))
     )
 }

@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.CollectionItemInfo
 import androidx.compose.ui.semantics.collectionItemInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import kotlin.math.abs
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import kr.seesun.core.a11y.LiveAnnouncement
@@ -32,7 +33,6 @@ import kr.seesun.core.a11y.politeLiveRegion
 import kr.seesun.core.designsystem.R
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunTheme
-import kotlin.math.abs
 
 /**
  * 스크롤 강조 목록(COM-13, HLT-05·EX-03).
@@ -56,7 +56,7 @@ fun <T> ScrollHighlightList(
     onItemClick: (T) -> Unit,
     modifier: Modifier = Modifier,
     isSelected: ((T) -> Boolean)? = null,
-    listState: LazyListState = rememberLazyListState(),
+    listState: LazyListState = rememberLazyListState()
 ) {
     val colors = SeeSunTheme.colors
     val current = highlightedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
@@ -67,8 +67,10 @@ fun <T> ScrollHighlightList(
     LaunchedEffect(current) {
         if (items.isEmpty()) return@LaunchedEffect
         val visible = listState.layoutInfo.visibleItemsInfo
-        val fullyVisible = visible.any { it.index == current && it.offset >= 0 &&
-            it.offset + it.size <= listState.layoutInfo.viewportEndOffset }
+        val fullyVisible = visible.any {
+            it.index == current && it.offset >= 0 &&
+                it.offset + it.size <= listState.layoutInfo.viewportEndOffset
+        }
         if (!fullyVisible) listState.animateScrollToItem((current - 1).coerceAtLeast(0))
     }
 
@@ -101,7 +103,7 @@ fun <T> ScrollHighlightList(
                     boundaryMessage = ""
                     onHighlightedIndexChange(current - 1)
                 }
-            },
+            }
         )
         if (items.isNotEmpty()) {
             val item = items[current]
@@ -110,13 +112,13 @@ fun <T> ScrollHighlightList(
                 text = "${current + 1}번째, 전체 ${items.size}개. ${itemLabel(item)}$state",
                 style = SeeSunTheme.typography.body,
                 color = colors.emphasis,
-                modifier = Modifier.fillMaxWidth().politeLiveRegion(),
+                modifier = Modifier.fillMaxWidth().politeLiveRegion()
             )
         }
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxWidth().weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(items) { index, item ->
                 val highlighted = index == current
@@ -131,7 +133,7 @@ fun <T> ScrollHighlightList(
                     },
                     modifier = Modifier
                         .semantics { collectionItemInfo = CollectionItemInfo(index, 1, 0, 1) }
-                        .then(if (highlighted) Modifier.border(4.dp, colors.emphasis, shape).padding(6.dp) else Modifier),
+                        .then(if (highlighted) Modifier.border(4.dp, colors.emphasis, shape).padding(6.dp) else Modifier)
                 )
             }
         }
@@ -146,7 +148,7 @@ fun <T> ScrollHighlightList(
                     boundaryMessage = ""
                     onHighlightedIndexChange(current + 1)
                 }
-            },
+            }
         )
         LiveAnnouncement(boundaryMessage)
     }
@@ -155,5 +157,4 @@ fun <T> ScrollHighlightList(
 /** 같은 안내를 연달아 해도 liveRegion이 다시 읽도록 보이지 않는 문자를 번갈아 붙인다. */
 private val ZERO_WIDTH_SPACE = Char(0x200B)
 
-internal fun repeatable(previous: String, message: String): String =
-    if (previous == message) message + ZERO_WIDTH_SPACE else message
+internal fun repeatable(previous: String, message: String): String = if (previous == message) message + ZERO_WIDTH_SPACE else message

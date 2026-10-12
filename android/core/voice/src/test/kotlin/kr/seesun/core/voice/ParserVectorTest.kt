@@ -1,5 +1,6 @@
 package kr.seesun.core.voice
 
+import java.time.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import java.time.LocalDate
 
 /**
  * 규칙 파서 테스트 벡터(src/test/resources/vectors 폴더의 JSON) — T3 3-4 완료 기준: **100% 통과**.
@@ -107,7 +107,7 @@ class ParserVectorTest {
             val actualFoods = r.foods.joinToString("; ") { "${it.name}(${it.matched}) ${quantityText(it.quantity)}" }
             "${e["date"].text()} ${e["meal_type"].text()} [$expectedFoods]" to
                 "${r.date ?: "null"} ${r.mealType?.name ?: "null"} [$actualFoods]"
-        },
+        }
     )
 
     @TestFactory

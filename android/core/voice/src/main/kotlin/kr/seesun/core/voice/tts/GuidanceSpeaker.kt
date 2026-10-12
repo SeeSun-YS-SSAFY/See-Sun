@@ -3,17 +3,17 @@ package kr.seesun.core.voice.tts
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kr.seesun.core.a11y.GuidancePolicy
-import kr.seesun.core.a11y.TalkBackMonitor
 import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
+import kr.seesun.core.a11y.GuidancePolicy
+import kr.seesun.core.a11y.TalkBackMonitor
 
 /** 음성 안내 속도(API `settings.voice_speed`). */
 enum class VoiceSpeed(val rate: Float) {
     SLOW(0.8f),
     NORMAL(1.0f),
-    FAST(1.3f),
+    FAST(1.3f)
 }
 
 /** 앱 음성 안내 창구. */

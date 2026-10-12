@@ -19,17 +19,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.LocalDate
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kr.seesun.core.designsystem.component.BodyText
-import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.ConfirmContent
 import kr.seesun.core.designsystem.component.InputState
 import kr.seesun.core.designsystem.component.ListButton
+import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.MicButton
 import kr.seesun.core.designsystem.component.MicState
 import kr.seesun.core.designsystem.component.NextButton
@@ -45,15 +47,13 @@ import kr.seesun.core.voice.parse.MealUtteranceParser
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.RecognitionFailureTracker
 import kr.seesun.core.voice.recognition.SpeechInput
-import java.time.LocalDate
-import javax.inject.Inject
 
 /** 개발용 컴포넌트 점검 화면: 실기기 TalkBack 수동 점검(06 문서)과 에뮬레이터 스모크 테스트에 쓴다. */
 @HiltViewModel
 class GalleryViewModel @Inject constructor(
     private val speech: SpeechInput,
     private val parser: MealUtteranceParser,
-    private val feedback: Feedback,
+    private val feedback: Feedback
 ) : ViewModel() {
 
     data class UiState(
@@ -61,7 +61,7 @@ class GalleryViewModel @Inject constructor(
         val input: InputState = InputState.WAITING,
         val text: String = "",
         val summary: String = "",
-        val status: String = "",
+        val status: String = ""
     )
 
     private val _state = MutableStateFlow(UiState())
@@ -82,19 +82,24 @@ class GalleryViewModel @Inject constructor(
                     is RecognitionEvent.Ready -> s.copy(
                         mic = MicState.LISTENING,
                         input = InputState.RECORDING,
-                        status = if (event.onDevice) "" else "기기 밖 음성 인식을 쓰고 있어요.",
+                        status = if (event.onDevice) "" else "기기 밖 음성 인식을 쓰고 있어요."
                     )
+
                     is RecognitionEvent.Partial -> s.copy(text = event.text)
+
                     RecognitionEvent.SpeechEnded -> s.copy(mic = MicState.PROCESSING)
+
                     RecognitionEvent.SpeechStarted -> s
+
                     is RecognitionEvent.Final -> {
                         failures.onSuccess()
                         s.copy(mic = MicState.IDLE, input = InputState.RECOGNIZED, text = event.best, summary = summarize(event.best))
                     }
+
                     is RecognitionEvent.Failed -> s.copy(
                         mic = MicState.IDLE,
                         input = InputState.WAITING,
-                        status = if (failures.onFailure()) failures.alternativeMessage else event.error.message,
+                        status = if (failures.onFailure()) failures.alternativeMessage else event.error.message
                     )
                 }
             }
@@ -124,7 +129,7 @@ class GalleryViewModel @Inject constructor(
         return listOfNotNull(
             r.date?.let { "날짜 $it" },
             r.mealType?.let { "끼니 ${it.label}" },
-            foods.takeIf { it.isNotEmpty() }?.let { "음식 $it" },
+            foods.takeIf { it.isNotEmpty() }?.let { "음식 $it" }
         ).joinToString(". ").ifEmpty { "알아들은 항목이 없어요." }
     }
 }
@@ -151,7 +156,7 @@ fun ComponentGalleryScreen(onBack: () -> Unit, onOpenHighlightList: () -> Unit, 
             value = state.text,
             state = state.input,
             onValueChange = viewModel::onTextEdited,
-            onEditRequest = viewModel::onEditRequest,
+            onEditRequest = viewModel::onEditRequest
         )
         LiveStatusText(state.status)
         LiveStatusText(state.summary, emphasis = false)
@@ -162,10 +167,12 @@ fun ComponentGalleryScreen(onBack: () -> Unit, onOpenHighlightList: () -> Unit, 
             ListButton(text = name, selected = name in diseases, onClick = {
                 when {
                     name in diseases -> diseases.remove(name)
+
                     name == "없음" -> {
                         diseases.clear()
                         diseases.add(name)
                     }
+
                     else -> {
                         diseases.remove("없음")
                         diseases.add(name)
@@ -178,7 +185,7 @@ fun ComponentGalleryScreen(onBack: () -> Unit, onOpenHighlightList: () -> Unit, 
             lines = listOf("점심", "떡볶이 한 그릇", "480킬로칼로리"),
             question = "이대로 기록할까요?",
             onConfirm = { saved = viewModel.onSaved() },
-            onEdit = { saved = "수정을 눌렀어요." },
+            onEdit = { saved = "수정을 눌렀어요." }
         )
         LiveStatusText(saved)
 
@@ -200,7 +207,7 @@ fun ComponentGalleryScreen(onBack: () -> Unit, onOpenHighlightList: () -> Unit, 
             message = message,
             actions = listOf(WarningAction(alternative) { warning = null }, WarningAction("확인") { warning = null }),
             onDismissRequest = { warning = null },
-            onShown = { viewModel.onWarningShown(it) },
+            onShown = { viewModel.onWarningShown(it) }
         )
     }
 }
@@ -211,7 +218,7 @@ fun HighlightListGalleryScreen(onBack: () -> Unit) {
     val allergens = remember {
         listOf(
             "알류", "우유", "메밀", "땅콩", "대두", "밀", "고등어", "게", "새우", "돼지고기",
-            "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어", "조개류", "잣",
+            "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어", "조개류", "잣"
         )
     }
     val selected = remember { mutableStateListOf<String>() }
@@ -224,7 +231,7 @@ fun HighlightListGalleryScreen(onBack: () -> Unit) {
             onHighlightedIndexChange = { index = it },
             onItemClick = { if (it in selected) selected.remove(it) else selected.add(it) },
             isSelected = { it in selected },
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f)
         )
     }
 }

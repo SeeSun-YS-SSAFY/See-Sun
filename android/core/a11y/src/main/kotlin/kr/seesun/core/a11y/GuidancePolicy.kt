@@ -20,7 +20,7 @@ object GuidancePolicy {
         APP_TTS,
 
         /** 사용자가 음성 안내를 껐다. */
-        NONE,
+        NONE
     }
 
     fun announceChannel(talkBackEnabled: Boolean, voiceGuideEnabled: Boolean): AnnounceChannel = when {

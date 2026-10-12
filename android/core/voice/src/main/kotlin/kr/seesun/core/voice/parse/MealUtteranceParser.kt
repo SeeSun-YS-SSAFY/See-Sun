@@ -3,19 +3,10 @@ package kr.seesun.core.voice.parse
 import java.time.LocalDate
 
 /** 발화 속 음식 하나. [name]은 사전 대표 이름(일치 없으면 들은 그대로). */
-data class FoodMention(
-    val spoken: String,
-    val name: String,
-    val matched: Boolean,
-    val quantity: Quantity,
-)
+data class FoodMention(val spoken: String, val name: String, val matched: Boolean, val quantity: Quantity)
 
 /** 식사 기록 한 문장 해석 결과(DREC-02). 못 찾은 항목은 null → 화면이 단계별로 다시 묻는다. */
-data class MealUtterance(
-    val date: LocalDate?,
-    val mealType: MealType?,
-    val foods: List<FoodMention>,
-)
+data class MealUtterance(val date: LocalDate?, val mealType: MealType?, val foods: List<FoodMention>)
 
 /**
  * "어제 점심에 김치찌개 한 그릇이랑 밥 반 공기 먹었어" →
@@ -32,7 +23,7 @@ class MealUtteranceParser(private val matcher: FoodMatcher = FoodMatcher()) {
         return MealUtterance(
             date = DateParser.parse(text, today),
             mealType = MealTypeParser.parse(text),
-            foods = foods,
+            foods = foods
         )
     }
 
@@ -105,7 +96,7 @@ class MealUtteranceParser(private val matcher: FoodMatcher = FoodMatcher()) {
         return FILLER_PREFIXES.any { word.startsWith(it) } ||
             bare in TIME_WORDS ||
             bare.endsWith("요일") ||
-            Regex("""^.+(월|일)$""").matches(bare) && KoreanNumbers.parse(bare.dropLast(1)) != null ||
+            (Regex("""^.+(월|일)$""").matches(bare) && KoreanNumbers.parse(bare.dropLast(1)) != null) ||
             bare in setOf("시월", "유월")
     }
 
@@ -115,13 +106,13 @@ class MealUtteranceParser(private val matcher: FoodMatcher = FoodMatcher()) {
             Regex("""\d{4}[-./]\d{1,2}[-./]\d{1,2}"""),
             Regex("""(\S+년\s*)?\S+월\s*\S+일"""),
             Regex("""\S+일\s*전"""),
-            Regex("""(지난주|저번주|이번주|다음주|지난 주|이번 주|다음 주)?\s*\S요일\S*"""),
+            Regex("""(지난주|저번주|이번주|다음주|지난 주|이번 주|다음 주)?\s*\S요일\S*""")
         )
         val SPLIT_WORDS = setOf("그리고", "또", "그다음", "다음에")
         val FILLER_PREFIXES = listOf("먹었", "먹어", "먹음", "먹고", "마셨", "마셔", "마시", "기록", "했어", "했습", "해줘", "해 줘", "주세요", "있어", "저는", "제가", "나는")
         val TIME_WORDS = setOf(
             "오늘", "어제", "어저께", "그제", "그저께", "내일", "모레", "지난주", "이번주", "저번주", "이번", "지난",
-            "아침", "점심", "저녁", "간식", "야식", "조식", "중식", "석식", "디저트", "새참", "밤", "낮", "식사", "끼니",
+            "아침", "점심", "저녁", "간식", "야식", "조식", "중식", "석식", "디저트", "새참", "밤", "낮", "식사", "끼니"
         )
     }
 }

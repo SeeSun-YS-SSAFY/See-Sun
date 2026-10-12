@@ -18,6 +18,8 @@ import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.ConfirmScreen
 import kr.seesun.core.designsystem.component.InputState
@@ -32,8 +34,6 @@ import kr.seesun.core.designsystem.component.SeeSunButton
 import kr.seesun.core.designsystem.component.WarningAction
 import kr.seesun.core.designsystem.component.WarningKind
 import kr.seesun.core.designsystem.component.WarningPopup
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -58,7 +58,7 @@ class ListAndDialogA11yTest {
                     highlightedIndex = index,
                     onHighlightedIndexChange = { index = it },
                     onItemClick = { name -> if (name in selected) selected.remove(name) else selected.add(name) },
-                    isSelected = { it in selected },
+                    isSelected = { it in selected }
                 )
             }
         }
@@ -94,7 +94,7 @@ class ListAndDialogA11yTest {
                 lines = listOf("아침", "떡볶이 한 그릇", "480킬로칼로리"),
                 question = "이대로 기록할까요?",
                 onConfirm = { result = "확인" },
-                onEdit = { result = "수정" },
+                onEdit = { result = "수정" }
             )
         }
         rule.onNode(hasText("아침") and hasText("480킬로칼로리")).assertIsDisplayed()
@@ -116,10 +116,10 @@ class ListAndDialogA11yTest {
                     message = "떡볶이에는 밀이 포함될 가능성이 높아요.",
                     actions = listOf(
                         WarningAction("대체 식단 보기") { action = "대체" },
-                        WarningAction("확인") { open = false },
+                        WarningAction("확인") { open = false }
                     ),
                     onDismissRequest = { open = false },
-                    onShown = { shown += it },
+                    onShown = { shown += it }
                 )
             }
         }

@@ -19,8 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.dp
 import kr.seesun.core.a11y.politeLiveRegion
 import kr.seesun.core.a11y.screenHeading
 import kr.seesun.core.a11y.screenPane
@@ -46,7 +46,7 @@ fun ScreenScaffold(
     onBack: (() -> Unit)? = null,
     onSpeakSummary: (() -> Unit)? = null,
     scrollable: Boolean = true,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = SeeSunTheme.colors
     Column(
@@ -54,14 +54,14 @@ fun ScreenScaffold(
             .fillMaxSize()
             .background(colors.background)
             .safeDrawingPadding()
-            .screenPane(title),
+            .screenPane(title)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = SeeSunDimens.HeaderTopHeight)
                 .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             if (onBack != null) {
                 SeeSunIconButton(iconRes = R.drawable.ic_arrow_back, label = "뒤로 가기", onClick = onBack)
@@ -76,13 +76,13 @@ fun ScreenScaffold(
                 .fillMaxWidth()
                 .heightIn(min = SeeSunDimens.HeaderTitleMinHeight)
                 .padding(horizontal = SeeSunDimens.ScreenPadding),
-            contentAlignment = Alignment.CenterStart,
+            contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = title,
                 style = SeeSunTheme.typography.screenTitle,
                 color = colors.onBackground,
-                modifier = Modifier.screenHeading(),
+                modifier = Modifier.screenHeading()
             )
         }
         val bodyModifier = Modifier
@@ -93,13 +93,13 @@ fun ScreenScaffold(
         Column(
             modifier = bodyModifier,
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap),
+            verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)
         ) {
             Column(
                 modifier = Modifier.widthIn(max = SeeSunDimens.ButtonMaxWidth).let { if (scrollable) it else it.weight(1f) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap),
-                content = content,
+                content = content
             )
         }
     }
@@ -112,7 +112,7 @@ fun BodyText(text: String, modifier: Modifier = Modifier, emphasis: Boolean = fa
         text = text,
         style = SeeSunTheme.typography.body,
         color = if (emphasis) SeeSunTheme.colors.emphasis else SeeSunTheme.colors.onBackground,
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth()
     )
 }
 
@@ -125,6 +125,6 @@ fun LiveStatusText(text: String, modifier: Modifier = Modifier, emphasis: Boolea
     BodyText(
         text = text,
         emphasis = emphasis,
-        modifier = modifier.then(if (text.isEmpty()) Modifier.clearAndSetSemantics { } else Modifier.politeLiveRegion()),
+        modifier = modifier.then(if (text.isEmpty()) Modifier.clearAndSetSemantics { } else Modifier.politeLiveRegion())
     )
 }

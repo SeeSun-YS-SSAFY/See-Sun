@@ -8,11 +8,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.HiltAndroidApp
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Inject
+import javax.inject.Singleton
 import kr.seesun.core.data.di.DataConfig
 import kr.seesun.core.data.sync.SyncScheduler
 import kr.seesun.core.network.NetworkConfig
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @HiltAndroidApp
 class SeeSunApplication :

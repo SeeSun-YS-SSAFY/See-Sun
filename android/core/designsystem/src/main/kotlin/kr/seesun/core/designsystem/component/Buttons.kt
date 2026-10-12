@@ -43,7 +43,7 @@ fun SeeSunButton(
     kind: ButtonKind = ButtonKind.PRIMARY,
     enabled: Boolean = true,
     supportingText: String? = null,
-    @DrawableRes iconRes: Int? = null,
+    @DrawableRes iconRes: Int? = null
 ) {
     val colors = SeeSunTheme.colors
     val (container, content) = when {
@@ -64,7 +64,7 @@ fun SeeSunButton(
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        verticalArrangement = Arrangement.Center
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (iconRes != null) {
@@ -72,7 +72,7 @@ fun SeeSunButton(
                     painter = painterResource(iconRes),
                     contentDescription = null,
                     tint = content,
-                    modifier = Modifier.size(28.dp).padding(end = 4.dp),
+                    modifier = Modifier.size(28.dp).padding(end = 4.dp)
                 )
             }
             Text(text = text, style = SeeSunTheme.typography.button, color = content, textAlign = TextAlign.Center)
@@ -82,7 +82,7 @@ fun SeeSunButton(
                 text = supportingText,
                 style = SeeSunTheme.typography.caption,
                 color = content,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -97,7 +97,7 @@ fun NextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     text: String = "다음",
-    disabledReason: String = "입력을 마치면 누를 수 있어요",
+    disabledReason: String = "입력을 마치면 누를 수 있어요"
 ) {
     SeeSunButton(
         text = text,
@@ -105,7 +105,7 @@ fun NextButton(
         modifier = modifier,
         kind = ButtonKind.PRIMARY,
         enabled = enabled,
-        supportingText = if (enabled) null else disabledReason,
+        supportingText = if (enabled) null else disabledReason
     )
 }
 
@@ -116,7 +116,7 @@ fun SeeSunIconButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    tint: Color = SeeSunTheme.colors.onBackground,
+    tint: Color = SeeSunTheme.colors.onBackground
 ) {
     Row(
         modifier = modifier
@@ -125,7 +125,7 @@ fun SeeSunIconButton(
             .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
+        horizontalArrangement = Arrangement.Center
     ) {
         Icon(painter = painterResource(iconRes), contentDescription = label, tint = tint, modifier = Modifier.size(32.dp))
     }

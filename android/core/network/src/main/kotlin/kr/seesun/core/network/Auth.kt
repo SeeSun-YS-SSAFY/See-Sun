@@ -1,5 +1,6 @@
 package kr.seesun.core.network
 
+import java.io.IOException
 import kotlinx.coroutines.runBlocking
 import kr.seesun.core.auth.TokenStore
 import kr.seesun.core.network.model.TokenRefreshRequest
@@ -9,7 +10,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
 import retrofit2.HttpException
-import java.io.IOException
 
 /** 로그인 후 API 요청에 `Authorization: Bearer <access>`를 붙인다. */
 class AuthInterceptor(private val tokens: TokenStore) : Interceptor {
@@ -35,10 +35,7 @@ class AuthInterceptor(private val tokens: TokenStore) : Interceptor {
  * - 갱신이 거절되면(401/400) 토큰을 지워 로그인 화면으로 돌아가게 한다. 네트워크 오류면 토큰은 둔다.
  * - 이미 재시도한 요청이 또 401이면 포기한다(무한 반복 방지).
  */
-class TokenAuthenticator(
-    private val tokens: TokenStore,
-    private val authApi: () -> AuthApi,
-) : Authenticator {
+class TokenAuthenticator(private val tokens: TokenStore, private val authApi: () -> AuthApi) : Authenticator {
 
     private val lock = Any()
 

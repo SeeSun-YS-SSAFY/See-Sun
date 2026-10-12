@@ -28,7 +28,7 @@ fun OnboardingScreen(onStart: () -> Unit) {
             } else {
                 "TalkBack이 꺼져 있어요. 앱이 음성으로 안내해 드려요."
             },
-            emphasis = true,
+            emphasis = true
         )
         BodyText("마이크 버튼을 누르고 말씀하시거나, 키보드로 직접 입력할 수 있어요.")
         SeeSunButton(text = "시작하기", onClick = onStart)

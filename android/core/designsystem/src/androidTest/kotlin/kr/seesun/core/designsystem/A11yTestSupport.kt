@@ -2,22 +2,22 @@ package kr.seesun.core.designsystem
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.test.DeviceConfigurationOverride
-import androidx.compose.ui.test.FontScale
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
-import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
-import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.DeviceConfigurationOverride
+import androidx.compose.ui.test.FontScale
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
+import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
+import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Dp
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import kr.seesun.core.designsystem.theme.SeeSunTheme
-import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.unit.Dp
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 
@@ -52,7 +52,7 @@ fun SemanticsNodeInteractionsProvider.assertNoTextOverflow() {
                 widestLine > layout.size.width + 1f
             assertFalse(
                 "글자가 잘림: \"$text\" size=${layout.size} lines=${layout.lineCount} widest=$widestLine",
-                clipped,
+                clipped
             )
         }
         val rootWidth = onRoot().fetchSemanticsNode().size.width
@@ -63,7 +63,7 @@ fun SemanticsNodeInteractionsProvider.assertNoTextOverflow() {
 /** 지정 식품 알레르기 표시 19종(식품등의 표시·광고에 관한 법률 기준 순서). */
 val SampleAllergens = listOf(
     "알류", "우유", "메밀", "땅콩", "대두", "밀", "고등어", "게", "새우", "돼지고기",
-    "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어", "조개류", "잣",
+    "복숭아", "토마토", "아황산류", "호두", "닭고기", "쇠고기", "오징어", "조개류", "잣"
 )
 
 /** 터치 영역(최소 터치 크기 보정 포함)이 가로·세로 모두 [min] 이상인지(04 §4: 최소 48dp). */

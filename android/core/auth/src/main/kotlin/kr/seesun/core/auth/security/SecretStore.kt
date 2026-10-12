@@ -71,7 +71,7 @@ class KeystoreSecretStore @Inject constructor(@ApplicationContext context: Conte
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(KEY_BITS)
-                .build(),
+                .build()
         )
         return generator.generateKey()
     }

@@ -1,5 +1,6 @@
 package kr.seesun.core.data
 
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kr.seesun.core.data.db.MealItemEntity
@@ -19,7 +20,6 @@ import kr.seesun.core.network.ApiResult
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
 
 class DataUnitTest {
 
@@ -31,9 +31,9 @@ class DataUnitTest {
             inputMethod = "PHOTO",
             recordedAt = "2026-10-12T12:31:00+09:00",
             syncState = "PENDING",
-            createdAt = 0,
+            createdAt = 0
         ),
-        items,
+        items
     )
 
     @Test
@@ -44,8 +44,8 @@ class DataUnitTest {
                 foodName = "포장 과자",
                 grams = 30.0,
                 nutritionSource = "LABEL",
-                nutrition = Nutrition(kcal = 150.0, sugarG = 9.0, servingG = 30.0),
-            ).toEntity("u1", 1),
+                nutrition = Nutrition(kcal = 150.0, sugarG = 9.0, servingG = 30.0)
+            ).toEntity("u1", 1)
         )
         val dto = meal(items).toDto()
         assertEquals("u1", dto.clientUuid)

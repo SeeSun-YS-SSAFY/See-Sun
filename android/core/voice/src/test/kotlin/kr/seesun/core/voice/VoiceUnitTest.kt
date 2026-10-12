@@ -1,5 +1,7 @@
 package kr.seesun.core.voice
 
+import java.time.LocalDate
+import java.time.LocalTime
 import kr.seesun.core.voice.parse.DateParser
 import kr.seesun.core.voice.parse.Jamo
 import kr.seesun.core.voice.parse.MealType
@@ -10,8 +12,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.time.LocalDate
-import java.time.LocalTime
 
 class VoiceUnitTest {
 

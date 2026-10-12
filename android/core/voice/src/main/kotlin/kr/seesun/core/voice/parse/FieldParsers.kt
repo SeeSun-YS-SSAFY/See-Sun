@@ -13,7 +13,7 @@ import java.time.temporal.TemporalAdjusters
 object PhoneNumberParser {
     private val DIGIT_WORDS = mapOf(
         '공' to '0', '영' to '0', '빵' to '0', '일' to '1', '이' to '2', '삼' to '3', '사' to '4',
-        '오' to '5', '육' to '6', '륙' to '6', '칠' to '7', '팔' to '8', '구' to '9',
+        '오' to '5', '육' to '6', '륙' to '6', '칠' to '7', '팔' to '8', '구' to '9'
     )
     private val VALID = Regex("""^01[016789]\d{7,8}$""")
 
@@ -29,7 +29,13 @@ object PhoneNumberParser {
     fun parse(text: String): String? {
         val d = digits(text)
         if (!VALID.matches(d)) return null
-        return if (d.length == 11) "${d.substring(0, 3)}-${d.substring(3, 7)}-${d.substring(7)}" else "${d.substring(0, 3)}-${d.substring(3, 6)}-${d.substring(6)}"
+        return if (d.length ==
+            11
+        ) {
+            "${d.substring(0, 3)}-${d.substring(3, 7)}-${d.substring(7)}"
+        } else {
+            "${d.substring(0, 3)}-${d.substring(3, 6)}-${d.substring(6)}"
+        }
     }
 }
 
@@ -39,13 +45,23 @@ object PhoneNumberParser {
  */
 object DateParser {
     private val RELATIVE = linkedMapOf(
-        "그저께" to -2L, "그제" to -2L, "어저께" to -1L, "어제" to -1L, "오늘" to 0L, "금일" to 0L,
-        "내일" to 1L, "모레" to 2L,
+        "그저께" to -2L,
+        "그제" to -2L,
+        "어저께" to -1L,
+        "어제" to -1L,
+        "오늘" to 0L,
+        "금일" to 0L,
+        "내일" to 1L,
+        "모레" to 2L
     )
     private val WEEKDAYS = mapOf(
-        "월요일" to DayOfWeek.MONDAY, "화요일" to DayOfWeek.TUESDAY, "수요일" to DayOfWeek.WEDNESDAY,
-        "목요일" to DayOfWeek.THURSDAY, "금요일" to DayOfWeek.FRIDAY, "토요일" to DayOfWeek.SATURDAY,
-        "일요일" to DayOfWeek.SUNDAY,
+        "월요일" to DayOfWeek.MONDAY,
+        "화요일" to DayOfWeek.TUESDAY,
+        "수요일" to DayOfWeek.WEDNESDAY,
+        "목요일" to DayOfWeek.THURSDAY,
+        "금요일" to DayOfWeek.FRIDAY,
+        "토요일" to DayOfWeek.SATURDAY,
+        "일요일" to DayOfWeek.SUNDAY
     )
     private val ISO = Regex("""(\d{4})[-./](\d{1,2})[-./](\d{1,2})""")
     private val COMPACT = Regex("""^(\d{4})(\d{2})(\d{2})$""")
@@ -110,7 +126,7 @@ enum class MealType(val label: String) {
     BREAKFAST("아침"),
     LUNCH("점심"),
     DINNER("저녁"),
-    SNACK("간식"),
+    SNACK("간식")
 }
 
 object MealTypeParser {
@@ -119,7 +135,7 @@ object MealTypeParser {
         "점심" to MealType.LUNCH, "중식" to MealType.LUNCH, "낮" to MealType.LUNCH,
         "저녁" to MealType.DINNER, "석식" to MealType.DINNER, "밤" to MealType.DINNER,
         "간식" to MealType.SNACK, "야식" to MealType.SNACK, "디저트" to MealType.SNACK, "새참" to MealType.SNACK,
-        "주전부리" to MealType.SNACK,
+        "주전부리" to MealType.SNACK
     )
 
     /** 발화에서 끼니를 찾는다. 여럿이 섞이면(아침 겸 점심) 판단하지 않고 null. */
@@ -142,12 +158,7 @@ object MealTypeParser {
  * 알아들을 수 없으면 1인분 + [needsConfirmation] → 화면이 "1인분으로 기록할까요?"를 묻는다.
  * ml는 물·음료 기준으로 g와 같게 본다(밀도 차이는 서버 영양 DB가 보정).
  */
-data class Quantity(
-    val ratio: Double? = null,
-    val grams: Double? = null,
-    val text: String = "",
-    val needsConfirmation: Boolean = false,
-) {
+data class Quantity(val ratio: Double? = null, val grams: Double? = null, val text: String = "", val needsConfirmation: Boolean = false) {
     companion object {
         val DEFAULT_SERVING = Quantity(ratio = 1.0, text = "1인분", needsConfirmation = true)
     }
@@ -165,12 +176,18 @@ object QuantityParser {
         tokens.forEachIndexed { i, t ->
             when {
                 t is Token.Num && t.unit == Unit.G -> grams = t.value
+
                 t is Token.Num && t.unit == Unit.KG -> grams = t.value * 1000
+
                 t is Token.Num && t.unit == Unit.ML -> grams = t.value
+
                 t is Token.Num && t.unit?.isPortion == true -> ratio = (ratio ?: 0.0) + t.value
+
                 t is Token.Num && t.unit == null && i == tokens.lastIndex && ratio == null && grams == null &&
                     tokens.any { it is Token.Word } -> ratio = t.value
+
                 t is Token.Word && isHalf(t.text) -> ratio = (ratio ?: 0.0) + 0.5
+
                 t is Token.Word && MORE.any { t.text.startsWith(it) } -> ratio = 1.5
             }
         }
@@ -190,7 +207,9 @@ object QuantityParser {
     /** 이 낱말이 섭취량 표현인가(음식 이름 추출에서 제외할 때 쓴다). */
     internal fun isQuantityWord(t: Token): Boolean = when (t) {
         is Token.Num -> true
+
         is Token.UnitOnly -> true
+
         is Token.Word -> isHalf(t.text) || MORE.any { t.text.startsWith(it) } ||
             t.text in setOf("조금", "조금만", "약간", "적당히", "좀")
     }

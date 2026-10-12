@@ -25,7 +25,7 @@ data class MealRecordEntity(
     @ColumnInfo(name = "server_id") val serverId: Long? = null,
     val attempts: Int = 0,
     @ColumnInfo(name = "last_error") val lastError: String? = null,
-    @ColumnInfo(name = "created_at") val createdAt: Long,
+    @ColumnInfo(name = "created_at") val createdAt: Long
 )
 
 @Entity(
@@ -35,10 +35,10 @@ data class MealRecordEntity(
             entity = MealRecordEntity::class,
             parentColumns = ["client_uuid"],
             childColumns = ["meal_uuid"],
-            onDelete = ForeignKey.CASCADE,
-        ),
+            onDelete = ForeignKey.CASCADE
+        )
     ],
-    indices = [Index("meal_uuid")],
+    indices = [Index("meal_uuid")]
 )
 data class MealItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -57,13 +57,13 @@ data class MealItemEntity(
     @ColumnInfo(name = "sodium_mg") val sodiumMg: Double?,
     @ColumnInfo(name = "sugar_g") val sugarG: Double?,
     @ColumnInfo(name = "fiber_g") val fiberG: Double?,
-    @ColumnInfo(name = "serving_g") val servingG: Double?,
+    @ColumnInfo(name = "serving_g") val servingG: Double?
 )
 
 data class MealWithItems(
     @Embedded val meal: MealRecordEntity,
     @Relation(parentColumn = "client_uuid", entityColumn = "meal_uuid")
-    val items: List<MealItemEntity>,
+    val items: List<MealItemEntity>
 )
 
 @Dao

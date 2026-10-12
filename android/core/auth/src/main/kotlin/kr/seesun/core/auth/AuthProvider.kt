@@ -65,7 +65,7 @@ enum class AuthError(val message: String) {
     TOO_MANY_REQUESTS("요청이 많아 잠시 막혔어요. 잠시 후 다시 시도해 주세요."),
     NETWORK("인터넷 연결을 확인해 주세요."),
     NOT_CONFIGURED("전화번호 인증이 아직 준비되지 않았어요. 관리자에게 문의해 주세요."),
-    UNKNOWN("인증에 실패했어요. 다시 시도해 주세요."),
+    UNKNOWN("인증에 실패했어요. 다시 시도해 주세요.")
 }
 
 /** 전화번호 형식 변환. */

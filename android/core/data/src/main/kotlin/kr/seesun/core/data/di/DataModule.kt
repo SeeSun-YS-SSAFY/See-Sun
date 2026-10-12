@@ -7,6 +7,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
+import javax.inject.Provider
+import javax.inject.Singleton
 import kr.seesun.core.auth.security.SecretStore
 import kr.seesun.core.data.db.MealDao
 import kr.seesun.core.data.db.SeeSunDatabase
@@ -21,9 +24,6 @@ import kr.seesun.core.data.repository.NetworkFoodRepository
 import kr.seesun.core.data.repository.OfflineFirstMealRepository
 import kr.seesun.core.data.sync.SyncScheduler
 import kr.seesun.core.data.sync.WorkManagerSyncScheduler
-import java.time.Clock
-import javax.inject.Provider
-import javax.inject.Singleton
 
 /**
  * 데이터 계층 설정. app 모듈이 제공한다.

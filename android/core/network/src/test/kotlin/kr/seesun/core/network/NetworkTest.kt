@@ -39,7 +39,8 @@ class NetworkTest {
         server.close()
     }
 
-    private fun json(code: Int, body: String) = MockResponse.Builder().code(code).body(body).addHeader("Content-Type", "application/json").build()
+    private fun json(code: Int, body: String) =
+        MockResponse.Builder().code(code).body(body).addHeader("Content-Type", "application/json").build()
 
     @Test
     fun `access 토큰을 Bearer 헤더로 붙이고 경로는 끝 슬래시를 쓴다`() = runTest {
@@ -116,8 +117,8 @@ class NetworkTest {
                  "warnings":[{"type":"ALLERGY","level":"WARNING","food_name":"떡볶이","allergen_codes":["WHEAT"],
                    "vibration":"ALLERGY","actions":["ALTERNATIVE_DIET"],"tts_message":"알레르기 주의."}],
                  "day_scores":[{"date":"2026-10-12","total":82.4,"grade":"GOOD"}], "new_field":1}
-                """.trimIndent(),
-            ),
+                """.trimIndent()
+            )
         )
         val response: MealBulkResponse = api.uploadMeals(
             MealBulkRequest(
@@ -128,10 +129,10 @@ class NetworkTest {
                         mealType = "LUNCH",
                         inputMethod = "VOICE",
                         recordedAt = "2026-10-12T12:31:00+09:00",
-                        items = listOf(MealItemInputDto(foodId = 12, amount = AmountDto(ratio = 1.0, text = "한 그릇"))),
-                    ),
-                ),
-            ),
+                        items = listOf(MealItemInputDto(foodId = 12, amount = AmountDto(ratio = 1.0, text = "한 그릇")))
+                    )
+                )
+            )
         )
         assertEquals("created", response.results.single().status)
         assertEquals("ALLERGY", response.warnings.single().vibration)
@@ -158,7 +159,7 @@ class NetworkTest {
                "profile_completed":true,"recommended_exercise_categories":["2","1","3","4"]},
              "onboarding":{"profile_completed":false,"consents_required":["TOS","PRIVACY"],"sensitive_consent":false},
              "tts_message":"전화번호 인증이 완료되었습니다."}
-            """.trimIndent(),
+            """.trimIndent()
         )
         assertTrue(response.isNewUser)
         assertEquals(listOf("TOS", "PRIVACY"), response.onboarding.consentsRequired)

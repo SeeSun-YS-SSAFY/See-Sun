@@ -32,7 +32,7 @@ data class SeeSunColors(
     val emphasis: Color = Color(0xFFFFFF53),
     val border: Color = Color(0xFF000000),
     val surface: Color = Color(0xFFFFFFFF),
-    val onSurface: Color = Color(0xFF000000),
+    val onSurface: Color = Color(0xFF000000)
 )
 
 /** 간격·크기 토큰. 360×740 기준 화면에서 버튼 폭 320dp, 최소 터치 48dp. */
@@ -58,7 +58,7 @@ data class SeeSunTypography(
     val listItemHighlighted: TextStyle = TextStyle(fontSize = 32.sp, lineHeight = 40.sp, fontWeight = FontWeight.ExtraBold),
     val body: TextStyle = TextStyle(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.Medium),
     val caption: TextStyle = TextStyle(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium),
-    val result: TextStyle = TextStyle(fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold),
+    val result: TextStyle = TextStyle(fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold)
 )
 
 val LocalSeeSunColors = staticCompositionLocalOf { SeeSunColors() }
@@ -83,16 +83,16 @@ fun SeeSunTheme(content: @Composable () -> Unit) {
         background = colors.background,
         onBackground = colors.onBackground,
         surface = colors.background,
-        onSurface = colors.onBackground,
+        onSurface = colors.onBackground
     )
     androidx.compose.runtime.CompositionLocalProvider(
         LocalSeeSunColors provides colors,
-        LocalSeeSunTypography provides typography,
+        LocalSeeSunTypography provides typography
     ) {
         MaterialTheme(
             colorScheme = scheme,
             typography = Typography(bodyLarge = typography.body),
-            content = content,
+            content = content
         )
     }
 }

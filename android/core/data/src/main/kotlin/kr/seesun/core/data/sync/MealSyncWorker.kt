@@ -22,12 +22,14 @@ import javax.inject.Singleton
 class MealSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters,
-    private val syncer: MealSyncer,
+    private val syncer: MealSyncer
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = when (syncer.syncPending()) {
         SyncOutcome.DONE -> Result.success()
+
         SyncOutcome.RETRY -> if (runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.failure()
+
         // 동의·로그인 문제는 재시도해도 풀리지 않는다. 다음 기록·앱 시작 때 다시 예약된다.
         SyncOutcome.BLOCKED -> Result.failure()
     }

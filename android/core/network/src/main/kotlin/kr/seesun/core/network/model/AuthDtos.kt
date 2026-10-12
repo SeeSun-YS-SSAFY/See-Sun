@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 data class ApiErrorDto(
     val error: String,
     @SerialName("tts_message") val ttsMessage: String? = null,
-    val errors: Map<String, List<String>>? = null,
+    val errors: Map<String, List<String>>? = null
 )
 
 /** §1.1 요청: Firebase ID 토큰 → 앱 JWT. */
@@ -20,14 +20,14 @@ data class FirebaseTokenExchangeRequest(
     @SerialName("id_token") val idToken: String,
     /** 신규 가입이면 필수(만 14세 미만 차단, 서버 비저장). "YYYY-MM-DD" */
     val birthdate: String? = null,
-    val name: String? = null,
+    val name: String? = null
 )
 
 @Serializable
 data class OnboardingStatusDto(
     @SerialName("profile_completed") val profileCompleted: Boolean = false,
     @SerialName("consents_required") val consentsRequired: List<String> = emptyList(),
-    @SerialName("sensitive_consent") val sensitiveConsent: Boolean = false,
+    @SerialName("sensitive_consent") val sensitiveConsent: Boolean = false
 )
 
 /** §1.1 응답. */
@@ -39,7 +39,7 @@ data class AuthTokenResponse(
     @SerialName("is_new_user") val isNewUser: Boolean,
     val user: MeDto? = null,
     val onboarding: OnboardingStatusDto = OnboardingStatusDto(),
-    @SerialName("tts_message") val ttsMessage: String? = null,
+    @SerialName("tts_message") val ttsMessage: String? = null
 )
 
 /** §1.2 */
@@ -58,7 +58,7 @@ data class TargetKcalDetailDto(
     val bmr: Double? = null,
     @SerialName("activity_factor") val activityFactor: Double? = null,
     val adjustment: Double? = null,
-    val formula: String? = null,
+    val formula: String? = null
 )
 
 /** `settings.voice_speed` = SLOW|NORMAL|FAST */
@@ -66,7 +66,7 @@ data class TargetKcalDetailDto(
 data class UserSettingsDto(
     @SerialName("voice_guide") val voiceGuide: Boolean = true,
     @SerialName("voice_speed") val voiceSpeed: String = "NORMAL",
-    @SerialName("hw_button_voice") val hwButtonVoice: Boolean = false,
+    @SerialName("hw_button_voice") val hwButtonVoice: Boolean = false
 )
 
 /** §2 GET /me/ — goal: LOSE_WEIGHT|GAIN_MUSCLE|MAINTAIN, gender: M|F */
@@ -85,7 +85,7 @@ data class MeDto(
     @SerialName("target_kcal_detail") val targetKcalDetail: TargetKcalDetailDto? = null,
     val settings: UserSettingsDto = UserSettingsDto(),
     @SerialName("profile_completed") val profileCompleted: Boolean = false,
-    @SerialName("recommended_exercise_categories") val recommendedExerciseCategories: List<String> = emptyList(),
+    @SerialName("recommended_exercise_categories") val recommendedExerciseCategories: List<String> = emptyList()
 )
 
 /** §2 PATCH /me/ — 보낸 필드만 바뀐다(null은 직렬화에서 빠진다). */
@@ -97,7 +97,7 @@ data class MePatchRequest(
     @SerialName("height_cm") val heightCm: Double? = null,
     @SerialName("weight_kg") val weightKg: Double? = null,
     val goal: String? = null,
-    val settings: UserSettingsDto? = null,
+    val settings: UserSettingsDto? = null
 )
 
 /** §2 DELETE /me/ */
@@ -113,7 +113,7 @@ data class ConsentDocumentDto(
     val required: Boolean,
     val url: String? = null,
     val summary: String? = null,
-    @SerialName("effective_at") val effectiveAt: String? = null,
+    @SerialName("effective_at") val effectiveAt: String? = null
 )
 
 @Serializable
@@ -126,15 +126,12 @@ data class ConsentStatusDto(
     @SerialName("agreed_version") val agreedVersion: String? = null,
     @SerialName("agreed_at") val agreedAt: String? = null,
     val method: String? = null,
-    @SerialName("needs_reconsent") val needsReconsent: Boolean = false,
+    @SerialName("needs_reconsent") val needsReconsent: Boolean = false
 )
 
 /** §3 GET·POST /me/consents/ 응답 */
 @Serializable
-data class ConsentListResponse(
-    val items: List<ConsentStatusDto>,
-    @SerialName("all_required_agreed") val allRequiredAgreed: Boolean,
-)
+data class ConsentListResponse(val items: List<ConsentStatusDto>, @SerialName("all_required_agreed") val allRequiredAgreed: Boolean)
 
 /** type: TOS|PRIVACY|OVERSEAS|SENSITIVE|MARKETING, method: TOUCH|VOICE */
 @Serializable
@@ -145,11 +142,7 @@ data class ConsentUpdateRequest(val items: List<ConsentDecisionDto>)
 
 /** §4 GET /allergens/ */
 @Serializable
-data class AllergenDto(
-    val code: String,
-    @SerialName("name_ko") val nameKo: String,
-    @SerialName("display_order") val displayOrder: Int,
-)
+data class AllergenDto(val code: String, @SerialName("name_ko") val nameKo: String, @SerialName("display_order") val displayOrder: Int)
 
 /** §4 GET·PUT /me/health/ — diseases: DIABETES|HYPERTENSION, []=없음 */
 @Serializable
@@ -157,7 +150,7 @@ data class HealthProfileDto(
     val diseases: List<String> = emptyList(),
     val allergens: List<String> = emptyList(),
     @SerialName("other_allergies") val otherAllergies: List<String> = emptyList(),
-    val goal: String? = null,
+    val goal: String? = null
 )
 
 /** §11 GET /healthz/ */

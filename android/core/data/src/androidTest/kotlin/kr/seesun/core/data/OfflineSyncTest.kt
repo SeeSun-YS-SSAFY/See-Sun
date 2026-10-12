@@ -8,6 +8,8 @@ import androidx.work.ListenableWorker
 import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import androidx.work.testing.TestListenableWorkerBuilder
+import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kr.seesun.core.auth.SecureTokenStore
@@ -35,8 +37,6 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.time.Clock
-import java.time.LocalDate
 
 /**
  * T3 3-5 완료 기준 "오프라인→온라인 전송 테스트".
@@ -71,7 +71,7 @@ class OfflineSyncTest {
                     scheduled++
                 }
             },
-            Clock.systemDefaultZone(),
+            Clock.systemDefaultZone()
         )
     }
 
@@ -86,7 +86,7 @@ class OfflineSyncTest {
         date = LocalDate.now(),
         mealType = MealType.LUNCH,
         inputMethod = InputMethod.VOICE,
-        items = listOf(MealItem(foodName = "떡볶이", foodId = 12, ratio = 1.0, amountText = "한 그릇")),
+        items = listOf(MealItem(foodName = "떡볶이", foodId = 12, ratio = 1.0, amountText = "한 그릇"))
     )
 
     private fun created(uuid: String, id: Long) = MockResponse.Builder().code(200)
@@ -127,7 +127,7 @@ class OfflineSyncTest {
         val record = repository.record(draft())
         server.enqueue(
             MockResponse.Builder().code(200).addHeader("Content-Type", "application/json")
-                .body("""{"results":[{"client_uuid":"${record.clientUuid}","status":"duplicate","id":5}]}""").build(),
+                .body("""{"results":[{"client_uuid":"${record.clientUuid}","status":"duplicate","id":5}]}""").build()
         )
         assertEquals(SyncOutcome.DONE, syncer.syncPending())
         assertEquals(SyncState.SYNCED, repository.observeMeals(LocalDate.now()).first().single().syncState)
@@ -177,7 +177,9 @@ class OfflineSyncTest {
         val header = ByteArray(16).also { buf -> file.inputStream().use { it.read(buf) } }.toString(Charsets.US_ASCII)
         assertTrue(header, !header.startsWith("SQLite format 3"))
         try {
-            SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use { it.rawQuery("SELECT * FROM meal_record", null).close() }
+            SQLiteDatabase.openDatabase(file.path, null, SQLiteDatabase.OPEN_READONLY).use {
+                it.rawQuery("SELECT * FROM meal_record", null).close()
+            }
             fail("암호 없이 열림")
         } catch (_: Exception) {
             // 예상: file is not a database

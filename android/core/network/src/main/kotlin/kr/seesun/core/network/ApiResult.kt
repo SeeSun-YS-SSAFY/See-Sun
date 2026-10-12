@@ -1,11 +1,11 @@
 package kr.seesun.core.network
 
+import java.io.IOException
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kr.seesun.core.network.model.ApiErrorDto
 import retrofit2.HttpException
-import java.io.IOException
 
 /** API 호출 결과. 화면은 실패의 [ApiFailure.ttsMessage]를 그대로 낭독할 수 있다(계약 §0). */
 sealed interface ApiResult<out T> {
@@ -19,7 +19,7 @@ data class ApiFailure(
     val code: String,
     val ttsMessage: String,
     val httpStatus: Int? = null,
-    val fieldErrors: Map<String, List<String>> = emptyMap(),
+    val fieldErrors: Map<String, List<String>> = emptyMap()
 ) {
     val isNetwork: Boolean get() = code == NETWORK
 
@@ -58,6 +58,6 @@ internal fun HttpException.toFailure(json: Json): ApiFailure {
         code = dto?.error ?: "HTTP_${code()}",
         ttsMessage = dto?.ttsMessage ?: ApiFailure.GENERIC_MESSAGE,
         httpStatus = code(),
-        fieldErrors = dto?.errors.orEmpty(),
+        fieldErrors = dto?.errors.orEmpty()
     )
 }

@@ -1,5 +1,11 @@
 package kr.seesun.core.data.repository
 
+import java.time.Clock
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import java.util.UUID
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -29,12 +35,6 @@ import kr.seesun.core.network.model.FoodSummaryDto
 import kr.seesun.core.network.model.LogoutRequest
 import kr.seesun.core.network.model.MealItemInputDto
 import kr.seesun.core.network.model.NutritionDto
-import java.time.Clock
-import java.time.LocalDate
-import java.time.OffsetDateTime
-import java.util.UUID
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /** Room에 먼저 쓰고 WorkManager로 보낸다(COM-15). */
 @Singleton
@@ -42,7 +42,7 @@ class OfflineFirstMealRepository @Inject constructor(
     private val dao: MealDao,
     private val syncer: MealSyncer,
     private val scheduler: SyncScheduler,
-    private val clock: Clock,
+    private val clock: Clock
 ) : MealRepository {
 
     override fun observeMeals(date: LocalDate): Flow<List<MealRecord>> =
@@ -62,7 +62,7 @@ class OfflineFirstMealRepository @Inject constructor(
             inputMethod = draft.inputMethod.name,
             recordedAt = now.toString(),
             syncState = SyncState.PENDING.name,
-            createdAt = clock.millis(),
+            createdAt = clock.millis()
         )
         dao.insert(entity, draft.items.mapIndexed { i, item -> item.toEntity(uuid, i) })
         scheduler.scheduleMealSync()
@@ -88,7 +88,7 @@ class NetworkFoodRepository @Inject constructor(private val api: SeeSunApi, priv
         nutritionSource = nutritionSource,
         nutrition = nutrition?.takeIf { nutritionSource != null }?.let {
             NutritionDto(it.kcal, it.carbG, it.proteinG, it.fatG, it.sodiumMg, it.sugarG, it.fiberG, it.servingG)
-        },
+        }
     )
 }
 
@@ -97,7 +97,7 @@ class DefaultAuthRepository @Inject constructor(
     private val authApi: AuthApi,
     private val tokens: TokenStore,
     private val authProvider: AuthProvider,
-    private val json: Json,
+    private val json: Json
 ) : AuthRepository {
 
     override val signedIn: StateFlow<Boolean> = tokens.signedIn
@@ -108,6 +108,7 @@ class DefaultAuthRepository @Inject constructor(
         }
         return when (result) {
             is ApiResult.Failure -> result
+
             is ApiResult.Success -> {
                 val r = result.data
                 tokens.save(r.accessToken, r.refreshToken)
@@ -117,8 +118,8 @@ class DefaultAuthRepository @Inject constructor(
                         profileCompleted = r.onboarding.profileCompleted,
                         consentsRequired = r.onboarding.consentsRequired,
                         sensitiveConsent = r.onboarding.sensitiveConsent,
-                        ttsMessage = r.ttsMessage,
-                    ),
+                        ttsMessage = r.ttsMessage
+                    )
                 )
             }
         }

@@ -14,8 +14,8 @@ plugins {
 // ── ktlint / detekt ────────────────────────────────────────────────
 // Gradle 플러그인 대신 CLI를 JavaExec로 돌린다. AGP 9 내장 Kotlin·Gradle 9와의
 // 플러그인 호환 문제를 피하고, 로컬·CI에서 같은 명령으로 실행하기 위함이다.
-val ktlint: Configuration by configurations.creating
-val detekt: Configuration by configurations.creating
+val ktlint: Configuration = configurations.create("ktlint")
+val detekt: Configuration = configurations.create("detekt")
 
 dependencies {
     ktlint(libs.ktlint.cli) {
@@ -61,6 +61,6 @@ tasks.register<JavaExec>("detekt") {
         "--config", file("config/detekt/detekt.yml").path,
         "--build-upon-default-config",
         "--report", "html:${reportDir.resolve("detekt.html")}",
-        "--report", "txt:${reportDir.resolve("detekt.txt")}",
+        "--report", "txt:${reportDir.resolve("detekt.txt")}"
     )
 }

@@ -2,7 +2,18 @@ package kr.seesun.core.voice.parse
 
 /** 단위 정규화 코드. */
 enum class Unit {
-    CM, M, KG, G, ML, KCAL, AGE, SERVING, BOWL, PLATE, PIECE, CUP,
+    CM,
+    M,
+    KG,
+    G,
+    ML,
+    KCAL,
+    AGE,
+    SERVING,
+    BOWL,
+    PLATE,
+    PIECE,
+    CUP
     ;
 
     /** 1인분 비율로 환산되는 단위(그릇·인분·접시·개·잔). */
@@ -33,12 +44,12 @@ object Tokenizer {
         "킬로" to Unit.KG, "키로" to Unit.KG, "그램" to Unit.G, "그람" to Unit.G, "미리" to Unit.ML, "미터" to Unit.M,
         "인분" to Unit.SERVING, "그릇" to Unit.BOWL, "공기" to Unit.BOWL, "접시" to Unit.PLATE, "조각" to Unit.PIECE,
         "kcal" to Unit.KCAL, "cm" to Unit.CM, "kg" to Unit.KG, "ml" to Unit.ML, "g" to Unit.G,
-        "개" to Unit.PIECE, "잔" to Unit.CUP, "컵" to Unit.CUP, "살" to Unit.AGE, "세" to Unit.AGE,
+        "개" to Unit.PIECE, "잔" to Unit.CUP, "컵" to Unit.CUP, "살" to Unit.AGE, "세" to Unit.AGE
     ).sortedByDescending { it.first.length }
 
     /** 어디에나 붙을 수 있는 두 글자 이상 조사·어미. */
     private val LONG_PARTICLES = listOf(
-        "입니다", "이에요", "이예요", "이었어", "였어요", "였어", "예요", "이요", "이야", "이고", "으로", "정도", "쯤이요", "쯤", "이나", "이랑", "하고",
+        "입니다", "이에요", "이예요", "이었어", "였어요", "였어", "예요", "이요", "이야", "이고", "으로", "정도", "쯤이요", "쯤", "이나", "이랑", "하고"
     ).sortedByDescending { it.length }
 
     /** 한 글자 조사. 수가 아닌 낱말("오이"→"오")을 수로 오인하지 않도록 단위·아라비아 숫자 뒤에서만 뗀다. */

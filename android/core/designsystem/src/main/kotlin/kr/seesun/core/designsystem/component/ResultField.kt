@@ -37,7 +37,7 @@ enum class InputState(val label: String) {
     WAITING("대기 중"),
     RECORDING("듣는 중"),
     RECOGNIZED("인식 완료"),
-    EDITING("직접 입력 중"),
+    EDITING("직접 입력 중")
 }
 
 /**
@@ -59,22 +59,27 @@ fun ResultField(
     modifier: Modifier = Modifier,
     placeholder: String = "여기에 인식 결과가 나와요",
     keyboardType: KeyboardType = KeyboardType.Text,
-    onEditDone: () -> Unit = {},
+    onEditDone: () -> Unit = {}
 ) {
     val colors = SeeSunTheme.colors
     val shape = RoundedCornerShape(SeeSunDimens.CornerRadius)
     Column(
         modifier = modifier.fillMaxWidth().widthIn(max = SeeSunDimens.ButtonMaxWidth),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (state == InputState.RECOGNIZED) {
-                Icon(painterResource(R.drawable.ic_check), contentDescription = null, tint = colors.emphasis, modifier = Modifier.size(24.dp))
+                Icon(
+                    painterResource(R.drawable.ic_check),
+                    contentDescription = null,
+                    tint = colors.emphasis,
+                    modifier = Modifier.size(24.dp)
+                )
             }
             Text(
                 text = "$label · ${state.label}",
                 style = SeeSunTheme.typography.caption,
-                color = colors.onBackground,
+                color = colors.onBackground
             )
         }
         val boxModifier = Modifier
@@ -91,7 +96,7 @@ fun ResultField(
                 cursorBrush = SolidColor(colors.onSurface),
                 keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { onEditDone() }),
-                modifier = boxModifier.semantics { contentDescription = "$label 입력칸" },
+                modifier = boxModifier.semantics { contentDescription = "$label 입력칸" }
             )
         } else {
             val shown = value.ifEmpty { placeholder }
@@ -104,13 +109,13 @@ fun ResultField(
                     .semantics {
                         contentDescription = "$label 입력칸, ${if (value.isEmpty()) "비어 있음" else value}"
                         stateDescription = state.label
-                    },
+                    }
             )
             SeeSunButton(
                 text = "키보드로 직접 입력",
                 onClick = onEditRequest,
                 kind = ButtonKind.OUTLINE,
-                iconRes = R.drawable.ic_edit,
+                iconRes = R.drawable.ic_edit
             )
         }
     }

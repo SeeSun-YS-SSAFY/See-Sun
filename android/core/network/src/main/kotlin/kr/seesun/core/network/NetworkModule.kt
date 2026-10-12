@@ -4,6 +4,8 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
 import kotlinx.serialization.json.Json
 import kr.seesun.core.auth.TokenStore
 import okhttp3.MediaType.Companion.toMediaType
@@ -11,8 +13,6 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
-import java.util.concurrent.TimeUnit
-import javax.inject.Singleton
 
 /**
  * 네트워크 설정. app 모듈이 BuildConfig(API_BASE_URL, gradle 속성 `seesun.apiBaseUrl`)로 제공한다.
@@ -47,7 +47,7 @@ object SeeSunHttp {
                     HttpLoggingInterceptor().apply {
                         level = HttpLoggingInterceptor.Level.BASIC
                         redactHeader(AuthInterceptor.HEADER)
-                    },
+                    }
                 )
             }
         }

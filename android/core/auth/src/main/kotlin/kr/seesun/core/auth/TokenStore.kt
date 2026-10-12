@@ -4,13 +4,13 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kr.seesun.core.auth.security.KeystoreSecretStore
 import kr.seesun.core.auth.security.SecretStore
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /** 앱 JWT(access 15분 / refresh 7일, API 계약 §0) 보관. */
 interface TokenStore {
