@@ -9,10 +9,20 @@ val firebaseEnabled = providers.gradleProperty("seesun.firebase.enabled").map(St
 
 if (firebaseEnabled) {
     // Firebase를 켤 때만 google-services 플러그인을 적용한다. app/google-services.json이 있어야 한다.
-    check(file("google-services.json").exists()) {
-        "seesun.firebase.enabled=true 이지만 app/google-services.json이 없습니다. android/README.md의 'Firebase 전환'을 참고하세요."
+    if (file("google-services.json").exists()) {
+        apply(plugin = "com.google.gms.google-services")
+    } else {
+        // 설정 단계가 아니라 app 빌드 때 실패시킨다(라이브러리 모듈은 따로 컴파일해 볼 수 있게).
+        val missing = tasks.register("checkGoogleServicesJson") {
+            doLast {
+                throw GradleException(
+                    "seesun.firebase.enabled=true 이지만 app/google-services.json이 없습니다. " +
+                        "android/README.md의 'Firebase 전환'을 참고하세요.",
+                )
+            }
+        }
+        tasks.named("preBuild") { dependsOn(missing) }
     }
-    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
