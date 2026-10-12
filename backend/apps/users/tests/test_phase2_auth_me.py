@@ -121,6 +121,12 @@ class TestFirebaseExchange:
         r = api.post(URL, {'id_token': 'anything'}, format='json')
         assert r.status_code == 503 and r.data['error'] == 'AUTH_NOT_CONFIGURED'
 
+    @override_settings(FIREBASE_CREDENTIALS_FILE='/nonexistent/firebase.json', FIREBASE_PROJECT_ID='',
+                       FIREBASE_AUTH_FAKE=False)
+    def test_자격증명_파일이_없으면_503(self, api):
+        r = api.post(URL, {'id_token': 'anything'}, format='json')
+        assert r.status_code == 503
+
     @override_settings(FIREBASE_PROJECT_ID='seesun-test', FIREBASE_AUTH_FAKE=False)
     def test_자격증명이_있으면_firebase_admin_검증기를_쓴다(self):
         verifier = firebase.get_verifier()

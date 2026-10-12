@@ -1,0 +1,75 @@
+# See:Sun 운영(데모·출시 공통) 구성 — 단일 VM(Lightsail 서울) + Cloudflare R2
+#   Caddy(HTTPS 자동 발급) → django(gunicorn) → postgres
+# 사용법은 deploy/README.md. 이 파일이 있는 deploy/ 폴더에서 실행한다:
+#   docker compose -f docker-compose.prod.yml --env-file .env up -d
+name: seesun
+
+services:
+  django:
+    image: ${DJANGO_IMAGE:-seesun-backend:latest}
+    build:
+      context: ../backend
+      target: runtime
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
+    volumes:
+      # Firebase 서비스 계정 JSON 등 자격 증명(읽기 전용). FIREBASE_CREDENTIALS_FILE=/run/secrets/seesun/firebase-service-account.json
+      - ./secrets:/run/secrets/seesun:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "8000"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-seesun}
+      POSTGRES_USER: ${POSTGRES_USER:-seesun}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD를 .env에 설정하세요}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # 외부 포트를 열지 않는다(같은 네트워크의 django만 접속)
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  caddy:
+    image: caddy:2.8-alpine
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN을 .env에 설정하세요}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL을 .env에 설정하세요}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      django:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

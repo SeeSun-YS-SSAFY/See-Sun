@@ -11,6 +11,7 @@ Firebase ID 토큰 검증 (09 문서 2-5)
 테스트는 ``set_verifier_for_tests()`` 로 검증기를 바꿔 끼운다.
 """
 import logging
+import os
 from dataclasses import dataclass
 
 from django.conf import settings
@@ -125,10 +126,15 @@ def get_verifier() -> FirebaseVerifier:
         return _override
     if settings.FIREBASE_AUTH_FAKE:
         return FakeFirebaseVerifier()
-    if settings.FIREBASE_CREDENTIALS_FILE or settings.FIREBASE_PROJECT_ID:
-        if _admin_verifier is None:
+    credentials_file = settings.FIREBASE_CREDENTIALS_FILE
+    if credentials_file and not os.path.exists(credentials_file):
+        # 경로만 있고 파일이 없으면(마운트 누락) 프로젝트 ID만으로 검증하거나 미설정으로 처리
+        logger.error('FIREBASE_CREDENTIALS_FILE 경로에 파일이 없습니다.')
+        credentials_file = ''
+    if credentials_file or settings.FIREBASE_PROJECT_ID:
+        if _admin_verifier is None or _admin_verifier.credentials_file != credentials_file:
             _admin_verifier = FirebaseAdminVerifier(
-                credentials_file=settings.FIREBASE_CREDENTIALS_FILE,
+                credentials_file=credentials_file,
                 project_id=settings.FIREBASE_PROJECT_ID,
                 check_revoked=settings.FIREBASE_CHECK_REVOKED,
             )

@@ -17,23 +17,12 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis (Celery 브로커)
-  redis:
-    image: redis:alpine
-    container_name: seesun-redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   # Django Backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: dev  # 개발 스테이지(runserver, 테스트·1차 웹 데모 호환 패키지 포함)
     container_name: seesun-backend
     ports:
       - "8000:8000"
@@ -49,46 +38,18 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_HOST=db
       - POSTGRES_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # 로컬 개발: 가짜 Firebase 검증기(fake:<uid>:<전화번호>), 1차 웹 데모 기능 켜기
+      - FIREBASE_AUTH_FAKE=true
+      - PIN_LOGIN_ENABLED=true
+      - LEGACY_STT_ENABLED=true
       - GOOGLE_APPLICATION_CREDENTIALS=/app/google-credentials.json
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     # 개발 환경에서는 마이그레이션을 수동으로 실행합니다.
     # (컨테이너 시작 시 자동 migrate + 별도 exec migrate가 겹치면 DB 카탈로그(pg_type)에서 충돌이 발생할 수 있음)
     command: >
       sh -c "python manage.py runserver 0.0.0.0:8000"
-
-  # Celery Worker
-  celery:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: seesun-celery
-    volumes:
-      - ./backend:/app
-      - ./backend/media:/app/media
-    env_file:
-      - ./backend/.env
-    environment:
-      - DJANGO_DEBUG=true
-      - POSTGRES_DB=seesun
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/google-credentials.json
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: celery -A config worker -l info --pool=solo
 
   # Next.js Frontend
   frontend:
