@@ -64,4 +64,46 @@ class HealthVoiceParserTest {
     fun `목표 음성 해석`(text: String, expected: String) {
         assertEquals(expected, HealthVoiceParser.goal(text))
     }
+
+    // ── 질환·알레르기 한 번에 말하기(2차 의뢰서 p6, Figma 1031:3673) ──
+
+    @ParameterizedTest
+    @CsvSource(
+        "당뇨가 있고 땅콩 알레르기가 있어요, DIABETES, PEANUT",
+        "당뇨랑 고혈압 있어요, DIABETES|HYPERTENSION, ''",
+        "땅콩이랑 우유 알레르기, '', PEANUT|MILK",
+        "당뇨는 없고 우유 알레르기만 있어요, '', MILK",
+        "당뇨 있고 알레르기는 없어요, DIABETES, ''",
+        "우유 알레르기는 없고 땅콩 알레르기 있어요, '', PEANUT",
+        "고혈압이랑 계란 알레르기, HYPERTENSION, EGG",
+        "둘 다 없어요, '', ''",
+        "없어요, '', ''",
+        "혈압이 높고 새우 알러지가 있어요, HYPERTENSION, SHRIMP",
+        "당뇨없어요 게 알레르기 있어요, '', CRAB"
+    )
+    fun `한 번에 말하기를 질환과 알레르기로 나눈다`(text: String, diseases: String, allergens: String) {
+        fun set(v: String) = v.split('|').filter { it.isNotEmpty() }.toSet()
+        assertEquals(HealthAnswer(set(diseases), set(allergens)), HealthVoiceParser.diseasesAndAllergens(text, names))
+    }
+
+    @Test
+    fun `질환·알레르기 이름도 없음도 없으면 null`() {
+        assertNull(HealthVoiceParser.diseasesAndAllergens("음 잘 모르겠어요", names))
+        // 「알레르기」라는 말만으로는 알류(알)로 오인하지 않는다.
+        assertNull(HealthVoiceParser.diseasesAndAllergens("알레르기", names))
+    }
+
+    @Test
+    fun `되읽기 글자는 표준 형식이고 다시 읽으면 같은 코드`() {
+        val answer = HealthAnswer(setOf("HYPERTENSION", "DIABETES"), setOf("PEANUT", "EGG"))
+        val text = HealthVoiceParser.summary(answer, names)
+        assertEquals("질환 당뇨, 고혈압 · 알레르기 알류, 땅콩", text)
+        assertEquals(answer, HealthVoiceParser.parseSummary(text, names))
+        assertEquals("질환 없음 · 알레르기 없음", HealthVoiceParser.summary(HealthAnswer(emptySet(), emptySet()), names))
+        assertEquals(HealthAnswer(emptySet(), emptySet()), HealthVoiceParser.parseSummary("질환 없음 · 알레르기 없음", names))
+        assertNull(HealthVoiceParser.parseSummary("질환 감기 · 알레르기 없음", names))
+        // 결과 칸 해석기: 말이든 표준 형식이든 표준 형식으로
+        assertEquals("질환 당뇨 · 알레르기 없음", HealthVoiceParser.summaryOf("당뇨 있어요 알레르기는 없어요", names))
+        assertEquals(text, HealthVoiceParser.summaryOf(text, names))
+    }
 }

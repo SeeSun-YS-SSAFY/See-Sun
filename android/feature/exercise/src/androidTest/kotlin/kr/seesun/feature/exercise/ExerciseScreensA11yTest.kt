@@ -23,6 +23,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
+import kr.seesun.core.data.model.ExerciseCategory
 import kr.seesun.core.data.model.ExerciseDetail
 import kr.seesun.core.data.model.ExerciseSummary
 import kr.seesun.core.data.model.GuideSection
@@ -84,14 +85,24 @@ class ExerciseScreensA11yTest {
     fun 운동_첫_화면은_방식_버튼과_로그인_안내를_글자로_보인다() {
         var opened: HomeDestination? = null
         rule.setThemed {
-            ExerciseHomeScreen(HomeUi(signedIn = false, pending = 2), {}, { opened = it })
+            ExerciseHomeScreen(
+                HomeUi(
+                    signedIn = false,
+                    pending = 2,
+                    loading = false,
+                    categories = listOf(ExerciseCategory("2", "유산소 운동")),
+                    goal = "LOSE_WEIGHT"
+                ),
+                {},
+                { opened = it }
+            )
         }
         rule.onNode(pane("운동")).assertExists()
         // 화면에는 한 줄로 줄이고, TalkBack에는 전체 문장을 읽힌다.
         rule.onNodeWithText("보내지 못한 운동 기록 2건", substring = true).assertExists()
         rule.onNode(hasContentDescription("아직 서버에 보내지 못한 운동 기록이 2건", substring = true)).assertExists()
         rule.onNodeWithText("루틴 운동").performScrollTo().performClick()
-        assertEquals(HomeDestination.ROUTINE, opened)
+        assertEquals(HomeDestination.Routine, opened)
         rule.assertNoLigatureNames()
     }
 

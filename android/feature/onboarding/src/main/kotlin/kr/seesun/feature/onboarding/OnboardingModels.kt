@@ -9,7 +9,8 @@ import kr.seesun.core.network.model.DocumentKinds
  * 온보딩 단계(04 §3.1, 05 §4 순서). 화면 하나가 한 단계다.
  * 시작 → 연령 확인 → 약관 동의 한 화면(의료기기 아님 고지 + 전체 동의 + 약관·개인정보·국외이전 고지·민감정보 행)
  * → 전화번호 → 인증번호
- * → 이름·생년월일·성별·키·몸무게 → 확인 → (민감정보 동의 시) 질환·알레르기·기타 → 목표 → 확인 → 가입 완료.
+ * → 이름·생년월일·성별·키·몸무게 → 확인 → (민감정보 동의 시) 질환·알레르기 한 번에 말하기(Figma 1031:3673)
+ *   [버튼으로 설정]이면 질환·알레르기·기타 → 목표 → 확인 → 가입 완료.
  */
 @Serializable
 enum class Step(val group: Int) {
@@ -25,6 +26,7 @@ enum class Step(val group: Int) {
     HEIGHT(5),
     WEIGHT(5),
     PROFILE_CONFIRM(5),
+    HEALTH_VOICE(6),
     DISEASES(6),
     ALLERGENS(6),
     OTHER_ALLERGY(6),
@@ -87,6 +89,8 @@ data class OnboardingForm(
     val allergens: Set<String> = emptySet(),
     val allergenIndex: Int = 0,
     val otherAllergy: String? = null,
+    /** 질환·알레르기를 한 번에 말해 정했는가(목표 화면의 뒤로 가기가 그 화면으로 간다). */
+    val healthByVoice: Boolean = false,
     val goal: String? = null,
     val healthSaved: Boolean = false
 )
@@ -146,6 +150,8 @@ data class OnboardingUiState(
     val targetKcal: Int? = null,
     /** 감량 목표가 하한(1,200kcal)에 맞춰 올라갔는가(법적 검토 T-07). */
     val targetFloored: Boolean = false,
+    /** 서버가 미성년 연령별 섭취기준(산식 kdri…)으로 목표 열량을 계산했는가(2차 의뢰서 p14). */
+    val targetMinorStandard: Boolean = false,
     /** 완료 화면에서 부를 이름(기존 회원은 서버 값). */
     val doneName: String? = null,
     val doneLoaded: Boolean = false,

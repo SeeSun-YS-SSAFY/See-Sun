@@ -157,6 +157,33 @@ internal fun profileLines(form: OnboardingForm): List<String> = listOfNotNull(
 private fun genderLabel(code: String): String =
     stringResource(if (code == Genders.MALE) R.string.onb_gender_male else R.string.onb_gender_female)
 
+/**
+ * 질환·알레르기 한 번에 말하기(2차 의뢰서 p6, Figma 1031:3673): 「마이크를 눌러 질환 및 알레르기를 말씀해주세요」 + 마이크 +
+ * [다음] + [버튼으로 설정]. 말한 내용을 질환·알레르기로 나눠 「질환 당뇨 · 알레르기 땅콩. 맞습니까?」로 되읽고 [확인]이면 목표로.
+ * 알레르기 이름은 서버 목록으로 알아들으므로 목록을 다 읽은 뒤에 마이크를 보인다.
+ */
+@Composable
+internal fun ColumnScope.HealthVoiceStep(ctx: StepContext) {
+    Prompt(R.string.onb_health_voice_keyword, R.string.onb_prompt_tail_reul, stringResource(R.string.onb_health_voice_body_spoken))
+    when (val list = ctx.state.allergens) {
+        Loadable.Loading -> BodyText(stringResource(R.string.onb_loading))
+
+        is Loadable.Failed -> {
+            BodyText(list.message, emphasis = true)
+            SeeSunButton(text = stringResource(R.string.onb_retry), onClick = ctx.vm::loadAllergens, kind = ButtonKind.SECONDARY)
+        }
+
+        is Loadable.Loaded -> FieldBlock(
+            ctx,
+            ctx.vm.healthVoiceField,
+            stringResource(R.string.onb_health_voice_label),
+            R.string.onb_health_voice_confirm,
+            stringResource(R.string.onb_health_voice_hint),
+            secondary = stringResource(R.string.onb_health_voice_buttons) to ctx.vm::healthByButtons
+        )
+    }
+}
+
 @Composable
 internal fun ColumnScope.DiseasesStep(ctx: StepContext) {
     val diseases = ctx.state.form.diseases
@@ -261,6 +288,7 @@ internal fun ColumnScope.GoalStep(ctx: StepContext) {
         stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note),
         spoken = stringResource(R.string.onb_goal_body) + " " + stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note)
     )
+    if (ctx.vm.isMinor()) BodyText(stringResource(R.string.onb_goal_minor_note))
     VoiceCommandButton(ctx.vm.goalVoice, stringResource(R.string.onb_goal_hint), ctx.talkBack, ctx.speak)
     GoalOption.entries.forEach { option ->
         ListButton(
@@ -341,7 +369,7 @@ internal fun doneLines(state: OnboardingUiState): List<String> {
         state.targetKcal?.let {
             stringResource(R.string.onb_done_kcal, "%,d".format(it))
         } ?: stringResource(R.string.onb_done_kcal_unknown),
-        state.targetKcal?.let { stringResource(R.string.onb_kcal_estimate) },
+        state.targetKcal?.let { stringResource(if (state.targetMinorStandard) R.string.onb_kcal_minor else R.string.onb_kcal_estimate) },
         if (state.targetFloored) stringResource(R.string.onb_kcal_floor) else null
     )
 }

@@ -89,6 +89,9 @@ enum class AuthError(val message: String) {
     RECAPTCHA_CANCELLED("로봇이 아님 확인이 취소됐어요. 인증번호 받기를 다시 누르고 확인을 끝까지 해 주세요."),
     APP_NOT_VERIFIED("앱 확인에 실패했어요. 앱을 최신 버전으로 업데이트한 뒤 다시 시도해 주세요."),
     NOT_CONFIGURED("전화번호 인증이 아직 준비되지 않았어요. 관리자에게 문의해 주세요."),
+
+    /** Firebase 결제 계정이 없어(Spark 요금제) 실제 번호로 문자를 보낼 수 없다 — 17499 BILLING_NOT_ENABLED. */
+    SMS_BILLING_DISABLED("지금은 인증 문자 보내기가 꺼져 있어 실제 휴대폰 번호로는 가입할 수 없어요. 번호를 다시 넣어도 같아요. 관리자에게 알려 주세요."),
     UNKNOWN("인증에 실패했어요. 잠시 후 다시 시도해 주세요. 계속되면 오류 코드를 관리자에게 알려 주세요.")
 }
 
@@ -131,6 +134,8 @@ object AuthErrors {
 
             code == "OPERATION_NOT_ALLOWED" -> AuthError.NOT_CONFIGURED
 
+            code == BILLING_NOT_ENABLED || "billing_not_enabled" in msg -> AuthError.SMS_BILLING_DISABLED
+
             else -> AuthError.UNKNOWN
         }
         return AuthFailure(error, supportCode(error, code, msg, source))
@@ -143,8 +148,11 @@ object AuthErrors {
     private fun supportCode(error: AuthError, code: String?, msg: String, source: Source): String? = when (error) {
         AuthError.INVALID_PHONE, AuthError.INVALID_CODE -> null
         AuthError.REGION_NOT_ENABLED -> "17006"
+        AuthError.SMS_BILLING_DISABLED -> BILLING_NOT_ENABLED
         else -> code ?: numericCode.find(msg)?.value ?: source.name
     }
+
+    private const val BILLING_NOT_ENABLED = "BILLING_NOT_ENABLED"
 
     private val APP_CHECK_CODES = setOf(
         "APP_NOT_AUTHORIZED",

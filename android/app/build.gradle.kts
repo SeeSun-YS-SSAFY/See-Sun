@@ -17,6 +17,9 @@ val appVersionName = providers.gradleProperty("seesun.versionName").getOrElse("0
 
 // 가운영 자체 업데이트(-Pseesun.selfUpdate=true). 켜면 설치 권한(REQUEST_INSTALL_PACKAGES)·FileProvider가 담긴
 // src/selfUpdate/AndroidManifest.xml을 합치고, 앱이 시작할 때 서버의 latest.json을 확인한다. Play·일반 빌드는 끈 채로 둔다.
+// 설정 「문의하기」 연락처(feature:mypage res/values/contact_config.xml을 덮어씀). 주지 않으면 「연락처 준비 중」.
+val contactPhone = providers.gradleProperty("seesun.contact.phone").orNull
+val contactEmail = providers.gradleProperty("seesun.contact.email").orNull
 val selfUpdate = providers.gradleProperty("seesun.selfUpdate").map(String::toBoolean).getOrElse(false)
 val selfUpdateManifestUrl = providers.gradleProperty("seesun.selfUpdate.manifestUrl")
     .getOrElse(apiBaseUrl.replace(Regex("/api/v1/?$"), "/media/app/latest.json"))
@@ -71,6 +74,8 @@ android {
         versionCode = appVersionCode
         versionName = appVersionName
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
+        contactPhone?.let { resValue("string", "seesun_contact_phone", it) }
+        contactEmail?.let { resValue("string", "seesun_contact_email", it) }
         buildConfigField("boolean", "SELF_UPDATE", selfUpdate.toString())
         buildConfigField("String", "SELF_UPDATE_MANIFEST_URL", "\"$selfUpdateManifestUrl\"")
         buildConfigField("String", "SELF_UPDATE_PUSH_TOPIC", "\"$selfUpdatePushTopic\"")
@@ -80,6 +85,7 @@ android {
     }
 
     buildFeatures.buildConfig = true
+    buildFeatures.resValues = contactPhone != null || contactEmail != null
 
     if (selfUpdate) {
         // 빌드 유형 소스 세트의 매니페스트로 합친다(main 매니페스트는 그대로). 플래그가 꺼진 빌드에는 들어가지 않는다.

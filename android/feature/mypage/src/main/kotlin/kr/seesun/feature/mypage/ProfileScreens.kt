@@ -285,6 +285,15 @@ private fun ProfileHeader(me: MeDto, spoken: String) {
                 textAlign = TextAlign.Center
             )
         }
+        // 만 19세 미만은 연령별 섭취기준(2차 의뢰서 p14) — 성인 공식과 다르다는 것을 글자로도 보인다.
+        if (me.targetKcal != null && usesMinorStandard(me)) {
+            Text(
+                text = stringResource(R.string.my_short_kcal_minor),
+                style = SeeSunTheme.typography.caption,
+                color = colors.onBackground,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
@@ -387,7 +396,7 @@ internal fun profileLines(me: MeDto?): List<String> {
         me.weightKg?.let { stringResource(R.string.my_line_weight, it) },
         GoalOption.of(me.goal)?.let { stringResource(R.string.my_line_goal, stringResource(it.label)) },
         me.targetKcal?.let { stringResource(R.string.my_line_kcal, "%,d".format(it)) },
-        me.targetKcal?.let { stringResource(R.string.my_kcal_estimate) }
+        me.targetKcal?.let { stringResource(if (usesMinorStandard(me)) R.string.my_kcal_minor else R.string.my_kcal_estimate) }
     )
 }
 
@@ -695,3 +704,14 @@ private fun fieldLabel(field: ProfileField): String = stringResource(
         ProfileField.WEIGHT -> R.string.my_field_weight
     }
 )
+
+/**
+ * 서버가 목표 열량을 미성년 연령별 섭취기준으로 계산했는가(산식 이름 kdri…). `minor` 표시만 보면 안 된다 —
+ * 그 산식이 서버에 배포되기 전에는 minor=true여도 값이 성인 공식이다.
+ */
+fun usesMinorStandard(me: MeDto): Boolean {
+    val detail = me.targetKcalDetail ?: return false
+    return detail.minor && detail.formula.orEmpty().startsWith(MINOR_FORMULA_PREFIX)
+}
+
+private const val MINOR_FORMULA_PREFIX = "kdri"

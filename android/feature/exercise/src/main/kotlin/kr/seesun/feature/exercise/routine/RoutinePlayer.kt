@@ -46,7 +46,9 @@ import kr.seesun.core.designsystem.component.BottomActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.LocalAppSettingsAction
+import kr.seesun.core.designsystem.component.PlaybackProgressBar
 import kr.seesun.core.designsystem.component.ScreenScaffold
+import kr.seesun.core.designsystem.component.progressPercent
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
@@ -658,6 +660,7 @@ private fun ColumnScope.ExerciseBody(ui: RoutineUi, routine: Routine, guide: Gui
         color = SeeSunTheme.colors.emphasis,
         modifier = Modifier.fillMaxWidth()
     )
+    RoutineProgressBar(routine, ui.stepIndex)
     val detail = ui.detail
     if (detail == null) {
         LiveStatusText("안내를 불러오는 중이에요.")
@@ -691,6 +694,7 @@ private fun ColumnScope.RestBody(ui: RoutineUi, routine: Routine, actions: Routi
         color = SeeSunTheme.colors.emphasis,
         modifier = Modifier.fillMaxWidth()
     )
+    RoutineProgressBar(routine, ui.stepIndex)
     BodyText("다음 운동: ${next.exerciseName}${if (step.nextSet > 1) ", ${step.nextSet}세트째" else ""}")
     BottomActions {
         ActionButton(text = "휴식 건너뛰기", iconRes = R.drawable.ic_exercise_next, onClick = actions.onSkipRest)
@@ -702,6 +706,13 @@ private fun ColumnScope.RestBody(ui: RoutineUi, routine: Routine, actions: Routi
         )
         ActionButton(text = "루틴 끝내기", iconRes = R.drawable.ic_exercise_stop, kind = ButtonKind.SECONDARY, onClick = actions.onEnd)
     }
+}
+
+/** 루틴 전체 진행 바(운동 n개 중 몇 번째인지는 바로 위 글자에도 있다). 값이 바뀌어도 낭독하지 않는다. */
+@Composable
+private fun RoutineProgressBar(routine: Routine, stepIndex: Int) {
+    val fraction = RoutinePlan.progress(RoutinePlan.build(routine.items), stepIndex)
+    PlaybackProgressBar(fraction = fraction, label = "루틴 진행", state = "${progressPercent(fraction)}퍼센트")
 }
 
 /** 보조자가 필요한 운동은 이름 뒤에 글자로 표시한다(색·아이콘만으로 표시하지 않음, T-08·EX-12). */

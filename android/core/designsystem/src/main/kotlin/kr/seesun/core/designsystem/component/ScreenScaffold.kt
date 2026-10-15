@@ -50,6 +50,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
@@ -353,6 +354,49 @@ fun StepProgressBar(step: Int, count: Int, description: String?, modifier: Modif
         )
     }
 }
+
+/**
+ * 재생 진행 막대(운동 안내·루틴, 2차 의뢰서 p15 「진행 바」). 채움은 [fraction] 그대로, TalkBack 값은 10% 단위로만 바뀐다.
+ * liveRegion을 두지 않는다 — 막대에 초점이 있을 때만 값이 읽히고, 재생 중에 문장마다 낭독이 끼어들지 않는다.
+ * 같은 내용은 상태 줄 글자(「구간 2/5」)에도 있으므로 색만으로 전하지 않는다.
+ */
+@Composable
+fun PlaybackProgressBar(fraction: Float, label: String, state: String, modifier: Modifier = Modifier) {
+    val colors = SeeSunTheme.colors
+    val shown = fraction.coerceIn(0f, 1f)
+    val announced = progressStep(shown)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(PROGRESS_HEIGHT)
+            .background(colors.chip, CircleShape)
+            .border(1.dp, colors.border, CircleShape)
+            .clearAndSetSemantics {
+                contentDescription = label
+                stateDescription = state
+                progressBarRangeInfo = ProgressBarRangeInfo(announced, 0f..1f, PROGRESS_STEPS)
+            }
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth(shown)
+                .fillMaxHeight()
+                .background(colors.primary, CircleShape)
+                .border(1.dp, colors.border, CircleShape)
+        )
+    }
+}
+
+/** TalkBack에 알릴 진행 값: 10% 단위(0, 0.1 … 1)로 내린다. 끝(1)은 끝일 때만. */
+fun progressStep(fraction: Float): Float = (kotlin.math.floor(fraction.coerceIn(0f, 1f) * TEN + EPSILON) / TEN).coerceIn(0f, 1f)
+
+/** 10% 단위 백분율(낭독 문구용). */
+fun progressPercent(fraction: Float): Int = kotlin.math.round(progressStep(fraction) * HUNDRED).toInt()
+
+private const val PROGRESS_STEPS = 9
+private const val TEN = 10f
+private const val HUNDRED = 100f
+private const val EPSILON = 1e-4f
 
 @Composable
 private fun ColumnScope.Body(scrollable: Boolean, dense: Boolean, margin: Dp, columnMax: Dp, content: @Composable ColumnScope.() -> Unit) {

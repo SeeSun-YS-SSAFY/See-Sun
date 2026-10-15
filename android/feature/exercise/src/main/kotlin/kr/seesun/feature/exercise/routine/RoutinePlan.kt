@@ -38,6 +38,17 @@ object RoutinePlan {
         return all.filter { it.key == FOLLOW_ALONG }.ifEmpty { all }
     }
 
+    /**
+     * 루틴 진행률(진행 바): 지금 단계 앞에 끝낸 운동 단계 수 ÷ 전체 운동 단계 수(세트마다 한 단계, 휴식은 세지 않음).
+     * [stepIndex]가 끝을 지나면 1.
+     */
+    fun progress(steps: List<RoutineStep>, stepIndex: Int): Float {
+        val total = steps.count { it is RoutineStep.Exercise }
+        if (total == 0) return 0f
+        val done = steps.take(stepIndex.coerceAtLeast(0)).count { it is RoutineStep.Exercise }
+        return done.toFloat() / total
+    }
+
     /** "운동 3개 중 2번째" 처럼 사람에게 읽어 줄 진행 위치. */
     fun progressLabel(itemIndex: Int, itemCount: Int, set: Int, totalSets: Int): String {
         val base = "운동 ${itemCount}개 중 ${itemIndex + 1}번째"
