@@ -20,7 +20,14 @@ import kr.seesun.core.voice.tts.Speaker
  * 자체 업데이트 설정. app이 빌드 속성(-Pseesun.selfUpdate)으로 만든다.
  * @property enabled false면 매니페스트를 확인하지 않고 아무것도 띄우지 않는다(Play·일반 빌드)
  */
-data class UpdateConfig(val enabled: Boolean, val manifestUrl: String, val installedVersionCode: Long, val installedVersionName: String)
+data class UpdateConfig(
+    val enabled: Boolean,
+    val manifestUrl: String,
+    val installedVersionCode: Long,
+    val installedVersionName: String,
+    /** FCM 업데이트 푸시 토픽(시험 빌드는 `seesun-app-updates-test`로 바꾼다 — 실제 토픽에 시험 푸시를 보내지 않게). */
+    val pushTopic: String = UpdatePushPolicy.TOPIC
+)
 
 /** 업데이트 안내 창의 단계. */
 enum class UpdateStep {

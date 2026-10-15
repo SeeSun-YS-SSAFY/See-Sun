@@ -28,6 +28,12 @@ dependencies {
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+    // 업데이트 푸시(FCM, 소유자 승인 msg 1011): 가운영 자체 업데이트 빌드에만 넣는다. Play·일반 빌드에는 FCM이 들어가지 않는다.
+    if (selfUpdate) {
+        // api: app 매니페스트가 이 모듈의 FirebaseMessagingService를 등록하므로 app에서도 보이게(lint Instantiatable).
+        api(platform(libs.firebase.bom))
+        api(libs.firebase.messaging)
+    }
     testImplementation(platform(libs.okhttp.bom))
     testImplementation(libs.okhttp.mockwebserver)
 }

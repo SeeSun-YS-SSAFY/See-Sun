@@ -45,7 +45,8 @@
     <string name="my_edit_health">건강 정보 수정</string>
     <string name="my_settings">설정</string>
     <string name="my_reports_soon">식단·운동 기록 레포트는 식단·운동 기능과 함께 제공돼요.</string>
-    <string name="my_guide">마이페이지. %1$s.</string>
+    <string name="my_guide">마이페이지. %1$s. 내 정보 수정, 건강 정보 수정, 운동 기록, 식단 기록, 설정 중에서 골라 주세요.</string>
+    <string name="my_voice_hint">내 정보 수정, 건강 정보 수정, 운동 기록, 식단 기록, 설정 중에서 말씀해 주세요.</string>
 
     <!-- MY-02 내 정보 수정 -->
     <string name="my_profile_edit_title">내 정보 수정</string>
@@ -89,7 +90,7 @@
     <string name="my_health_disclaimer">알레르기·질환 정보는 맞춤 경고와 추천에 쓰는 참고 정보예요. 정확한 진단은 전문가와 상담하세요.</string>
 
     <!-- SET-01 설정 -->
-    <string name="my_settings_guide">설정. 내 개인정보 권리, 개인정보·동의 관리, 데이터 초기화, 처리방침, 이용약관, 데이터 출처, 오픈소스 라이선스, 접근성 안내·문의, 음성 자동 인식, 권한 상태, 알림 설정, 앱 버전, 로그아웃, 회원 탈퇴가 있어요. 말로 고르기를 누르고 메뉴 이름을 말씀하셔도 돼요.</string>
+    <string name="my_settings_guide">설정. %1$s이 있어요. 말로 고르기를 누르고 메뉴 이름을 말씀하셔도 돼요.</string>
     <string name="my_set_rights">내 개인정보 권리</string>
     <string name="my_set_rights_desc">보기·고치기·지우기·처리 멈추기·문의</string>
     <string name="my_set_reset">데이터 초기화</string>
@@ -103,17 +104,62 @@
     <string name="my_set_sources">데이터 출처</string>
     <string name="my_set_licenses">오픈소스 라이선스</string>
     <string name="my_set_voice_auto">음성 자동 인식</string>
-    <string name="my_set_voice_auto_desc">안내가 끝나면 마이크가 저절로 켜져요</string>
+    <string name="my_set_voice_auto_desc">질문 뒤 듣기·말하면 듣기</string>
+    <string name="my_set_speed">말 속도</string>
+    <string name="my_set_speed_desc">앱 안내 빠르기</string>
+    <string name="my_set_app_voice">앱 음성 안내</string>
+    <string name="my_set_app_voice_desc">자동·항상·끄기</string>
+    <string name="my_set_press">누름 알림</string>
+    <string name="my_set_press_desc">결과 읽기·진동만·끄기</string>
+    <string name="my_set_howto">사용법 다시 듣기</string>
+    <string name="my_set_howto_desc">처음 안내를 다시 들어요</string>
+    <string name="my_choice_guide">%1$s. 지금은 %2$s이에요. %3$s 중에서 골라 주세요.</string>
+    <string name="my_speed_body">앱 안내 음성의 빠르기예요. 고르면 그 빠르기로 바로 들려 드려요. TalkBack 속도는 TalkBack 설정에서 바꿔요.</string>
+    <string name="my_speed_slow">느리게</string>
+    <string name="my_speed_slow_desc">천천히 또박또박</string>
+    <string name="my_speed_normal">보통</string>
+    <string name="my_speed_normal_desc">기본 빠르기</string>
+    <string name="my_speed_fast">빠르게</string>
+    <string name="my_speed_fast_desc">익숙해지면 빠르게</string>
+    <string name="my_speed_preview">이 빠르기로 안내해 드려요.</string>
+    <string name="my_speed_try">미리 듣기</string>
+    <string name="my_app_voice_body">앱이 화면 안내를 직접 말할지 정해요. 운동 안내 음성은 따로 재생 버튼으로 들어요.</string>
+    <string name="my_app_voice_auto">자동</string>
+    <string name="my_app_voice_auto_desc">TalkBack이 켜져 있으면 앱은 말하지 않아요(기본)</string>
+    <string name="my_app_voice_always">항상</string>
+    <string name="my_app_voice_always_desc">TalkBack이 켜져 있어도 앱이 말해요</string>
+    <string name="my_app_voice_off">끄기</string>
+    <string name="my_app_voice_off_desc">앱 안내 음성을 쓰지 않아요</string>
+    <string name="my_press_body">TalkBack을 쓰지 않을 때 버튼을 누르면 알려 드리는 방법이에요. TalkBack이 켜져 있으면 TalkBack이 알려 드려요.</string>
+    <string name="my_press_speak">결과 읽기</string>
+    <string name="my_press_speak_desc">진동 한 번, 고르는 버튼은 「선택됨」처럼 결과를 말해요. 길게 누르면 이름을 읽어요(기본)</string>
+    <string name="my_press_vibrate">진동만</string>
+    <string name="my_press_vibrate_desc">진동 한 번만. 길게 누르면 이름을 읽어요</string>
+    <string name="my_press_off">끄기</string>
+    <string name="my_press_off_desc">진동도 말도 없어요</string>
+    <string name="my_howto_again">다시 듣기</string>
     <string name="my_voice_auto_title">음성 자동 인식</string>
-    <string name="my_voice_auto_body">켜 두면 화면 안내 음성이 끝난 뒤 마이크가 저절로 켜져 말씀을 들어요. 마이크 버튼을 누르지 않아도 돼요.</string>
+    <string name="my_voice_auto_body">질문이 끝나면 8초씩 두 번 들어요. 「말하면 듣기」를 고르면 그 뒤에도 말씀을 기다렸다가, 말씀하시면 바로 들어요. 마이크 버튼이나 이어폰 버튼은 언제든 쓸 수 있어요.</string>
+    <string name="my_voice_auto_talkback">TalkBack이 켜져 있어 지금은 저절로 듣지 않아요. 마이크 버튼이나 이어폰 버튼, 두 손가락 두 번 탭으로 말씀해 주세요.</string>
+    <string name="my_listen_off">끄기</string>
+    <string name="my_listen_off_desc">마이크 버튼이나 이어폰 버튼을 눌러 말해요</string>
+    <string name="my_listen_after">질문 뒤에만</string>
+    <string name="my_listen_after_desc">질문이 끝나면 8초씩 두 번 들어요</string>
+    <string name="my_listen_voice">질문 뒤 + 말하면 듣기</string>
+    <string name="my_listen_voice_desc">그 뒤에도 말씀을 기다려요. 초록 마이크 표시가 켜져요(기본)</string>
+    <string name="my_listen_idle_title">말씀이 없으면 듣기를 쉬기까지</string>
+    <string name="my_listen_idle_30">30초</string>
+    <string name="my_listen_idle_60">1분(기본)</string>
+    <string name="my_listen_idle_120">2분</string>
+    <string name="my_voice_auto_changed">음성 자동 인식을 %1$s(으)로 바꿨어요.</string>
     <string name="my_voice_auto_detail">사람 말소리로 알아들은 말 중 그 화면에서 쓸 수 있는 말에만 반응해요. 몇 번 들어도 말씀이 없으면 듣기를 멈추고, 그때는 마이크 버튼을 누르면 돼요. TalkBack을 켜면 TalkBack 낭독을 잘못 들을 수 있어 자동으로 켜지 않아요. 마이크 권한을 허용해야 해요.</string>
     <string name="my_voice_auto_toggle">음성 자동 인식</string>
     <string name="my_voice_auto_on">켜짐: 안내가 끝나면 저절로 들어요</string>
     <string name="my_voice_auto_off">꺼짐: 마이크 버튼을 눌러 말해요</string>
     <string name="my_voice_auto_changed_on">음성 자동 인식을 켰어요.</string>
     <string name="my_voice_auto_changed_off">음성 자동 인식을 껐어요.</string>
-    <string name="my_voice_auto_hint">켜 줘, 또는 꺼 줘라고 말씀해 주세요.</string>
-    <string name="my_voice_auto_guide">음성 자동 인식. 지금 %1$s. 켜 두면 안내가 끝난 뒤 마이크가 저절로 켜져요. 켜 줘, 꺼 줘라고 말씀하시거나 아래 버튼을 눌러 바꿀 수 있어요.</string>
+    <string name="my_voice_auto_hint">켜 줘, 꺼 줘, 또는 질문 뒤에만이라고 말씀해 주세요.</string>
+    <string name="my_voice_auto_guide">음성 자동 인식. 지금은 %1$s이에요. 끄기, 질문 뒤에만, 질문 뒤 더하기 말하면 듣기 중에서 고르거나 말로 바꿀 수 있어요.</string>
     <string name="my_voice_auto_state_on">켜져 있어요</string>
     <string name="my_voice_auto_state_off">꺼져 있어요</string>
     <string name="my_set_notifications">알림 설정</string>
@@ -285,7 +331,8 @@
 
     <!-- 로그인 전 설정(시작 화면 톱니바퀴, 소유자 msg 959)·권한 상태·앱 버전 -->
     <string name="my_settings_before_sign_in">로그인 전이라 계정과 상관없는 설정만 보여요.</string>
-    <string name="my_settings_guide_before_sign_in">설정. 로그인 전이라 접근성 안내, 음성 자동 인식, 권한 상태, 앱 버전만 있어요. 고르거나 말로 고르기를 눌러 말씀해 주세요.</string>
+    <string name="my_settings_guide_before_sign_in">설정. 로그인 전이라 %1$s만 있어요. 고르거나 말로 고르기를 눌러 말씀해 주세요.</string>
+    <string name="my_set_voice_hint_before_sign_in">말 속도, 음성 자동 인식, 앱 음성 안내, 사용법, 이용약관, 처리방침처럼 가고 싶은 메뉴를 말씀해 주세요.</string>
     <string name="my_set_permissions">권한 상태</string>
     <string name="my_set_permissions_desc">마이크·알림 권한이 켜졌는지 보고 허용해요</string>
     <string name="my_set_version">앱 버전</string>

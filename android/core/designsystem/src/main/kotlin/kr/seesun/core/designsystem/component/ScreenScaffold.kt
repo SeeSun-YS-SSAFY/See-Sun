@@ -3,7 +3,7 @@ package kr.seesun.core.designsystem.component
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -32,6 +32,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +41,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -54,6 +57,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kr.seesun.core.a11y.politeLiveRegion
+import kr.seesun.core.a11y.rememberTalkBackEnabled
 import kr.seesun.core.a11y.screenHeading
 import kr.seesun.core.a11y.screenPane
 import kr.seesun.core.designsystem.R
@@ -67,7 +71,7 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.designsystem.theme.WidthClass
 
 /**
- * 화면 공통 틀: 헤더([뒤로 가기] 회색 삼각형 · 큰 제목 · [화면 요약 듣기]) + (온보딩) 진행 막대 + 본문 + (선택) 하단 행동 영역.
+ * 화면 공통 틀: 헤더([뒤로 가기] 회색 삼각형 · 큰 제목 · [화면 다시 듣기] · [설정]) + (온보딩) 진행 막대 + 본문 + (선택) 하단 행동 영역.
  * 헤더 모양은 의뢰인 Figma(뒤로가기 325:1564, 화면 제목 Title M 40)를 따른다. 배치 기준은 docs/design/11_레이아웃_기준.md.
  *
  * - 화면 전체에 paneTitle을 붙여 화면이 바뀌면 TalkBack이 제목을 읽는다. 제목은 heading.
@@ -82,9 +86,11 @@ import kr.seesun.core.designsystem.theme.WidthClass
  * - 내부에 지연 목록(스크롤 강조 목록)을 두는 화면은 [scrollable]을 false로 둔다(목록이 남는 높이를 채운다).
  *
  * @param onBack null이면 [뒤로 가기]를 그리지 않는다(메인 등).
- * @param onSpeakSummary 화면 요약 낭독(COM-08). null이면 숨긴다.
- * @param onOpenSettings 헤더 오른쪽 위 [설정](톱니바퀴). [화면 요약 듣기]와 같은 크기·모양으로 나란히(소유자 msg 959·977),
- *   TalkBack 「설정」. 기본값은 앱이 [LocalAppSettingsAction]으로 넘긴 동작(모든 화면), null이면 숨긴다(설정 목록 자체 등).
+ * @param onSpeakSummary [화면 다시 듣기](COM-08)에서 읽을 화면 요약. null이면 앱 기본 동작([ScreenChrome.repeat]: 이 화면의
+ *   마지막 안내, 없으면 제목)을 쓴다. 보일지는 [LocalShowRepeat](화면 낭독기 + 「자동」이면 숨김)가 정한다.
+ * @param onOpenSettings 헤더 오른쪽 위 [설정](톱니바퀴). [화면 다시 듣기]와 같은 크기(56dp 칸·32dp 아이콘)로 8dp 띄워 나란히, 맨 오른쪽 끝
+ *   (소유자 msg 959·977, v6). TalkBack 「설정」. 기본값은 앱이 [LocalAppSettingsAction]으로 넘긴 동작(모든 화면), null이면 숨긴다
+ *   (설정 목록 자체·탈퇴·초기화 같은 되돌릴 수 없는 확인 화면).
  * @param dense 요소가 많은 화면(Figma에 없는 약관 동의·운동 재생 등): 보통 폰에서도 묶음 사이 24 대신 12dp.
  */
 @Composable
@@ -103,6 +109,15 @@ fun ScreenScaffold(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = SeeSunTheme.colors
+    val chrome = LocalScreenChrome.current
+    val enteredAt = remember { chrome?.now() ?: 0L }
+    LaunchedEffect(chrome, title) { chrome?.onScreen(title) }
+    val repeat: (() -> Unit)? = when {
+        !LocalShowRepeat.current && onSpeakSummary == null -> null
+        onSpeakSummary != null -> onSpeakSummary
+        chrome != null -> ({ chrome.repeat(title, enteredAt) })
+        else -> null
+    }
     // 배치 단계는 키보드와 상관없는 높이(창 − 상태·내비게이션 막대)로 정한다(키보드가 열려도 단계가 바뀌지 않게).
     BoxWithConstraints(
         modifier = modifier
@@ -114,7 +129,7 @@ fun ScreenScaffold(
         val tier = LayoutTier.of(maxHeight.value)
         CompositionLocalProvider(LocalLayoutTier provides tier) {
             CompositionLocalProvider(LocalHeaderSettings provides onOpenSettings) {
-                ScaffoldColumn(title, showTitle, onBack, onSpeakSummary, scrollable, step, stepCount, progressDescription, dense, content)
+                ScaffoldColumn(title, showTitle, onBack, repeat, scrollable, step, stepCount, progressDescription, dense, content)
             }
         }
     }
@@ -188,26 +203,33 @@ private fun Header(
                     .heightIn(min = if (showTitle) rowHeight else SeeSunDimens.MinTouchTarget),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (onBack != null) BackTriangleButton(onClick = onBack, height = rowHeight) else Spacer(Modifier.width(SIDE_SLOT))
-                if (showTitle) HeaderTitle(title, Modifier.weight(1f)) else Spacer(Modifier.weight(1f))
-                if (onSpeakSummary != null) {
-                    SeeSunIconButton(
-                        iconRes = R.drawable.ic_volume,
-                        label = "화면 요약 듣기",
-                        onClick = onSpeakSummary,
-                        modifier = Modifier.width(SIDE_SLOT)
-                    )
-                } else if (onOpenSettings == null) {
-                    Spacer(Modifier.width(SIDE_SLOT))
-                }
-                // [설정]은 오른쪽 맨 끝(톱니바퀴). 포커스 순서: 뒤로 → 제목 → 요약 듣기 → 설정.
-                if (onOpenSettings != null) {
-                    SeeSunIconButton(
-                        iconRes = R.drawable.ic_ss_settings,
-                        label = "설정",
-                        onClick = onOpenSettings,
-                        modifier = Modifier.width(SIDE_SLOT).testTag(LayoutTags.SETTINGS)
-                    )
+                // 포커스 순서: 뒤로 → 제목 → 화면 다시 듣기 → 설정(톱니는 오른쪽 맨 끝).
+                HeaderLayout.slots(onBack != null, showTitle, onSpeakSummary != null, onOpenSettings != null).forEach { slot ->
+                    when (slot) {
+                        HeaderSlot.BACK -> BackTriangleButton(onClick = onBack ?: {}, height = rowHeight)
+
+                        HeaderSlot.SIDE_SPACER, HeaderSlot.END_SPACER -> Spacer(Modifier.width(SIDE_SLOT))
+
+                        HeaderSlot.TITLE -> HeaderTitle(title, Modifier.weight(1f))
+
+                        HeaderSlot.FILL -> Spacer(Modifier.weight(1f))
+
+                        HeaderSlot.REPEAT -> SeeSunIconButton(
+                            iconRes = R.drawable.ic_volume,
+                            label = HeaderLayout.REPEAT_LABEL,
+                            onClick = onSpeakSummary ?: {},
+                            modifier = Modifier.size(SIDE_SLOT).testTag(LayoutTags.REPEAT)
+                        )
+
+                        HeaderSlot.GAP -> Spacer(Modifier.width(HEADER_PAIR_GAP))
+
+                        HeaderSlot.SETTINGS -> SeeSunIconButton(
+                            iconRes = R.drawable.ic_ss_settings,
+                            label = HeaderLayout.SETTINGS_LABEL,
+                            onClick = onOpenSettings ?: {},
+                            modifier = Modifier.size(SIDE_SLOT).testTag(LayoutTags.SETTINGS)
+                        )
+                    }
                 }
             }
         }
@@ -268,7 +290,7 @@ fun BackTriangleButton(onClick: () -> Unit, modifier: Modifier = Modifier, label
     Box(
         modifier = modifier
             .size(width = SIDE_SLOT, height = height.coerceIn(SeeSunDimens.MinTouchTarget, SIDE_SLOT))
-            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .pressable(label = label, onClick = onClick, onClickLabel = label)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
@@ -334,7 +356,16 @@ fun StepProgressBar(step: Int, count: Int, description: String?, modifier: Modif
 
 @Composable
 private fun ColumnScope.Body(scrollable: Boolean, dense: Boolean, margin: Dp, columnMax: Dp, content: @Composable ColumnScope.() -> Unit) {
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth().weight(1f).testTag(LayoutTags.BODY)) {
+    val chrome = LocalScreenChrome.current
+    val talkBack = rememberTalkBackEnabled()
+    // 화면 빈 곳 두 번 탭(T6): 쉬던 「말하면 듣기」를 다시 켠다. TalkBack 제스처와 겹치므로 화면 낭독기가 꺼져 있을 때만.
+    // 버튼은 자기 누르기를 먼저 받으므로 빈 곳만 여기에 온다.
+    val doubleTap = if (chrome != null && !talkBack) {
+        Modifier.pointerInput(chrome) { detectTapGestures(onDoubleTap = { chrome.onDoubleTap() }) }
+    } else {
+        Modifier
+    }
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth().weight(1f).testTag(LayoutTags.BODY).then(doubleTap)) {
         val compact = LocalLayoutTier.current != LayoutTier.REGULAR
         val viewport = maxHeight
         // 제스처 내비게이션(힌트 숨김)에서는 내비게이션 바 높이가 0이라 화면 맨 아래가 시스템 제스처 영역이다
@@ -412,8 +443,11 @@ val LocalBodyGap = staticCompositionLocalOf { SeeSunDimens.SectionGap }
 /** 헤더 아이콘 버튼(48dp)의 아이콘 안쪽 여백만큼 헤더를 바깥으로 내어 제목이 본문 가장자리와 맞게 한다. */
 private val HEADER_ICON_INSET = 4.dp
 
-/** 헤더 양옆 칸(뒤로 가기·요약 듣기) 폭. 제목이 화면 가운데에 오도록 두 칸을 같게 둔다. */
+/** 헤더 양옆 칸(뒤로 가기·다시 듣기·설정) 크기 56dp(누르는 곳 48dp 이상, 아이콘 32dp). */
 private val SIDE_SLOT = 56.dp
+
+/** [화면 다시 듣기]와 [설정] 사이(중심 거리 64dp, UI/UX v2 §5.2). */
+private val HEADER_PAIR_GAP = 8.dp
 
 /**
  * 앱 전체 [설정] 열기 동작. app이 내비게이션 위에서 넘기면 모든 화면 헤더에 톱니바퀴가 [화면 요약 듣기] 옆에 붙는다.

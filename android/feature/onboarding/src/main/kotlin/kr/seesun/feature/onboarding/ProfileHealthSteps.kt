@@ -136,7 +136,11 @@ internal fun ColumnScope.ProfileConfirmStep(ctx: StepContext) {
         onConfirm = ctx.vm::saveProfile,
         onEdit = ctx.vm::editProfile,
         confirmText = stringResource(R.string.onb_profile_confirm_save),
-        editText = stringResource(R.string.onb_profile_confirm_edit)
+        editText = stringResource(R.string.onb_profile_confirm_edit),
+        // 말로 답하기(「네」·「저장」 / 「아니요」·「고칠게요」): 질문 안내가 끝나면 저절로 듣는다(흐름 문서 P0-5).
+        footer = {
+            VoiceCommandButton(ctx.vm.profileConfirmVoice, stringResource(R.string.onb_confirm_voice_hint), ctx.talkBack, ctx.speak)
+        }
     )
 }
 
@@ -284,6 +288,7 @@ internal fun ColumnScope.HealthConfirmStep(ctx: StepContext) {
         editText = stringResource(R.string.onb_profile_confirm_edit),
         footer = {
             BodyText(stringResource(R.string.onb_health_disclaimer), spoken = stringResource(R.string.onb_health_disclaimer_spoken))
+            VoiceCommandButton(ctx.vm.healthConfirmVoice, stringResource(R.string.onb_confirm_voice_hint), ctx.talkBack, ctx.speak)
         }
     )
 }

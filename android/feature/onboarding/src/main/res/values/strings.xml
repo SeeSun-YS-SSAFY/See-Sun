@@ -43,7 +43,7 @@
     <string name="onb_intro_start">처음 시작하기</string>
     <string name="onb_intro_login">이미 가입했어요</string>
     <string name="onb_intro_login_desc">전화번호 인증으로 다시 로그인</string>
-    <string name="onb_intro_guide">시선 시작하기. 모든 입력은 말이나 키보드, 버튼으로 할 수 있어요. 처음이시면 처음 시작하기를, 이미 가입하셨으면 이미 가입했어요를 눌러 주세요. 오른쪽 위 설정에서 음성 자동 인식과 권한을 바꿀 수 있어요.</string>
+    <string name="onb_intro_guide">시선 시작하기. 모든 입력은 말이나 키보드, 버튼으로 할 수 있어요. 처음이시면 처음 시작하기를, 이미 가입하셨으면 이미 가입했어요를 눌러 주세요. 오른쪽 위 설정에서 말 속도와 음성 자동 인식, 권한을 바꿀 수 있어요.</string>
 
     <!-- LGL-01 연령 확인 -->
     <string name="onb_age_title">연령 확인</string>
@@ -251,5 +251,6 @@
     <string name="onb_clause_service">서비스 성격과 책임</string>
     <string name="onb_clause_summary">요약</string>
     <string name="onb_clause_doc_info">문서 버전·전문 안내</string>
+    <string name="onb_confirm_voice_hint">저장하려면 네, 고치려면 고칠게요라고 말씀해 주세요.</string>
     <string name="onb_intro_voice_hint">시작하기, 이미 가입했어요, 설정 중에서 말씀해 주세요.</string>
 </resources>

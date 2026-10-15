@@ -26,6 +26,7 @@ import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.component.ScrollHighlightList
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.EntryGuidance
 import kr.seesun.feature.exercise.ExerciseListRoute
 import kr.seesun.feature.exercise.home.ListSource
 import kr.seesun.feature.exercise.routine.assistantLabel
@@ -127,6 +128,13 @@ fun ExerciseListScreen(title: String, ui: ListUi, onBack: () -> Unit, onOpen: (E
             }
         }
     }
+    val guide = when {
+        ui.loading -> null
+        ui.error != null -> ui.error
+        ui.items.isEmpty() -> ui.emptyMessage
+        else -> "$title. 운동 ${ui.items.size}개가 있어요. 위아래로 넘겨 운동을 고르고, 누르면 시작 화면으로 가요."
+    }
+    if (guide != null) EntryGuidance("exercise-list:$title:${ui.items.size}:${ui.error != null}", guide)
 }
 
 /** 목록 가운데 카드의 픽토그램 높이. */

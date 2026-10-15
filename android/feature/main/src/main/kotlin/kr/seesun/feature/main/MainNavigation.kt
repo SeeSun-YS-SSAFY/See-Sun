@@ -65,6 +65,8 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.ui.AutoGuidance
 import kr.seesun.core.ui.GuidanceVoice
+import kr.seesun.core.ui.VoiceMenuButton
+import kr.seesun.core.ui.VoiceMenuOption
 import kr.seesun.core.voice.tts.Speaker
 
 /**
@@ -216,7 +218,7 @@ fun MainScreen(
                 supportingText = stringResource(R.string.main_reconsent_body)
             )
         }
-        // Figma처럼 큰 타일이 화면 가운데를 채우고(남는 높이에 맞춤), [설정]은 화면 아래 누르는 영역(11_레이아웃_기준.md §2).
+        // Figma처럼 큰 타일이 화면 가운데를 채우고(남는 높이에 맞춤), [말로 고르기]는 화면 아래 누르는 영역(11_레이아웃_기준.md §2).
         MainTiles(
             extra = (if (summary.failed) FAILED_ROWS else 0.dp) + (if (summary.needsReconsent) RECONSENT_ROWS else 0.dp) +
                 (if (notice.isEmpty()) 0.dp else NOTICE_ROWS),
@@ -227,12 +229,21 @@ fun MainScreen(
             }
         )
         BottomActions(pushDown = LocalDensity.current.fontScale > 1f) {
-            SeeSunButton(
-                text = stringResource(MainDestination.SETTINGS.label),
-                onClick = { onNavigate(MainDestination.SETTINGS) },
-                kind = ButtonKind.OUTLINE,
-                iconRes = DsR.drawable.ic_ss_settings
+            // 말로 고르기(흐름 문서 P0-4): 안내가 「…중에서 골라 주세요」로 끝나므로 같은 말로 고른다(질문 뒤 듣기·말하면 듣기).
+            VoiceMenuButton(
+                options = listOf(
+                    VoiceMenuOption(listOf("식단", "식사", "밥")) { onNavigate(MainDestination.DIET) },
+                    VoiceMenuOption(listOf("운동")) { onNavigate(MainDestination.EXERCISE) },
+                    VoiceMenuOption(listOf("약", "복약")) {
+                        notice = if (notice == comingSoon) comingSoon + ZERO_WIDTH else comingSoon
+                        speak(comingSoon)
+                    },
+                    VoiceMenuOption(listOf("마이페이지", "마이 페이지", "내 정보")) { onNavigate(MainDestination.MY_PAGE) },
+                    VoiceMenuOption(listOf("설정")) { onNavigate(MainDestination.SETTINGS) }
+                ),
+                hint = stringResource(R.string.main_voice_hint)
             )
+            // 하단 큰 [설정]은 없앴다(소유자 msg 1029): 설정은 오른쪽 위 톱니바퀴 하나, 말로 「설정」도 된다.
             if (showDeveloperMenu) {
                 SeeSunButton(
                     text = stringResource(R.string.main_components),

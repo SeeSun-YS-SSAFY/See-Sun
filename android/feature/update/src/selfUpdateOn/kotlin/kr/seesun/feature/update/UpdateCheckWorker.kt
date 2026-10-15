@@ -37,7 +37,7 @@ import javax.inject.Singleton
 /**
  * 가운영 자체 업데이트 빌드에서만 컴파일된다(src/selfUpdateOn). 서버 latest.json을 백그라운드로 확인하고,
  * 새 버전이면 「새 버전이 있어요」 알림을 낸다. 알림을 누르면 앱이 열리며 업데이트 안내 창이 바로 뜬다([UpdateRequests]).
- * 서버 푸시(FCM)는 쓰지 않는다(v5 범위).
+ * v6부터 서버가 게시 즉시 FCM 푸시를 보낸다([UpdatePushService]). 이 확인은 놓친 푸시를 받는 예비다.
  */
 @HiltWorker
 class UpdateCheckWorker @AssistedInject constructor(
@@ -51,44 +51,59 @@ class UpdateCheckWorker @AssistedInject constructor(
         if (!config.enabled) return Result.success()
         // 실패(서버에 닿지 않음)는 다음 주기에 다시 본다. 재시도로 배터리를 쓰지 않는다.
         val manifest = UpdateClient().fetchManifest(config.manifestUrl)
-        Log.i(TAG, "background check: installed=${config.installedVersionCode} latest=${manifest?.versionCode}")
-        notifier.maybeNotify(manifest)
+        val source = inputData.getString(KEY_SOURCE) ?: "periodic"
+        Log.i(TAG, "background check ($source): installed=${config.installedVersionCode} latest=${manifest?.versionCode}")
+        notifier.maybeNotify(manifest, source = source)
         return Result.success()
     }
 
-    private companion object {
-        const val TAG = "SeeSunSelfUpdate"
+    companion object {
+        private const val TAG = "SeeSunSelfUpdate"
+        const val KEY_SOURCE = "source"
     }
 }
 
-/** 업데이트 알림(채널 「앱 업데이트」). 같은 versionCode는 하루 한 번만([UpdateNotifyPolicy]). */
+/**
+ * 업데이트 알림(채널 「앱 업데이트」). 같은 versionCode는 하루 한 번만([UpdateNotifyPolicy]).
+ * 백그라운드 확인 두 개와 FCM 푸시가 동시에 와도 [UpdateNotifyGate]가 한 번만 내게 한다(v5에서 넘어온 중복 알림 수정).
+ */
 @Singleton
 class UpdateNotifier @Inject constructor(@ApplicationContext private val context: Context, private val config: UpdateConfig) {
     private val prefs = context.getSharedPreferences(UpdateNotifyPolicy.PREFS, Context.MODE_PRIVATE)
+    private val gate = UpdateNotifyGate(
+        object : NotifyLedgerStore {
+            override fun read(): Pair<Long?, Long?> = prefs.getLong(UpdateNotifyPolicy.KEY_NOTIFIED_CODE, -1L).takeIf { it >= 0 } to
+                prefs.getLong(UpdateNotifyPolicy.KEY_NOTIFIED_AT, -1L).takeIf { it >= 0 }
 
-    /** @return 알림을 냈으면 true */
-    fun maybeNotify(manifest: UpdateManifest?, nowMillis: Long = System.currentTimeMillis()): Boolean {
-        val lastCode = prefs.getLong(UpdateNotifyPolicy.KEY_NOTIFIED_CODE, -1L).takeIf { it >= 0 }
-        val lastAt = prefs.getLong(UpdateNotifyPolicy.KEY_NOTIFIED_AT, -1L).takeIf { it >= 0 }
-        val notify = UpdateNotifyPolicy.shouldNotify(
-            installedVersionCode = config.installedVersionCode,
-            manifest = manifest,
-            lastNotifiedCode = lastCode,
-            lastNotifiedAt = lastAt,
-            nowMillis = nowMillis,
-            appVisible = UpdateRequests.appVisible
-        )
-        if (!notify || manifest == null) return false
+            // commit: 다음 호출(다른 스레드)이 바로 이 기록을 읽어야 한다.
+            override fun write(code: Long, at: Long) {
+                prefs.edit(commit = true) {
+                    putLong(UpdateNotifyPolicy.KEY_NOTIFIED_CODE, code)
+                    putLong(UpdateNotifyPolicy.KEY_NOTIFIED_AT, at)
+                }
+            }
+        }
+    )
+
+    /**
+     * @param source 로그용(start·periodic·push)
+     * @return 알림을 냈으면 true
+     */
+    fun maybeNotify(manifest: UpdateManifest?, nowMillis: Long = System.currentTimeMillis(), source: String = "check"): Boolean {
+        if (manifest == null) return false
         if (!canPost()) {
-            Log.i(TAG, "notification permission off: in-app dialog only")
+            // 알림 권한을 거절했으면 알리지 않는다. 앱을 열면 앱 안 안내 창이 맡는다.
+            if (UpdateRules.need(config.installedVersionCode, manifest) != UpdateNeed.NONE) {
+                Log.i(TAG, "notification permission off ($source): in-app dialog only")
+            }
+            return false
+        }
+        if (!gate.claim(config.installedVersionCode, manifest, nowMillis, UpdateRequests.appVisible)) {
+            Log.i(TAG, "update notification skipped ($source): not newer, app visible, or already notified for ${manifest.versionCode}")
             return false
         }
         post(manifest)
-        prefs.edit {
-            putLong(UpdateNotifyPolicy.KEY_NOTIFIED_CODE, manifest.versionCode)
-            putLong(UpdateNotifyPolicy.KEY_NOTIFIED_AT, nowMillis)
-        }
-        Log.i(TAG, "update notification posted for versionCode=${manifest.versionCode}")
+        Log.i(TAG, "update notification posted for versionCode=${manifest.versionCode} ($source)")
         return true
     }
 
@@ -148,6 +163,7 @@ class WorkManagerUpdateCheckScheduler @Inject constructor(@ApplicationContext pr
         val now = OneTimeWorkRequestBuilder<UpdateCheckWorker>()
             .setConstraints(network)
             .setInitialDelay(START_DELAY_SECONDS, TimeUnit.SECONDS)
+            .setInputData(androidx.work.workDataOf(UpdateCheckWorker.KEY_SOURCE to "start"))
             .build()
         val work = WorkManager.getInstance(context)
         work.enqueueUniquePeriodicWork(PERIODIC_NAME, ExistingPeriodicWorkPolicy.KEEP, periodic)
@@ -166,4 +182,7 @@ class WorkManagerUpdateCheckScheduler @Inject constructor(@ApplicationContext pr
 internal abstract class UpdateCheckBindings {
     @Binds
     abstract fun scheduler(impl: WorkManagerUpdateCheckScheduler): UpdateCheckScheduler
+
+    @Binds
+    abstract fun pushSubscriber(impl: FcmUpdatePushSubscriber): UpdatePushSubscriber
 }

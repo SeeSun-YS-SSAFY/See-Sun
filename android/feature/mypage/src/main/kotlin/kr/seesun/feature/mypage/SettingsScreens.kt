@@ -168,7 +168,8 @@ fun SettingsScreen(
             stringResource(R.string.my_logout_body),
             if (pending > 0) stringResource(R.string.my_logout_pending, pending) else null
         )
-        ScreenScaffold(title = stringResource(R.string.my_logout_confirm_title), onBack = onBack) {
+        // 확인 화면에는 톱니를 두지 않는다(설정 안의 확인, 흐름 문서 P2-1).
+        ScreenScaffold(title = stringResource(R.string.my_logout_confirm_title), onBack = onBack, onOpenSettings = null) {
             ConfirmScreenContent(
                 lines = lines,
                 question = stringResource(if (busy) R.string.my_logging_out else R.string.my_logout_question),
@@ -183,7 +184,8 @@ fun SettingsScreen(
     }
     // 설정 목록 자체에는 톱니바퀴를 두지 않는다(같은 화면으로 가는 버튼).
     ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack, onOpenSettings = null) {
-        if (voiceCommand != null) VoiceCommandButton(voiceCommand, stringResource(R.string.my_set_voice_hint), talkBackEnabled, speak)
+        val hint = stringResource(if (signedIn) R.string.my_set_voice_hint else R.string.my_set_voice_hint_before_sign_in)
+        if (voiceCommand != null) VoiceCommandButton(voiceCommand, hint, talkBackEnabled, speak)
         // 11개 메뉴를 두 칸 타일로(소유자 피드백 2026-10-13: 한 화면에). 설명은 낭독(버튼 설명)으로 남긴다.
         if (!signedIn) BodyText(stringResource(R.string.my_settings_before_sign_in))
         val items = SettingsItem.visible(signedIn).map { item ->
@@ -196,9 +198,11 @@ fun SettingsScreen(
             titleStyle = SeeSunTheme.typography.listItem.copy(fontSize = 18.sp, lineHeight = 24.sp)
         )
     }
+    // 목록은 화면에 보이는 항목에서 만든다(항목이 바뀌어도 안내가 어긋나지 않게).
+    val names = SettingsItem.visible(signedIn).map { stringResource(it.label) }.joinToString(", ")
     AutoGuidance(
         "settings:$signedIn",
-        stringResource(if (signedIn) R.string.my_settings_guide else R.string.my_settings_guide_before_sign_in),
+        stringResource(if (signedIn) R.string.my_settings_guide else R.string.my_settings_guide_before_sign_in, names),
         talkBackEnabled,
         speak
     )
@@ -209,18 +213,33 @@ fun SettingsScreen(
  * @property beforeSignIn 로그인 전(시작 화면 톱니바퀴)에도 보이는 항목(계정 없이 의미 있는 것만, 소유자 msg 959)
  */
 enum class SettingsItem(val label: Int, val description: Int?, val route: Any?, val beforeSignIn: Boolean = false) {
-    RIGHTS(R.string.my_set_rights, R.string.my_set_rights_desc, RightsRoute),
-    CONSENTS(R.string.my_set_consents, R.string.my_set_consents_desc, ConsentManageRoute),
-    DATA_RESET(R.string.my_set_reset, R.string.my_set_reset_desc, DataResetRoute),
-    PRIVACY(R.string.my_set_privacy, null, DocumentRoute("PRIVACY")),
-    TERMS(R.string.my_set_terms, null, DocumentRoute("TOS")),
-    DATA_SOURCES(R.string.my_set_sources, null, DataSourcesRoute),
-    LICENSES(R.string.my_set_licenses, null, LicensesRoute),
-    ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute, beforeSignIn = true),
+    // 사용법 다시 듣기는 맨 위(소유자 msg 1029, 로그인 전에도)
+    HOW_TO(R.string.my_set_howto, R.string.my_set_howto_desc, HowToRoute, beforeSignIn = true),
+
+    // 소리·말(자주 바꾸는 것 먼저, UI/UX v2 §5.3) — 로그인 전에도
+    VOICE_SPEED(R.string.my_set_speed, R.string.my_set_speed_desc, VoiceSpeedRoute, beforeSignIn = true),
     VOICE_AUTO(R.string.my_set_voice_auto, R.string.my_set_voice_auto_desc, VoiceAutoRoute, beforeSignIn = true),
+    APP_VOICE(R.string.my_set_app_voice, R.string.my_set_app_voice_desc, AppVoiceRoute, beforeSignIn = true),
+    PRESS_FEEDBACK(R.string.my_set_press, R.string.my_set_press_desc, PressFeedbackRoute, beforeSignIn = true),
+
+    // 도움
+    ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute, beforeSignIn = true),
+
+    // 기기
     PERMISSIONS(R.string.my_set_permissions, R.string.my_set_permissions_desc, PermissionSettingsRoute, beforeSignIn = true),
     NOTIFICATIONS(R.string.my_set_notifications, R.string.my_set_notifications_desc, NotificationSettingsRoute),
     APP_VERSION(R.string.my_set_version, R.string.my_set_version_desc, AppVersionRoute, beforeSignIn = true),
+
+    // 문서(약관·처리방침은 가입 전에도 볼 수 있어야 한다 — 개인정보 보호법 제30조, 서버 문서 목록은 인증 불필요)
+    TERMS(R.string.my_set_terms, null, DocumentRoute("TOS"), beforeSignIn = true),
+    PRIVACY(R.string.my_set_privacy, null, DocumentRoute("PRIVACY"), beforeSignIn = true),
+    DATA_SOURCES(R.string.my_set_sources, null, DataSourcesRoute),
+    LICENSES(R.string.my_set_licenses, null, LicensesRoute),
+
+    // 계정·개인정보
+    RIGHTS(R.string.my_set_rights, R.string.my_set_rights_desc, RightsRoute),
+    CONSENTS(R.string.my_set_consents, R.string.my_set_consents_desc, ConsentManageRoute),
+    DATA_RESET(R.string.my_set_reset, R.string.my_set_reset_desc, DataResetRoute),
     LOGOUT(R.string.my_logout, R.string.my_logout_desc, null),
     DELETE(R.string.my_delete, R.string.my_delete_desc, DeleteAccountRoute);
 

@@ -11,8 +11,15 @@ class SettingsBeforeSignInTest {
 
     @Test
     fun `로그인 전에는 계정과 상관없는 항목만 보인다`() {
+        // v6: 사용법 다시 듣기(맨 위, 소유자 msg 1029) → 소리·말 → 도움 → 기기 → 문서(약관·처리방침은 가입 전에도 공개).
         assertEquals(
-            listOf(SettingsItem.ACCESSIBILITY, SettingsItem.VOICE_AUTO, SettingsItem.PERMISSIONS, SettingsItem.APP_VERSION),
+            listOf(
+                SettingsItem.HOW_TO,
+                SettingsItem.VOICE_SPEED, SettingsItem.VOICE_AUTO, SettingsItem.APP_VOICE, SettingsItem.PRESS_FEEDBACK,
+                SettingsItem.ACCESSIBILITY,
+                SettingsItem.PERMISSIONS, SettingsItem.APP_VERSION,
+                SettingsItem.TERMS, SettingsItem.PRIVACY
+            ),
             SettingsItem.visible(signedIn = false)
         )
         // 로그인 뒤에는 모두(권한 상태·앱 버전 포함).
@@ -27,6 +34,27 @@ class SettingsBeforeSignInTest {
         assertTrue(SettingsItem.allowsVoiceTarget(VoiceAutoRoute, signedIn = false))
         assertTrue(SettingsItem.allowsVoiceTarget(PermissionSettingsRoute, signedIn = false))
         assertTrue(SettingsItem.allowsVoiceTarget(DeleteAccountRoute, signedIn = true))
+    }
+
+    @Test
+    fun `약관·처리방침은 로그인 전에도 말로 연다`() {
+        assertTrue(SettingsItem.allowsVoiceTarget(DocumentRoute("TOS"), signedIn = false))
+        assertTrue(SettingsItem.allowsVoiceTarget(DocumentRoute("PRIVACY"), signedIn = false))
+        assertEquals(DocumentRoute("TOS"), SettingsVoiceMatcher.match("이용약관 보여 줘"))
+    }
+
+    @Test
+    fun `소리·말 설정 음성 명령`() {
+        assertEquals(VoiceSpeedRoute, SettingsVoiceMatcher.match("말 속도"))
+        assertEquals(VoiceSpeedRoute, SettingsVoiceMatcher.match("천천히 말해 줘"))
+        assertEquals(AppVoiceRoute, SettingsVoiceMatcher.match("앱 음성 안내"))
+        assertEquals(PressFeedbackRoute, SettingsVoiceMatcher.match("누름 알림"))
+        assertEquals(HowToRoute, SettingsVoiceMatcher.match("사용법 다시 듣기"))
+        // 「음성 자동 인식」은 「음성 안내」보다 먼저 맞는다.
+        assertEquals(VoiceAutoRoute, SettingsVoiceMatcher.match("음성 자동 인식"))
+        listOf(VoiceSpeedRoute, AppVoiceRoute, PressFeedbackRoute, HowToRoute).forEach {
+            assertTrue(SettingsItem.allowsVoiceTarget(it, signedIn = false), "$it")
+        }
     }
 
     @Test

@@ -26,6 +26,7 @@ okhttp = "5.5.0"
 kotlinxSerialization = "1.11.0"
 coroutines = "1.11.0"
 firebaseBom = "34.19.0"
+androidVad = "2.0.10"
 googleServices = "4.5.0"
 # 전화번호 힌트(Phone Number Hint API, 권한 불필요). 22.x(2026-08) 대신 검증된 21.x 안정판 고정.
 playServicesAuth = "21.6.0"
@@ -96,6 +97,8 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+android-vad-webrtc = { group = "com.github.gkonovalov.android-vad", name = "webrtc", version.ref = "androidVad" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 junit5-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit5" }

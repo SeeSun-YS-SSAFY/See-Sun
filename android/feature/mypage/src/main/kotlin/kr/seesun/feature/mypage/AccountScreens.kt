@@ -328,7 +328,7 @@ private fun ConsentChangeConfirm(
         change.agree -> R.string.my_consent_agree_title
         else -> R.string.my_consent_withdraw_title
     }
-    ScreenScaffold(title = stringResource(title), onBack = onCancel) {
+    ScreenScaffold(title = stringResource(title), onBack = onCancel, onOpenSettings = null) {
         StatusMessage(state.message, state.messageSeq, talkBack, speak)
         ConfirmScreenContent(
             lines = lines,
@@ -449,7 +449,8 @@ fun DeleteAccountScreen(
     speak: (String) -> Unit = {}
 ) {
     when (state.step) {
-        DeleteStep.EXPLAIN -> ScreenScaffold(title = stringResource(R.string.my_delete), onBack = onBack) {
+        // 탈퇴 단계(되돌릴 수 없는 확인)에는 톱니를 숨긴다(소유자 결정 v6).
+        DeleteStep.EXPLAIN -> ScreenScaffold(title = stringResource(R.string.my_delete), onBack = onBack, onOpenSettings = null) {
             val lines = listOf(
                 stringResource(R.string.my_delete_explain),
                 stringResource(R.string.my_delete_explain_device),
@@ -474,7 +475,11 @@ fun DeleteAccountScreen(
             AutoGuidance("delete-explain", lines.joinToString(" "), talkBackEnabled, speak)
         }
 
-        DeleteStep.CONFIRM -> ScreenScaffold(title = stringResource(R.string.my_delete_confirm_title), onBack = onBack) {
+        DeleteStep.CONFIRM -> ScreenScaffold(
+            title = stringResource(R.string.my_delete_confirm_title),
+            onBack = onBack,
+            onOpenSettings = null
+        ) {
             StatusMessage(state.error ?: stringResource(R.string.my_deleting).takeIf { state.busy }, state.seq, talkBackEnabled, speak)
             val question = stringResource(R.string.my_delete_question)
             BodyText(question, emphasis = true)
@@ -491,7 +496,7 @@ fun DeleteAccountScreen(
             AutoGuidance("delete-confirm", question, talkBackEnabled, speak)
         }
 
-        DeleteStep.DONE -> ScreenScaffold(title = stringResource(R.string.my_delete_done_title)) {
+        DeleteStep.DONE -> ScreenScaffold(title = stringResource(R.string.my_delete_done_title), onOpenSettings = null) {
             val message = state.doneMessage ?: stringResource(R.string.my_delete_done)
             BodyText(message, emphasis = true)
             BodyText(stringResource(R.string.my_delete_done_device))

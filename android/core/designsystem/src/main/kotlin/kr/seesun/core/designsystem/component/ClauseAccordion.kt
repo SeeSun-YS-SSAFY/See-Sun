@@ -2,7 +2,6 @@ package kr.seesun.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -188,7 +187,7 @@ private fun ClauseHeading(title: String, expanded: Boolean, style: TextStyle, on
             .heightIn(min = SeeSunDimens.MinTouchTarget)
             .background(if (expanded) colors.primary else colors.chip, shape)
             .border(SeeSunDimens.BorderWidth, colors.border, shape)
-            .clickable(role = Role.Button, onClickLabel = action, onClick = onToggle)
+            .pressable(label = title, onClick = onToggle, onClickLabel = action)
             .clearAndSetSemantics {
                 contentDescription = title
                 heading()

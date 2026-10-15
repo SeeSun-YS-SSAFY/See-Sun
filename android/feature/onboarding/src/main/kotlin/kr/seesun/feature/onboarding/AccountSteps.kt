@@ -23,6 +23,7 @@ import androidx.compose.ui.autofill.ContentType
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +49,7 @@ import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
+import kr.seesun.core.ui.R as UiR
 import kr.seesun.core.ui.VoiceCommandButton
 import kr.seesun.core.ui.VoiceFieldController
 import kr.seesun.core.ui.VoiceInputField
@@ -62,11 +64,15 @@ internal fun ColumnScope.IntroStep(ctx: StepContext) {
         emblemSize = if (LocalCompactHeight.current) INTRO_LOGO_COMPACT else INTRO_LOGO,
         modifier = Modifier.padding(vertical = SeeSunSpace.S)
     )
-    BodyText(stringResource(R.string.onb_intro_body), spoken = stringResource(R.string.onb_intro_body_spoken))
+    // 로고 아래 짧은 두 줄(소유자 msg 1029 최종 문구, core:ui 리소스). TalkBack은 인사 줄에서 TalkBack용 안내 전체를 한 번에 읽는다.
     BodyText(
-        stringResource(if (ctx.talkBack) R.string.onb_intro_talkback_on_short else R.string.onb_intro_talkback_off_short),
+        stringResource(UiR.string.ui_usage_headline),
         emphasis = true,
-        spoken = stringResource(if (ctx.talkBack) R.string.onb_intro_talkback_on else R.string.onb_intro_talkback_off)
+        spoken = if (ctx.talkBack) stringResource(UiR.string.ui_usage_talkback) else null
+    )
+    BodyText(
+        stringResource(UiR.string.ui_usage_short),
+        modifier = if (ctx.talkBack) Modifier.clearAndSetSemantics { } else Modifier
     )
     BottomActions {
         SeeSunButton(text = stringResource(R.string.onb_intro_start), onClick = ctx.vm::startSignUp)

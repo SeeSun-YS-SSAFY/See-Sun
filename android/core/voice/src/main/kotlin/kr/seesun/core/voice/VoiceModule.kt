@@ -12,6 +12,8 @@ import kr.seesun.core.voice.parse.FoodMatcher
 import kr.seesun.core.voice.parse.MealUtteranceParser
 import kr.seesun.core.voice.recognition.AndroidSpeechInput
 import kr.seesun.core.voice.recognition.SpeechInput
+import kr.seesun.core.voice.recognition.SpeechOnsetDetector
+import kr.seesun.core.voice.recognition.VadOnsetDetector
 import kr.seesun.core.voice.settings.SharedVoicePreferences
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.AndroidGuidanceSpeaker
@@ -31,6 +33,9 @@ internal abstract class VoiceBindings {
 
     @Binds
     abstract fun bindVoicePreferences(impl: SharedVoicePreferences): VoicePreferences
+
+    @Binds
+    abstract fun bindOnsetDetector(impl: VadOnsetDetector): SpeechOnsetDetector
 }
 
 @Module

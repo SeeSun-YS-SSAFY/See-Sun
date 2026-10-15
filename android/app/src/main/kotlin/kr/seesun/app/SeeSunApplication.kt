@@ -16,6 +16,7 @@ import kr.seesun.core.network.NetworkConfig
 import kr.seesun.core.voice.lifecycle.AppAudioGuard
 import kr.seesun.feature.update.UpdateCheckScheduler
 import kr.seesun.feature.update.UpdateConfig
+import kr.seesun.feature.update.UpdatePushSubscriber
 
 @HiltAndroidApp
 class SeeSunApplication :
@@ -30,6 +31,8 @@ class SeeSunApplication :
 
     @Inject lateinit var updateCheckScheduler: UpdateCheckScheduler
 
+    @Inject lateinit var updatePushSubscriber: UpdatePushSubscriber
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
@@ -41,6 +44,8 @@ class SeeSunApplication :
         audioGuard.start()
         // 가운영 빌드만: 6시간마다·앱 시작 때 새 버전 확인 → 알림. 끈 빌드는 아무것도 하지 않는 구현이 묶인다.
         if (BuildConfig.SELF_UPDATE) updateCheckScheduler.schedule()
+        // 가운영 빌드만: 새 버전 게시 즉시 알림(FCM 토픽). 처음 실행·앱 업데이트 뒤 첫 실행 때 구독하고, 실패하면 다시 한다.
+        if (BuildConfig.SELF_UPDATE) updatePushSubscriber.ensureSubscribed()
     }
 }
 
@@ -67,6 +72,7 @@ object AppConfigModule {
         enabled = BuildConfig.SELF_UPDATE,
         manifestUrl = BuildConfig.SELF_UPDATE_MANIFEST_URL,
         installedVersionCode = BuildConfig.VERSION_CODE.toLong(),
-        installedVersionName = BuildConfig.VERSION_NAME
+        installedVersionName = BuildConfig.VERSION_NAME,
+        pushTopic = BuildConfig.SELF_UPDATE_PUSH_TOPIC
     )
 }

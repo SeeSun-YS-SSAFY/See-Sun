@@ -15,7 +15,17 @@
     <string name="ui_mic_permission_denied_buttons">마이크 권한이 없어 음성으로 고를 수 없어요. 아래 버튼으로 골라 주세요.</string>
     <!-- 음성 자동 인식: 화면에서 처음 마이크가 저절로 켜지기 직전에 한 번(짧게). -->
     <string name="ui_auto_listen_cue">말씀하세요.</string>
+    <!-- 첫 실행 사용법 안내(소유자 msg 1029 최종 문구). 시작 화면 첫 실행 한 번 + 설정 「사용법 다시 듣기」. -->
+    <string name="ui_usage_guide">안녕하세요. 눈으로 보지 않아도 오늘의 몸을 함께 챙기는 친구, 시선이에요. 운동도 식단도 제가 소리로 하나하나 안내해 드릴게요. 제 말이 끝나면 언제든 편하게 말씀하시면 돼요. 버튼을 누르면 언제든 멈춰요. 오른쪽 위 스피커는 다시 듣기, 그 옆 톱니바퀴는 설정이에요.</string>
+    <string name="ui_usage_start_prompt">처음이시면 \"처음 시작\", 가입하셨으면 \"이미 가입\"이라고 말씀해 주세요.</string>
+    <string name="ui_usage_headline">안녕하세요, 시선이에요.</string>
+    <string name="ui_usage_short">눈으로 보지 않아도 오늘의 몸을 함께 챙겨요. 제 말이 끝나면 편하게 말씀하세요.</string>
+    <string name="ui_usage_talkback">안녕하세요. 눈으로 보지 않아도 오늘의 몸을 함께 챙기는 친구, 시선이에요. TalkBack이 켜져 있어 앱 음성은 쉬고 있어요. 버튼은 평소처럼 쓰시고, 마이크 버튼을 누르면 말로 입력할 수 있어요.</string>
     <string name="ui_voice_command_idle">말로 고르기</string>
+    <string name="ui_voice_command_standby">듣는 중 · 말씀하세요</string>
+    <string name="ui_standby_paused_idle">듣기를 쉬어요. 화면을 두 번 누르거나 이어폰 버튼, 마이크 버튼을 누르면 다시 들어요.</string>
+    <string name="ui_standby_paused_noisy">주변이 시끄러워 듣기를 쉬어요. 마이크 버튼이나 이어폰 버튼을 누르고 말씀해 주세요.</string>
+    <string name="ui_standby_mic_indicator">말씀을 기다리는 동안 화면 위에 초록 마이크 표시가 켜져요. 소리는 저장하지 않아요.</string>
     <string name="ui_voice_command_listening">듣는 중, 누르면 멈춰요</string>
     <string name="ui_voice_command_processing">인식 중</string>
     <string name="ui_voice_command_wait">잠시만 기다려 주세요</string>

@@ -83,16 +83,17 @@ class ComponentA11yTest {
         rule.setThemedContent {
             MicButton(state = state, onClick = { state = if (state == MicState.IDLE) MicState.LISTENING else MicState.PROCESSING })
         }
-        rule.onNodeWithContentDescription("음성 입력 시작")
+        // v6: 이름은 늘 「음성 입력」, 상태는 상태 설명으로만(liveRegion 없음 — 녹음 시작 때 두 번 읽히지 않게, G1·G7).
+        rule.onNodeWithContentDescription("음성 입력")
             .assert(hasRole(Role.Button))
             .assert(hasStateDescription("대기 중"))
             .assertWidthIsAtLeast(188.dp)
             .assertHeightIsAtLeast(188.dp)
-            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion))
+            .assert(SemanticsMatcher.keyNotDefined(SemanticsProperties.LiveRegion))
             .performClick()
-        rule.onNodeWithContentDescription("음성 입력 멈추기").assert(hasStateDescription("녹음 중"))
-        rule.onNodeWithContentDescription("음성 입력 멈추기").performClick()
-        rule.onNodeWithContentDescription("음성 인식 중").assertIsNotEnabled().assert(hasStateDescription("인식 중"))
+        rule.onNodeWithContentDescription("음성 입력").assert(hasStateDescription("녹음 중"))
+        rule.onNodeWithContentDescription("음성 입력").performClick()
+        rule.onNodeWithContentDescription("음성 입력").assertIsNotEnabled().assert(hasStateDescription("인식 중"))
         rule.onNode(hasText("mic", substring = true)).assertDoesNotExist()
     }
 

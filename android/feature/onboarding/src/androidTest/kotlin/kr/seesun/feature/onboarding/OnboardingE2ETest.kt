@@ -169,7 +169,7 @@ class OnboardingE2ETest {
 
         waitPane("이름")
         speech.enqueue("제 이름은 홍길동입니다")
-        rule.onNode(hasContentDescription("음성 입력 시작")).performScrollTo().performClick()
+        rule.onNode(hasContentDescription("음성 입력")).performScrollTo().performClick()
         waitText("이름 홍길동")
         rule.shot("10_name_voice_readback")
         rule.onNode(hasText("확인") and hasClickAction()).performScrollTo().performClick()
@@ -311,7 +311,7 @@ class OnboardingE2ETest {
         start(vm)
         waitPane("키")
         speech.enqueue("칠십육")
-        rule.onNode(hasContentDescription("음성 입력 시작")).performScrollTo().performClick()
+        rule.onNode(hasContentDescription("음성 입력")).performScrollTo().performClick()
         waitText("칠십육(이)라고 들었는데")
         rule.shot("44_voice_misrecognition")
         rule.onNode(pane("키")).assertExists()

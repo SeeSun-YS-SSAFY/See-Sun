@@ -88,6 +88,8 @@ import kr.seesun.core.ui.GoalOption
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.VoiceFieldController
 import kr.seesun.core.ui.VoiceInputField
+import kr.seesun.core.ui.VoiceMenuButton
+import kr.seesun.core.ui.VoiceMenuOption
 import kr.seesun.core.voice.parse.DateParser
 import kr.seesun.core.voice.parse.ProfileParsers
 import kr.seesun.core.voice.recognition.SpeechInput
@@ -215,6 +217,20 @@ fun MyPageScreen(
             onExercise = onOpenExerciseReport
         )
         BottomActions {
+            // 말로 고르기(흐름 문서 P0-4).
+            VoiceMenuButton(
+                options = listOf(
+                    VoiceMenuOption(listOf("내 정보", "정보 수정", "프로필")) { onEditProfile() },
+                    VoiceMenuOption(listOf("건강")) { onEditHealth() },
+                    VoiceMenuOption(listOf("운동 기록", "운동")) { onOpenExerciseReport() },
+                    VoiceMenuOption(listOf("식단 기록", "식단")) {
+                        notice = if (notice == dietSoon) dietSoon + ZERO_WIDTH else dietSoon
+                        speak(dietSoon)
+                    },
+                    VoiceMenuOption(listOf("설정")) { onOpenSettings() }
+                ),
+                hint = stringResource(R.string.my_voice_hint)
+            )
             SeeSunButton(
                 text = stringResource(R.string.my_settings),
                 onClick = onOpenSettings,

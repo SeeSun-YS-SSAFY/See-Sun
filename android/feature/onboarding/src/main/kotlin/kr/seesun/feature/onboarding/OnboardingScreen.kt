@@ -13,10 +13,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -31,6 +33,8 @@ import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.ui.AutoGuidance
+import kr.seesun.core.ui.R as UiR
+import kr.seesun.core.ui.UsageGuideStore
 
 /** 화면 단위 묶음: 상태 + 음성 + 콜백. 단계 화면 함수에 넘긴다. */
 internal class StepContext(val vm: OnboardingViewModel, val state: OnboardingUiState, val talkBack: Boolean) {
@@ -67,7 +71,17 @@ fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit, onO
 
     val ctx = StepContext(viewModel, state, talkBack)
     val title = stepTitle(state)
-    val guide = stepGuide(state)
+    // 첫 실행 사용법 안내(소유자 msg 1029): 시작 화면, 아주 처음만. [처음 시작하기]·[이미 가입했어요]를 누르거나 말로 골라 시작 화면을
+    // 떠나면 「사용법 들음」을 기록한다(그 전에 앱을 닫으면 다음에 다시 들려준다). 버튼을 누르면 안내가 바로 멈춘다.
+    val context = LocalContext.current
+    val usage = remember(context) { UsageGuideStore(context) }
+    val firstRun = rememberSaveable { !usage.heard }
+    LaunchedEffect(state.step, firstRun) { if (firstRun && state.step != Step.INTRO) usage.markHeard() }
+    val guide = if (firstRun && state.step == Step.INTRO) {
+        stringResource(UiR.string.ui_usage_guide) + " " + stringResource(UiR.string.ui_usage_start_prompt)
+    } else {
+        stepGuide(state)
+    }
     val showProgress = state.step != Step.INTRO
     ScreenScaffold(
         title = title,

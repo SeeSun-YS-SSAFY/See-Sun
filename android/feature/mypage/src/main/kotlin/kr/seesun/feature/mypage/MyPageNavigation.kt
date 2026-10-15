@@ -58,6 +58,22 @@ data object AccessibilityRoute
 @Serializable
 data object VoiceAutoRoute
 
+/** 말 속도(앱 안내 음성, 로그인 전에도) */
+@Serializable
+data object VoiceSpeedRoute
+
+/** 앱 음성 안내: 자동·항상·끄기(로그인 전에도) */
+@Serializable
+data object AppVoiceRoute
+
+/** 누름 알림: 결과 읽기·진동만·끄기(로그인 전에도) */
+@Serializable
+data object PressFeedbackRoute
+
+/** 사용법 다시 듣기(자리 표시, 최종 문구는 소유자 확인 뒤) */
+@Serializable
+data object HowToRoute
+
 /** 권한 상태(마이크·알림) — 꺼진 것은 [허용하기]로 앱 설정(로그인 전에도) */
 @Serializable
 data object PermissionSettingsRoute
@@ -110,6 +126,10 @@ fun NavGraphBuilder.myPageGraph(
     composable<DataResetRoute> { DataResetRoute(onBack = back) }
     composable<AccessibilityRoute> { AccessibilityScreen(onBack = back) }
     composable<VoiceAutoRoute> { VoiceAutoRoute(onBack = back) }
+    composable<VoiceSpeedRoute> { VoiceSpeedRoute(onBack = back) }
+    composable<AppVoiceRoute> { AppVoiceRoute(onBack = back) }
+    composable<PressFeedbackRoute> { PressFeedbackRoute(onBack = back) }
+    composable<HowToRoute> { HowToRoute(onBack = back) }
     composable<PermissionSettingsRoute> { PermissionSettingsRoute(onBack = back) }
     composable<AppVersionRoute> { AppVersionRoute(onBack = back, info = appInfo) }
 }

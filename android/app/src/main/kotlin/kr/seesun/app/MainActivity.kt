@@ -8,25 +8,42 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kr.seesun.app.gallery.ComponentGalleryScreen
 import kr.seesun.app.gallery.HighlightListGalleryScreen
 import kr.seesun.core.data.repository.SessionRepository
 import kr.seesun.core.designsystem.component.LocalAppSettingsAction
 import kr.seesun.core.designsystem.theme.SeeSunTheme
+import kr.seesun.core.feedback.Haptics
 import kr.seesun.core.ui.AutoListenEnvironment
 import kr.seesun.core.ui.LocalAutoListen
 import kr.seesun.core.ui.PermissionPrimerGate
+import kr.seesun.core.ui.VoiceMediaButtons
+import kr.seesun.core.voice.recognition.SpeechInput
+import kr.seesun.core.voice.recognition.SpeechOnsetDetector
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.diet.DietRoute
@@ -62,19 +79,54 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var speaker: Speaker
 
+    @Inject lateinit var speechInput: SpeechInput
+
+    @Inject lateinit var onsetDetector: SpeechOnsetDetector
+
+    @Inject lateinit var haptics: Haptics
+
+    /** 권한 안내 화면의 톱니바퀴: 안내를 닫은 뒤 설정을 연다(내비게이션 밖이라 요청 번호로 넘긴다). */
+    private val settingsRequests = MutableStateFlow(0)
+    private val settingsRequestFlow: StateFlow<Int> = settingsRequests.asStateFlow()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        // 음성 자동 인식(기본 켜짐): 음성 입력·명령 칸이 있는 화면은 안내 음성이 끝나면 저절로 듣는다.
-        val autoListen = AutoListenEnvironment(enabled = voicePreferences.autoListen, guidanceSpeaking = speaker.speaking)
+        // 음성 자동 인식(기본 「질문 뒤 + 말하면 듣기」): 질문이 끝나면 8초씩 두 번 듣고, 그 뒤에는 사람 말소리를 기다린다.
+        val autoListen = AutoListenEnvironment(
+            mode = voicePreferences.listenMode,
+            guidanceSpeaking = speaker.speaking,
+            recognizerListening = speechInput.listening,
+            idleMs = voicePreferences.standbyIdleMs,
+            detector = onsetDetector,
+            micIndicatorExplained = { voicePreferences.micIndicatorExplained },
+            markMicIndicatorExplained = voicePreferences::markMicIndicatorExplained
+        )
+        // 이어폰 버튼·TalkBack 두 손가락 두 번 탭으로 바로 듣기: 음성 화면이 앞에 있을 때만 미디어 세션을 켠다.
+        val mediaButtons = VoiceMediaButtons(this, autoListen)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                try {
+                    autoListen.directStart.active.collect { mediaButtons.setActive(it) }
+                } finally {
+                    mediaButtons.setActive(false)
+                }
+            }
+        }
         // 업데이트 알림을 눌러 열었으면 안내 창을 바로 띄운다(가운영 빌드만).
         if (BuildConfig.SELF_UPDATE && savedInstanceState == null) UpdateRequests.handleIntent(intent)
         setContent {
             SeeSunTheme {
                 // 처음 실행(또는 빠진 권한이 있는 기존 설치의 다음 실행) 때 온보딩보다 먼저 권한 안내 한 화면(msg 946).
-                PermissionPrimerGate(speaker = speaker, updateNotices = BuildConfig.SELF_UPDATE) {
-                    CompositionLocalProvider(LocalAutoListen provides autoListen) {
-                        SeeSunNavHost(session, appInfo())
+                ProvideAppChrome(speaker, speechInput, haptics, voicePreferences, autoListen) {
+                    PermissionPrimerGate(
+                        speaker = speaker,
+                        updateNotices = BuildConfig.SELF_UPDATE,
+                        onOpenSettings = { settingsRequests.update { it + 1 } }
+                    ) {
+                        CompositionLocalProvider(LocalAutoListen provides autoListen) {
+                            SeeSunNavHost(session, appInfo(), settingsRequestFlow)
+                        }
                     }
                 }
                 // 가운영 빌드만: 새 버전 안내 창(앱 화면 위). 상수 false면 R8이 이 호출을 지운다.
@@ -115,12 +167,31 @@ data object HighlightGalleryRoute
  * 시작 화면: 로그인했고 가입 단계를 마쳤으면 메인, 아니면 온보딩.
  */
 @Composable
-fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo()) {
+fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo(), settingsRequests: StateFlow<Int>? = null) {
     val nav = rememberNavController()
     val start: Any = remember { if (session.state.value.needsOnboarding) OnboardingRoute else MainRoute }
     SignedOutWatcher(session, nav)
+    // 권한 안내 화면에서 톱니바퀴를 눌렀으면 안내가 닫힌 뒤 설정을 연다.
+    if (settingsRequests != null) {
+        val request by settingsRequests.collectAsStateWithLifecycle()
+        var handled by rememberSaveable { mutableIntStateOf(0) }
+        LaunchedEffect(request) {
+            if (request > handled) {
+                handled = request
+                nav.navigate(SettingsRoute) { launchSingleTop = true }
+            }
+        }
+    }
     // 모든 화면 오른쪽 위 [설정](톱니바퀴, [화면 요약 듣기]와 같은 크기로 나란히, 소유자 msg 959·977). 로그인 전에는 계정 항목을 숨긴다.
-    val openSettings: () -> Unit = remember(nav) { { nav.navigate(SettingsRoute) { launchSingleTop = true } } }
+    // 설정 하위 화면의 톱니는 설정 목록을 하나 더 쌓지 않고 이미 있는 설정 목록으로 돌아간다(흐름 문서 P2-1).
+    val openSettings: () -> Unit = remember(nav) {
+        {
+            nav.navigate(SettingsRoute) {
+                launchSingleTop = true
+                popUpTo<SettingsRoute> { inclusive = false }
+            }
+        }
+    }
     CompositionLocalProvider(LocalAppSettingsAction provides openSettings) {
         SeeSunNavGraph(nav, start, appInfo)
     }

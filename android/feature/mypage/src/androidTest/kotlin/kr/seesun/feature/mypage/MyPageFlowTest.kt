@@ -116,7 +116,7 @@ class MyPageFlowTest {
         click("키: 176센티미터")
         waitPane("키 수정")
         speech.enqueue("백팔십 센티")
-        rule.onNode(hasContentDescription("음성 입력 시작")).performScrollTo().performClick()
+        rule.onNode(hasContentDescription("음성 입력")).performScrollTo().performClick()
         waitText("키 180센티미터")
         rule.shot("62_profile_edit_height_readback")
         rule.onNode(hasText("확인") and hasClickAction()).performScrollTo().performClick()

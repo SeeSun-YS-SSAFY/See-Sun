@@ -12,6 +12,8 @@ import kr.seesun.core.designsystem.component.MicState
 import kr.seesun.core.voice.parse.Answer
 import kr.seesun.core.voice.parse.AnswerParser
 import kr.seesun.core.voice.recognition.AutoListenOutcome
+import kr.seesun.core.voice.recognition.ListenOptions
+import kr.seesun.core.voice.recognition.PreRollAudio
 import kr.seesun.core.voice.recognition.RecognitionError
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.RecognitionFailureTracker
@@ -101,7 +103,7 @@ class VoiceFieldController(
 
             MicState.PROCESSING -> Unit
 
-            MicState.IDLE -> startListening()
+            MicState.IDLE, MicState.STANDBY -> startListening()
         }
     }
 
@@ -170,7 +172,7 @@ class VoiceFieldController(
      * 음성 자동 인식으로 한 번 듣는다([AutoListenEffect]가 부른다). 되읽기 확인 중이면 "네/아니요/다시"와 새 값을, 아니면 이 칸에
      * 맞는 값만 받는다. 무음·못 알아들음·맞지 않는 말에는 오류 문구·실패 횟수를 남기지 않는다. 편집 중·듣는 중이면 듣지 않는다.
      */
-    suspend fun listenAuto(): AutoListenOutcome {
+    suspend fun listenAuto(preRoll: PreRollAudio? = null): AutoListenOutcome {
         val now = _state.value
         if (now.mic != MicState.IDLE || now.inputState == InputState.EDITING) return AutoListenOutcome.USER_STOPPED
         onBeforeListen()
@@ -194,7 +196,8 @@ class VoiceFieldController(
                     }
                 }
             },
-            accept = ::acceptAuto
+            accept = ::acceptAuto,
+            preRoll = preRoll
         )
     }
 
@@ -210,7 +213,7 @@ class VoiceFieldController(
         onBeforeListen()
         _state.update { it.copy(mic = MicState.LISTENING, inputState = InputState.RECORDING, error = null) }
         listening = scope.launch {
-            speech.listen().collect { event ->
+            speech.listen(ListenOptions(manual = true)).collect { event ->
                 when (event) {
                     is RecognitionEvent.SpeechEnded -> _state.update { it.copy(mic = MicState.PROCESSING) }
                     is RecognitionEvent.Final -> onFinal(event.candidates)
