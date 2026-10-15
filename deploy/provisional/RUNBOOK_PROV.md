@@ -1,0 +1,170 @@
+# 시선(See:Sun) 가운영 런북
+
+1주에서 한 달 동안 개인 AWS 계정의 Lightsail 서울 인스턴스 한 대에 백엔드를 띄우고, 실제 주소를 쓰는 Android 앱을 시험자에게 나눠 주는 절차입니다. 이 번들은 작업 PC에서 리허설을 마쳤습니다. 서버는 PC에서 만든 이미지를 그대로 받아 실행하므로 서버에서 소스를 받거나 빌드하지 않습니다.
+
+브랜치는 `deploy/provisional-20261015`(로컬 전용)입니다. 앱 UI(`feat/figma-align`), 배포 리허설 수정(`feat/deploy-verify`), 법적 문서(`feat/legal-docs`)를 합쳤습니다. 운동 콘텐츠는 2026-10-14 기준 개발 DB와 같습니다. 다시 그린 픽토그램 19장, 고친 대본 9개 운동(나비자세 따라 하기 2세트 포함), 다시 만든 녹음 16구간과 병합본 3개, 픽토그램 대본 위치 연결표가 들어 있습니다.
+
+## 1. 번들 구성
+
+`server/` 폴더만 서버에 올립니다. `keys/`와 `logs/`는 PC에만 둡니다.
+
+| 파일 | 내용 |
+|---|---|
+| `seesun-backend_prov-20261015_amd64.tar.gz` | 백엔드 이미지(linux/amd64, `docker save`+gzip) |
+| `docker-compose.prod.yml` | django·postgres·caddy. 서버에서 빌드하지 않는 가운영판 |
+| `Caddyfile` | HTTPS 자동 발급, 보안 헤더, `/admin/` IP 제한, `/media/` 직접 서빙 |
+| `env.template` | `.env` 원본. 사람이 채울 자리표시 4개, 나머지는 고정값 |
+| `seed/exercises_content_seed_20261014.json` | 운동 카테고리 4, 운동 29, 운동 미디어 273행(픽토그램 112·안내 음성 161) |
+| `seed/EXPECTED_COUNTS.txt` | `deploy.sh`가 서버 DB와 맞춰 보는 기대 개수 |
+| `media_content_20261014.tar.gz` | 픽토그램(원본·다시 그린 그림·보기용 사본), 운동 음성, 병합본, 화면 안내 음성 524개 파일 |
+| `bootstrap.sh` | 서버 첫 준비: Docker 공식 저장소 설치, 스왑 2GB, 자동 보안 업데이트, ufw(22·80·443) |
+| `deploy.sh` | 배포: 이미지 적재, 비밀값 생성, 기동, 시드, 개수·파일 검증, HTTPS 확인, 백업 cron |
+| `backup.sh` | 매일 DB 덤프(서버 안 7일 보관). `deploy.sh`가 cron에 등록 |
+| `export_for_handover.sh` | 의뢰인 계정 이관용 DB 덤프·미디어·데이터 키 묶음 |
+| `teardown_checklist.md` | 종료 체크리스트(백업 → 검증 → 인스턴스·고정 IP 삭제) |
+| `SHA256SUMS` | 큰 파일 무결성. `deploy.sh`가 먼저 검사 |
+
+## 2. 소유자가 직접 해야 하는 일
+
+아래 다섯 가지는 계정·결제·본인 확인이 걸려 있어 소유자가 직접 합니다. 나머지는 스크립트가 처리합니다.
+
+1. **AWS 가입과 카드 등록.** 개인 계정을 만들고 결제 카드를 등록합니다. 가입 직후 Billing → Budgets에서 월 예산 알림(예: 20달러)을 하나 걸어 두면 종료를 잊었을 때 바로 알 수 있습니다. 루트 계정에는 MFA를 켭니다.
+2. **Lightsail 인스턴스 만들기(콘솔).** 리전은 서울(ap-northeast-2), 플랫폼은 Linux/Unix, 블루프린트는 「OS 전용 → Ubuntu 24.04 LTS」, 플랜은 메모리 2GB(x86, 듀얼 스택)입니다. 이름은 `seesun-prov`로 둡니다. 월 요금은 콘솔에 표시된 금액을 확인합니다(2GB 플랜은 대략 월 12달러).
+3. **고정 IP와 방화벽(콘솔).** 네트워킹 탭에서 고정 IP를 만들어 이 인스턴스에 붙입니다. 인스턴스의 네트워킹 → IPv4 방화벽에는 기본으로 SSH(22)와 HTTP(80)만 있으므로 **HTTPS(443)를 추가**합니다. 22·80·443 말고는 열지 않습니다.
+4. **DuckDNS 하위 도메인.** duckdns.org에 로그인해 하위 도메인(예: `seesun-test`)을 만들고 current ip에 고정 IP를 넣습니다. 이 이름이 `<sub>`이고, 서버 주소는 `https://<sub>.duckdns.org`입니다. DuckDNS 토큰은 이 번들에 쓰지 않습니다.
+5. **Firebase 프로젝트.** Firebase 콘솔에서 프로젝트를 만들고 Android 앱(패키지 `kr.seesun.app`)을 등록합니다. 등록할 때 이 가운영 서명 키의 지문을 넣습니다(`keys/FINGERPRINTS.txt`).
+   - SHA-1 `27:2E:75:67:D2:7C:A3:FA:28:C0:20:99:D0:89:C6:11:F6:57:04:66`
+   - SHA-256 `01:93:09:91:04:8C:A0:B6:88:FE:5B:A0:C2:8E:9B:44:33:58:1E:A2:17:73:10:64:1E:EC:20:5D:27:35:FA:1C`
+
+   Authentication → 로그인 방법에서 「전화」를 켜고, `google-services.json`을 내려받아 작업 PC의 `android/app/`에 둡니다(커밋 금지, .gitignore에 있음). 콘솔이 요금제 변경(Blaze)을 요구하면 그때 예산 알림도 겁니다. 실제 SMS 없이 시험하려면 「테스트용 전화번호」에 가상 번호와 고정 인증번호를 등록합니다. 프로젝트 ID는 서버 `.env`의 `FIREBASE_PROJECT_ID`에 넣습니다.
+
+## 3. SSH 접속
+
+Lightsail은 리전마다 기본 키 쌍을 만들어 둡니다. 콘솔 오른쪽 위 계정 메뉴 → 계정 → SSH 키에서 서울 리전의 기본 키(`LightsailDefaultKey-ap-northeast-2.pem`)를 내려받습니다. Windows에서는 키 파일 권한을 본인만 읽게 줄여야 ssh가 받아 줍니다.
+
+```powershell
+icacls .\LightsailDefaultKey-ap-northeast-2.pem /inheritance:r /grant:r "$($env:USERNAME):R"
+ssh -i .\LightsailDefaultKey-ap-northeast-2.pem ubuntu@<고정IP>
+```
+
+사용자 이름은 `ubuntu`입니다. 키가 없거나 막히면 콘솔의 「SSH를 사용하여 연결」(브라우저 터미널)로도 들어갈 수 있습니다.
+
+## 4. 배포 순서
+
+**① 번들 올리기(작업 PC).** `server/` 폴더를 통째로 올립니다. 약 200MB입니다.
+
+```bash
+scp -i LightsailDefaultKey-ap-northeast-2.pem -r deploy_prov/server ubuntu@<고정IP>:~/seesun-prov
+```
+
+**② 서버 준비(서버, 처음 한 번).** Docker 공식 저장소에서 엔진과 compose 플러그인을 설치하고, 스왑 2GB, 자동 보안 업데이트, ufw(22·80·443), 시간대(Asia/Seoul)를 맞춥니다. 끝나면 docker 그룹이 적용되도록 SSH를 끊고 다시 접속합니다.
+
+```bash
+cd ~/seesun-prov && chmod +x *.sh && sudo ./bootstrap.sh
+exit   # 다시 ssh 접속
+```
+
+**③ 환경값 채우기(서버).** 처음 `./deploy.sh`를 실행하면 `.env`를 만들고 비밀값(DJANGO_SECRET_KEY·POSTGRES_PASSWORD·FIELD_ENCRYPTION_KEYS·PHONE_HASH_KEY)을 무작위로 채운 뒤, 자리표시가 남아 있다며 멈춥니다. `nano .env`로 네 줄을 채웁니다.
+
+- `API_DOMAIN=<sub>.duckdns.org`
+- `ACME_EMAIL=` 인증서 만료 알림 받을 이메일
+- `FIREBASE_PROJECT_ID=` Firebase 프로젝트 ID
+- `ADMIN_ALLOWED_IPS=` 관리자 화면을 SSH 터널로만 쓸 거면 `private_ranges`, 사무실 IP도 열 거면 `private_ranges 203.0.113.10/32` 형식
+
+`FIELD_ENCRYPTION_KEYS`는 지금 바로 서버 밖(비밀번호 관리자)에 복사해 둡니다. 잃어버리면 가입자의 전화번호·건강정보를 영영 풀 수 없습니다. `DEBUG`와 가짜 Firebase 인증은 꺼져 있고, `deploy.sh`가 켜져 있으면 멈춥니다.
+
+**④ 배포(서버).**
+
+```bash
+./deploy.sh
+```
+
+`deploy.sh`는 번들 무결성을 확인하고 이미지를 적재한 뒤 컨테이너를 띄웁니다(django 시작 전에 마이그레이션이 자동으로 돕니다). 이어서 media 볼륨에 미디어를 풀고 운동 콘텐츠를 넣은 다음, 개수와 파일을 검증합니다. 마지막으로 `https://<sub>.duckdns.org/healthz/`가 응답하는지 확인하고 매일 03:15 백업을 cron에 등록합니다. 다시 실행해도 결과가 같습니다. 이미 넣은 콘텐츠는 다시 넣지 않고, 강제로 다시 넣으려면 `FORCE_SEED=1 ./deploy.sh`를 씁니다. 정상이면 끝에 다음 줄이 보입니다.
+
+```
+category=4 exercise=29 pictogram=112 guide_audio=161 redrawn=19 script_revised=9 butterfly_guide_text=1 missing_files=0
+콘텐츠 개수·파일 = 기대값과 같음
+healthz OK
+```
+
+인증서 발급에 1~2분 걸립니다. healthz가 실패하면 대개 원인은 셋 중 하나입니다. DuckDNS IP가 고정 IP와 다르거나, Lightsail 방화벽에 443이 없거나, 80이 막혀 Let's Encrypt 확인이 안 되는 경우입니다. `deploy.sh`는 DNS가 이 서버를 가리키지 않으면 경고를 냅니다.
+
+서버에서 **`update_pictograms`·`update_media`·`link_exercise_media`를 실행하지 않습니다.** 이 명령들은 1차 기준으로 픽토그램·음성 행을 다시 만들어, 다시 그린 그림과 새 구간을 덮어쓸 수 있습니다.
+
+**⑤ 관리자 계정(선택, 서버).**
+
+```bash
+docker compose -f docker-compose.prod.yml --env-file .env exec -e SEESUN_OPERATOR=<이름> django python manage.py createsuperuser
+# 내 PC에서 터널:  ssh -i <키.pem> -L 8443:127.0.0.1:443 ubuntu@<고정IP>
+# 내 PC hosts 파일에 127.0.0.1 <sub>.duckdns.org 추가 → https://<sub>.duckdns.org:8443/admin/
+```
+
+**⑥ 앱 빌드(작업 PC).** `google-services.json`을 `android/app/`에 둔 뒤 빌드합니다. 이 가운영 키로 서명하므로 Firebase에 넣은 지문과 맞습니다. 서버 주소·서명 파일 경로는 저장소에 두지 않고, 저장소 밖 `prov.env`(형식 `deploy/provisional/prov.env.example`)에 적어 `SEESUN_PROV_ENV`로 넘깁니다.
+
+```bash
+cd <저장소 루트>
+SEESUN_PROV_ENV=<저장소 밖>/deploy_prov/prov.env bash deploy/provisional/build_android_release.sh --firebase
+# 또는 인자로: bash deploy/provisional/build_android_release.sh "$API_DOMAIN" <signing.properties 경로> --firebase
+```
+
+Firebase 없이 서버 주소만 넣은 빌드는 2026-10-15에 컴파일·서명까지 확인했습니다(`deploy_prov/android/`). 다만 이 빌드는 전화 인증 단계에서 「인증 준비 안 됨」으로 멈추므로 시험자에게는 `--firebase` 빌드를 나눠 줍니다. 배포 방법(APK 직접 설치, Firebase App Distribution, Play 내부 테스트)은 소유자가 정합니다.
+
+## 5. 운영 중 확인
+
+```bash
+C="docker compose -f docker-compose.prod.yml --env-file .env"
+$C ps                         # django·postgres healthy, caddy Up
+$C logs --tail 100 django     # 개인정보는 로그에 남지 않게 걸러져 있음
+ls -lh backups/ && tail backups/backup.log
+df -h / && free -h
+```
+
+백업은 서버 디스크에만 7일 남습니다. 가운영 동안 원격 백업은 쓰지 않습니다. 원격으로 보내려면 `.env`의 `BACKUP_BUCKET`과 `BACKUP_GPG_RECIPIENT`(암호화 필수)를 채웁니다. 중요한 시험 데이터가 생기면 수시로 `./export_for_handover.sh`를 돌려 PC로 내려받는 편이 간단합니다.
+
+## 6. 롤백
+
+- **배포가 중간에 실패했을 때.** 데이터는 볼륨에 남으므로 원인을 고친 뒤 `./deploy.sh`를 다시 실행합니다. 컨테이너만 내리려면 `docker compose -f docker-compose.prod.yml --env-file .env down`을 씁니다. `down -v`는 DB와 미디어를 지우므로 쓰지 않습니다.
+- **새 이미지를 올렸다가 되돌릴 때.** 이전 이미지 묶음을 `docker load`한 뒤 `.env`의 `DJANGO_IMAGE`를 이전 태그로 바꾸고 `./deploy.sh`를 실행합니다. 마이그레이션이 바뀐 이미지였다면 아래 DB 복원을 함께 합니다.
+- **DB를 백업 시점으로 되돌릴 때.** 서비스를 멈추고 덤프로 다시 만듭니다.
+
+  ```bash
+  C="docker compose -f docker-compose.prod.yml --env-file .env"
+  $C stop django caddy
+  $C exec -T postgres dropdb -U seesun seesun && $C exec -T postgres createdb -U seesun seesun
+  $C exec -T postgres pg_restore -U seesun -d seesun --no-owner < backups/seesun-<시각>.dump
+  $C start django caddy && curl -fsS https://<sub>.duckdns.org/healthz/
+  ```
+
+- **이번 주 콘텐츠 수정(그림·대본·녹음)만 원래대로 되돌릴 때.** 의뢰인 확인 전 수정이라 되돌리기 명령이 이미지에 들어 있습니다. 원래 파일은 미디어 볼륨에 함께 있습니다.
+
+  ```bash
+  $C exec -e SEESUN_OPERATOR=<이름> django python manage.py apply_pictogram_redraw --rollback
+  $C exec -e SEESUN_OPERATOR=<이름> django python manage.py apply_script_revisions --rollback
+  ```
+
+  다시 적용하려면 `FORCE_SEED=1 ./deploy.sh`를 실행합니다.
+- **가운영 전체를 접을 때.** `teardown_checklist.md` 순서대로 백업 → 검증 → 인스턴스·고정 IP 삭제까지 합니다. 인스턴스를 「중지」만 하면 요금이 계속 나갑니다.
+
+## 7. 의뢰인 계정으로 옮기기
+
+`./export_for_handover.sh`는 서비스를 멈추지 않고 `handover_<시각>/`을 만듭니다. 안에는 DB 덤프, 미디어 묶음, 데이터 키 두 줄(`data_keys.env`), 복원 순서(`RESTORE.txt`), 체크섬이 들어 있습니다. 데이터 키는 덤프와 다른 경로로 전달합니다. 받는 쪽 gpg 키가 있으면 `HANDOVER_GPG_RECIPIENT=<키>`를 붙여 덤프와 키를 암호화합니다. 새 서버에서는 같은 번들로 `bootstrap.sh`를 실행하고, `SKIP_SEED=1 ./deploy.sh` 뒤 `RESTORE.txt` 순서로 복원합니다.
+
+## 8. 남은 위험과 확인할 것
+
+- **콘텐츠 수정은 의뢰인 확인 전입니다.** 다시 그린 그림 19장과 고친 대본 9개 운동은 모두 「의뢰인 확인 필요」 표시가 있습니다. 시험자에게 이 점을 알리고, 반려되면 6절의 되돌리기 명령을 씁니다.
+- **픽토그램·음성의 공개 배포 허락(법적 검토 L-05).** 가운영 주소의 `/media/`는 누구나 받을 수 있습니다. 저작자 이용허락 전이면 시험 기간을 짧게 두고 주소를 널리 알리지 않습니다.
+- **Firebase 프로젝트 ID만 쓰는 모드.** 탈퇴할 때 Firebase 쪽 사용자 삭제는 되지 않고 재시도 대기열에 쌓입니다. 서비스 계정 JSON을 `secrets/`에 넣으면 해결되지만 가운영에서는 선택입니다.
+- **DuckDNS는 무료 공용 서비스입니다.** 장애가 나면 주소가 풀리지 않습니다. 정식 운영 전에는 자체 도메인으로 바꿉니다. 그때 앱도 새 주소로 다시 빌드해야 합니다.
+- **가운영 서명 키는 정식 출시 키가 아닙니다.** Play 등록 때는 별도 업로드 키와 Play 앱 서명을 쓰고, Firebase에 그 지문을 추가합니다.
+- **관리자 2단계 인증은 아직 없습니다.** 관리자 화면은 SSH 터널로만 엽니다.
+
+## 9. 작업 PC 리허설 결과(2026-10-15)
+
+같은 번들을 Docker Desktop에서 `API_DOMAIN=localhost`, 포트 19080·19443, 프로젝트 이름 `seesun-prov-rehearsal`로 띄워 확인했습니다. 가짜 Firebase 토큰을 쓰는 시험용 스택(`seesun-prov-staging`, 포트 29443)도 같은 이미지와 같은 시드로 띄웠습니다.
+
+- **시드.** 시드한 Postgres를 개발 DB(SQLite)와 행 단위로 비교했습니다. 운동 29, 픽토그램 112, 안내 음성 161(나비자세 따라 하기 행 포함)으로 306행 모두 같았습니다. 시각 표기(`.000Z`/`Z`)만 다르고 내용 차이는 0입니다. 미디어 파일 524개는 SHA-256까지 같았습니다.
+- **`deploy.sh`.** 첫 실행과 재실행 모두 통과했습니다. 재실행 때는 이미지·미디어·시드를 건너뛰었습니다. 자리표시가 남은 `.env`에서는 비밀값만 만들고 멈췄습니다.
+- **시험 결과.** 백엔드 pytest 423개, 배포 E2E 흐름 20개, QA 행렬 306개, 운영 구성 점검 21개가 모두 통과했습니다. 운영 점검(재기동 뒤 데이터 유지, 백업·복원, `check --deploy`, 가짜 검증기 차단, 로그 개인정보)은 실패 0입니다.
+- **이관 시험.** `export_for_handover.sh`로 묶음을 만들어 새 스택에 `RESTORE.txt` 순서대로 복원했습니다. 행 수가 같았고, 옮긴 데이터 키로 암호화된 전화번호를 다시 풀 수 있었습니다.
+- **되돌리기 시험.** 6절의 되돌리기 명령을 실행하자 그림 19장, 대본 9개 운동, 녹음, 나비자세 새 구간 행이 원래대로 돌아갔습니다. 이어서 `FORCE_SEED=1 ./deploy.sh`로 다시 적용하니 기대 개수와 녹음 해시가 그대로 돌아왔습니다.
+- **앱 응답.** 나비자세 상세 API가 다시 그린 그림 3(`_v2`), 따라 하기 구간 녹음(`exercise_guide_text`), 반복 그림 순서(`pictogram_cycle`)를 돌려줬습니다.

@@ -1,5 +1,5 @@
 {
-  "_comment": "동의 문서 v1 자리값. TODO(client-data): 이용약관·개인정보 처리방침·민감정보 동의서 본문과 공개 URL은 법무 검토(05 문서 §5) 후 확정해 version을 올린다.",
+  "_comment": "동의 문서 자리값. TODO(client-data): 이용약관·개인정보 처리방침·민감정보 동의서 본문과 공개 URL은 법무 검토(05 문서 §5) 후 확정해 version을 올린다. OVERSEAS는 2026-10-12부터 고지 확인(kind=NOTICE, 법적 검토 C-01·C-02). 고지 본문은 법무 확인 전 초안이다.",
   "documents": [
     {"type": "TOS", "version": "2026-10-01", "required": true, "effective_at": "2026-10-01",
      "title": "See:Sun 이용약관", "url": "",
@@ -7,9 +7,12 @@
     {"type": "PRIVACY", "version": "2026-10-01", "required": true, "effective_at": "2026-10-01",
      "title": "개인정보 수집·이용 안내", "url": "",
      "summary": "이름, 전화번호, 생년월일, 성별, 키, 몸무게를 서비스 제공을 위해 수집하며, 탈퇴하면 바로 파기합니다."},
-    {"type": "OVERSEAS", "version": "2026-10-01", "required": false, "effective_at": "2026-10-01",
+    {"type": "OVERSEAS", "version": "2026-10-01", "required": false, "effective_at": "2026-10-01", "is_active": false,
      "title": "개인정보 국외이전 고지", "url": "",
      "summary": "전화번호 인증을 위해 전화번호가 미국 Google LLC(Firebase)로 전송됩니다."},
+    {"type": "OVERSEAS", "version": "2026-10-12", "required": false, "kind": "NOTICE", "effective_at": "2026-10-12",
+     "title": "개인정보 국외이전 고지", "url": "",
+     "summary": "전화번호 인증을 위해 개인정보가 국외로 이전됩니다. 이전 항목: 휴대폰 번호, 인증 요청 시 기기·네트워크 정보(IP 주소 등). 이전 국가: 미국. 이전 시기와 방법: 인증번호를 요청할 때 암호화된 네트워크로 전송. 받는 자: Google LLC(Firebase Authentication), 연락처 https://support.google.com/policies/contact/general_privacy_form. 이용 목적: 휴대폰 문자 인증과 로그인. 보유 기간: 회원 탈퇴 시 삭제 요청, Google 정책에 따라 삭제 완료까지 최대 180일. 거부 방법과 효과: 이전을 원하지 않으면 전화번호 인증을 진행하지 않으면 되며, 이 경우 가입할 수 없습니다."},
     {"type": "SENSITIVE", "version": "2026-10-01", "required": false, "effective_at": "2026-10-01",
      "title": "건강정보(민감정보) 처리 동의", "url": "",
      "summary": "질환과 알레르기 정보를 맞춤 경고와 추천에 사용합니다. 동의하지 않아도 기본 기능을 이용할 수 있고, 설정에서 언제든 철회할 수 있습니다."},

@@ -1,0 +1,167 @@
+{
+ "exercise_no": 26,
+ "exercise_id": "b09b403f4962401cb46b0f8fd0a52e87",
+ "exercise_name": "런지",
+ "name_en": "lunge",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "",
+ "fields": {
+  "exercise_description": "[추천] 3세트, 한 세트마다 양다리 각 6회, 전체 3분 동안 운동하기를 권장합니다.\n\n[유의사항] 별도의 준비물이 필요하지 않은 운동입니다.",
+  "first_description": "3초 안에 런지에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 두 발을 엉덩이 너비로 벌리고 곧은 자세로 섭니다. 발목, 무릎, 엉덩이가 일직선이 되도록 신경써 줍니다. 2. 팔은 허리에 두거나 몸 옆으로 내려서 균형을 잡습니다. 시선은 편하게 앞을 향하고 척추를 곧게 폅니다.",
+  "main_form": "동작 시작 : 1. 오른쪽 다리를 크게 한 걸음(발 길이 세 개 정도) 앞으로 내딛습니다. 2. 양 무릎을 90도 각도로 천천히 구부리면서, 뒤쪽 다리의 무릎은 거의 바닥에 닿도록 합니다. 다만 바닥에 쿵 찍지 않도록 주의합니다. 3. 체중은 앞다리의 발뒤꿈치에 실리도록 합니다. 4. 상체를 최대한 수직으로 유지해 앞쪽 무릎이 발끝을 넘지 않도록 주의합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 3초 정도 유지하며 균형을 잡으세요. 2. 다리를 굽히는 동안에도 머리부터 허리까지는 일직선을 유지해주어야 합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 앞다리로 바닥을 밀며 시작 자세로 돌아갑니다. 2. 반대쪽 다리도 같은 방법으로 반복하세요. 올라올 때 복부와 다리 근육에 힘을 줍니다.",
+  "exercise_guide_text": "이제 이 동작을 한 세트 당 양다리를 번갈아가면서 총 12회 반복합니다. 총 3세트를 반복하고, 세트 사이마다 30초씩 휴식을 취합니다. 다리나 엉덩이에 통증이나 불편함을 느낀다면, 무릎을 90도까지 깊게 굽히지 마시고 덜 구부려서 운동의 강도를 줄이는 것을 권장합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 3세트, 한 세트마다 양다리 각 6회, 전체 3분 동안 운동하기를 권장합니다.\n\n[유의사항] 별도의 준비물이 필요하지 않은 운동입니다.",
+  "first_description": "3초 안에 런지에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 두 발을 엉덩이 너비로 벌리고 곧은 자세로 섭니다. 발목, 무릎, 엉덩이가 일직선이 되도록 신경써 줍니다. 2. 팔은 허리에 두거나 몸 옆으로 내려서 균형을 잡습니다. 시선은 편하게 앞을 향하고 척추를 곧게 폅니다.",
+  "main_form": "동작 시작 : 1. 오른쪽 다리를 약 세 걸음 앞에 내딛습니다. 2. 양 무릎을 90도 각도로 천천히 구부리면서, 뒤쪽 다리의 무릎은 거의 바닥에 닿도록 합니다. 다만 바닥에 쿵 찍지 않도록 주의합니다. 3. 체중은 앞다리의 발뒤꿈치에 실리도록 합니다. 4. 상체를 최대한 수직으로 유지해 앞쪽 무릎이 발끝을 넘지 않도록 주의합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 5초 정도 유지하며 균형을 잡으세요. 2. 다리를 굽히는 동안에도 머리부터 허리까지는 일직선을 유지해주어야 합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 앞다리로 바닥을 밀며 시작 자세로 돌아갑니다. 2. 반대쪽 다리도 같은 방법으로 반복하세요. 올라올 때 복부와 다리 근육에 힘을 줍니다.",
+  "exercise_guide_text": "이제 이 동작을 한 세트 당 양다리를 번갈아가면서 총 12회 반복합니다. 총 3세트를 반복하고, 세트 사이마다 30초씩 휴식을 취합니다. 다리나 엉덩이에 통증이나 불편함을 느낀다면, 무릎을 90도까지 깊게 굽히지 마시고 덜 구부려서 운동의 강도를 줄이는 것을 권장합니다."
+ },
+ "changes": [
+  {
+   "section_key": "main_form",
+   "section": "동작 시작",
+   "original": "1. 오른쪽 다리를 약 세 걸음 앞에 내딛습니다.",
+   "new": "1. 오른쪽 다리를 크게 한 걸음(발 길이 세 개 정도) 앞으로 내딛습니다.",
+   "reason": "그림은 한 걸음. '세 걸음'은 귀로만 듣는 사용자에게 세 발짝 걸어 나가라는 뜻으로 들려 자세가 무너지고 낙상 위험(판정 picture_correct).",
+   "verdict": {
+    "verdict_index": 21,
+    "item": "보폭: 대본 '약 세 걸음 앞에 내딛습니다' vs 그림 한 걸음 (검토표에 없던 불일치)",
+    "verdict": "picture_correct",
+    "confidence": "high",
+    "sources": [
+     "ACE Exercise Library — Forward lunge — https://acefitness.org/resources/everyone/exercise-library/94/forward-lunge/",
+     "SilverSneakers — 5 exercises for seniors to improve leg strength — https://www.silversneakers.com/?p=23674"
+    ]
+   }
+  },
+  {
+   "section_key": "stay_form",
+   "section": "자세 유지",
+   "original": "1. 자세를 5초 정도 유지하며 균형을 잡으세요.",
+   "new": "1. 자세를 3초 정도 유지하며 균형을 잡으세요.",
+   "reason": "그림 3 '3s'와 맞춤. 앞뒤로 벌린 불안정 자세에서 머무는 시간은 짧을수록 안전, 양다리 12회 × 3세트 반복(판정 both_valid_keep_picture). 그림 v2(5s)는 되돌림.",
+   "verdict": {
+    "verdict_index": 20,
+    "item": "유지 시간 '3s' vs '5초 정도'",
+    "verdict": "both_valid_keep_picture",
+    "confidence": "medium",
+    "sources": [
+     "ACE Exercise Library — Forward lunge — https://acefitness.org/resources/everyone/exercise-library/94/forward-lunge/",
+     "SilverSneakers — 5 exercises for seniors to improve leg strength — https://www.silversneakers.com/?p=23674",
+     "Northumbria University — Can exercise help older people with vision problems avoid falls? — https://northumbria.ac.uk/about-us/news-events/news/2015/06/can-exercise-help-older-people-with-vision-problems-avoid-falls"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/lunge/exercise_description.mp3",
+   "mp3_seconds": 14.23,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 14.2
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/lunge/first_description.mp3",
+   "mp3_seconds": 30.58,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 6,
+   "sentences_after": 6,
+   "est_seconds_after": 30.6
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/lunge/main_form.mp3",
+   "mp3_seconds": 32.18,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 6,
+   "sentences_after": 6,
+   "est_seconds_after": 34.8
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/lunge/stay_form.mp3",
+   "mp3_seconds": 13.54,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 13.5
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/lunge/fixed_form.mp3",
+   "mp3_seconds": 16.39,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 4,
+   "sentences_after": 4,
+   "est_seconds_after": 16.4
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/lunge/exercise_guide_text.mp3",
+   "mp3_seconds": 26.47,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 26.5
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

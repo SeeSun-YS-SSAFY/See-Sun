@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+ 시작 화면(SplashScreen API): 남색 바탕 + 시선 로고(Figma INIT 345:961). -->
+    <style name="Theme.SeeSun" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/seesun_background</item>
+        <item name="android:statusBarColor">@color/seesun_background</item>
+        <item name="android:navigationBarColor">@color/seesun_background</item>
+        <item name="android:windowSplashScreenBackground">@color/seesun_background</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/splash_emblem</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/seesun_background</item>
+    </style>
+</resources>

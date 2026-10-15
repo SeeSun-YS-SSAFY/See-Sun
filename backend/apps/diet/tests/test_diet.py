@@ -67,7 +67,7 @@ class TestEvaluate:
         item = r.data['items'][0]
         assert item['nutrition']['kcal'] == pytest.approx(f.per_serving()['kcal'] * 0.5, abs=0.01)
         assert r.data['warnings'][0]['type'] == 'ALLERGY'
-        assert '포함될 가능성' in r.data['warnings'][0]['tts_message']
+        assert '들어 있을 수 있어요' in r.data['warnings'][0]['tts_message']
 
     def test_DB에_없는_음식은_알레르기_확인_불가_안내(self):
         user = make_user(sensitive=True, allergens=['EGG'])
@@ -236,7 +236,7 @@ class TestRecommendations:
         assert data['alternative_diet']['menus'] == ['쌀국수', '잔치국수', '감자전']
         assert '메밀의 대체 식단은 쌀국수, 잔치국수, 감자전입니다' in data['alternative_diet']['tts_message']
         assert {c['food']['name'] for c in data['items']} == {'쌀국수', '잔치국수', '감자전'}
-        assert data['notice'] == '개인의 알레르기 진단 결과를 우선 확인하세요.'
+        assert data['notice'] == '제품 포장의 표시와 본인의 진단 결과를 먼저 확인하세요.'
 
     @pytest.mark.parametrize('params', [{'type': 'nutrient', 'key': 'SUGAR'}, {'type': 'disease', 'key': 'X'},
                                         {'type': 'allergy', 'key': 'NOPE'}, {'type': 'weird'}])

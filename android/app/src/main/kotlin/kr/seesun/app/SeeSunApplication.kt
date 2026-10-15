@@ -43,5 +43,9 @@ object AppConfigModule {
 
     @Provides
     @Singleton
-    fun dataConfig(): DataConfig = DataConfig(useFakeRepositories = BuildConfig.USE_FAKE_DATA)
+    fun dataConfig(): DataConfig = DataConfig(
+        useFakeRepositories = BuildConfig.USE_FAKE_DATA,
+        // 동의 기록 입증 정보(법적 검토 C-07). 빠지면 서버 동의 기록의 앱 버전이 비어 남는다(통합 E2E BUG-05).
+        appVersion = BuildConfig.VERSION_NAME
+    )
 }

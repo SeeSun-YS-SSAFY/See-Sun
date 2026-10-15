@@ -1,0 +1,8 @@
+# 운동 음성 생성·병합 작업용 의존성(운영 이미지에는 넣지 않는다 — 법적 검토 L-02)
+# - imageio-ffmpeg는 GPL 빌드 ffmpeg 바이너리를 함께 배포한다. 이 묶음을 넣은 이미지를 공개 배포하면 GPL 소스 제공 의무가 생긴다.
+# - 사용처: manage.py update_media·generate_nav_audio, 1차 실시간 병합(/exercises/<id>/audio/ 미리 병합본이 없을 때)
+-r requirements.txt
+
+pydub==0.25.1
+imageio-ffmpeg==0.6.0
+google-cloud-texttospeech==2.34.0

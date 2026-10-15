@@ -20,4 +20,12 @@ dependencies {
 
     testImplementation(platform(libs.okhttp.bom))
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.snakeyaml.engine)
+}
+
+// 계약 검사 테스트(OpenApiContractTest)가 읽을 기계 판독 명세(저장소 루트 docs/api/openapi.yaml).
+tasks.withType<Test>().configureEach {
+    val spec = rootProject.layout.projectDirectory.file("../docs/api/openapi.yaml").asFile
+    inputs.file(spec).withPropertyName("openapiSpec")
+    systemProperty("seesun.openapi", spec.absolutePath)
 }

@@ -20,6 +20,8 @@ from seesun_rules.sugar_index import compute_sugar_index
 from .models import DailyDietScore, MealItem, MealRecord, NutritionSource
 
 NUTRIENTS = ('kcal', 'carb_g', 'protein_g', 'fat_g', 'sodium_mg', 'sugar_g', 'fiber_g')
+# 섭취량 배수 상한(입력 ratio 상한과 같다: serializers.AmountSerializer.ratio max_value)
+MAX_AMOUNT_RATIO = 20
 
 
 class ItemError(Exception):
@@ -64,6 +66,9 @@ def resolve_item(data, ctx: HealthContext) -> dict:
         ratio = float(grams) / float(serving_g)
     else:
         ratio = 1.0
+    if ratio > MAX_AMOUNT_RATIO:
+        # grams ÷ 1회 제공량이 너무 크면(예: 5000g ÷ 0.1g) DB 숫자 범위를 넘어 500이 났다(배포 리허설 B-07)
+        raise ItemError({'amount': [f'섭취량이 1회 제공량의 {MAX_AMOUNT_RATIO}배를 넘습니다. 양을 다시 확인해 주세요.']})
     if grams is None and serving_g:
         grams = float(serving_g) * ratio
     scaled = {k: (None if v is None else round(float(v) * ratio, 2)) for k, v in base.items()}
@@ -110,11 +115,12 @@ def warnings_for(resolved_items, ctx: HealthContext) -> list:
         if hit:
             names = ', '.join(a['name_ko'] for a in hit)
             sure = any(a['basis'] == 'LABEL' for a in hit)
-            phrase = '성분이 들어 있어요' if sure else '성분이 포함될 가능성이 높아요'
+            # 법적 검토 T-05: 포장 표시(LABEL)면 "들어 있어요", 음식명 추정이면 "들어 있을 수 있어요" + 확인 안내
+            phrase = '성분이 들어 있어요' if sure else '성분이 들어 있을 수 있어요'
             allergy.append({
                 'type': 'ALLERGY', 'level': 'WARNING', 'food_name': name, 'allergen_codes': [a['code'] for a in hit],
                 'vibration': 'ALLERGY', 'actions': ['ALTERNATIVE_DIET'],
-                'tts_message': f'알레르기 주의. {name}에는 {names} {phrase}.',
+                'tts_message': f"알레르기 주의. {name}에 {names} {phrase}. {get_tables().RECOMMEND['allergy_notice']}",
             })
         elif any(a['status'] == 'UNKNOWN' for a in mine):
             unknown.append({
@@ -130,7 +136,8 @@ def warnings_for(resolved_items, ctx: HealthContext) -> list:
                 'type': 'SUGAR_INDEX', 'level': 'DANGER' if very else 'WARNING', 'food_name': name,
                 'grade': si['grade'], 'score': si['score'],
                 'vibration': 'SUGAR_VERY_HIGH' if very else 'SUGAR_HIGH', 'actions': ['RECOMMENDED_FOODS'],
-                'tts_message': f"{name}, {t['name']} {si['label']}, {si['score']}점. {si['message']} {t['error_notice']}",
+                'tts_message': (f"{name}, {t['name']} {si['label']}, {si['score']}점. {si['message']} "
+                                f"{t['reference_notice']} {t['error_notice']}"),
             })
     return allergy + unknown + sugar
 
@@ -156,11 +163,20 @@ def evaluate_items(user, items_data):
             errors[str(index)] = exc.errors
     if errors:
         raise ItemError(errors)
+    tts = ' '.join(item_tts(r, ctx) for r in resolved)
+    if ctx.is_diabetic and any(r['sugar_index']['computable'] for r in resolved):
+        tts += f" {get_tables().SUGAR_INDEX['reference_notice']}"
     return {
         'items': [public_item(r) for r in resolved],
         'warnings': warnings_for(resolved, ctx),
-        'tts_message': ' '.join(item_tts(r, ctx) for r in resolved),
+        'tts_message': tts,
+        'indicator_notice': indicator_notice(ctx),
     }
+
+
+def indicator_notice(ctx: HealthContext):
+    """당뇨 선택 사용자에게만 주는 지표 안내(앱이 최초 1회 낭독, 법적 검토 T-03). 아니면 None"""
+    return get_tables().SUGAR_INDEX['diabetes_notice'] if ctx.is_diabetic else None
 
 
 def _save_items(meal, resolved_items):
@@ -254,7 +270,7 @@ def daily_report(user, day, ctx: HealthContext | None = None, save=True) -> dict
     items = _score_items(user, day, ctx)
     result = compute_daily_score(items, ScoreContext(target_kcal=user.target_kcal, diseases=ctx.diseases,
                                                      allergens=ctx.allergens))
-    result = {'date': day.isoformat(), **result}
+    result = {'date': day.isoformat(), **result, 'disclaimer': get_tables().DIET_SCORE['disclaimer']}
     if save:
         if result['status'] == 'NO_RECORD':
             DailyDietScore.objects.filter(user=user, date=day).delete()

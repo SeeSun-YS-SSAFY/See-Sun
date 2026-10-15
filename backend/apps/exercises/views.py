@@ -1,3 +1,4 @@
+import logging
 """
 운동 관련 API 뷰셋 모듈.
 
@@ -27,6 +28,8 @@ from rest_framework import serializers as drf_serializers
 AUDIO_RESPONSE = {(200, 'audio/mpeg'): OpenApiTypes.BINARY}
 TEXT_REQUEST = inline_serializer('TTSTextRequest', fields={'text': drf_serializers.CharField()})
 from .models import Exercise, Playlist, ExerciseCategory, PlaylistItem
+
+logger = logging.getLogger(__name__)
 
 class ExerciseViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -410,6 +413,19 @@ class TTSTestView(TemplateView):
 
 # -----------------------------------------------------------------------
 
+def _server_tts_unavailable():
+    """서버 TTS 라이브러리가 없으면(운영 이미지, 법적 검토 L-02) 503 응답, 있으면 None"""
+    import importlib.util
+    try:
+        found = importlib.util.find_spec('google.cloud.texttospeech') is not None
+    except ModuleNotFoundError:
+        found = False
+    if found:
+        return None
+    return Response({"error": "TTS_UNAVAILABLE", "tts_message": "서버 음성 안내는 쓰지 않아요. 휴대폰 음성으로 안내합니다."},
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
 class GoogleTTSView(APIView):
     """
     Google Cloud TTS를 이용하여 텍스트를 오디오로 변환하여 반환하는 API
@@ -422,6 +438,9 @@ class GoogleTTSView(APIView):
         if not text:
             return Response({"error": "변환할 텍스트가 필요합니다."}, status=status.HTTP_400_BAD_REQUEST)
         
+        unavailable = _server_tts_unavailable()
+        if unavailable:
+            return unavailable
         try:
             from .google_tts import GoogleTTSClient
             tts_client = GoogleTTSClient()
@@ -433,8 +452,10 @@ class GoogleTTSView(APIView):
             response['Content-Disposition'] = 'inline; filename="tts_output.mp3"'
             return response
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception:  # noqa: BLE001 — 예외 내용은 응답에 넣지 않는다(내부 정보 노출 방지)
+            logger.exception('서버 TTS 실패')
+            return Response({"error": "TTS_FAILED", "tts_message": "음성을 만들지 못했어요."},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 # -----------------------------------------------------------------------
 
@@ -471,6 +492,9 @@ class PlaylistAudioView(APIView):
             text = f"{playlist.title} 화면입니다. 운동추가 버튼을 눌러 추가해주세요."
         
         # 4. TTS 생성 (저장 안 함)
+        unavailable = _server_tts_unavailable()
+        if unavailable:
+            return unavailable
         try:
             from .google_tts import GoogleTTSClient
             tts_client = GoogleTTSClient()
@@ -481,11 +505,10 @@ class PlaylistAudioView(APIView):
             response['Content-Disposition'] = 'inline; filename="playlist_audio.mp3"'
             return response
             
-        except Exception as e:
-            return Response(
-                {"error": f"TTS 생성 오류: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+        except Exception:  # noqa: BLE001
+            logger.exception('루틴 안내 TTS 실패')
+            return Response({"error": "TTS_FAILED", "tts_message": "음성을 만들지 못했어요."},
+                            status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 # -----------------------------------------------------------------------
 
@@ -501,15 +524,7 @@ class ExerciseAudioView(APIView):
     @extend_schema(summary="운동 안내 병합 음성(1차)", tags=['Exercises'], responses=AUDIO_RESPONSE)
     def get(self, request, exercise_id):
         from django.http import HttpResponse
-        from pydub import AudioSegment
         import os
-        
-        # imageio-ffmpeg에서 ffmpeg 경로 설정
-        try:
-            import imageio_ffmpeg
-            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
-        except ImportError:
-            pass
         
         # 1. 운동 조회
         exercise = Exercise.objects.filter(exercise_id=exercise_id).first()
@@ -548,7 +563,14 @@ class ExerciseAudioView(APIView):
             print(f"파일명 정규화 조회 실패: {e}")
             pass
         
-        # 3. 병합된 파일 없음 → 실시간 병합
+        # 3. 병합된 파일 없음 → 실시간 병합(pydub·ffmpeg 필요: requirements-media.txt, 운영 이미지에는 없음)
+        try:
+            from pydub import AudioSegment
+            import imageio_ffmpeg
+            AudioSegment.converter = imageio_ffmpeg.get_ffmpeg_exe()
+        except ImportError:
+            return Response({"error": "AUDIO_NOT_PREPARED", "tts_message": "이 운동의 안내 음성이 아직 준비되지 않았어요."},
+                            status=status.HTTP_404_NOT_FOUND)
         from .models import ExerciseMedia
         
         audio_medias = ExerciseMedia.objects.filter(

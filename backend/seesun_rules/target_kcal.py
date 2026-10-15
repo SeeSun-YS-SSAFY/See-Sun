@@ -54,6 +54,8 @@ def compute_target_kcal(*, weight_kg, height_cm, age, sex, goal, tables=None) ->
     target = round_half_up(tdee + adjustment)
     if t.get('min_target_kcal') is not None:
         target = max(target, t['min_target_kcal'])
+    if goal == 'LOSE_WEIGHT' and t.get('lose_weight_min_kcal') is not None:
+        target = max(target, t['lose_weight_min_kcal'])
     return TargetKcal(
         target_kcal=target,
         bmr=round_half_up(bmr, 1),

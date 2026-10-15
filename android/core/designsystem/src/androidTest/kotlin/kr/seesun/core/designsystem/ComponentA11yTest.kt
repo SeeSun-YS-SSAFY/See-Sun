@@ -117,9 +117,11 @@ class ComponentA11yTest {
         rule.onNode(hasContentDescription("키 입력칸, 176센티미터"))
             .assert(hasStateDescription("인식 완료"))
             .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.LiveRegion))
-        rule.onNodeWithText("키 · 인식 완료").assertIsDisplayed()
-
-        rule.onNodeWithText("키보드로 직접 입력").assertHasClickAction().performClick()
+        // 키보드 대안은 결과 옆 연필 버튼(Figma). 글자 대신 설명으로 읽히고 48dp 이상이다.
+        rule.onNodeWithContentDescription("키보드로 직접 입력")
+            .assert(hasRole(Role.Button))
+            .assertTouchTargetAtLeast(48.dp)
+            .performClick()
         rule.onNode(hasContentDescription("키 입력칸")).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.EditableText))
     }
 

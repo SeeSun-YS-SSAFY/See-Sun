@@ -32,6 +32,9 @@ class FirebasePhoneAuthProvider @Inject constructor() : AuthProvider {
     override val kind = AuthProvider.Kind.FIREBASE
     override val isConfigured = true
 
+    // Firebase는 SMS Retriever(권한 없음)·인스턴트 인증으로 인증번호를 저절로 받는다(onVerificationCompleted).
+    override val supportsAutoRetrieval = true
+
     override fun startPhoneVerification(phoneE164: String, activity: Activity?): Flow<PhoneVerificationEvent> = callbackFlow {
         val callbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
             override fun onVerificationCompleted(credential: PhoneAuthCredential) {

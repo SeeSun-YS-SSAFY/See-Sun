@@ -27,7 +27,6 @@ requests==2.32.5
 # 데이터 적재(식약처 XLSX)
 openpyxl==3.1.5
 
-# 1차 운동 기능 유지: 운동 안내 음성 병합(pydub + 내장 ffmpeg), 루틴 안내 TTS(Google Cloud TTS)
-pydub==0.25.1
-imageio-ffmpeg==0.6.0
-google-cloud-texttospeech==2.34.0
+# 1차 운동 음성 병합(pydub + GPL 빌드 ffmpeg)·서버 TTS(Google Cloud TTS)는 운영 이미지에서 뺐다(법적 검토 L-02):
+# 운동 음성은 미리 만든 mp3를 CDN(R2)·/media/에서 내려주고, 앱은 기기 TTS를 쓴다.
+# 음성 생성·병합 관리 명령이 필요하면 requirements-media.txt(개발·운영 작업용)를 설치한다.

@@ -48,6 +48,17 @@ class Exercise(models.Model):
     fixed_form = models.TextField(blank=True, null=True, verbose_name="고정 동작 설명")
     
     exercise_guide_text = models.TextField(blank=True, null=True, verbose_name="TTS 가이드 텍스트")
+    # 대본 수정(2026-10-14 소유자 사실 확인, 의뢰인 확인 필요): 고친 구간의 원래 대본(되돌리기용)과 표시.
+    # 고친 구간의 녹음 mp3를 아직 다시 만들지 않았으면 audio_stale=true → 앱은 운동 전체를 기기 음성(TTS)으로 읽는다
+    # (중간에 목소리가 바뀌지 않게, 안전장치). 녹음을 다시 만들면(수정표 audio_regenerated) false.
+    script_revised = models.BooleanField(default=False, verbose_name="대본 수정됨(의뢰인 확인 필요)")
+    original_texts = models.JSONField(blank=True, null=True, verbose_name="수정 전 대본(구간별)")
+    audio_stale = models.BooleanField(default=False, verbose_name="녹음 음성이 대본과 다름(기기 음성으로 읽기)")
+    # 대본을 고쳤는데 녹음(mp3)을 아직 다시 만들지 않은 구간. 비어 있으면 audio_stale=false(다시 만든 mp3를 그대로 씀).
+    stale_audio_sections = models.JSONField(blank=True, null=True, verbose_name="녹음 다시 만들 구간")
+    # 반복·유지 구간(따라 하기)에서 1초마다 되풀이할 픽토그램(2026-10-14 육안 검토 연결표):
+    # {"section_key", "sequences": [2, 3, 4], "kind": "반복"|"유지", "start_sentence_index", "hold_sequence"}. 없으면 null.
+    pictogram_cycle = models.JSONField(blank=True, null=True, verbose_name="픽토그램 반복 구간")
     is_active = models.BooleanField(default=True, verbose_name="활성 여부")
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
@@ -87,6 +98,19 @@ class ExerciseMedia(models.Model):
     section = models.CharField(max_length=50, blank=True, null=True, verbose_name="음성 구간")
     s3_key = models.CharField(max_length=512, blank=True, null=True, verbose_name="스토리지 키(CDN 상대키)")
     url = models.CharField(max_length=1024, blank=True, null=True, verbose_name="URL(1차 /media/ 경로 또는 절대 주소)")
+    # 픽토그램(2026-10-14): 그림이 보이기 시작하는 대본 위치(section + sentence_index, 앱 문장 나누기 기준)와 그림 이름.
+    # 연결은 사람·LLM 검토 결과(fixtures/pictogram_section_map.json)를 import_pictogram_map 명령으로 넣는다.
+    sentence_index = models.IntegerField(blank=True, null=True, verbose_name="그림 시작 문장(구간 안 0부터)")
+    label_ko = models.CharField(max_length=100, blank=True, null=True, verbose_name="그림 이름(낭독용)")
+    needs_client = models.BooleanField(default=False, verbose_name="의뢰인 확인 필요")
+    # 대본과 맞지 않던 그림을 같은 화풍으로 다시 그려 바꾼 경우(2026-10-14 소유자 msg 728): 원래 URL(되돌리기용)과 표시.
+    # 의뢰인 확인 전. 바꾸기·되돌리기는 apply_pictogram_redraw 명령.
+    original_url = models.CharField(max_length=1024, blank=True, null=True, verbose_name="다시 그리기 전 URL")
+    redrawn = models.BooleanField(default=False, verbose_name="다시 그림(의뢰인 확인 필요)")
+    # 그림을 끼워 넣어 번호를 다시 매긴 운동의 원래 그림 번호(되돌리기용). 새로 넣은 그림은 null(redrawn=true, original_url=null).
+    original_sequence = models.IntegerField(blank=True, null=True, verbose_name="다시 매기기 전 그림 번호")
+    # 보기용 사본(여백을 잘라 그림을 크게, 원본은 그대로): MEDIA 상대키. make_pictogram_display 명령이 채운다.
+    display_key = models.CharField(max_length=512, blank=True, null=True, verbose_name="보기용 사본 키")
     duration_ms = models.IntegerField(blank=True, null=True, verbose_name="재생 시간(ms)")
     checksum = models.CharField(max_length=64, blank=True, null=True, verbose_name="체크섬")
     

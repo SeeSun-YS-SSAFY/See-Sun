@@ -16,7 +16,8 @@ django_asgi_app = get_asgi_application()
 
 from django.conf import settings  # noqa: E402
 
-if getattr(settings, 'LEGACY_WEBSOCKET_AVAILABLE', False):
+# 운영 이미지에는 apps/stt가 없다(LEGACY_STT_CODE_PRESENT=False) → 아래 import는 실행되지 않는다
+if getattr(settings, 'LEGACY_WEBSOCKET_AVAILABLE', False) and getattr(settings, 'LEGACY_STT_CODE_PRESENT', False):
     from channels.auth import AuthMiddlewareStack
     from channels.routing import ProtocolTypeRouter, URLRouter
 

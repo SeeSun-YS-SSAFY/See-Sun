@@ -37,7 +37,7 @@ class TestSessionBulk:
     def test_멱등_저장(self, exercise):
         user = make_user()
         api = client_for(user)
-        today = timezone.localdate()
+        today = timezone.localdate() - timedelta(days=1)  # 어제: 자정~07시에 돌리면 오늘 07시는 미래 시각(무효)이 됨
         body = {'sessions': [session(at(today, 7), 600, exercise=exercise)]}
         r1 = api.post(URL, body, format='json')
         assert r1.status_code == 200, r1.data
@@ -51,7 +51,7 @@ class TestSessionBulk:
 
     def test_10초_미만·중단은_무효로_저장(self, exercise):
         api = client_for(make_user())
-        today = timezone.localdate()
+        today = timezone.localdate() - timedelta(days=1)  # 어제: 자정~07시에 돌리면 오늘 07시는 미래 시각(무효)이 됨
         r = api.post(URL, {'sessions': [session(at(today, 8), 5), session(at(today, 9), 300, status='ABORTED')]},
                      format='json')
         assert [x['is_valid'] for x in r.data['results']] == [False, False]
@@ -59,7 +59,7 @@ class TestSessionBulk:
     def test_건별_검증(self, exercise):
         user, other = make_user(), make_user('01077778888')
         foreign = Playlist.objects.create(user=other, mode='CUSTOM', title='남의 루틴')
-        today = timezone.localdate()
+        today = timezone.localdate() - timedelta(days=1)  # 어제: 자정~07시에 돌리면 오늘 07시는 미래 시각(무효)이 됨
         bad_exercise = session(at(today, 7), 60)
         bad_exercise['items'] = [{'exercise_id': str(uuid.uuid4()), 'sequence_no': 1}]
         reversed_time = session(at(today, 7), 60)
@@ -74,7 +74,7 @@ class TestSessionBulk:
         user = make_user()
         mine = Playlist.objects.create(user=user, mode='CUSTOM', title='나의 루틴')
         r = client_for(user).post(URL, {'sessions': [
-            session(at(timezone.localdate(), 7), 60, exercise_name='', playlist_id=str(mine.playlist_id))]},
+            session(at(timezone.localdate() - timedelta(days=1), 7), 60, exercise_name='', playlist_id=str(mine.playlist_id))]},
             format='json')
         assert r.data['results'][0]['status'] == 'created'
         assert ExerciseSession.objects.get(user=user).exercise_name == '나의 루틴'
@@ -108,3 +108,15 @@ class TestWeekly:
         current = api.get('/api/v1/exercise/weekly/').data
         assert current['session_count'] == 0 and current['tts_message'] == '이번 주에는 운동 기록이 없어요.'
         assert api.get('/api/v1/exercise/weekly/', {'from': 'x'}).status_code == 400
+
+    @pytest.mark.parametrize('parts, minutes', [([13, 17], 1), ([29], 0), ([40, 49], 1), ([45, 45], 2), ([75, 75], 3)])
+    def test_총_분은_앱과_같게_0점5에서_올린다(self, exercise, parts, minutes):
+        # 통합 E2E BUG-06: 총 30초(13초+17초)를 서버는 "총 0분", 앱 요일 줄은 "1분"으로 읽었다(round 은행가 반올림).
+        api = client_for(make_user())
+        today = timezone.localdate()
+        monday = today - timedelta(days=today.weekday() + 7)
+        api.post(URL, {'sessions': [session(at(monday, 7 + i), sec) for i, sec in enumerate(parts)]}, format='json')
+        data = api.get('/api/v1/exercise/weekly/', {'from': monday.isoformat()}).data
+        assert data['total_seconds'] == sum(parts)
+        assert data['total_minutes'] == minutes
+        assert data['tts_message'].endswith(f'총 {minutes}분이에요.')

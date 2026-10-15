@@ -1,32 +1,94 @@
 package kr.seesun.feature.mypage
 
-import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
-import kr.seesun.core.designsystem.component.BodyText
-import kr.seesun.core.designsystem.component.ListButtonGroup
-import kr.seesun.core.designsystem.component.ListButtonItem
-import kr.seesun.core.designsystem.component.ScreenScaffold
 
-/** MY-01 마이페이지(MY-02·03은 T3 3-6). */
+/** MY-01 마이페이지 */
 @Serializable
 data object MyPageRoute
 
-fun NavGraphBuilder.myPageScreen(onBack: () -> Unit) {
-    composable<MyPageRoute> { MyPageScreen(onBack = onBack) }
-}
+/** MY-02 내 정보 수정(이름·생년월일·성별·키·몸무게) */
+@Serializable
+data object ProfileEditRoute
 
-@Composable
-fun MyPageScreen(onBack: () -> Unit) {
-    ScreenScaffold(title = "마이페이지", onBack = onBack) {
-        BodyText("건강 정보와 기록 레포트는 준비 중이에요.")
-        ListButtonGroup(
-            items = listOf(
-                ListButtonItem("health", "건강 정보 수정"),
-                ListButtonItem("report", "기록 레포트", "식단·운동")
-            ),
-            onClick = { }
+/** MY-02 건강 정보 수정(질환·알레르기·기타·목표) */
+@Serializable
+data object HealthEditRoute
+
+/** SET-01 설정 목록 */
+@Serializable
+data object SettingsRoute
+
+/** SET-05 개인정보·동의 관리(철회·재동의) */
+@Serializable
+data object ConsentManageRoute
+
+/** 동의 문서 보기(이용약관·개인정보 처리방침 등). type = TOS|PRIVACY|OVERSEAS|SENSITIVE */
+@Serializable
+data class DocumentRoute(val type: String)
+
+/** SET-06 데이터 출처 */
+@Serializable
+data object DataSourcesRoute
+
+/** SET-06 오픈소스 라이선스 */
+@Serializable
+data object LicensesRoute
+
+/** 알림 설정(3차 복약 알림 자리) */
+@Serializable
+data object NotificationSettingsRoute
+
+/** 내 개인정보 권리(열람·정정·삭제·처리정지·문의, 법적 검토 A-04) */
+@Serializable
+data object RightsRoute
+
+/** 데이터 초기화(식사 기록 또는 건강 정보만 삭제, 법적 검토 A-03) */
+@Serializable
+data object DataResetRoute
+
+/** 접근성 안내·문의(법적 검토 T-12) */
+@Serializable
+data object AccessibilityRoute
+
+/** SET-09 회원 탈퇴(2단계 확인) */
+@Serializable
+data object DeleteAccountRoute
+
+/**
+ * 마이페이지·설정 화면 묶음.
+ * @param onSignedOut 로그아웃·탈퇴를 마치면(온보딩 시작 화면으로, 뒤로 가기 기록 지움)
+ */
+fun NavGraphBuilder.myPageGraph(nav: NavController, onSignedOut: () -> Unit, onOpenExerciseReport: () -> Unit = {}) {
+    val back: () -> Unit = { nav.popBackStack() }
+    composable<MyPageRoute> {
+        MyPageRoute(
+            onBack = back,
+            onEditProfile = { nav.navigate(ProfileEditRoute) },
+            onEditHealth = { nav.navigate(HealthEditRoute) },
+            onOpenSettings = { nav.navigate(SettingsRoute) },
+            onOpenExerciseReport = onOpenExerciseReport
         )
     }
+    composable<ProfileEditRoute> { ProfileEditRoute(onBack = back) }
+    composable<HealthEditRoute> { HealthEditRoute(onBack = back, onOpenConsents = { nav.navigate(ConsentManageRoute) }) }
+    composable<SettingsRoute> {
+        SettingsRoute(
+            onBack = back,
+            onOpen = { destination -> nav.navigate(destination) },
+            onSignedOut = onSignedOut
+        )
+    }
+    composable<ConsentManageRoute> { ConsentManageRoute(onBack = back, onOpenDocument = { nav.navigate(DocumentRoute(it)) }) }
+    composable<DocumentRoute> { entry -> DocumentRoute(type = entry.toRoute<DocumentRoute>().type, onBack = back) }
+    composable<DataSourcesRoute> { DataSourcesScreen(onBack = back) }
+    composable<LicensesRoute> { LicensesScreen(onBack = back) }
+    composable<NotificationSettingsRoute> { NotificationSettingsScreen(onBack = back) }
+    composable<DeleteAccountRoute> { DeleteAccountRoute(onBack = back, onDeleted = onSignedOut) }
+    composable<RightsRoute> { RightsScreen(onBack = back, onOpen = { nav.navigate(it) }) }
+    composable<DataResetRoute> { DataResetRoute(onBack = back) }
+    composable<AccessibilityRoute> { AccessibilityScreen(onBack = back) }
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -163,9 +164,10 @@ class ListAndDialogA11yTest {
         // 실제로 글꼴이 커졌는지(비선형 확대라도 1.5배 이상)
         assertTrue("글꼴 배율이 적용되지 않음: $bodyPx / $basePx", bodyPx >= basePx * 1.5f)
         rule.assertNoTextOverflow()
-        listOf("키보드로 직접 입력", "영양소 기준 추천", "대체 식단 보기").forEach {
+        listOf("영양소 기준 추천", "대체 식단 보기").forEach {
             rule.onNodeWithText(it, substring = true).performScrollTo().assertIsDisplayed()
         }
+        rule.onNodeWithContentDescription("키보드로 직접 입력").performScrollTo().assertIsDisplayed()
         rule.onNodeWithText("다음", substring = true).performScrollTo().assertIsDisplayed()
     }
 }

@@ -1,0 +1,200 @@
+{
+ "exercise_no": 28,
+ "exercise_id": "845c6389e84c4a3eace7fb2bf534bf68",
+ "exercise_name": "버피테스트",
+ "name_en": "burpee_test",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "동작 시작 5→4문장(번호 문장), 원래 자세로 4→3문장. 그림 4 앵커 fixed_form 2 → fixed_form 1.",
+ "fields": {
+  "exercise_description": "[추천] 4세트, 각 5회, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 여유 공간 확보가 필요한 운동입니다.",
+  "first_description": "3초 안에 버피테스트에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 양발을 어깨너비로 약 30-40cm 벌린 후 바르게 섭니다. 2. 주변에 장애물이 없는지 확인합니다.",
+  "main_form": "동작 시작 : 1. 바르게 선 상태에서 두 다리를 구부려 쪼그려 앉습니다. 2. 앉은 후 양손으로 앞쪽 바닥을 짚습니다. 3. 바닥을 짚은 상태에서 왼쪽 다리를 뒤로 쭉 펴줍니다. 4. 오른쪽 다리 또한 뒤로 쭉 펴줍니다.",
+  "form_description": null,
+  "stay_form": "x",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 왼쪽 다리를 다시 앞으로 가져온 후 오른쪽 다리도 다시 앞으로 가져와 쪼그려 앉은 상태를 만들어줍니다. 2. 바닥에서 손을 천천히 떼어주며 천천히 일어섭니다.",
+  "exercise_guide_text": "한 세트당 5회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 4세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 4세트, 각 5회, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 여유 공간 확보가 필요한 운동입니다.",
+  "first_description": "3초 안에 버피테스트에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 양발을 어깨너비로 약 30-40cm 벌린 후 바르게 섭니다. 2. 주변에 장애물이 없는지 확인합니다.",
+  "main_form": "동작 시작 : 1. 바르게 선 상태에서 두 다리를 구부려 쪼그려 앉습니다. 2. 앉은 후 양손으로 앞쪽 바닥을 짚습니다. 3. 바닥을 짚은 상태에서 왼쪽 다리를 뒤로 쭉 펴줍니다. 4. 오른쪽 다리 또한 뒤로 쭉 펴줍니다. 5. 다리가 모두 펴진 상태에서 팔을 굽혀 가슴을 바닥에 대고 상체를 내립니다.",
+  "form_description": null,
+  "stay_form": "x",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 팔을 천천히 다시 펴며 상체를 올려줍니다. 2. 왼쪽 다리를 다시 앞으로 가져온 후 오른쪽 다리도 다시 앞으로 가져와 쪼그려 앉은 상태를 만들어줍니다. 3. 바닥에서 손을 천천히 떼어주며 천천히 일어섭니다.",
+  "exercise_guide_text": "한 세트당 5회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 4세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "main_form",
+   "section": "동작 시작",
+   "original": "5. 다리가 모두 펴진 상태에서 팔을 굽혀 가슴을 바닥에 대고 상체를 내립니다.",
+   "new": null,
+   "reason": "원형 버피(1939, 4동작 스쿼트 스러스트)에는 가슴 대기가 없고 원본 그림 4장이 정확히 이 원형. 고령·만성질환 사용자에게 원형이 맞음(판정 picture_correct). 추가 그림(03b)은 넣지 않음.",
+   "verdict": {
+    "verdict_index": 24,
+    "item": "동작 시작 5 '가슴을 바닥에 대고 상체를 내립니다' — 해당 그림 없음",
+    "verdict": "picture_correct",
+    "confidence": "high",
+    "sources": [
+     "Wikipedia — Burpee (exercise) — https://en.wikipedia.org/wiki/Burpee_(exercise)",
+     "Task & Purpose — The history of the burpee — https://taskandpurpose.com/health-fitness/the-history-of-the-burpee/"
+    ]
+   }
+  },
+  {
+   "section_key": "fixed_form",
+   "section": "원래 자세로",
+   "original": "1. 팔을 천천히 다시 펴며 상체를 올려줍니다.",
+   "new": null,
+   "reason": "가슴 대기를 지웠으니 상체를 다시 올리는 문장도 지움(판정 extra_fixes).",
+   "verdict": {
+    "verdict_index": 24,
+    "item": "동작 시작 5 '가슴을 바닥에 대고 상체를 내립니다' — 해당 그림 없음",
+    "verdict": "picture_correct",
+    "confidence": "high",
+    "sources": [
+     "Wikipedia — Burpee (exercise) — https://en.wikipedia.org/wiki/Burpee_(exercise)",
+     "Task & Purpose — The history of the burpee — https://taskandpurpose.com/health-fitness/the-history-of-the-burpee/"
+    ]
+   }
+  },
+  {
+   "section_key": "fixed_form",
+   "section": "원래 자세로",
+   "original": "2. 왼쪽 다리를 다시 앞으로 가져온 후",
+   "new": "1. 왼쪽 다리를 다시 앞으로 가져온 후",
+   "reason": "앞 문장 삭제에 따라 번호를 1부터 다시 매김(내용 그대로).",
+   "verdict": {
+    "verdict_index": 24,
+    "item": "동작 시작 5 '가슴을 바닥에 대고 상체를 내립니다' — 해당 그림 없음",
+    "verdict": "picture_correct",
+    "confidence": "high",
+    "sources": [
+     "Wikipedia — Burpee (exercise) — https://en.wikipedia.org/wiki/Burpee_(exercise)",
+     "Task & Purpose — The history of the burpee — https://taskandpurpose.com/health-fitness/the-history-of-the-burpee/"
+    ]
+   }
+  },
+  {
+   "section_key": "fixed_form",
+   "section": "원래 자세로",
+   "original": "3. 바닥에서 손을 천천히 떼어주며",
+   "new": "2. 바닥에서 손을 천천히 떼어주며",
+   "reason": "번호만 다시 매김(내용 그대로).",
+   "verdict": {
+    "verdict_index": 24,
+    "item": "동작 시작 5 '가슴을 바닥에 대고 상체를 내립니다' — 해당 그림 없음",
+    "verdict": "picture_correct",
+    "confidence": "high",
+    "sources": [
+     "Wikipedia — Burpee (exercise) — https://en.wikipedia.org/wiki/Burpee_(exercise)",
+     "Task & Purpose — The history of the burpee — https://taskandpurpose.com/health-fitness/the-history-of-the-burpee/"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/burpee_test/exercise_description.mp3",
+   "mp3_seconds": 12.24,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 12.2
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/burpee_test/first_description.mp3",
+   "mp3_seconds": 20.74,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 4,
+   "sentences_after": 4,
+   "est_seconds_after": 20.7
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/burpee_test/main_form.mp3",
+   "mp3_seconds": 29.4,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 6,
+   "sentences_after": 5,
+   "est_seconds_after": 21.6
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/burpee_test/fixed_form.mp3",
+   "mp3_seconds": 22.8,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 4,
+   "sentences_after": 3,
+   "est_seconds_after": 18.1
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/burpee_test/exercise_guide_text.mp3",
+   "mp3_seconds": 8.81,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 8.8
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 4
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 2
+   }
+  }
+ ]
+}

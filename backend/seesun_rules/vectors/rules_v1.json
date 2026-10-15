@@ -12,7 +12,9 @@
     {"name": "목표 미설정은 유지와 같음", "input": {"sex": "M", "weight_kg": 70, "height_cm": 176, "age": 36, "goal": null},
      "expected": {"target_kcal": 2113}},
     {"name": "성별 미선택은 계산 불가", "input": {"sex": "U", "weight_kg": 70, "height_cm": 176, "age": 36, "goal": "MAINTAIN"},
-     "expected": null}
+     "expected": null},
+    {"name": "여 60세 45kg 150cm 감량 — 하한 1,200kcal(법적 검토 T-07)", "input": {"sex": "F", "weight_kg": 45, "height_cm": 150, "age": 60, "goal": "LOSE_WEIGHT"},
+     "expected": {"bmr": 926.5, "tdee": 1204.5, "adjustment": -500, "target_kcal": 1200, "minor": false}}
   ],
   "sugar_index": [
     {"name": "의뢰서 예시 사과 150g", "input": {"sugar_g": 16, "carb_g": 20, "fiber_g": 4, "is_beverage": false},

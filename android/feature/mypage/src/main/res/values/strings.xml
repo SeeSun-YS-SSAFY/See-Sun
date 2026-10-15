@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 공통 -->
+    <string name="my_loading">불러오는 중이에요. 잠시만 기다려 주세요.</string>
+    <string name="my_load_failed">정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</string>
+    <string name="my_retry">다시 시도</string>
+    <string name="my_cancel">취소</string>
+    <string name="my_ok">확인</string>
+    <string name="my_save">저장</string>
+    <string name="my_apply">적용</string>
+    <string name="my_saving">저장하는 중이에요</string>
+    <string name="my_saved">저장했어요.</string>
+    <string name="my_save_disabled">값을 입력하면 누를 수 있어요</string>
+    <string name="my_unset">입력 안 함</string>
+    <string name="my_required">필수 항목</string>
+    <string name="my_optional">선택 항목</string>
+    <string name="my_date_format">%1$d년 %2$d월 %3$d일</string>
+    <string name="my_value_cm">%1$d센티미터</string>
+    <string name="my_value_kg">%1$d킬로그램</string>
+    <string name="my_gender_male">남성</string>
+    <string name="my_gender_female">여성</string>
+
+    <!-- MY-01 마이페이지 -->
+    <string name="my_title">마이페이지</string>
+    <string name="my_line_name">이름 %1$s</string>
+    <string name="my_line_phone">전화번호 %1$s</string>
+    <string name="my_line_birth">생년월일 %1$s, 만 %2$d세</string>
+    <string name="my_line_gender">성별 %1$s</string>
+    <string name="my_line_height">키 %1$d센티미터</string>
+    <string name="my_line_weight">몸무게 %1$d킬로그램</string>
+    <string name="my_line_goal">목표 %1$s</string>
+    <string name="my_line_kcal">하루 목표 열량 %1$s킬로칼로리(추정값)</string>
+    <string name="my_line_diseases">질환 %1$s</string>
+    <string name="my_line_allergens">알레르기 %1$s</string>
+    <string name="my_line_other">기타 알레르기 %1$s</string>
+    <string name="my_health_general_mode">건강정보 처리에 동의하지 않아 일반 모드로 이용 중이에요. 설정의 개인정보·동의 관리에서 동의할 수 있어요.</string>
+    <string name="my_edit_profile">내 정보 수정</string>
+    <!-- 기록 레포트(Figma 845:2184) -->
+    <string name="my_report_title">기록 레포트</string>
+    <string name="my_report_diet">식단</string>
+    <string name="my_report_exercise">운동</string>
+    <string name="my_report_diet_spoken">식단 레포트</string>
+    <string name="my_report_exercise_spoken">운동 레포트, 이번 주 운동 기록</string>
+    <string name="my_report_diet_soon">식단 레포트는 준비 중이에요.</string>
+    <string name="my_edit_health">건강 정보 수정</string>
+    <string name="my_settings">설정</string>
+    <string name="my_reports_soon">식단·운동 기록 레포트는 식단·운동 기능과 함께 제공돼요.</string>
+    <string name="my_guide">마이페이지. %1$s.</string>
+
+    <!-- MY-02 내 정보 수정 -->
+    <string name="my_profile_edit_title">내 정보 수정</string>
+    <string name="my_edit_field_title">%1$s 수정</string>
+    <string name="my_field_name">이름</string>
+    <string name="my_field_birth">생년월일</string>
+    <string name="my_field_gender">성별</string>
+    <string name="my_field_height">키</string>
+    <string name="my_field_weight">몸무게</string>
+    <string name="my_field_value">%1$s: %2$s</string>
+    <string name="my_tap_to_edit">누르면 고칠 수 있어요</string>
+    <string name="my_phone_note">전화번호는 바꿀 수 없어요. 번호가 바뀌면 새 번호로 다시 인증해 주세요.</string>
+    <string name="my_edit_guide">%1$s, 지금 값은 %2$s이에요. 새 값을 말씀하거나 입력해 주세요.</string>
+    <string name="my_hint_name">이름을 1자에서 20자로 말씀해 주세요.</string>
+    <string name="my_hint_birth">생년월일을 1990년 5월 1일처럼 말씀하거나 19900501처럼 입력해 주세요.</string>
+    <string name="my_hint_height">키는 100에서 250 사이 숫자로 말씀해 주세요.</string>
+    <string name="my_hint_weight">몸무게는 20에서 300 사이 숫자로 말씀해 주세요.</string>
+    <string name="my_birth_note">만 14세 이상이어야 해요. 생년월일이 바뀌면 목표 열량도 다시 계산해요.</string>
+
+    <!-- 건강 정보 수정 -->
+    <string name="my_health_edit_title">건강 정보 수정</string>
+    <string name="my_health_current">지금 값: 질환 %1$s, 알레르기 %2$s, 기타 알레르기 %3$s, 목표 %4$s.</string>
+    <string name="my_health_current_general">지금 목표는 %1$s이에요. 건강정보 처리에 동의하지 않아 질환과 알레르기는 받지 않아요.</string>
+    <string name="my_health_diseases_header">질환(여러 개 고를 수 있어요)</string>
+    <string name="my_hint_diseases">당뇨, 고혈압, 없음 중에서 말씀해 주세요.</string>
+    <string name="my_allergen_open">알레르기 고르기, %1$d개 선택됨</string>
+    <string name="my_allergen_title">알레르기 선택</string>
+    <string name="my_allergen_guide">이전, 다음 버튼으로 항목을 듣고 해당하면 눌러 주세요. 다 고르면 선택 마치기를 눌러 주세요. 저장은 건강 정보 화면의 저장 버튼으로 해요.</string>
+    <string name="my_hint_allergens">땅콩, 우유처럼 알레르기 이름을 말씀해 주세요.</string>
+    <string name="my_allergen_none">알레르기 없음</string>
+    <string name="my_allergen_done">선택 마치기</string>
+    <string name="my_other_label">기타 알레르기</string>
+    <string name="my_other_open">기타 알레르기 고치기</string>
+    <string name="my_other_body">목록에 없는 알레르기를 말씀하거나 입력해 주세요. 여러 개면 쉼표로 나눠 주세요.</string>
+    <string name="my_hint_other">키위처럼 음식 이름을 말씀해 주세요.</string>
+    <string name="my_other_none">기타 알레르기 없음</string>
+    <string name="my_health_need_consent">질환과 알레르기를 맞춤 경고에 쓰려면 건강정보 처리 동의가 필요해요.</string>
+    <string name="my_open_consents">동의 관리로 가기</string>
+    <string name="my_health_goal_header">목표</string>
+    <string name="my_hint_goal">체중 감량, 근육 증진, 건강 유지 중에서 말씀해 주세요.</string>
+    <string name="my_health_disclaimer">알레르기·질환 정보는 맞춤 경고와 추천에 쓰는 참고 정보예요. 정확한 진단은 전문가와 상담하세요.</string>
+
+    <!-- SET-01 설정 -->
+    <string name="my_settings_guide">설정. 내 개인정보 권리, 개인정보·동의 관리, 데이터 초기화, 처리방침, 이용약관, 데이터 출처, 오픈소스 라이선스, 접근성 안내·문의, 알림 설정, 로그아웃, 회원 탈퇴가 있어요. 말로 고르기를 누르고 메뉴 이름을 말씀하셔도 돼요.</string>
+    <string name="my_set_rights">내 개인정보 권리</string>
+    <string name="my_set_rights_desc">보기·고치기·지우기·처리 멈추기·문의</string>
+    <string name="my_set_reset">데이터 초기화</string>
+    <string name="my_set_reset_desc">계정은 두고 식사 기록 또는 건강 정보만 지우기</string>
+    <string name="my_set_accessibility">접근성 안내·문의</string>
+    <string name="my_set_voice_hint">탈퇴, 데이터 초기화, 동의 철회, 내 정보 보기, 처리방침, 접근성처럼 가고 싶은 메뉴를 말씀해 주세요.</string>
+    <string name="my_set_consents">개인정보·동의 관리</string>
+    <string name="my_set_consents_desc">동의 상태 보기·철회·다시 동의</string>
+    <string name="my_set_privacy">개인정보 처리방침</string>
+    <string name="my_set_terms">이용약관</string>
+    <string name="my_set_sources">데이터 출처</string>
+    <string name="my_set_licenses">오픈소스 라이선스</string>
+    <string name="my_set_notifications">알림 설정</string>
+    <string name="my_set_notifications_desc">복약 알림은 3차에 제공돼요</string>
+    <string name="my_logout">로그아웃</string>
+    <string name="my_logout_desc">이 기기에서 로그아웃하고 기기의 기록을 지워요</string>
+    <string name="my_delete">회원 탈퇴</string>
+    <string name="my_delete_desc">계정과 모든 기록을 지워요(2단계 확인)</string>
+    <string name="my_logout_confirm_title">로그아웃 확인</string>
+    <string name="my_logout_body">로그아웃하면 이 기기에 저장된 기록이 지워져요. 서버에 보낸 기록은 다시 로그인하면 볼 수 있어요.</string>
+    <string name="my_logout_pending">아직 서버로 보내지 못한 기록 %1$d건도 함께 지워져요.</string>
+    <string name="my_logout_question">로그아웃할까요?</string>
+    <string name="my_logging_out">로그아웃하는 중이에요</string>
+
+    <!-- 문서 -->
+    <string name="my_document_title">문서</string>
+    <string name="my_document_missing">이 문서를 찾지 못했어요.</string>
+    <string name="my_document_version">문서 버전 %1$s, 시행일 %2$s</string>
+    <string name="my_document_full_pending">전문은 법무 검토 후 이 화면과 웹 주소로 제공돼요. 지금은 위 요약이 전체 내용이에요.</string>
+    <string name="my_listen_all">전체 듣기</string>
+    <string name="my_open_web">웹에서 보기</string>
+
+    <!-- SET-05 동의 관리 -->
+    <string name="my_consent_needs_reconsent">문서가 바뀌어 다시 동의가 필요해요</string>
+    <string name="my_consent_agreed_on">동의함, %1$s</string>
+    <string name="my_consent_not_agreed">동의 안 함</string>
+    <string name="my_consent_read">%1$s 내용 보기</string>
+    <!-- my_consent_agree~withdrawn_result의 %1$s는 consentName(제목): 제목이 "…동의"로 끝나면 그대로, 아니면 "제목 동의". "동의 동의" 반복 방지(통합 E2E BUG-08) -->
+    <string name="my_consent_agree">%1$s하기</string>
+    <string name="my_consent_reagree">%1$s 다시 하기</string>
+    <string name="my_consent_withdraw">%1$s 철회</string>
+    <string name="my_consent_required_note">필수 동의는 철회할 수 없어요. 이용을 멈추려면 회원 탈퇴를 이용해 주세요.</string>
+    <string name="my_consent_agree_title">동의 확인</string>
+    <string name="my_consent_withdraw_title">동의 철회 확인</string>
+    <string name="my_consent_agree_question">%1$s를 할까요?</string>
+    <string name="my_consent_withdraw_question">%1$s를 철회할까요?</string>
+    <string name="my_consent_withdraw_sensitive">철회하면 저장된 질환·알레르기 정보와 질환 기반 식단 점수가 바로 지워지고, 맞춤 경고와 추천 없이 일반 모드로 이용해요.</string>
+    <string name="my_consent_withdraw_note">철회해도 기본 기능은 계속 쓸 수 있어요.</string>
+    <string name="my_consent_agree_button">동의</string>
+    <string name="my_consent_withdraw_button">철회</string>
+    <string name="my_consent_agreed_result">%1$s를 마쳤어요.</string>
+    <string name="my_consent_withdrawn_result">%1$s를 철회했어요.</string>
+    <string name="my_consent_deleted_result">건강정보와 질환 기반 점수를 지웠어요.</string>
+
+    <!-- SET-09 탈퇴 -->
+    <string name="my_delete_explain">탈퇴하면 이름·전화번호·생년월일·성별·키·몸무게·목표, 식사 기록과 식단 점수, 운동 기록과 나만의 루틴, 질환·알레르기 건강정보, 선호 식단, 동의 기록이 모두 지워지고 되돌릴 수 없어요.</string>
+    <string name="my_delete_explain_device">이 기기에 저장된 기록과 로그인 정보도 함께 지워요. 서버 백업 파일에는 최대 14일 동안 남아 있다가 자동으로 지워져요. 전화번호 인증 정보는 Google(Firebase)에서 삭제가 끝나기까지 최대 180일이 걸릴 수 있어요.</string>
+    <string name="my_delete_explain_web">앱을 쓸 수 없을 때는 웹의 탈퇴 요청 페이지에서도 탈퇴를 요청할 수 있어요.</string>
+    <string name="my_delete_continue">탈퇴 계속하기</string>
+    <string name="my_delete_confirm_title">탈퇴 확인</string>
+    <string name="my_delete_question">정말 탈퇴할까요? 마지막 확인이에요.</string>
+    <string name="my_delete_button">탈퇴하기</string>
+    <string name="my_delete_retry">다시 시도해서 탈퇴하기</string>
+    <string name="my_delete_irreversible">되돌릴 수 없어요</string>
+    <string name="my_deleting">탈퇴하는 중이에요. 잠시만 기다려 주세요.</string>
+    <string name="my_delete_done_title">탈퇴 완료</string>
+    <string name="my_delete_done">회원 탈퇴를 마쳤어요.</string>
+    <string name="my_delete_done_device">이 기기의 기록과 로그인 정보도 지웠어요. 확인을 누르면 시작 화면으로 돌아가요.</string>
+
+    <!-- SET-06 데이터 출처·라이선스·알림 -->
+    <string name="my_source_food_title">음식 영양 정보</string>
+    <string name="my_source_food">음식 영양 정보: 식품의약품안전처 「전국통합식품영양성분정보(음식) 표준데이터」(공공데이터포털), 이용 조건 ○○(공공누리 유형 확인 후 기재). 영양 정보에는 오차가 있을 수 있습니다.</string>
+    <string name="my_source_allergen_title">알레르기 항목</string>
+    <string name="my_source_allergen">「식품 등의 표시·광고에 관한 법률」의 알레르기 유발물질 표시 대상 19종을 정해진 순서로 보여 드려요. 음식에 들어 있을 가능성을 알려 드리는 참고 정보예요.</string>
+    <string name="my_source_kcal_title">하루 목표 열량</string>
+    <string name="my_source_kcal">목표 칼로리는 일반 공식으로 계산한 추정값이에요. Mifflin-St Jeor 기초대사량 식에 활동 계수 1.3을 곱하고 목표에 따라 조정해요(감량 500킬로칼로리 줄임, 근육 증진 300킬로칼로리 늘림). 감량 목표는 1,200킬로칼로리 아래로는 권하지 않아요.</string>
+    <string name="my_source_exercise_title">운동 안내</string>
+    <string name="my_source_exercise">운동 동작 그림과 음성 안내는 시선 1차 서비스에서 만든 콘텐츠예요.</string>
+    <string name="my_source_voice_title">음성 인식</string>
+    <string name="my_source_voice">음성 인식은 휴대폰의 음성 인식 기능을 쓰고, 가능하면 기기 안에서 처리해요. 음성 원본은 서버에 저장하지 않아요.</string>
+    <string name="my_source_note">데이터 이용 조건은 출시 전에 다시 확인해 이 화면에 반영해요.</string>
+    <string name="my_licenses_intro">시선 앱은 다음 오픈소스 소프트웨어를 사용해요. 각 소프트웨어의 저작권은 해당 저작자에게 있어요.</string>
+    <string name="my_license_line">라이선스: %1$s</string>
+    <string name="my_licenses_generated">이 목록은 앱을 만들 때 들어간 라이브러리에서 자동으로 만들었어요. 라이브러리 %1$d개, 라이선스별로 묶었어요.</string>
+    <string name="my_license_group">%1$s, 라이브러리 %2$d개</string>
+    <string name="my_license_show_apache">Apache License 2.0 전문 보기</string>
+    <string name="my_license_show_sqlcipher">SQLCipher 라이선스 고지 보기</string>
+    <string name="my_license_hide">전문 접기</string>
+    <string name="my_licenses_load_failed">라이브러리 목록을 불러오지 못했어요. 앱을 다시 설치하면 해결될 수 있어요.</string>
+    <string name="my_license_sqlcipher_name">BSD 3-Clause(SQLCipher)</string>
+    <!-- 아이콘·로고 글자 모양 고지(2026-10-14, FIGMA_ALIGN_REPORT) -->
+    <string name="my_license_fonts_title">아이콘·로고 글자</string>
+    <string name="my_license_icons_material">Material Symbols 아이콘(식단·운동·약·사람·설정·그래프·카메라). Copyright Google LLC. Apache License 2.0.</string>
+    <string name="my_license_font_pretendard">로고 둘레 글자 모양: Pretendard(Kil Hyung-jin) 윤곽을 그림으로 바꿔 사용. SIL Open Font License 1.1.</string>
+    <string name="my_notifications_placeholder">알림 설정은 준비 중이에요. 복약 알림은 3차에 제공될 예정이고, 지금은 앱이 알림을 보내지 않아요.</string>
+    <string name="my_notifications_permission">알림이 필요한 기능을 처음 쓸 때 목적을 먼저 설명하고 권한을 여쭤볼게요.</string>
+
+    <!-- 동의 관리: 고지 확인 항목(법적 검토 C-01) -->
+    <string name="my_consent_notice_kind">고지 확인 항목</string>
+    <string name="my_consent_notice_status">확인함, %1$s</string>
+    <string name="my_consent_notice_note">전화번호 인증에 필요한 고지라 철회하는 항목이 아니에요. 원하지 않으시면 회원 탈퇴를 이용해 주세요.</string>
+    <string name="my_consent_reack">%1$s 다시 확인하기</string>
+    <string name="my_consent_ack_title">고지 확인</string>
+    <string name="my_consent_ack_question">%1$s 내용을 확인하셨나요?</string>
+    <string name="my_consent_ack_button">확인했어요</string>
+    <string name="my_consent_acked_result">%1$s를 확인했어요.</string>
+    <string name="my_kcal_estimate">목표 칼로리는 일반 공식으로 계산한 추정값이에요.</string>
+
+    <!-- A-04 내 개인정보 권리 -->
+    <string name="my_rights_intro">개인정보에 대한 권리는 앱 안에서 버튼이나 음성으로, 또는 전화·문자·이메일로 언제든 행사할 수 있어요. 가입할 때보다 어렵지 않게 만들었어요.</string>
+    <string name="my_rights_view">내 정보 보기(열람)</string>
+    <string name="my_rights_view_desc">저장된 내 정보와 건강 정보를 읽어 드려요</string>
+    <string name="my_rights_edit">내 정보 고치기(정정)</string>
+    <string name="my_rights_edit_desc">이름 · 생년월일 · 성별 · 키 · 몸무게</string>
+    <string name="my_rights_delete_part">일부 지우기(데이터 초기화)</string>
+    <string name="my_rights_delete_part_desc">식사 기록 또는 건강 정보만</string>
+    <string name="my_rights_stop">처리 멈추기·동의 철회</string>
+    <string name="my_rights_stop_desc">건강정보 처리 동의 철회 등</string>
+    <string name="my_rights_delete_all">모두 지우기(회원 탈퇴)</string>
+    <string name="my_rights_delete_all_desc">계정과 모든 기록</string>
+    <string name="my_rights_contact_title">전화·문자·이메일 문의</string>
+    <string name="my_rights_contact">개인정보 보호책임자와 문의 연락처(전화·문자·이메일)는 운영자가 정하면 이 화면에 적어요. 요청을 받으면 10일 안에 처리 결과를 알려 드리는 것을 목표로 해요.</string>
+    <string name="my_rights_voice_hint">내 정보 보기, 고치기, 지우기, 동의 철회, 탈퇴처럼 말씀해 주세요.</string>
+
+    <!-- A-03 데이터 초기화 -->
+    <string name="my_reset_intro">계정은 그대로 두고 일부 데이터만 지울 수 있어요. 지울 데이터를 골라 주세요.</string>
+    <string name="my_reset_meals">식사 기록 모두 지우기</string>
+    <string name="my_reset_meals_desc">식사 기록과 식단 점수</string>
+    <string name="my_reset_health">건강 정보만 지우기</string>
+    <string name="my_reset_health_desc">질환·알레르기·기타 알레르기</string>
+    <string name="my_reset_meals_explain">식사 기록을 모두 지워요. 서버에 저장된 식사 기록과 식단 점수, 이 기기에 저장된 식사 기록이 지워지고 되돌릴 수 없어요. 아직 서버로 보내지 못한 기록 %1$d건도 함께 지워져요. 계정, 건강 정보, 목표, 동의 내용은 그대로 남아요.</string>
+    <string name="my_reset_health_explain">건강 정보만 지워요. 질환, 알레르기, 기타 알레르기와 질환을 반영한 식단 점수가 지워지고 되돌릴 수 없어요. 계정, 식사 기록, 목표, 동의 내용은 그대로 남아요. 건강정보 처리 동의를 계속 두면 다시 입력할 수 있어요.</string>
+    <string name="my_reset_backup">서버 백업 파일에는 최대 14일 동안 남아 있다가 자동으로 지워져요.</string>
+    <string name="my_reset_continue">계속하기</string>
+    <string name="my_reset_confirm_title">지우기 확인</string>
+    <string name="my_reset_meals_question">정말 식사 기록을 모두 지울까요? 마지막 확인이에요.</string>
+    <string name="my_reset_health_question">정말 건강 정보를 지울까요? 마지막 확인이에요.</string>
+    <string name="my_reset_delete">지우기</string>
+    <string name="my_reset_retry">다시 시도해서 지우기</string>
+    <string name="my_reset_deleting">지우는 중이에요. 잠시만 기다려 주세요.</string>
+    <string name="my_reset_done_title">지우기 완료</string>
+    <string name="my_reset_done">지웠어요.</string>
+
+    <!-- T-12 접근성 안내·문의 -->
+    <string name="my_a11y_check_title">접근성 점검</string>
+    <string name="my_a11y_check">과학기술정보통신부 고시 제2026-1호 별표 3에 따른 자체 점검을 진행하고 있어요. 점검 결과(준수·일부 준수·미준수 항목)는 확정되면 이 화면에 적어요.</string>
+    <string name="my_a11y_support_title">지원하는 기능</string>
+    <string name="my_a11y_support">TalkBack 화면 낭독, 글꼴 크기 200%까지 확대, 모든 입력을 음성 또는 키보드·버튼으로, 목록은 밀지 않고 이전·다음 버튼으로 이동, 상태는 색과 함께 글자·아이콘·음성으로 알려요.</string>
+    <string name="my_a11y_types_title">장애 유형별 이용 안내</string>
+    <string name="my_a11y_blind">시각장애(전맹): TalkBack을 켜면 화면 제목과 상태를 TalkBack이 읽고, 앱 음성은 겹치지 않게 자동으로 나오지 않아요. 마이크 버튼을 두 번 탭해 말씀하세요.</string>
+    <string name="my_a11y_low_vision">저시력: 노란 버튼과 검은 글자로 대비를 높였어요. 휴대폰 설정에서 글꼴을 키우면 앱 글자도 함께 커져요.</string>
+    <string name="my_a11y_hearing">청각장애: 모든 음성 안내는 화면에 글자로도 보여요. 진동은 종류마다 패턴이 달라요.</string>
+    <string name="my_a11y_motor">손 사용이 어려운 경우: 버튼은 크게(최소 48dp) 만들었고, 입력은 음성으로도 할 수 있어요.</string>
+    <string name="my_a11y_limits_title">알려진 제약</string>
+    <string name="my_a11y_limits">기기에 따라 음성 인식이 Google 서버를 거칠 수 있어요. 식단·운동의 일부 기능과 약관·처리방침 전문은 준비 중이에요.</string>
+    <string name="my_a11y_contact_title">문의</string>
+    <string name="my_a11y_contact">접근성 문의는 전화·문자·이메일로 받아요. 연락처와 답변 목표 기간은 운영자가 정하면 이 화면에 적어요.</string>
+    <string name="my_health_edit_body">항목을 눌러 고친 뒤 저장해 주세요.</string>
+    <string name="my_diseases_open">질환 고르기</string>
+    <string name="my_diseases_title">질환</string>
+    <string name="my_goal_open">목표 고르기</string>
+    <string name="my_goal_title">목표</string>
+    <string name="my_health_disclaimer_short">참고 정보예요. 진단은 전문가와 상담하세요.</string>
+    <string name="my_allergen_guide_short">이전·다음으로 듣고 해당하면 눌러 주세요.</string>
+    <string name="my_other_body_short">목록에 없는 알레르기를 넣어 주세요.</string>
+    <string name="my_short_kcal">하루 목표 %1$skcal(추정값)</string>
+    <string name="my_back_to_list">목록으로 돌아가기</string>
+    <string name="my_rights_intro_short">버튼이나 말로 언제든 행사할 수 있어요.</string>
+    <string name="my_rights_contact_short">전화·문자·이메일 창구는 운영자가 정하면 적어요.</string>
+    <string name="my_consent_short_read">내용</string>
+    <string name="my_consent_short_withdraw">철회</string>
+    <string name="my_consent_short_agree">동의</string>
+    <string name="my_consent_short_reack">확인</string>
+    <string name="my_consent_short_locked">철회는 탈퇴로</string>
+    <string name="my_edit_current">지금 값: %1$s</string>
+    <string name="my_delete_clause_device">이 기기·백업·인증 정보</string>
+    <string name="my_delete_clause_web">앱을 쓸 수 없을 때</string>
+    <string name="my_document_clause_info">문서 버전·전문 안내</string>
+</resources>

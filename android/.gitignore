@@ -15,3 +15,9 @@ captures/
 google-services.json
 # 긴 빌드·테스트 로그 보관 위치
 build-logs/
+# 서명 키·암호는 저장소에 넣지 않는다(-Pseesun.signing.file 로 저장소 밖 파일을 가리킨다)
+*.jks
+*.keystore
+*.p12
+signing.properties
+keystore_password.txt

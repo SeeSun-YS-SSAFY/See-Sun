@@ -24,6 +24,7 @@ class FakeAuthProvider @Inject constructor() : AuthProvider {
 
     override val kind = AuthProvider.Kind.FAKE
     override val isConfigured = true
+    override val supportsAutoRetrieval: Boolean get() = autoRetrieve
 
     override fun startPhoneVerification(phoneE164: String, activity: Activity?): Flow<PhoneVerificationEvent> = flow {
         if (!phoneE164.matches(Regex("""^\+821[016789]\d{7,8}$"""))) {

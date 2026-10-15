@@ -1,0 +1,99 @@
+{
+ "exercise_no": 19,
+ "apply": true,
+ "exercise_id": "78f36d5f97c242f78379f5f463c88f21",
+ "exercise_name": "다리 스트레칭",
+ "name_en": "leg_stretch",
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "소유자 결정(텔레그램 msg 765): 원본 그림 1~4(앉은 자세, 30s·x5회 표시)가 기준, 대본을 그림에 맞춰 고침",
+ "pictures": [
+  "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_01.jpg",
+  "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_02.jpg",
+  "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_03.jpg",
+  "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_04.jpg"
+ ],
+ "fields": {
+  "exercise_description": "[추천] 5회, 한 회마다 30초 유지, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다. 반동 없이 천천히, 통증이 있으면 멈춥니다.",
+  "first_description": "3초 안에 다리 스트레칭에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 평평한 바닥에 다리를 앞으로 쭉 편 상태로 허리를 세워 바르게 앉습니다",
+  "main_form": "동작 시작 : 1. 왼쪽 무릎을 굽혀 다리를 몸통 쪽으로 당기며 천천히 들어줍니다. 2. 왼쪽 허벅지 밑에 양손으로 깍지를 끼워 다리가 떨어지지 않도록 다리 밑에 고정 시킵니다. 이때 오른쪽 다리가 따라 올라가지 않도록 유의합니다. 3. 손깍지를 유지한 상태에서, 왼쪽 발바닥이 앞쪽 위를 향하도록 천천히 무릎을 펴줍니다. 이때 다리는 편하게 구부린 상태도 괜찮습니다. 4. 무릎을 폈다면, 왼쪽 발목을 위아래로 천천히 움직여 종아리가 당겨지는 듯한 느낌을 느낍니다. 5. 호흡을 편하게 이어가며 왼쪽 다리를 30초동안 유지한 뒤, 오른쪽 다리도 동일한 방법으로 30초동안 유지합니다.",
+  "form_description": null,
+  "stay_form": "x",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 손깍지를 유지한 채, 다리를 천천히 내리며 구부려줍니다. 2. 종아리 뒷부분이 손깍지에 닿을 정도로 다리를 구부려줬다면 손깍지를 풀어줍니다. 3. 다리를 천천히 바닥으로 편하게 내려줍니다. 4. 숨을 고르며 몸을 편안한 상태로 만들고 운동을 마무리합니다.",
+  "exercise_guide_text": "한 회당 30초 유지하고, 회 사이마다 30초씩 휴식을 취하면서 5회 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 5세트, 한 세트마다 30초 유지, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 다리 스트레칭에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 평평한 바닥에 팔과 다리를 쭉 편 상태로 바르게 눕습니다",
+  "main_form": "동작 시작 : 1. 왼쪽 다리를 최대한 몸통쪽으로 당겨 천천히 하늘을 향해 들어줍니다. 2. 왼쪽 허벅지 밑에 양손으로 깍지를 끼워 다리가 떨어지지 않도록 다리 밑에 고정 시킵니다. 이때 오른쪽 다리가 따라 올라가지 않도록 유의합니다. 3. 손깍지를 유지한 상태에서, 왼쪽 발바닥이 하늘을 향하도록 천천히 다리를 일자로 펴줍니다. 이때 다리는 편하게 구부린 상태도 괜찮습니다. 4. 발바닥이 하늘을 향하도록 다리를 폈다면, 왼쪽 발목을 위아래로 움직여 종아리가 당겨지는 듯한 느낌을 느낍니다. 5. 왼쪽 다리를 30초동안 유지한 뒤, 오른쪽 다리도 동일한 방법으로 30초동안 유지합니다.",
+  "form_description": null,
+  "stay_form": "x",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 손깍지를 유지한 채, 다리를 천천히 내리며 구부려줍니다. 2. 종아리 뒷부분이 손깍지에 닿을 정도로 다리를 구부려줬다면 손깍지를 풀어줍니다. 3. 다리를 천천히 바닥으로 편하게 내려줍니다. 4. 숨을 고르며 몸을 편안한 상태로 만들고 운동을 마무리합니다.",
+  "exercise_guide_text": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 5세트 반복합니다."
+ },
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/leg_stretch/exercise_description.mp3",
+   "mp3_seconds": 13.25,
+   "changed": true,
+   "stale": true,
+   "chars_before": 73,
+   "chars_after": 96,
+   "est_seconds_after": 17.4
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/leg_stretch/first_description.mp3",
+   "mp3_seconds": 15.41,
+   "changed": true,
+   "stale": true,
+   "chars_before": 88,
+   "chars_after": 96,
+   "est_seconds_after": 16.8
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/leg_stretch/main_form.mp3",
+   "mp3_seconds": 56.18,
+   "changed": true,
+   "stale": true,
+   "chars_before": 328,
+   "chars_after": 327,
+   "est_seconds_after": 56.0
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "chars_before": 0,
+   "chars_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "chars_before": 1,
+   "chars_after": 1,
+   "est_seconds_after": null
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/leg_stretch/fixed_form.mp3",
+   "mp3_seconds": 27.22,
+   "changed": false,
+   "stale": false,
+   "chars_before": 159,
+   "chars_after": 159,
+   "est_seconds_after": 27.2
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/leg_stretch/exercise_guide_text.mp3",
+   "mp3_seconds": 9.05,
+   "changed": true,
+   "stale": true,
+   "chars_before": 48,
+   "chars_after": 45,
+   "est_seconds_after": 8.5
+  }
+ },
+ "anchors_note": "main_form 문장 수(8)와 순서를 유지해 pictogram_section_map.json 앵커(그림 3 = main_form[4])가 그대로 맞음. exercise_description 은 [유의사항]에 문장 1개가 늘어 문장 3개(앵커는 [0]만 사용)."
+}

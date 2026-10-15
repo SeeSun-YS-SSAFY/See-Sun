@@ -21,6 +21,11 @@ class ConsentMethod(models.TextChoices):
     VOICE = 'VOICE', '음성'
 
 
+class DocumentKind(models.TextChoices):
+    CONSENT = 'CONSENT', '동의'
+    NOTICE = 'NOTICE', '고지 확인'
+
+
 class ConsentDocument(models.Model):
     type = models.CharField(max_length=20, choices=ConsentType.choices, verbose_name='동의 항목')
     version = models.CharField(max_length=32, verbose_name='버전')
@@ -28,6 +33,9 @@ class ConsentDocument(models.Model):
     summary = models.TextField(blank=True, verbose_name='낭독용 요약')
     url = models.URLField(blank=True, verbose_name='전문 주소')
     required = models.BooleanField(default=False, verbose_name='필수 여부')
+    # NOTICE = 동의가 아니라 고지(거부할 수 없는 확인). 기록은 agreed=true로 남기고 recorded_at이 확인 시각이다
+    # (법적 검토 C-01: 국외이전은 전화번호 인증에 꼭 필요해 선택 동의로 둘 수 없음).
+    kind = models.CharField(max_length=10, choices=DocumentKind.choices, default=DocumentKind.CONSENT, verbose_name='종류')
     effective_at = models.DateField(verbose_name='시행일')
     is_active = models.BooleanField(default=True, verbose_name='사용 여부')
 
@@ -50,6 +58,10 @@ class ConsentRecord(models.Model):
     method = models.CharField(max_length=10, choices=ConsentMethod.choices, verbose_name='방법')
     recorded_at = models.DateTimeField(auto_now_add=True, verbose_name='기록 일시')
     withdrawn_at = models.DateTimeField(null=True, blank=True, verbose_name='철회 일시')
+    # 입증 대비(법적 검토 C-07): 어느 앱 버전·화면에서 받았는지, 음성이면 재확인 질문을 통과했는지
+    app_version = models.CharField(max_length=32, blank=True, default='', verbose_name='앱 버전')
+    screen_id = models.CharField(max_length=40, blank=True, default='', verbose_name='화면 ID')
+    voice_confirmed = models.BooleanField(null=True, blank=True, verbose_name='음성 재확인 통과')
 
     class Meta:
         db_table = 'consent_records'

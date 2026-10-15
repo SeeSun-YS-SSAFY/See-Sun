@@ -1,0 +1,16 @@
+# 배포 리허설 E2E 전용 staging 스택(운영 compose 위에 덧씌움) — 운영 VM에서 쓰지 않는다
+#   운영과 같은 이미지·Caddy·postgres에 settings_staging.py만 볼륨으로 넣어 가짜 Firebase 검증기를 켠다.
+#   deploy/ 폴더에서:
+#     docker compose -p seesun-staging -f docker-compose.prod.yml -f e2e/docker-compose.staging.yml \
+#       --env-file e2e/staging.env up -d
+#   (경로는 첫 번째 compose 파일 위치 = deploy/ 기준)
+services:
+  django:
+    env_file: !override
+      - e2e/staging.env
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings_staging
+      SEESUN_STAGING_ACK: staging-only-fake-firebase
+    volumes:
+      - ./secrets:/run/secrets/seesun:ro
+      - ./e2e/settings_staging.py:/app/config/settings_staging.py:ro

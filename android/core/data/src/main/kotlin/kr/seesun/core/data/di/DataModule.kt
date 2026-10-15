@@ -28,8 +28,9 @@ import kr.seesun.core.data.sync.WorkManagerSyncScheduler
 /**
  * 데이터 계층 설정. app 모듈이 제공한다.
  * @param useFakeRepositories true면 서버 없이 메모리 가짜 저장소를 쓴다(gradle 속성 `seesun.fakeData`).
+ * @param appVersion 동의 기록에 남길 앱 버전(법적 검토 C-07)
  */
-data class DataConfig(val useFakeRepositories: Boolean)
+data class DataConfig(val useFakeRepositories: Boolean, val appVersion: String = "")
 
 @Module
 @InstallIn(SingletonComponent::class)

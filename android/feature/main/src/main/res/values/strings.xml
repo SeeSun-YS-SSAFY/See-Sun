@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="main_title">메인</string>
+    <string name="main_today">오늘 요약</string>
+    <string name="main_hello">%1$s님, 안녕하세요.</string>
+    <string name="main_target_kcal">하루 목표 열량 %1$s킬로칼로리(추정값)</string>
+    <string name="main_target_unknown">키, 몸무게, 성별을 입력하면 목표 열량을 알려 드려요.</string>
+    <string name="main_loading">불러오는 중이에요.</string>
+    <string name="main_load_failed">정보를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.</string>
+    <string name="main_retry">다시 불러오기</string>
+    <string name="main_meals_today">오늘 기록한 식사 %1$d끼</string>
+    <string name="main_pending">보내지 못한 기록 %1$d건(연결되면 자동 전송)</string>
+    <string name="main_reconsent_body">동의 문서가 바뀌었어요. 다시 동의해야 기록돼요.</string>
+    <string name="main_reconsent_action">동의 다시 하기</string>
+    <string name="main_exercise">운동</string>
+    <string name="main_exercise_desc">운동 고르기 · 루틴</string>
+    <string name="main_diet">식단</string>
+    <string name="main_diet_desc">식사 기록 · 추천</string>
+    <string name="main_mypage">마이페이지</string>
+    <!-- 타일 안 표시(Figma 「마이 / 페이지」 두 줄). 낭독은 main_mypage. -->
+    <string name="main_mypage_tile">마이\n페이지</string>
+    <string name="main_medicine">약</string>
+    <string name="main_medicine_soon">약 기능은 준비 중인 기능이에요.</string>
+    <string name="main_mypage_desc">내 정보 · 건강 정보</string>
+    <string name="main_settings">설정</string>
+    <string name="main_settings_desc">동의 · 로그아웃 · 탈퇴</string>
+    <string name="main_components">공통 컴포넌트 보기</string>
+    <string name="main_components_desc">개발용 점검</string>
+    <string name="main_guide">메인. %1$s 식단, 운동, 약, 마이페이지, 설정 중에서 골라 주세요.</string>
+</resources>

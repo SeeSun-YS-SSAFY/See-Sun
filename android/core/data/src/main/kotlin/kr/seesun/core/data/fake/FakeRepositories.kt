@@ -7,17 +7,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kr.seesun.core.data.model.MealDraft
 import kr.seesun.core.data.model.MealItem
 import kr.seesun.core.data.model.MealRecord
 import kr.seesun.core.data.model.SyncState
-import kr.seesun.core.data.repository.AuthRepository
 import kr.seesun.core.data.repository.FoodRepository
 import kr.seesun.core.data.repository.MealRepository
-import kr.seesun.core.data.repository.SignInResult
 import kr.seesun.core.data.sync.SyncOutcome
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.network.model.DietEvaluateResponse
@@ -83,7 +79,7 @@ class FakeFoodRepository @Inject constructor() : FoodRepository {
                 foodName = food?.name ?: item.foodName,
                 amountRatio = ratio,
                 nutrition = NutritionDto(kcal = food?.perServing?.kcal?.times(ratio)),
-                sugarIndex = if (food?.name == "떡볶이") SugarIndexDto(true, 55.0, "HIGH", "높음") else null,
+                sugarIndex = if (food?.name == "떡볶이") SugarIndexDto(computable = true, score = 60, grade = "HIGH", label = "높음") else null,
                 allergens = if (food?.name == "떡볶이") listOf(FoodAllergenDto("WHEAT", "밀", "CONFIRMED", "KEYWORD")) else emptyList()
             )
         }
@@ -105,7 +101,7 @@ class FakeFoodRepository @Inject constructor() : FoodRepository {
                     grade = "HIGH",
                     vibration = "SUGAR_HIGH",
                     actions = listOf("RECOMMENDED_FOODS"),
-                    ttsMessage = "당류·탄수화물 지표 높음, 55점."
+                    ttsMessage = "당류·탄수화물 지표 높음, 60점."
                 )
             )
         }
@@ -121,22 +117,4 @@ class FakeFoodRepository @Inject constructor() : FoodRepository {
             perServing = NutritionDto(kcal = kcal, carbG = carb, sugarG = sugar),
             source = "FAKE"
         )
-}
-
-/** 서버 없이 로그인된 것처럼 동작한다. */
-@Singleton
-class FakeAuthRepository @Inject constructor() : AuthRepository {
-    private val state = MutableStateFlow(false)
-    override val signedIn: StateFlow<Boolean> = state.asStateFlow()
-
-    override suspend fun signIn(idToken: String, birthdate: LocalDate?, name: String?): ApiResult<SignInResult> {
-        state.value = true
-        return ApiResult.Success(
-            SignInResult(isNewUser = true, profileCompleted = false, listOf("TOS", "PRIVACY"), false, "전화번호 인증이 완료되었습니다.")
-        )
-    }
-
-    override suspend fun signOut() {
-        state.value = false
-    }
 }

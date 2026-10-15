@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 공통 -->
+    <string name="onb_progress">%1$d단계, 전체 %2$d단계</string>
+    <string name="onb_next">다음</string>
+    <string name="onb_next_disabled_input">값을 입력하면 누를 수 있어요</string>
+    <string name="onb_next_disabled_choice">하나를 고르면 누를 수 있어요</string>
+    <string name="onb_retry">다시 시도</string>
+    <string name="onb_loading">불러오는 중이에요. 잠시만 기다려 주세요.</string>
+    <string name="onb_saving">처리하는 중이에요. 잠시만 기다려 주세요.</string>
+
+    <!-- 안내(Notice) -->
+    <string name="onb_notice_required_consent">필수 항목에 동의해야 가입할 수 있어요.</string>
+    <string name="onb_notice_back_locked">이미 인증과 동의를 마쳐서 이전 단계로 돌아갈 수 없어요. 이 화면에서 계속해 주세요.</string>
+    <string name="onb_notice_busy">처리하는 중이에요. 잠시만 기다려 주세요.</string>
+    <string name="onb_notice_code_sent">인증번호를 문자로 보냈어요. 여섯 자리를 말하거나 입력해 주세요.</string>
+    <string name="onb_notice_code_auto">문자로 받은 인증번호가 자동으로 입력됐어요. 확인하는 중이에요.</string>
+    <string name="onb_notice_verify_again">인증 시간이 지나 전화번호 인증을 다시 해 주세요.</string>
+    <string name="onb_notice_new_user">처음 가입하는 전화번호예요. 연령 확인과 동의부터 진행할게요.</string>
+    <string name="onb_notice_welcome_back">다시 오셨네요. 바뀐 동의 내용을 확인해 주세요.</string>
+    <string name="onb_notice_allergens_none">알레르기 없음으로 정했어요.</string>
+    <string name="onb_notice_notice_required">국외이전 고지는 확인만 할 수 있어요. 원하지 않으시면 가입을 멈추시면 돼요.</string>
+    <string name="onb_notice_under_age">만 14세 이상만 이용할 수 있어요. 생년월일을 다시 확인해 주세요.</string>
+
+    <!-- SPL-01 시작 -->
+    <string name="onb_intro_title">시선 시작하기</string>
+    <!-- 음성 입력 질문(Figma 「마이크를 눌러 / 이름을 말씀해주세요.」): 첫 줄 + 노랑 키워드 + 꼬리 -->
+    <string name="onb_prompt_lead">마이크를 눌러</string>
+    <string name="onb_prompt_tail_eul">을 말씀해주세요.</string>
+    <string name="onb_prompt_tail_reul">를 말씀해주세요.</string>
+    <string name="onb_age_prompt_keyword">생년월일</string>
+    <string name="onb_phone_prompt_keyword">전화번호</string>
+    <string name="onb_code_prompt_keyword">인증번호</string>
+    <string name="onb_name_prompt_keyword">이름</string>
+    <string name="onb_gender_prompt_keyword">성별</string>
+    <string name="onb_height_prompt_keyword">키</string>
+    <string name="onb_weight_prompt_keyword">몸무게</string>
+    <string name="onb_other_prompt_keyword">기타 알레르기 종류</string>
+    <string name="onb_intro_body">화면을 보지 않고도 운동과 식단을 기록하는 앱이에요.</string>
+    <string name="onb_intro_talkback_on">TalkBack이 켜져 있어요. 안내는 TalkBack으로 읽어 드리고, 앱 음성과 마이크는 자동으로 켜지지 않아요.</string>
+    <string name="onb_intro_talkback_off">TalkBack이 꺼져 있어요. 앱이 음성으로 안내해 드려요. 안내 중에 버튼을 누르면 안내가 멈춰요.</string>
+    <string name="onb_intro_start">처음 시작하기</string>
+    <string name="onb_intro_login">이미 가입했어요</string>
+    <string name="onb_intro_login_desc">전화번호 인증으로 다시 로그인</string>
+    <string name="onb_intro_guide">시선 시작하기. 모든 입력은 말이나 키보드, 버튼으로 할 수 있어요. 처음이시면 처음 시작하기를, 이미 가입하셨으면 이미 가입했어요를 눌러 주세요.</string>
+
+    <!-- LGL-01 연령 확인 -->
+    <string name="onb_age_title">연령 확인</string>
+    <string name="onb_age_body">만 14세 이상만 가입할 수 있어요.</string>
+    <string name="onb_age_label">생년월일</string>
+    <string name="onb_age_hint">1990년 5월 1일처럼 말하거나 19900501로 입력해 주세요.</string>
+    <string name="onb_age_guide">연령 확인, 2단계. 생년월일을 1990년 5월 1일처럼 말씀해 주세요. 만 14세 이상만 가입할 수 있고, 14세 미만이면 입력한 값은 바로 지워요.</string>
+    <string name="onb_birth_confirm">생년월일 %1$s</string>
+    <string name="onb_date_format">%1$d년 %2$d월 %3$d일</string>
+
+    <!-- 연령 차단 -->
+    <string name="onb_blocked_title">가입할 수 없어요</string>
+    <string name="onb_blocked_body">만 14세 미만은 법에 따라 보호자 동의가 필요해서, 지금은 시선에 가입할 수 없어요.</string>
+    <string name="onb_blocked_privacy">입력하신 생년월일은 저장하지 않고 지웠어요.</string>
+    <string name="onb_blocked_retry">생년월일 다시 입력</string>
+    <string name="onb_blocked_guide">가입할 수 없어요. 만 14세 미만은 보호자 동의가 필요해서 지금은 가입할 수 없어요. 입력하신 생년월일은 저장하지 않았어요.</string>
+
+    <!-- LGL-02 서비스 성격·면책 -->
+    <string name="onb_notice_summary">시선은 운동과 식사 기록을 돕는 생활 건강관리 앱입니다. 의료기기가 아니며, 질병을 진단하거나 치료·예방하지 않습니다. 건강 문제는 의사, 약사, 영양사와 상담하세요.</string>
+    <string name="onb_notice_full">시선이 알려 드리는 영양 정보, 당류·탄수화물 지표, 알레르기 정보, 운동 안내는 참고 정보예요. 질병을 진단하거나 치료·예방하지 않아요. 영양 정보에는 오차가 있을 수 있으니, 건강 상태나 알레르기는 의사·약사 등 전문가와 상담하세요. 알레르기 정보는 포함 가능성을 알려 드리는 것이며, 확인할 수 없는 음식도 있어요.</string>
+
+    <!-- LGL-03~06 동의 -->
+    <string name="onb_consent_required">필수</string>
+    <string name="onb_consent_notice">고지 확인</string>
+    <string name="onb_consent_optional">선택</string>
+    <string name="onb_consent_sensitive_note">동의하지 않으면 질환·알레르기 맞춤 경고와 추천 없이 일반 모드로 이용해요. 설정에서 언제든 동의하거나 철회할 수 있어요.</string>
+    <string name="onb_consent_version">문서 버전 %1$s, 시행일 %2$s</string>
+    <string name="onb_consent_full_pending">전문은 법무 검토 후 이 화면과 웹 주소로 제공돼요. 지금은 위 요약이 전체 내용이에요.</string>
+    <string name="onb_consent_open_web">웹에서 전문 보기</string>
+    <string name="onb_consent_voice_hint">전체 동의 또는 필수만 동의라고 말씀해 주세요. 다시 들으려면 다시 들려줘라고 말씀해 주세요.</string>
+    <string name="onb_consent_voice_confirm">%1$s에 동의하시겠어요? 맞으면 동의 확인, 아니면 취소를 눌러 주세요. 네 또는 아니요라고 말씀하셔도 돼요.</string>
+    <string name="onb_consent_voice_yes">동의 확인</string>
+    <string name="onb_consent_voice_no">취소</string>
+    <string name="onb_consent_guide">약관 동의, 3단계. 시선은 의료기기가 아니며 진단·치료를 하지 않아요. 전체 동의를 누르거나 항목을 하나씩 체크해 주세요. 필수는 이용약관과 개인정보 수집·이용, 국외이전은 확인만 하는 고지예요. 건강정보(민감정보)는 선택이라 동의하지 않아도 가입돼요. 각 항목의 자세히를 누르면 전체 내용을 들을 수 있어요. 다 고르면 다음을 눌러 주세요.</string>
+
+    <!-- ONB-06·07 전화번호 인증 -->
+    <string name="onb_phone_title">전화번호 인증</string>
+    <string name="onb_phone_body">휴대폰 번호를 넣어 주세요.</string>
+    <string name="onb_phone_firebase">인증 문자를 위해 번호가 Google(미국)으로 전송돼요.</string>
+    <string name="onb_phone_label">전화번호</string>
+    <string name="onb_phone_hint">공일공 일이삼사 오육칠팔처럼 말씀해 주세요.</string>
+    <string name="onb_phone_confirm">전화번호 %1$s</string>
+    <string name="onb_phone_send">인증번호 받기</string>
+    <string name="onb_phone_guide">전화번호 인증, 4단계. 이 폰 번호를 바로 가져오거나, 번호를 한 자리씩 말씀해 주세요. 인증 문자를 받으려면 전화번호가 Google(미국)의 Firebase로 전송돼요.</string>
+    <string name="onb_code_title">인증번호 입력</string>
+    <string name="onb_code_body">%1$s로 보낸 여섯 자리를 넣어 주세요.</string>
+    <string name="onb_code_label">인증번호</string>
+    <string name="onb_code_hint">인증번호 여섯 자리를 한 자리씩 말씀해 주세요.</string>
+    <string name="onb_code_confirm">인증번호 %1$s</string>
+    <string name="onb_code_submit">인증하기</string>
+    <string name="onb_code_resend">인증번호 다시 받기</string>
+    <string name="onb_code_guide">인증번호 입력. 문자로 받은 여섯 자리 숫자를 말씀해 주세요.</string>
+
+    <!-- ONB-01~05 프로필 -->
+    <string name="onb_name_title">이름</string>
+    <string name="onb_name_body">불러 드릴 이름을 말하거나 입력해 주세요.</string>
+    <string name="onb_name_label">이름</string>
+    <string name="onb_name_hint">이름을 홍길동처럼 말씀해 주세요.</string>
+    <string name="onb_name_confirm">이름 %1$s</string>
+    <string name="onb_name_guide">이름, 5단계. 불러 드릴 이름을 말씀해 주세요.</string>
+    <string name="onb_birth_title">생년월일</string>
+    <string name="onb_birth_body">연령 확인 때 값이에요. 맞으면 다음을 눌러 주세요.</string>
+    <string name="onb_birth_guide">생년월일. 연령 확인 때 말씀하신 생년월일을 그대로 쓸게요. 맞으면 다음을 눌러 주세요.</string>
+    <string name="onb_gender_title">성별</string>
+    <string name="onb_gender_body">목표 열량 계산에 써요. 남성 또는 여성을 골라 주세요.</string>
+    <string name="onb_gender_male">남성</string>
+    <string name="onb_gender_female">여성</string>
+    <string name="onb_gender_hint">남자 또는 여자라고 말씀해 주세요.</string>
+    <string name="onb_gender_guide">성별. 남성 또는 여성을 골라 주세요.</string>
+    <string name="onb_height_title">키</string>
+    <string name="onb_height_body">키를 센티미터로 넣어 주세요(100~250).</string>
+    <string name="onb_height_label">키</string>
+    <string name="onb_height_hint">키는 100에서 250 사이로 말씀해 주세요.</string>
+    <string name="onb_height_confirm">키 %1$s센티미터</string>
+    <string name="onb_height_value">%1$scm</string>
+    <string name="onb_height_guide">키. 키를 센티미터로 말씀해 주세요.</string>
+    <string name="onb_weight_title">몸무게</string>
+    <string name="onb_weight_body">몸무게를 킬로그램으로 넣어 주세요(20~300).</string>
+    <string name="onb_weight_label">몸무게</string>
+    <string name="onb_weight_hint">몸무게는 20에서 300 사이로 말씀해 주세요.</string>
+    <string name="onb_weight_confirm">몸무게 %1$s킬로그램</string>
+    <string name="onb_weight_value">%1$skg</string>
+    <string name="onb_weight_guide">몸무게. 몸무게를 킬로그램으로 말씀해 주세요.</string>
+    <string name="onb_profile_confirm_title">입력 확인</string>
+    <string name="onb_profile_confirm_question">이대로 저장할까요?</string>
+    <string name="onb_profile_confirm_save">저장</string>
+    <string name="onb_profile_confirm_edit">처음부터 수정</string>
+    <string name="onb_confirm_guide">%1$s. %2$s 이대로 저장할까요?</string>
+    <string name="onb_line_name">이름 %1$s</string>
+    <string name="onb_line_birth">생년월일 %1$s</string>
+    <string name="onb_line_gender">성별 %1$s</string>
+    <string name="onb_line_height">키 %1$s센티미터</string>
+    <string name="onb_line_weight">몸무게 %1$s킬로그램</string>
+
+    <!-- HLT 건강 -->
+    <string name="onb_diseases_title">질환</string>
+    <string name="onb_diseases_body">해당하는 질환을 모두 골라 주세요.</string>
+    <string name="onb_diseases_hint">당뇨, 고혈압, 없음 중에서 말씀해 주세요.</string>
+    <string name="onb_diseases_guide">질환, 6단계. 당뇨, 고혈압 중 해당하는 것을 모두 고르거나 없음을 골라 주세요.</string>
+    <string name="onb_allergens_title">알레르기</string>
+    <string name="onb_allergens_body">이전·다음으로 듣고 해당하면 눌러 주세요.</string>
+    <string name="onb_allergens_selected">선택한 알레르기 %1$d개: %2$s</string>
+    <string name="onb_allergens_selected_none">선택한 알레르기 없음</string>
+    <string name="onb_allergens_hint">땅콩, 우유처럼 알레르기 이름을 말씀하시거나 없음이라고 말씀해 주세요.</string>
+    <string name="onb_allergens_none">알레르기 없음</string>
+    <string name="onb_allergens_done">선택 마치기</string>
+    <string name="onb_allergens_guide">알레르기. 이전, 다음 버튼으로 항목을 듣고 해당하면 눌러 주세요. 다 고르면 선택 마치기를 눌러 주세요.</string>
+    <string name="onb_other_title">기타 알레르기</string>
+    <string name="onb_other_body">목록에 없는 알레르기가 있으면 넣어 주세요.</string>
+    <string name="onb_other_label">기타 알레르기</string>
+    <string name="onb_other_hint">키위처럼 음식 이름을 말씀해 주세요.</string>
+    <string name="onb_other_confirm">기타 알레르기 %1$s</string>
+    <string name="onb_other_skip">없음</string>
+    <string name="onb_other_guide">기타 알레르기. 목록에 없는 알레르기가 있으면 말씀해 주세요. 없으면 없음을 눌러 주세요.</string>
+    <string name="onb_goal_title">목표</string>
+    <string name="onb_goal_body">목표에 따라 목표 열량이 정해져요.</string>
+    <string name="onb_goal_hint">체중 감량, 근육 증진, 건강 유지 중에서 말씀해 주세요.</string>
+    <string name="onb_goal_guide">목표. 체중 감량, 근육 증진, 건강 유지 중 하나를 골라 주세요.</string>
+    <string name="onb_health_confirm_title">건강 정보 확인</string>
+    <string name="onb_line_diseases">질환 %1$s</string>
+    <string name="onb_line_allergens">알레르기 %1$s</string>
+    <string name="onb_line_other">기타 알레르기 %1$s</string>
+    <string name="onb_line_goal">목표 %1$s</string>
+    <string name="onb_line_general_mode">건강정보 처리에 동의하지 않아 질환·알레르기는 받지 않았어요(일반 모드)</string>
+    <string name="onb_health_disclaimer">참고 정보예요. 진단은 전문가와 상담하세요.</string>
+    <string name="onb_list_separator">", "</string>
+
+    <!-- ONB-08 완료 -->
+    <string name="onb_done_title">가입 완료</string>
+    <string name="onb_done_kcal">하루 목표 열량은 %1$s킬로칼로리예요.</string>
+    <string name="onb_done_kcal_unknown">키, 몸무게, 성별, 생년월일이 모두 있으면 하루 목표 열량을 계산해 드려요.</string>
+    <string name="onb_done_agreed">동의한 항목: %1$s</string>
+    <string name="onb_done_declined">동의하지 않은 항목: %1$s</string>
+    <string name="onb_done_noticed">확인한 고지: %1$s</string>
+    <string name="onb_kcal_estimate">목표 칼로리는 일반 공식으로 계산한 추정값이에요.</string>
+    <string name="onb_kcal_floor">감량 목표는 하루 1,200킬로칼로리 아래로는 권하지 않아서 1,200킬로칼로리로 정했어요.</string>
+    <string name="onb_done_change">동의 내용은 설정의 개인정보·동의 관리에서 언제든 바꿀 수 있어요.</string>
+    <string name="onb_done_welcome">%1$s님, 가입을 마쳤어요.</string>
+    <string name="onb_done_welcome_back">%1$s님, 다시 오신 걸 환영해요.</string>
+    <string name="onb_done_welcome_anonymous">가입을 마쳤어요.</string>
+    <string name="onb_done_start">시작하기</string>
+    <string name="onb_progress_short">%1$d/%2$d</string>
+    <string name="onb_notice_consent_checks_required">필수 2개와 국외이전 고지 확인을 체크해야 다음으로 갈 수 있어요.</string>
+    <string name="onb_notice_consent_all_checked">전체 동의했어요. 필수 이용약관, 필수 개인정보 수집·이용, 국외이전 고지 확인, 그리고 선택인 건강정보(민감정보) 별도 동의까지 모두 체크했어요. 민감정보는 행을 눌러 따로 끌 수 있어요.</string>
+    <string name="onb_notice_consent_all_cleared">모든 체크를 해제했어요.</string>
+    <string name="onb_notice_phone_hint_filled">이 폰 번호 %1$s를 넣었어요. 맞으면 인증번호 받기를 눌러 주세요.</string>
+    <string name="onb_notice_phone_hint_none">번호를 말하거나 키보드로 입력해 주세요.</string>
+    <string name="onb_notice_phone_hint_not_mobile">고른 번호가 한국 휴대폰 번호가 아니에요. 번호를 말하거나 입력해 주세요.</string>
+    <string name="onb_intro_body_spoken">시선은 화면을 보지 않고도 운동과 식단을 기록할 수 있는 앱이에요. 모든 입력은 마이크 버튼을 누르고 말씀하시거나, 키보드와 버튼으로 할 수 있어요. 말씀하신 내용은 다시 읽어 드리고 확인을 받아요.</string>
+    <string name="onb_intro_talkback_on_short">TalkBack이 안내를 읽어 드려요.</string>
+    <string name="onb_intro_talkback_off_short">앱이 음성으로 안내해요. 버튼을 누르면 멈춰요.</string>
+    <string name="onb_age_body_spoken">만 14세 이상만 가입할 수 있어요. 생년월일을 1990년 5월 1일처럼 말하거나 19900501처럼 입력해 주세요. 입력한 생년월일은 나이 확인에 먼저 쓰고, 만 14세 미만이면 저장하지 않고 바로 지워요.</string>
+    <string name="onb_medical_line">의료기기가 아니에요(진단·치료 안 함).</string>
+    <string name="onb_medical_line_spoken">서비스 안내. 시선은 운동과 식사 기록을 돕는 생활 건강관리 앱입니다. 의료기기가 아니며, 질병을 진단하거나 치료·예방하지 않습니다. 건강 문제는 의사, 약사, 영양사와 상담하세요.</string>
+    <string name="onb_consent_title">약관 동의</string>
+    <string name="onb_consent_all">전체 동의</string>
+    <string name="onb_consent_all_desc">필수·고지·선택 4개 모두</string>
+    <string name="onb_consent_all_spoken">전체 동의. 필수 이용약관, 필수 개인정보 수집·이용, 국외이전 고지 확인, 선택 건강정보(민감정보) 별도 동의를 한 번에 체크해요.</string>
+    <string name="onb_consent_more">자세히</string>
+    <string name="onb_consent_more_label">%1$s 자세히 보기</string>
+    <string name="onb_consent_kind_required">필수</string>
+    <string name="onb_consent_kind_optional">선택</string>
+    <string name="onb_consent_kind_notice">고지</string>
+    <string name="onb_consent_kind_sensitive">선택·별도</string>
+    <string name="onb_consent_state_agreed">동의함</string>
+    <string name="onb_consent_state_not_agreed">동의 안 함</string>
+    <string name="onb_consent_state_noticed">확인함</string>
+    <string name="onb_consent_state_not_noticed">확인 안 함</string>
+    <string name="onb_consent_row_tos">이용약관</string>
+    <string name="onb_consent_row_tos_desc">이용 조건·책임 범위</string>
+    <string name="onb_consent_row_privacy">개인정보 수집·이용</string>
+    <string name="onb_consent_row_privacy_desc">신체정보·전화번호, 탈퇴 시 파기</string>
+    <string name="onb_consent_row_overseas">국외이전 고지</string>
+    <string name="onb_consent_row_overseas_desc">인증 문자용 번호를 Google(미국)로</string>
+    <string name="onb_consent_row_sensitive">건강정보(민감정보)</string>
+    <string name="onb_consent_row_sensitive_desc">안 해도 가입돼요</string>
+    <string name="onb_consent_row_spoken">%1$s, %2$s. %3$s.</string>
+    <string name="onb_consent_detail_privacy">수집·이용 목적: 회원 식별, 목표 열량 계산, 운동·식단 기록 제공.
+수집 항목: 이름, 휴대폰 번호, 생년월일, 성별, 키, 몸무게, 목표.
+보유·이용 기간: 회원 탈퇴 시까지(탈퇴하면 바로 파기, 백업은 최대 14일).
+동의를 거부할 권리가 있어요. 다만 필수 항목이라 거부하면 가입할 수 없어요.</string>
+    <string name="onb_consent_detail_sensitive">수집·이용 목적: 질환·알레르기 맞춤 경고와 식단 추천.
+수집 항목: 질환(당뇨·고혈압), 알레르기, 기타 알레르기.
+보유·이용 기간: 동의 철회 또는 회원 탈퇴 시까지(철회하면 바로 삭제).
+동의를 거부할 권리가 있어요. 거부해도 가입과 기본 기능은 그대로 쓸 수 있고, 맞춤 경고·추천만 빠져요.</string>
+    <string name="onb_consent_detail_tos">시선은 운동과 식사 기록을 돕는 생활 건강관리 앱입니다. 의료기기가 아니며, 질병을 진단하거나 치료·예방하지 않습니다. 영양 정보에는 오차가 있을 수 있고, 알레르기 정보는 포함 가능성을 알려 드리는 참고 정보예요. 건강 문제는 의사·약사·영양사와 상담하세요.</string>
+    <string name="onb_consent_detail_back">목록으로 돌아가기</string>
+    <string name="onb_consent_detail_kind">%1$s 항목</string>
+    <string name="onb_consent_next_disabled">필수와 고지를 체크해 주세요</string>
+    <string name="onb_consent_voice_confirm_all">이용약관, 개인정보 수집·이용, 국외이전 고지 확인, 선택인 건강정보(민감정보) 별도 동의까지 모두 동의하시겠어요? 맞으면 동의 확인을 눌러 주세요. 네라고 말씀하셔도 돼요.</string>
+    <string name="onb_consent_voice_confirm_required">필수 이용약관, 필수 개인정보 수집·이용, 국외이전 고지 확인에만 동의하고 건강정보(민감정보)는 동의하지 않을까요? 맞으면 동의 확인을 눌러 주세요.</string>
+    <string name="onb_consent_detail_guide">%1$s. %2$s</string>
+    <string name="onb_phone_body_spoken">휴대폰 번호를 말씀하거나 입력해 주세요. 이 폰 번호 쓰기를 누르면 번호를 바로 가져와요. 인증번호를 문자로 보내 드려요. 문자 읽기 권한은 쓰지 않아요.</string>
+    <string name="onb_phone_firebase_spoken">인증 문자를 받으려면 전화번호가 Google(미국)의 Firebase로 전송돼요. 문자 수신 요금은 통신사 기준에 따릅니다.</string>
+    <string name="onb_phone_hint_button">이 폰 번호 쓰기</string>
+    <string name="onb_code_body_spoken">%1$s 번호로 보낸 문자의 인증번호 여섯 자리를 말씀하거나 입력해 주세요.</string>
+    <string name="onb_code_auto">문자가 오면 저절로 입력돼요.</string>
+    <string name="onb_birth_body_spoken">연령 확인 때 말씀하신 생년월일을 그대로 쓸게요. 맞으면 다음을, 바꾸려면 다시 말씀하거나 입력해 주세요.</string>
+    <string name="onb_diseases_body_spoken">해당하는 질환을 모두 골라 주세요. 없으면 없음을 골라 주세요. 식단 경고와 추천에만 써요.</string>
+    <string name="onb_allergens_body_spoken">이전, 다음 버튼으로 19가지를 하나씩 듣고, 해당하면 그 항목을 눌러 선택해 주세요. 말로도 고를 수 있어요.</string>
+    <string name="onb_other_body_spoken">목록에 없는 알레르기가 있으면 말씀하거나 입력해 주세요. 여러 개면 쉼표로 나눠 주세요. 없으면 없음을 눌러 주세요.</string>
+    <string name="onb_health_disclaimer_spoken">알레르기·질환 정보는 맞춤 경고와 추천에 쓰는 참고 정보예요. 정확한 진단은 전문가와 상담하세요.</string>
+    <string name="onb_done_change_short">동의는 설정에서 언제든 바꿀 수 있어요.</string>
+    <string name="onb_notice_consent_all_checked_short">4개 모두 체크(민감정보 포함)</string>
+    <string name="onb_clause_service">서비스 성격과 책임</string>
+    <string name="onb_clause_summary">요약</string>
+    <string name="onb_clause_doc_info">문서 버전·전문 안내</string>
+</resources>

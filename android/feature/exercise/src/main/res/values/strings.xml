@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="exercise_notification_channel">운동 안내</string>
+    <string name="exercise_notification_default">운동</string>
+    <string name="exercise_notification_title">운동 중: %1$s</string>
+    <string name="exercise_notification_text">눌러서 운동 화면으로 돌아가요.</string>
+</resources>

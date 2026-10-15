@@ -20,6 +20,14 @@ interface AuthProvider {
     val isConfigured: Boolean
 
     /**
+     * 인증번호 자동 수신 경로가 있는가(SMS 권한 없이). Firebase는 SMS Retriever·인스턴트 인증으로
+     * [PhoneVerificationEvent.CodeAutoRetrieved]·[PhoneVerificationEvent.Verified]를 보내고, 가짜 인증은
+     * [FakeAuthProvider.autoRetrieve]로 같은 이벤트를 흉내 낸다. 화면은 true면 "문자가 오면 저절로 입력돼요"를 안내한다.
+     * 새 SMS 연동을 붙일 때도 이 두 이벤트로 보내면 화면·흐름을 고치지 않아도 된다.
+     */
+    val supportsAutoRetrieval: Boolean get() = false
+
+    /**
      * 인증번호 발송을 시작한다. SMS 권한 없이 자동 인증·SMS Retriever를 쓴다(ONB-04).
      * @param phoneE164 "+821012345678" 형식([PhoneNumbers.toE164])
      * @param activity Firebase reCAPTCHA 대체 화면용. 가짜 구현은 쓰지 않는다.
@@ -78,4 +86,27 @@ object PhoneNumbers {
         if (!DOMESTIC.matches(digits)) return null
         return "+82" + digits.drop(1)
     }
+
+    /**
+     * 번호 힌트(Phone Number Hint)나 붙여 넣은 번호를 국내 형식 "010-1234-5678"로 바꾼다.
+     * "+82 10-1234-5678", "+821012345678", "+82 010-…", "821012345678", "010 1234 5678"을 받는다.
+     * 한국 휴대폰 번호가 아니면(다른 나라 번호·유선 전화) null — 화면은 직접 입력을 안내한다.
+     */
+    fun domesticFromHint(raw: String): String? {
+        val digits = raw.filter(Char::isDigit)
+        val international = raw.trim().startsWith("+")
+        val local = when {
+            international && !digits.startsWith(KOREA) -> return null
+            digits.startsWith(KOREA) && (international || digits.length in KOREA_DIGITS) -> "0" + digits.drop(KOREA.length).trimStart('0')
+            else -> digits
+        }
+        if (!DOMESTIC.matches(local)) return null
+        // 010-1234-5678 / 011-123-4567: 앞 3자리, 끝 4자리, 가운데 나머지.
+        return listOf(local.take(AREA), local.drop(AREA).dropLast(LINE), local.takeLast(LINE)).joinToString("-")
+    }
+
+    private const val KOREA = "82"
+    private val KOREA_DIGITS = 11..12
+    private const val AREA = 3
+    private const val LINE = 4
 }

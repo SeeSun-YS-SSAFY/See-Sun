@@ -19,13 +19,33 @@
 		-Server
 	}
 
-	reverse_proxy django:8000 {
-		health_uri /healthz/
-		health_interval 30s
-		header_up X-Forwarded-Proto {scheme}
+	# 관리자 화면(/admin/)은 허용한 IP에서만(법적 검토 S-01). 기본 private_ranges = VM 안·SSH 터널
+	#   ssh -L 8443:127.0.0.1:443 <VM> 후 https://<API_DOMAIN>:8443/admin/ (hosts 파일에 127.0.0.1 <API_DOMAIN>)
+	#   사무실 고정 IP를 더하려면 .env의 ADMIN_ALLOWED_IPS="private_ranges 203.0.113.10/32"
+	@admin_blocked {
+		path /admin /admin/*
+		not remote_ip {$ADMIN_ALLOWED_IPS}
+	}
+	handle @admin_blocked {
+		respond "Not Found" 404
 	}
 
-	# 접근 로그는 쿼리 문자열을 지우고 남긴다(검색어 등 최소화)
+	# 공개 미디어 로컬 서빙(MEDIA_CDN_BASE_URL 미설정 시 API가 /media/... 를 돌려준다). R2를 쓰면 요청이 오지 않는다
+	handle_path /media/* {
+		root * /srv/media
+		file_server
+		header Cache-Control "public, max-age=86400"
+	}
+
+	handle {
+		reverse_proxy django:8000 {
+			health_uri /healthz/
+			health_interval 30s
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	# 접근 로그: 요청·응답 본문은 Caddy가 남기지 않는다(법적 검토 S-09). 검색어 q·인증 헤더·쿠키는 지운다
 	log {
 		output stdout
 		format filter {
@@ -36,6 +56,7 @@
 				}
 				request>headers>Authorization delete
 				request>headers>Cookie delete
+				resp_headers>Set-Cookie delete
 			}
 		}
 	}

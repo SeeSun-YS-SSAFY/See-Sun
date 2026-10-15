@@ -27,6 +27,8 @@ include(":core:voice")
 include(":core:auth")
 include(":core:network")
 include(":core:data")
+include(":core:ui")
+include(":core:uitest")
 
 // 기능 모듈(T3 3-6에서 채운다)
 include(":feature:onboarding")

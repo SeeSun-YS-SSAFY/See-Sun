@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 의뢰인 로고 Seesunlogo.png를 scripts/design/build_logo.py로 벡터화(원판·점자 점 실측). 둘레 글자 윤곽: Pretendard Bold(SIL OFL 1.1). 테마 아이콘 단색 층(점자 점은 구멍) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.25"
+        android:scaleY="0.25"
+        android:translateX="28"
+        android:translateY="28">
+        <path
+            android:fillColor="#FF000000"
+            android:fillType="evenOdd"
+            android:pathData="M0,105.52a105.52,105.52 0 1,0 211.05,0a105.52,105.52 0 1,0 -211.05,0ZM64.05,61.06a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.89,61.06a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM83.69,80.89a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM150.17,81.03a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.82,80.89a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM30.2,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM64.01,100.92a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM116.33,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM150.13,100.92a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.89,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0Z" />
+    </group>
+</vector>

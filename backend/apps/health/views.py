@@ -1,14 +1,22 @@
 from drf_spectacular.utils import extend_schema
+from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.consents.permissions import HEALTH_API_PERMISSIONS
 from apps.core.responses import validation_error
+from apps.diet.models import DailyDietScore
 from apps.users.profile import refresh_target_kcal
 
 from .models import Allergen, HealthProfile
 from .serializers import AllergenSerializer, HealthProfileSerializer
+
+
+class PartialDeleteResponseSerializer(serializers.Serializer):
+    deleted = serializers.ListField(child=serializers.CharField(), help_text='지운 데이터 종류')
+    count = serializers.IntegerField(required=False, help_text='지운 식사 기록 수(식사 삭제일 때)')
+    tts_message = serializers.CharField()
 
 
 class AllergenListView(APIView):
@@ -21,8 +29,13 @@ class AllergenListView(APIView):
 
 
 class MyHealthView(APIView):
-    """질환·알레르기·목표(민감정보 동의 필요)"""
+    """질환·알레르기·목표(민감정보 동의 필요). 삭제는 동의와 상관없이 언제든 할 수 있다(권리 행사, 법적 검토 A-03·A-04)."""
     permission_classes = HEALTH_API_PERMISSIONS
+
+    def get_permissions(self):
+        if self.request.method == 'DELETE':
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     def _payload(self, user):
         profile = HealthProfile.objects.filter(user=user).first()
@@ -57,3 +70,12 @@ class MyHealthView(APIView):
         body = HealthProfileSerializer(self._payload(request.user)).data
         body['tts_message'] = '건강 정보를 저장했어요.'
         return Response(body)
+
+    @extend_schema(summary='건강 정보만 삭제(데이터 초기화)', tags=['Health'], request=None,
+                   responses={200: PartialDeleteResponseSerializer},
+                   description='질환·알레르기·기타 알레르기와 질환 기반 식단 점수를 지운다. 계정·동의·목표·식사 기록은 남는다.')
+    def delete(self, request):
+        HealthProfile.objects.filter(user=request.user).delete()
+        DailyDietScore.objects.filter(user=request.user).delete()
+        return Response({'deleted': ['diet_scores', 'health_profile'],
+                         'tts_message': '건강 정보를 삭제했어요. 질환과 알레르기 정보가 지워졌어요.'})

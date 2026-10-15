@@ -10,6 +10,7 @@ urlpatterns = [
     path('diet/stats/', views.StatsView.as_view(), name='stats'),
     path('meals/bulk/', views.MealBulkView.as_view(), name='meal_bulk'),
     path('meals/', views.MealListView.as_view(), name='meal_list'),
+    path('me/meals/', views.MyMealsDeleteView.as_view(), name='my_meals_delete'),
     path('meals/<uuid:meal_id>/', views.MealDetailView.as_view(), name='meal_detail'),
     path('recommendations/', views.RecommendationView.as_view(), name='recommendations'),
     path('favorites/foods/', views.FavoriteListView.as_view(), name='favorite_list'),
