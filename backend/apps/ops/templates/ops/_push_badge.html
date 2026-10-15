@@ -1,0 +1,1 @@
+{% if p %}{% if p.ok %}<span class="badge active" title="메시지 ID {{ p.message_id }}">푸시 보냄</span>{% else %}<span class="badge flag" title="{{ p.error }}">푸시 실패</span>{% endif %}{% else %}<span class="muted">-</span>{% endif %}

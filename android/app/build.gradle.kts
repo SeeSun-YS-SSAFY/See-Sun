@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.util.zip.ZipFile
 
 plugins {
     alias(libs.plugins.seesun.android.application)
@@ -118,6 +119,7 @@ dependencies {
     implementation(project(":feature:diet"))
     implementation(project(":feature:mypage"))
     implementation(project(":feature:update"))
+    implementation(project(":feature:admin"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
@@ -164,5 +166,55 @@ androidComponents {
             }
         }
         tasks.matching { it.name == "check" }.configureEach { dependsOn(check) }
+
+        // v7 관리자 모드(소유자 msg 1063)는 가운영 자체 업데이트 빌드에만 있어야 한다. 완성된 APK의 dex·resources.arsc에서
+        // 표시 문자열(저장 파일 이름·화면 문구)을 찾아, Play·일반 빌드에 있으면 실패, 가운영 빌드에 없으면 실패(양쪽 확인).
+        val apkDir = variant.artifacts.get(com.android.build.api.artifact.SingleArtifact.APK)
+        val adminTask = "check${variant.name.replaceFirstChar { it.uppercase() }}AdminMode"
+        val adminCheck = tasks.register(adminTask) {
+            group = "verification"
+            description = "release APK에 관리자 모드가 selfUpdate 빌드에만 들어 있는지 확인한다."
+            inputs.dir(apkDir)
+            doLast {
+                val apk = apkDir.get().asFile.walkTopDown().first { it.extension == "apk" }
+                val hits = adminMarkers.associateWith { 0 }.toMutableMap()
+                ZipFile(apk).use { zip ->
+                    zip.entries().asSequence().filter { it.name.endsWith(".dex") || it.name == "resources.arsc" }.forEach { entry ->
+                        val bytes = zip.getInputStream(entry).readBytes()
+                        adminMarkers.forEach { m ->
+                            hits[m] = hits.getValue(m) + countBytes(bytes, m.toByteArray(Charsets.UTF_8)) +
+                                countBytes(bytes, m.toByteArray(Charsets.UTF_16LE))
+                        }
+                    }
+                }
+                logger.lifecycle("[$adminTask] ${apk.name} selfUpdate=$selfUpdate 관리자 모드 표지: $hits")
+                if (!selfUpdate && hits.values.any { it > 0 }) {
+                    throw GradleException("seesun.selfUpdate=false 빌드에 관리자 모드가 들어 있습니다: $hits")
+                }
+                if (selfUpdate && hits.getValue(adminMarkers.first()) == 0) {
+                    throw GradleException("seesun.selfUpdate=true 빌드에 관리자 모드가 없습니다: $hits")
+                }
+            }
+        }
+        tasks.matching { it.name == "check" }.configureEach { dependsOn(adminCheck) }
     }
+}
+
+/** 관리자 모드 표지: 저장 파일 이름(feature:admin AdminSettings.PREFS)과 화면 문구. */
+val adminMarkers = listOf("seesun_admin", "관리자 모드", "음성 감지 시험")
+
+fun countBytes(haystack: ByteArray, needle: ByteArray): Int {
+    var count = 0
+    var i = 0
+    while (i <= haystack.size - needle.size) {
+        var j = 0
+        while (j < needle.size && haystack[i + j] == needle[j]) j++
+        if (j == needle.size) {
+            count++
+            i += needle.size
+        } else {
+            i++
+        }
+    }
+    return count
 }

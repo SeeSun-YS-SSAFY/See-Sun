@@ -22,6 +22,7 @@ AUDITED_COMMANDS = {
     'shell', 'dbshell', 'dumpdata', 'loaddata', 'changepassword', 'createsuperuser', 'flush',
     'rotate_field_keys', 'purge_inactive_users', 'purge_withdrawn_users', 'purge_access_logs',
     'retry_firebase_deletions', 'import_mfds_foods', 'sync_reference_data',
+    'ops_bootstrap_admin', 'ops_reset_otp', 'ops_push_app_update',
 }
 ADMIN_VIEW_SUFFIXES = {
     'changelist': 'VIEW', 'change': 'VIEW', 'add': 'VIEW', 'delete': 'VIEW', 'history': 'VIEW',
@@ -145,33 +146,41 @@ def on_login_failed(sender, credentials, request=None, **kwargs):
 
 
 # ---- 관리자 로그인 잠금(S-01) ------------------------------------------------------------------------
-def _lock_keys(request):
-    username = (request.POST.get('username') or '').strip().lower()[:150]
-    return [f'admin-login-fail:ip:{client_ip(request)}', f'admin-login-fail:user:{username}']
+# 비밀번호 단계와 2단계 인증(코드) 단계가 같은 카운터를 쓴다(계정·IP 각각). 비밀번호가 맞아도 카운터를 지우지 않고,
+# 2단계 코드까지 맞아야 지운다 — 다시 로그인하는 것으로 코드 실패 횟수를 되돌릴 수 없게.
+def login_lock_keys(username, ip):
+    username = (username or '').strip().lower()[:150]
+    return [f'admin-login-fail:ip:{ip}', f'admin-login-fail:user:{username}']
+
+
+def is_login_locked(username, ip):
+    return any((cache.get(k) or 0) >= settings.LOGIN_MAX_FAILURES for k in login_lock_keys(username, ip))
+
+
+def register_login_failure(username, ip):
+    for key in login_lock_keys(username, ip):
+        try:
+            cache.incr(key)
+        except ValueError:
+            cache.set(key, 1, settings.LOGIN_LOCKOUT_SECONDS)
+
+
+def clear_login_failures(username, ip):
+    cache.delete_many(login_lock_keys(username, ip))
 
 
 def admin_login(request, extra_context=None):
     from django.contrib import admin
 
-    max_failures = settings.LOGIN_MAX_FAILURES
     lockout = settings.LOGIN_LOCKOUT_SECONDS
-    if request.method == 'POST':
-        keys = _lock_keys(request)
-        if any((cache.get(k) or 0) >= max_failures for k in keys):
-            record('LOGIN_LOCKED', actor=(request.POST.get('username') or '')[:150], ip=client_ip(request),
-                   path=request.path, status=429)
-            return HttpResponse(f'로그인 실패가 {max_failures}회 넘어 {lockout // 60}분 동안 잠겼습니다.',
-                                status=429, content_type='text/plain; charset=utf-8')
+    username = request.POST.get('username') if request.method == 'POST' else None
+    if request.method == 'POST' and is_login_locked(username, client_ip(request)):
+        record('LOGIN_LOCKED', actor=(username or '')[:150], ip=client_ip(request), path=request.path, status=429)
+        return HttpResponse(f'로그인 실패가 {settings.LOGIN_MAX_FAILURES}회 넘어 {lockout // 60}분 동안 잠겼습니다.',
+                            status=429, content_type='text/plain; charset=utf-8')
     response = admin.site.login(request, extra_context)
-    if request.method == 'POST':
-        if request.user.is_authenticated and response.status_code in (301, 302, 303):
-            cache.delete_many(_lock_keys(request))
-        else:
-            for key in _lock_keys(request):
-                try:
-                    cache.incr(key)
-                except ValueError:
-                    cache.set(key, 1, lockout)
+    if request.method == 'POST' and not (request.user.is_authenticated and response.status_code in (301, 302, 303)):
+        register_login_failure(username, client_ip(request))
     return response
 
 

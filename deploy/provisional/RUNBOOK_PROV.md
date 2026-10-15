@@ -69,7 +69,8 @@ exit   # 다시 ssh 접속
 - `API_DOMAIN=<sub>.duckdns.org`
 - `ACME_EMAIL=` 인증서 만료 알림 받을 이메일
 - `FIREBASE_PROJECT_ID=` Firebase 프로젝트 ID
-- `ADMIN_ALLOWED_IPS=` 관리자 화면을 SSH 터널로만 쓸 거면 `private_ranges`, 사무실 IP도 열 거면 `private_ranges 203.0.113.10/32` 형식
+- `ADMIN_ALLOWED_IPS=` 장고 기본 관리자 화면(/admin/)을 SSH 터널로만 쓸 거면 `private_ranges`, 사무실 IP도 열 거면 `private_ranges 203.0.113.10/32` 형식
+- `OPS_ALLOWED_IPS=any` 운영 콘솔(/ops/)은 어느 IP에서나 열고 비밀번호 + 2단계 인증으로 막습니다(2026-10-15 결정, 6-2절). 비우면 `ADMIN_ALLOWED_IPS`와 같은 목록으로 제한합니다.
 
 `FIELD_ENCRYPTION_KEYS`는 지금 바로 서버 밖(비밀번호 관리자)에 복사해 둡니다. 잃어버리면 가입자의 전화번호·건강정보를 영영 풀 수 없습니다. `DEBUG`와 가짜 Firebase 인증은 꺼져 있고, `deploy.sh`가 켜져 있으면 멈춥니다.
 
@@ -91,12 +92,31 @@ healthz OK
 
 서버에서 **`update_pictograms`·`update_media`·`link_exercise_media`를 실행하지 않습니다.** 이 명령들은 1차 기준으로 픽토그램·음성 행을 다시 만들어, 다시 그린 그림과 새 구간을 덮어쓸 수 있습니다.
 
-**⑤ 관리자 계정(선택, 서버).**
+**⑤ 관리자 계정(서버).** 비밀번호는 명령 인자가 아니라 환경변수로만 넘깁니다(셸 기록·프로세스 목록에 남지 않게). 명령은 비밀번호를 출력하거나 기록하지 않고, 첫 로그인 때 바꾸게 표시합니다. 앞에 공백을 넣으면 bash가 그 줄을 기록에 남기지 않습니다(`HISTCONTROL=ignorespace`).
 
 ```bash
-docker compose -f docker-compose.prod.yml --env-file .env exec -e SEESUN_OPERATOR=<이름> django python manage.py createsuperuser
-# 내 PC에서 터널:  ssh -i <키.pem> -L 8443:127.0.0.1:443 ubuntu@<고정IP>
-# 내 PC hosts 파일에 127.0.0.1 <sub>.duckdns.org 추가 → https://<sub>.duckdns.org:8443/admin/
+C="docker compose -f docker-compose.prod.yml --env-file .env"
+ export OPS_ADMIN_PASSWORD="$(openssl rand -base64 18)"     # 맨 앞 공백: 셸 기록에 남기지 않음
+ echo "$OPS_ADMIN_PASSWORD"                                  # 이 임시 비밀번호를 관리자에게 따로 전달(첫 로그인 때 바뀜)
+$C exec -e OPS_ADMIN_PASSWORD -e SEESUN_OPERATOR=<이름> django python manage.py ops_bootstrap_admin ops-admin
+unset OPS_ADMIN_PASSWORD
+# 운영 콘솔: https://<sub>.duckdns.org/ops/ (어느 IP에서나, OPS_ALLOWED_IPS=any)
+# 장고 기본 관리자 화면(/admin/)만 허용 IP 또는 터널: ssh -i <키.pem> -L 8443:127.0.0.1:443 ubuntu@<고정IP>
+#   내 PC hosts 파일에 127.0.0.1 <sub>.duckdns.org 추가 → https://<sub>.duckdns.org:8443/admin/
+```
+
+첫 로그인 순서(관리자 화면 /admin/ 과 운영 콘솔 /ops/ 공통, 처리방침 11절 2단계 인증):
+
+1. `https://<sub>.duckdns.org/ops/` → 콘솔 로그인(/ops/login/)에 `ops-admin`과 임시 비밀번호(비밀번호·코드 실패를 합쳐 5회면 15분 잠금)
+2. **비밀번호 바꾸기**: 임시 비밀번호 → 새 비밀번호(8자 이상, 흔한 비밀번호·숫자만·계정 이름과 비슷한 것 거부)
+3. **2단계 인증 등록**: 휴대폰 Google OTP(Google Authenticator) 앱 → + → QR 코드 스캔 → 앱의 6자리 숫자 입력
+4. **복구 코드 10개**가 한 번만 보입니다. 종이나 암호 관리자에 적어 둡니다(휴대폰이 없을 때 6자리 대신 한 번씩).
+5. 그다음부터는 로그인할 때마다 비밀번호 → 6자리 코드. 코드도 5회 틀리면 15분 잠깁니다. 모두 접속기록에 남습니다.
+
+휴대폰을 잃었으면 서버 셸에서 2단계 인증을 지우고 다음 로그인 때 다시 등록합니다. 비밀번호를 잊었으면 ⑤의 명령을 다시 실행합니다(새 임시 비밀번호, 2단계 등록은 유지되어 코드 확인 → 비밀번호 변경 순서).
+
+```bash
+$C exec -e SEESUN_OPERATOR=<이름> django python manage.py ops_reset_otp ops-admin
 ```
 
 **⑥ 앱 빌드(작업 PC).** `google-services.json`을 `android/app/`에 둔 뒤 빌드합니다. 이 가운영 키로 서명하므로 Firebase에 넣은 지문과 맞습니다. 서버 주소·서명 파일 경로는 저장소에 두지 않고, 저장소 밖 `prov.env`(형식 `deploy/provisional/prov.env.example`)에 적어 `SEESUN_PROV_ENV`로 넘깁니다.
@@ -161,6 +181,13 @@ bash deploy/provisional/publish_apk.sh --show                                   
 
 서버 주소·ssh 키·도메인은 저장소에 없습니다. 위 명령 앞에 `SEESUN_PROV_ENV=<저장소 밖>/deploy_prov/prov.env`를 붙이거나 `SEESUN_PROV_HOST`, `SEESUN_PROV_SSH_KEY`, `API_DOMAIN`(필요하면 `SEESUN_PROV_SSH_USER`, `SEESUN_PROV_DIR`)을 환경변수로 줍니다. 빠지면 스크립트가 어떤 값이 없는지 말하고 멈춥니다.
 
+**바로 알림(FCM 푸시, 서버 이미지 ops3부터).** 게시가 끝나면 서버가 FCM 토픽 `seesun-app-updates`로 데이터 메시지를 보냅니다(`android.priority=high`, TTL 7일, `collapse_key=app_update`). 내용은 문자열만 `{"type":"app_update","versionCode":"4","versionName":"0.4.0","apkUrl":"https://<sub>.duckdns.org/media/app/seesun-prov-4.apk","sha256":"<64자>"}`입니다. 이 토픽을 구독한 앱(v6부터)은 6시간을 기다리지 않고 바로 「새 버전이 있어요」를 띄웁니다. 서비스 계정 키(`FIREBASE_CREDENTIALS_FILE`)가 있어야 하고, 보내기에 실패해도 게시는 그대로입니다. `publish_apk.sh`는 마지막 단계에서 `manage.py ops_push_app_update`를 부르고(건너뛰려면 `SEESUN_PROV_PUSH=0`), 운영 콘솔은 게시 직후 보내며 「앱 버전」 화면에 결과와 「업데이트 알림 다시 보내기」 버튼이 있습니다. 같은 버전을 다시 보내도 안전합니다(앱은 버전을 비교함).
+
+```bash
+$C exec -T django python manage.py ops_push_app_update --dry-run   # FCM 검사만(기기에 안 감)
+$C exec -T django python manage.py ops_push_app_update             # 지금 latest.json 버전 알림 다시 보내기
+```
+
 **되돌리기.** 매니페스트를 서버에 남아 있는 이전 버전으로 돌립니다. `--show`로 남은 버전을 먼저 확인합니다.
 
 ```bash
@@ -168,6 +195,24 @@ bash deploy/provisional/publish_apk.sh --rollback 3
 ```
 
 되돌리면 아직 새 버전을 받지 않은 기기에 더 이상 새 버전을 권하지 않습니다. 이미 새 버전을 설치한 기기는 낮은 버전으로 내려가지 않습니다(Android가 막음). 그런 기기를 고치려면 이전 코드를 더 높은 versionCode로 다시 빌드해 게시합니다. 처음 업데이트할 때는 「이 출처 허용」을 한 번 켜야 합니다. 앱이 설정 화면으로 안내하고, 돌아오면 설치를 이어 갑니다.
+
+**관리자 모드와 음성 감지 시험(v7부터, 가운영 자체 업데이트 빌드만).** 어느 화면에서든 오른쪽 위 톱니(설정)를 3초 안에 7번 누르면 켜집니다. 첫 누름은 평소처럼 설정을 열고, 이 빌드는 설정 목록에도 같은 자리에 톱니를 두어 이어지는 누름이 거기서 세어집니다(설정 목록의 톱니는 화면을 바꾸지 않음). 4번째부터 「관리자 모드까지 n번」, 7번째에 「관리자 모드를 켰어요」가 짧게 뜹니다. 켜진 상태는 기기에 남고, 설정 맨 아래 「관리자 모드」 묶음에서 [음성 감지 시험]을 열거나 스위치로 끕니다. 시험 화면에서 바꾼 말 시작 판정 값(여유 dB·말 시작 길이·WebRTC 판정·소음 재기 시간)은 바로 저장되고, 관리자 모드가 켜져 있는 동안 실제 말하면 듣기에도 쓰입니다(「음성 자동 인식」 화면에 「조정값 사용 중」). 「값 내보내기」는 값과 기록을 글로 복사하고, 마지막 줄 `code: OnsetTuning(...)`을 코드 기본값에 그대로 옮기면 됩니다. Play·일반 빌드에는 이 기능이 아예 없습니다(`:app:checkReleaseAdminMode`가 APK에서 확인, 빌드 스크립트가 함께 돌림).
+
+## 6-2. 운영 콘솔(시선 ops, /ops/)
+
+**결정(2026-10-15, 소유자 msg 993): 운영 콘솔은 IP 허용 목록 대신 인증으로 보호합니다.** `https://<sub>.duckdns.org/ops/` 는 어느 IP에서나 열리고(`OPS_ALLOWED_IPS=any`), 콘솔 전용 로그인 `/ops/login/` → 2단계 인증 코드(TOTP)를 거쳐야 화면이 보입니다(계정 만들기·첫 로그인은 4절 ⑤). 장고 기본 관리자 화면 `/admin/`(로그인 포함)은 지금처럼 `ADMIN_ALLOWED_IPS`(Caddy와 장고 두 번)에서만 열립니다. 법적 근거와 바뀐 점은 `docs/design/05_법적검토_요약.md` 6절 2026-10-15 항목.
+
+- 보호: 비밀번호·코드 실패를 합쳐 계정·IP별 5회면 15분 잠금(코드까지 맞아야 카운터가 지워짐), 계정 유무를 드러내지 않는 같은 오류 문구, 모든 로그인 성공·실패·잠금·로그아웃을 IP와 함께 접속기록에 남김
+- 세션: 유휴 30분·로그인 후 8시간이면 다시 로그인, 쿠키 Secure·HttpOnly·SameSite=Lax, 모든 폼 CSRF
+- 응답 헤더: `X-Frame-Options: DENY`, `Cache-Control: no-store`, `X-Robots-Tag: noindex, nofollow`
+- 다시 IP로 막으려면 `.env`의 `OPS_ALLOWED_IPS=` 를 비우고(= ADMIN_ALLOWED_IPS 목록) django를 다시 띄웁니다. Caddy에서도 막으려면 `@admin_blocked`의 path에 `/ops /ops/*`를 다시 넣습니다.
+ 직원(is_staff)은 조회만, 최고 관리자(is_superuser)만 이용 중지·탈퇴 처리·파일 교체·앱 게시를 할 수 있습니다. 모든 쓰기와 사용자 화면 조회는 접속기록에 남습니다.
+
+- 대시보드·사용자: 개수와 계정 정보만 보입니다. 전화번호는 해시 조각, 이름은 가운데를 가립니다. 건강·식단·운동 기록은 보이지 않습니다.
+- 탈퇴 처리는 앱의 회원 탈퇴와 같은 `User.withdraw()`를 씁니다(Firebase 삭제 실패는 대기열).
+- 운동 콘텐츠: 그림·음성을 바꾸면 `media/exercises/ops/` 에 새 이름으로 두고 이전 파일은 그대로 둡니다. 교체 이력의 「되돌리기」로 돌아갑니다. `link_exercise_media`를 다시 돌리면 미디어 행이 새로 만들어져 콘솔 교체분은 원본으로 돌아갑니다.
+- 앱 버전: `publish_apk.sh`와 같은 형식으로 `app/` 폴더에 게시합니다(versionCode가 지금보다 커야 함, APK 안의 패키지·버전·서명 확인, 최신 + 이전 3개 보관). 되돌리기는 지금처럼 `publish_apk.sh --rollback`.
+- 파일 올리기 경로(`/ops/upload/`)만 Caddy 본문 한도가 160MB입니다(나머지는 2MB 그대로). 느린 회선에서 큰 APK를 올리면 `.env`에 `GUNICORN_TIMEOUT=120`을 둡니다.
 
 ## 7. 의뢰인 계정으로 옮기기
 
@@ -180,7 +225,7 @@ bash deploy/provisional/publish_apk.sh --rollback 3
 - **Firebase 프로젝트 ID만 쓰는 모드.** 탈퇴할 때 Firebase 쪽 사용자 삭제는 되지 않고 재시도 대기열에 쌓입니다. 서비스 계정 JSON을 `secrets/`에 넣으면 해결되지만 가운영에서는 선택입니다.
 - **DuckDNS는 무료 공용 서비스입니다.** 장애가 나면 주소가 풀리지 않습니다. 정식 운영 전에는 자체 도메인으로 바꿉니다. 그때 앱도 새 주소로 다시 빌드해야 합니다.
 - **가운영 서명 키는 정식 출시 키가 아닙니다.** Play 등록 때는 별도 업로드 키와 Play 앱 서명을 쓰고, Firebase에 그 지문을 추가합니다.
-- **관리자 2단계 인증은 아직 없습니다.** 관리자 화면은 SSH 터널로만 엽니다.
+- **관리자 2단계 인증(TOTP)은 2026-10-15 ops v0.1부터 있습니다(4절 ⑤).** 운영 콘솔(/ops/)은 인터넷에 열려 있고 인증으로만 막습니다(6-2절). 장고 기본 관리자 화면(/admin/)은 허용 IP에서만 엽니다. 2단계 비밀값은 필드 암호화 키(FIELD_ENCRYPTION_KEYS)로 암호화되어 있어, 키를 잃으면 관리자도 다시 등록해야 합니다(ops_reset_otp).
 - **앱 자체 업데이트는 가운영 전용입니다.** `--self-update` 빌드에는 설치 권한(REQUEST_INSTALL_PACKAGES)이 들어가 Play 정책에 맞지 않습니다. Play 빌드는 이 옵션 없이 만들고, 권한 검사(`checkReleaseManifestPermissions`)가 이를 막습니다. 업데이트 APK의 진위는 HTTPS로 받은 매니페스트의 SHA-256과 같은 서명 키 여부(Android가 확인)로 지킵니다. 서버 계정이 털리면 같은 키로 서명된 APK가 아닌 한 설치되지 않지만, 서명 키는 서버에 두지 않습니다. 이관 내보내기(`export_for_handover.sh`)는 `app/` 폴더를 뺍니다.
 
 ## 9. 작업 PC 리허설 결과(2026-10-15)

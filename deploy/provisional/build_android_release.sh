@@ -65,7 +65,7 @@ case "$VCODE" in ''|*[!0-9]*) echo "versionCode는 양의 정수여야 합니다
 VNAME=${VNAME:-0.${VCODE}.0}
 echo "[build] versionCode=$VCODE versionName=$VNAME selfUpdate=$SELF_UPDATE firebase=$FIREBASE (카운터: $COUNTER)"
 cd "$ANDROID"
-./gradlew --no-daemon :app:assembleRelease :app:checkReleaseManifestPermissions \
+./gradlew --no-daemon :app:assembleRelease :app:checkReleaseManifestPermissions :app:checkReleaseAdminMode \
   "-Pseesun.apiBaseUrl=$URL" "-Pseesun.firebase.enabled=$FIREBASE" "-Pseesun.signing.file=$(winpath "$SIGNING")" \
   "-Pseesun.versionCode=$VCODE" "-Pseesun.versionName=$VNAME" "-Pseesun.selfUpdate=$SELF_UPDATE"
 mkdir -p "$OUT"

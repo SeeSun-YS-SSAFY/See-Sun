@@ -1,0 +1,19 @@
+{# 일별 막대(한 계열). series: [{day, n, pct}], unit: 단위 #}
+<div class="bars" role="img" aria-label="{{ label }} 14일 막대 그래프. 아래 표에 같은 값이 있습니다.">
+  {% for s in series %}
+  <div class="col" tabindex="0">
+    <span class="tip">{{ s.day|date:"n월 j일" }} · {{ s.n }}{{ unit }}</span>
+    {% if s.n == peak and s.n > 0 or forloop.last %}<span class="val">{{ s.n }}</span>{% endif %}
+    <div class="bar{% if s.n == 0 %} zero{% endif %}" style="height: {{ s.pct }}%"></div>
+  </div>
+  {% endfor %}
+</div>
+<div class="axis" aria-hidden="true">
+  {% for s in series %}<span>{% if forloop.first or forloop.last or forloop.counter == 8 %}{{ s.day|date:"n/j" }}{% endif %}</span>{% endfor %}
+</div>
+<details class="table-view">
+  <summary>표로 보기</summary>
+  <table><thead><tr><th>날짜</th><th class="num">{{ label }}</th></tr></thead><tbody>
+  {% for s in series %}<tr><td>{{ s.day|date:"Y-m-d" }}</td><td class="num">{{ s.n }}</td></tr>{% endfor %}
+  </tbody></table>
+</details>

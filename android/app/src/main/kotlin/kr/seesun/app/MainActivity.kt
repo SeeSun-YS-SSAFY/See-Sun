@@ -36,6 +36,7 @@ import kr.seesun.app.gallery.ComponentGalleryScreen
 import kr.seesun.app.gallery.HighlightListGalleryScreen
 import kr.seesun.core.data.repository.SessionRepository
 import kr.seesun.core.designsystem.component.LocalAppSettingsAction
+import kr.seesun.core.designsystem.component.LocalSettingsExtras
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.Haptics
 import kr.seesun.core.ui.AutoListenEnvironment
@@ -46,6 +47,8 @@ import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.recognition.SpeechOnsetDetector
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
+import kr.seesun.feature.admin.AdminHooks
+import kr.seesun.feature.admin.adminGraph
 import kr.seesun.feature.diet.DietRoute
 import kr.seesun.feature.diet.dietScreen
 import kr.seesun.feature.exercise.ExerciseRoute
@@ -85,6 +88,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var haptics: Haptics
 
+    /** v7 관리자 모드(가운영 빌드만 실제 동작, Play·일반 빌드는 아무것도 하지 않는 구현). */
+    @Inject lateinit var admin: AdminHooks
+
     /** 권한 안내 화면의 톱니바퀴: 안내를 닫은 뒤 설정을 연다(내비게이션 밖이라 요청 번호로 넘긴다). */
     private val settingsRequests = MutableStateFlow(0)
     private val settingsRequestFlow: StateFlow<Int> = settingsRequests.asStateFlow()
@@ -122,10 +128,16 @@ class MainActivity : ComponentActivity() {
                     PermissionPrimerGate(
                         speaker = speaker,
                         updateNotices = BuildConfig.SELF_UPDATE,
-                        onOpenSettings = { settingsRequests.update { it + 1 } }
+                        onOpenSettings = {
+                            admin.onGearTap()
+                            settingsRequests.update { it + 1 }
+                        }
                     ) {
-                        CompositionLocalProvider(LocalAutoListen provides autoListen) {
-                            SeeSunNavHost(session, appInfo(), settingsRequestFlow)
+                        CompositionLocalProvider(
+                            LocalAutoListen provides autoListen,
+                            LocalSettingsExtras provides admin.settingsExtras
+                        ) {
+                            SeeSunNavHost(session, appInfo(), settingsRequestFlow, admin)
                         }
                     }
                 }
@@ -167,7 +179,12 @@ data object HighlightGalleryRoute
  * 시작 화면: 로그인했고 가입 단계를 마쳤으면 메인, 아니면 온보딩.
  */
 @Composable
-fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo(), settingsRequests: StateFlow<Int>? = null) {
+fun SeeSunNavHost(
+    session: SessionRepository,
+    appInfo: AppInfo = AppInfo(),
+    settingsRequests: StateFlow<Int>? = null,
+    admin: AdminHooks? = null
+) {
     val nav = rememberNavController()
     val start: Any = remember { if (session.state.value.needsOnboarding) OnboardingRoute else MainRoute }
     SignedOutWatcher(session, nav)
@@ -184,8 +201,10 @@ fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo(), sett
     }
     // 모든 화면 오른쪽 위 [설정](톱니바퀴, [화면 요약 듣기]와 같은 크기로 나란히, 소유자 msg 959·977). 로그인 전에는 계정 항목을 숨긴다.
     // 설정 하위 화면의 톱니는 설정 목록을 하나 더 쌓지 않고 이미 있는 설정 목록으로 돌아간다(흐름 문서 P2-1).
-    val openSettings: () -> Unit = remember(nav) {
+    // v7: 톱니를 누를 때마다 관리자 모드 횟수도 센다(가운영 빌드만, 3초 안에 7번 — 첫 누름은 평소처럼 설정을 연다).
+    val openSettings: () -> Unit = remember(nav, admin) {
         {
+            admin?.onGearTap()
             nav.navigate(SettingsRoute) {
                 launchSingleTop = true
                 popUpTo<SettingsRoute> { inclusive = false }
@@ -193,18 +212,22 @@ fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo(), sett
         }
     }
     CompositionLocalProvider(LocalAppSettingsAction provides openSettings) {
-        SeeSunNavGraph(nav, start, appInfo)
+        SeeSunNavGraph(nav, start, appInfo, admin)
     }
 }
 
 @Composable
-private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo) {
+private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo, admin: AdminHooks?) {
     val back: () -> Unit = { nav.popBackStack() }
     NavHost(navController = nav, startDestination = start) {
         onboardingScreen(
             onFinished = { nav.navigate(MainRoute) { popUpTo(OnboardingRoute) { inclusive = true } } },
             // 시작 화면 오른쪽 위 톱니바퀴·말로 "설정": 로그인 전 설정(계정 항목은 숨김, 소유자 msg 959).
-            onOpenSettings = { nav.navigate(SettingsRoute) }
+            onOpenSettings = {
+                admin?.onGearTap()
+                // 톱니 연타(관리자 모드)에도 설정이 겹겹이 쌓이지 않게.
+                nav.navigate(SettingsRoute) { launchSingleTop = true }
+            }
         )
         mainScreen(
             onNavigate = { destination ->
@@ -233,6 +256,8 @@ private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo)
             ComponentGalleryScreen(onBack = back, onOpenHighlightList = { nav.navigate(HighlightGalleryRoute) })
         }
         composable<HighlightGalleryRoute> { HighlightListGalleryScreen(onBack = back) }
+        // v7 관리자 모드 화면(음성 감지 시험). Play·일반 빌드는 아무 경로도 더하지 않는다.
+        adminGraph(nav)
     }
 }
 

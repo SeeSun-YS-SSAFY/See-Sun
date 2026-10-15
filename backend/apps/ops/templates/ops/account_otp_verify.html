@@ -1,0 +1,15 @@
+{% extends 'ops/account_base.html' %}
+{% block title %}2단계 인증{% endblock %}
+{% block steps %}<li class="done">비밀번호</li><li aria-current="step">2단계 인증 코드</li>{% endblock %}
+{% block content %}
+<h1>2단계 인증 코드</h1>
+<p class="lead">Google OTP 앱의 <strong>{{ issuer }}</strong> 항목에 보이는 6자리 숫자를 넣어 주세요.</p>
+{% if error %}<div class="msg error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" class="controls">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <input class="code-input" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" required autofocus aria-label="6자리 코드 또는 복구 코드">
+  <button class="btn primary" type="submit">확인</button>
+</form>
+<p class="hint">휴대폰이 없으면 복구 코드(예: abcde-fgh23)를 같은 칸에 넣습니다. 남은 복구 코드 {{ left }}개.</p>
+{% endblock %}

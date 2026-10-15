@@ -10,6 +10,7 @@ from django.test import Client, override_settings
 from django.utils import timezone
 
 from apps.core.models import AccessLog, AccessLogImmutable
+from apps.core.testing import staff_login
 from apps.users.models import User
 
 LOGIN = '/admin/login/'
@@ -57,7 +58,7 @@ class TestAdminLoginLockout:
 class TestAccessLog:
     def test_관리자_화면_조회를_기록(self, staff):
         c = Client()
-        c.force_login(staff)
+        staff_login(c, staff)  # 2단계 인증까지 마친 세션
         r = c.get('/admin/core/accesslog/', {'q': '01012345678'}, HTTP_X_FORWARDED_FOR='203.0.113.9')
         assert r.status_code == 200
         log = AccessLog.objects.filter(action='VIEW', target_type='core.accesslog').latest('at')
@@ -67,7 +68,7 @@ class TestAccessLog:
 
     def test_관리자_첫_화면은_기록하지_않음(self, staff):
         c = Client()
-        c.force_login(staff)
+        staff_login(c, staff)  # 2단계 인증까지 마친 세션
         c.get('/admin/')
         assert not AccessLog.objects.filter(action='VIEW').exists()
 

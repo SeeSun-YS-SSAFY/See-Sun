@@ -35,6 +35,8 @@ import kr.seesun.core.designsystem.component.ConfirmContent
 import kr.seesun.core.designsystem.component.ConfirmScreenContent
 import kr.seesun.core.designsystem.component.ListButtonGrid
 import kr.seesun.core.designsystem.component.ListButtonItem
+import kr.seesun.core.designsystem.component.LocalAppSettingsAction
+import kr.seesun.core.designsystem.component.LocalSettingsExtras
 import kr.seesun.core.designsystem.component.ReadingBlock
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.component.SeeSunButton
@@ -182,8 +184,11 @@ fun SettingsScreen(
         AutoGuidance("logout-confirm", lines.joinToString(" ") + " " + stringResource(R.string.my_logout_question), talkBackEnabled, speak)
         return
     }
-    // 설정 목록 자체에는 톱니바퀴를 두지 않는다(같은 화면으로 가는 버튼).
-    ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack, onOpenSettings = null) {
+    // 설정 목록 자체에는 톱니바퀴를 두지 않는다(같은 화면으로 가는 버튼). 가운영 빌드(v7 관리자 모드)만 연달아 누르기를
+    // 셀 수 있게 같은 자리에 둔다(LocalSettingsExtras.gearOnSettingsList).
+    val extras = LocalSettingsExtras.current
+    val listGear = if (extras.gearOnSettingsList) LocalAppSettingsAction.current else null
+    ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack, onOpenSettings = listGear) {
         val hint = stringResource(if (signedIn) R.string.my_set_voice_hint else R.string.my_set_voice_hint_before_sign_in)
         if (voiceCommand != null) VoiceCommandButton(voiceCommand, hint, talkBackEnabled, speak)
         // 11개 메뉴를 두 칸 타일로(소유자 피드백 2026-10-13: 한 화면에). 설명은 낭독(버튼 설명)으로 남긴다.
@@ -197,6 +202,7 @@ fun SettingsScreen(
             onClick = { picked -> SettingsItem.valueOf(picked.key).let { it.route?.let(onOpen) ?: onAskLogout() } },
             titleStyle = SeeSunTheme.typography.listItem.copy(fontSize = 18.sp, lineHeight = 24.sp)
         )
+        extras.settingsFooter?.invoke(this, onOpen)
     }
     // 목록은 화면에 보이는 항목에서 만든다(항목이 바뀌어도 안내가 어긋나지 않게).
     val names = SettingsItem.visible(signedIn).map { stringResource(it.label) }.joinToString(", ")
