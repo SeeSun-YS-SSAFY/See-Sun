@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 자체 업데이트 APK를 설치 화면에 넘길 때만 쓰는 경로(앱 캐시의 updates/ 폴더 하나). -->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

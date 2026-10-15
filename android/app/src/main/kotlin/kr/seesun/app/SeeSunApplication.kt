@@ -13,6 +13,7 @@ import javax.inject.Singleton
 import kr.seesun.core.data.di.DataConfig
 import kr.seesun.core.data.sync.SyncScheduler
 import kr.seesun.core.network.NetworkConfig
+import kr.seesun.feature.update.UpdateConfig
 
 @HiltAndroidApp
 class SeeSunApplication :
@@ -47,5 +48,15 @@ object AppConfigModule {
         useFakeRepositories = BuildConfig.USE_FAKE_DATA,
         // 동의 기록 입증 정보(법적 검토 C-07). 빠지면 서버 동의 기록의 앱 버전이 비어 남는다(통합 E2E BUG-05).
         appVersion = BuildConfig.VERSION_NAME
+    )
+
+    /** 가운영 자체 업데이트(-Pseesun.selfUpdate). 꺼진 빌드에서는 매니페스트를 확인하지 않는다. */
+    @Provides
+    @Singleton
+    fun updateConfig(): UpdateConfig = UpdateConfig(
+        enabled = BuildConfig.SELF_UPDATE,
+        manifestUrl = BuildConfig.SELF_UPDATE_MANIFEST_URL,
+        installedVersionCode = BuildConfig.VERSION_CODE.toLong(),
+        installedVersionName = BuildConfig.VERSION_NAME
     )
 }

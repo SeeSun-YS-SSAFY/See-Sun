@@ -12,4 +12,13 @@ class AppConfigModuleTest {
         assertTrue(config.appVersion.isNotBlank())
         assertEquals(BuildConfig.VERSION_NAME, config.appVersion)
     }
+
+    @Test
+    fun `자체 업데이트 설정은 설치된 버전과 매니페스트 주소를 넘기고 기본 빌드에서는 꺼져 있다`() {
+        val config = AppConfigModule.updateConfig()
+        assertEquals(BuildConfig.SELF_UPDATE, config.enabled)
+        assertEquals(BuildConfig.VERSION_CODE.toLong(), config.installedVersionCode)
+        assertEquals(BuildConfig.VERSION_NAME, config.installedVersionName)
+        assertTrue(config.manifestUrl.endsWith("/media/app/latest.json"), config.manifestUrl)
+    }
 }
