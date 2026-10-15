@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  설정 「문의하기」 연락처(2차 의뢰서 p7). 코드에 넣지 않고 여기서만 바꾼다.
+  빌드할 때 Gradle 속성 -Pseesun.contact.phone=… -Pseesun.contact.email=… 을 주면 app 모듈이 이 값을 덮어쓴다.
+  TODO(client-data): 의뢰인이 전화번호·이메일을 정하지 않았다(질문 Q-13, 확인사항 C-91). 비어 있으면 화면은 「연락처 준비 중」.
+-->
+<resources>
+    <string name="seesun_contact_phone" translatable="false"></string>
+    <string name="seesun_contact_email" translatable="false"></string>
+</resources>

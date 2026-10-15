@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.lang.ref.WeakReference
 import java.time.Clock
 import java.time.LocalDate
+import java.time.Period
 import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
@@ -40,6 +41,7 @@ import kr.seesun.core.network.model.Goals
 import kr.seesun.core.network.model.HealthProfileRequest
 import kr.seesun.core.network.model.MePatchRequest
 import kr.seesun.core.ui.GuidanceVoice
+import kr.seesun.core.ui.HealthAnswer
 import kr.seesun.core.ui.HealthVoiceParser
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.core.ui.VoiceFieldController
@@ -121,6 +123,9 @@ class OnboardingViewModel @Inject constructor(
         updateForm { copy(weightKg = v.toInt()) }
         goTo(Step.PROFILE_CONFIRM)
     }
+
+    /** 질환·알레르기 한 번에 말하기(Figma 1031:3673): 해석 결과를 「질환 당뇨 · 알레르기 땅콩」으로 되읽고 확인받는다. */
+    val healthVoiceField = field({ t -> HealthVoiceParser.summaryOf(t, allergenNames()) }, ::applyHealthAnswer)
     val otherAllergyField = field({ t -> t.trim().takeIf { it.length in 1..OTHER_MAX } }) { v ->
         updateForm { copy(otherAllergy = v) }
         goTo(Step.GOAL)
@@ -177,7 +182,7 @@ class OnboardingViewModel @Inject constructor(
         syncFields()
         when (form.step) {
             Step.CONSENT -> loadDocuments()
-            Step.ALLERGENS -> loadAllergens()
+            Step.ALLERGENS, Step.HEALTH_VOICE -> loadAllergens()
             Step.DONE -> loadDone()
             else -> Unit
         }
@@ -621,7 +626,7 @@ class OnboardingViewModel @Inject constructor(
                     setBusy(false)
                     updateForm { copy(profileSaved = true) }
                     if (form.sensitiveAgreed) {
-                        goTo(Step.DISEASES)
+                        goTo(Step.HEALTH_VOICE)
                         loadAllergens()
                     } else {
                         goTo(Step.GOAL)
@@ -632,6 +637,23 @@ class OnboardingViewModel @Inject constructor(
     }
 
     // ── 건강 ───────────────────────────────────────────
+
+    private fun allergenNames(): Map<String, String> =
+        (state.value.allergens as? Loadable.Loaded)?.value.orEmpty().associate { it.code to it.nameKo }
+
+    /** 확인한 한 번에 말하기 결과를 질환·알레르기 칸에 넣고 목표로 간다(기타 알레르기는 그대로). */
+    private fun applyHealthAnswer(summary: String) {
+        val answer = HealthVoiceParser.parseSummary(summary, allergenNames()) ?: return
+        updateForm { copy(diseases = answer.diseases, allergens = answer.allergens, healthByVoice = true) }
+        goTo(Step.GOAL)
+    }
+
+    /** [버튼으로 설정]: 질환 → 알레르기 → 기타 알레르기 버튼 화면으로. */
+    fun healthByButtons() {
+        updateForm { copy(healthByVoice = false) }
+        goTo(Step.DISEASES)
+        loadAllergens()
+    }
 
     fun toggleDisease(code: String) = updateForm {
         val now = diseases.orEmpty()
@@ -677,6 +699,12 @@ class OnboardingViewModel @Inject constructor(
     }
 
     fun selectGoal(code: String) = updateForm { copy(goal = code) }
+
+    /** 입력한 생년월일로 만 19세 미만인가(목표 화면 안내: 연령별 섭취기준이라 목표에 따른 열량 조정이 없음). */
+    fun isMinor(): Boolean {
+        val birth = form.birthdate?.let { runCatching { LocalDate.parse(it) }.getOrNull() } ?: return false
+        return Period.between(birth, today).years < ADULT_AGE
+    }
 
     fun goalNext() {
         if (form.goal != null) goTo(Step.HEALTH_CONFIRM)
@@ -725,7 +753,13 @@ class OnboardingViewModel @Inject constructor(
             val target = data?.targetKcal
             val floored = data?.goal == Goals.LOSE_WEIGHT && raw != null && target != null && raw < target
             _state.update {
-                it.copy(targetKcal = data?.targetKcal, targetFloored = floored, doneName = data?.name ?: form.name, doneLoaded = true)
+                it.copy(
+                    targetKcal = data?.targetKcal,
+                    targetFloored = floored,
+                    targetMinorStandard = detail?.minor == true && detail.formula.orEmpty().startsWith(MINOR_FORMULA_PREFIX),
+                    doneName = data?.name ?: form.name,
+                    doneLoaded = true
+                )
             }
         }
     }
@@ -746,7 +780,7 @@ class OnboardingViewModel @Inject constructor(
             Step.CONSENT -> if (state.value.documents is Loadable.Failed) loadDocuments() else consentsDone()
             Step.CODE, Step.PHONE -> if (idToken != null) finishAuth() else requestCode()
             Step.PROFILE_CONFIRM -> saveProfile()
-            Step.ALLERGENS -> loadAllergens()
+            Step.ALLERGENS, Step.HEALTH_VOICE -> loadAllergens()
             Step.HEALTH_CONFIRM -> saveHealth()
             Step.DONE -> loadDone()
             else -> Unit
@@ -784,9 +818,17 @@ class OnboardingViewModel @Inject constructor(
     /** 이전 단계. null이면 잠김(로그인 이후 연령·동의·인증 단계, 완료 화면). */
     private fun previousStep(f: OnboardingForm): Step? = when (f.step) {
         Step.AGE -> Step.INTRO
+
         Step.CONSENT -> if (f.signedIn) null else Step.AGE
+
         Step.PHONE -> if (f.loginMode) Step.INTRO else Step.CONSENT
-        Step.GOAL -> if (f.sensitiveAgreed) Step.OTHER_ALLERGY else Step.PROFILE_CONFIRM
+
+        Step.GOAL -> when {
+            !f.sensitiveAgreed -> Step.PROFILE_CONFIRM
+            f.healthByVoice -> Step.HEALTH_VOICE
+            else -> Step.OTHER_ALLERGY
+        }
+
         else -> LINEAR_BACK[f.step]
     }
 
@@ -809,12 +851,23 @@ class OnboardingViewModel @Inject constructor(
         val f = form
         when (f.step) {
             Step.AGE -> ageField.setValue(f.birthdate)
+
             Step.PHONE -> phoneField.setValue(f.phone)
+
             Step.NAME -> nameField.setValue(f.name)
+
             Step.BIRTHDATE -> birthField.setValue(f.birthdate)
+
             Step.HEIGHT -> heightField.setValue(f.heightCm?.toString())
+
             Step.WEIGHT -> weightField.setValue(f.weightKg?.toString())
+
             Step.OTHER_ALLERGY -> otherAllergyField.setValue(f.otherAllergy)
+
+            Step.HEALTH_VOICE -> healthVoiceField.setValue(
+                f.diseases?.let { HealthVoiceParser.summary(HealthAnswer(it, f.allergens), allergenNames()) }
+            )
+
             else -> Unit
         }
     }
@@ -861,12 +914,15 @@ class OnboardingViewModel @Inject constructor(
             Step.HEIGHT to Step.GENDER,
             Step.WEIGHT to Step.HEIGHT,
             Step.PROFILE_CONFIRM to Step.WEIGHT,
-            Step.DISEASES to Step.PROFILE_CONFIRM,
+            Step.HEALTH_VOICE to Step.PROFILE_CONFIRM,
+            Step.DISEASES to Step.HEALTH_VOICE,
             Step.ALLERGENS to Step.DISEASES,
             Step.OTHER_ALLERGY to Step.ALLERGENS,
             Step.HEALTH_CONFIRM to Step.GOAL
         )
         const val MIN_AGE = 14
+        private const val ADULT_AGE = 19
+        private const val MINOR_FORMULA_PREFIX = "kdri"
         private const val MIN_BIRTH_YEAR = 1900
         private const val CODE_LENGTH = 6
         private const val OTHER_MAX = 50

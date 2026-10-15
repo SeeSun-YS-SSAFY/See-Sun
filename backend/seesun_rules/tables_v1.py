@@ -27,9 +27,18 @@ TARGET_KCAL = {
     'sex_constant': {'M': 5.0, 'F': -161.0},
     'activity_factor': 1.3,
     'goal_adjustment': {'LOSE_WEIGHT': -500, 'GAIN_MUSCLE': 300, 'MAINTAIN': 0},
-    # TODO(client-data): 미성년(만 14~18세) 연령별 섭취기준·감량 목표 제한(「식단스코어 설계」 미수령).
-    # 현재는 성인과 같은 산식을 쓰고 결과에 minor=True 표시만 한다.
+    # 미성년(만 19세 미만, 가입은 만 14세부터): 2차 의뢰서 p14 「미성년 사용자는 연령별 섭취기준을 적용」.
+    # 기준: 2020 한국인 영양소 섭취기준(보건복지부·한국영양학회) 에너지필요추정량(kcal/일), 연령 구간·성별.
+    # 성인 산식(Mifflin-St Jeor × 1.3) 대신 이 표의 값을 목표 칼로리로 쓴다.
+    # TODO(client-data): 의뢰인 확인(확인사항 C-81·질문 Q-08) — 2025 개정판 채택 여부와 감량·증진 보정.
     'minor_age_below': 19,
+    'minor_formula': 'kdri2020_eer_v1',
+    'minor_eer': {
+        'M': [(12, 14, 2500), (15, 18, 2700)],
+        'F': [(12, 14, 2000), (15, 18, 2000)],
+    },
+    # 성장기에는 감량(−500)·증진(+300) 보정을 하지 않는다(안전 기본값, 전문가 상담 권고). TODO(client-data): 의뢰인 확인
+    'minor_goal_adjustment': {'LOSE_WEIGHT': 0, 'GAIN_MUSCLE': 0, 'MAINTAIN': 0},
     # TODO(client-data): 목표 칼로리 하한(과도한 감량 방지) 기준 미정 → 현재 하한 없음
     'min_target_kcal': None,
     # 감량 목표의 하한(법적 검토 T-07: 1,200kcal 아래는 권하지 않음). TODO(client-data): 의뢰인·전문가 확인

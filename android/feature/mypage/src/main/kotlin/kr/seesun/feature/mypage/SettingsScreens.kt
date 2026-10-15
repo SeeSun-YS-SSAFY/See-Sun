@@ -227,8 +227,13 @@ enum class SettingsItem(val label: Int, val description: Int?, val route: Any?, 
     VOICE_AUTO(R.string.my_set_voice_auto, R.string.my_set_voice_auto_desc, VoiceAutoRoute, beforeSignIn = true),
     APP_VOICE(R.string.my_set_app_voice, R.string.my_set_app_voice_desc, AppVoiceRoute, beforeSignIn = true),
     PRESS_FEEDBACK(R.string.my_set_press, R.string.my_set_press_desc, PressFeedbackRoute, beforeSignIn = true),
+    HW_BUTTON(R.string.my_set_hw_button, R.string.my_set_hw_button_desc, HardwareButtonRoute, beforeSignIn = true),
+
+    // 건강 정보 → 마이페이지 [건강 정보 수정](2차 의뢰서 p7)
+    HEALTH(R.string.my_set_health, R.string.my_set_health_desc, HealthEditRoute),
 
     // 도움
+    CONTACT(R.string.my_set_contact, R.string.my_set_contact_desc, ContactRoute, beforeSignIn = true),
     ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute, beforeSignIn = true),
 
     // 기기

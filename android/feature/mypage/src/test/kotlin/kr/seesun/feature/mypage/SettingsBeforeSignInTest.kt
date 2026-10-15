@@ -16,7 +16,8 @@ class SettingsBeforeSignInTest {
             listOf(
                 SettingsItem.HOW_TO,
                 SettingsItem.VOICE_SPEED, SettingsItem.VOICE_AUTO, SettingsItem.APP_VOICE, SettingsItem.PRESS_FEEDBACK,
-                SettingsItem.ACCESSIBILITY,
+                SettingsItem.HW_BUTTON,
+                SettingsItem.CONTACT, SettingsItem.ACCESSIBILITY,
                 SettingsItem.PERMISSIONS, SettingsItem.APP_VERSION,
                 SettingsItem.TERMS, SettingsItem.PRIVACY
             ),

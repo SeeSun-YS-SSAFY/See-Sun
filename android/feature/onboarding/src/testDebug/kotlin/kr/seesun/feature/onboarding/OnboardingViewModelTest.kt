@@ -113,6 +113,8 @@ class OnboardingViewModelTest {
         assertTrue(backend.agreed("OVERSEAS")) // 고지 확인 기록
 
         fillProfile(vm)
+        assertEquals(Step.HEALTH_VOICE, vm.step) // 질환·알레르기 한 번에 말하기(Figma 1031:3673)가 먼저
+        vm.healthByButtons()
         assertEquals(Step.DISEASES, vm.step)
         vm.toggleDisease("DIABETES")
         vm.diseasesNext()
@@ -270,7 +272,85 @@ class OnboardingViewModelTest {
         assertEquals(Step.PROFILE_CONFIRM, vm.step)
         advanceUntilIdle()
         assertEquals(1, backend.calls.count { it == "update" })
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+    }
+
+    @Test
+    fun `질환·알레르기를 한 번에 말하면 둘로 나눠 되읽고 확인해야 목표로 간다`() = runTest(dispatcher) {
+        val vm = vm()
+        signUpThroughPhone(vm)
+        fillProfile(vm)
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+        advanceUntilIdle() // 알레르기 목록(이름으로 알아듣기)
+
+        speech.enqueue("당뇨가 있고 땅콩이랑 우유 알레르기가 있어요")
+        vm.healthVoiceField.onMicClick()
+        assertEquals("질환 당뇨 · 알레르기 우유, 땅콩", vm.healthVoiceField.state.value.pending)
+        assertEquals(Step.HEALTH_VOICE, vm.step) // 확인 전에는 저장·이동하지 않는다
+
+        vm.healthVoiceField.confirm()
+        assertEquals(Step.GOAL, vm.step)
+        assertEquals(setOf("DIABETES"), vm.state.value.form.diseases)
+        assertEquals(setOf("PEANUT", "MILK"), vm.state.value.form.allergens)
+
+        // 목표에서 뒤로 가면 한 번에 말하기 화면으로, 값은 결과 칸에 남아 있다.
+        vm.back()
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+        assertEquals("질환 당뇨 · 알레르기 우유, 땅콩", vm.healthVoiceField.state.value.text)
+
+        // [수정]이면 값을 비우고 다시 듣는다. "둘 다 없어요"는 없음으로.
+        speech.enqueue("둘 다 없어요")
+        vm.healthVoiceField.onMicClick()
+        vm.healthVoiceField.reject()
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+        speech.enqueue("둘 다 없어요")
+        vm.healthVoiceField.onMicClick()
+        assertEquals("질환 없음 · 알레르기 없음", vm.healthVoiceField.state.value.pending)
+        speech.enqueue("네")
+        vm.healthVoiceField.onMicClick()
+        assertEquals(Step.GOAL, vm.step)
+        assertEquals(emptySet<String>(), vm.state.value.form.diseases)
+        assertEquals(emptySet<String>(), vm.state.value.form.allergens)
+
+        vm.selectGoal("MAINTAIN")
+        vm.goalNext()
+        vm.saveHealth()
+        advanceUntilIdle()
+        assertEquals(Step.DONE, vm.step)
+    }
+
+    @Test
+    fun `만 19세 미만이면 목표 화면에 연령별 섭취기준 안내를 보인다`() = runTest(dispatcher) {
+        val vm = vm()
+        vm.startSignUp()
+        vm.ageField.onEditRequest()
+        vm.ageField.onTextChange("20100301") // 2026-10-12 기준 만 16세
+        assertTrue(vm.ageField.commitTyped())
+        assertTrue(vm.isMinor())
+        val adult = vm()
+        adult.startSignUp()
+        adult.ageField.onEditRequest()
+        adult.ageField.onTextChange("20071012") // 그날 만 19세
+        assertTrue(adult.ageField.commitTyped())
+        assertFalse(adult.isMinor())
+    }
+
+    @Test
+    fun `한 번에 말하기에서 알아들을 수 없으면 넘어가지 않고 버튼으로 설정을 쓸 수 있다`() = runTest(dispatcher) {
+        val vm = vm()
+        signUpThroughPhone(vm)
+        fillProfile(vm)
+        advanceUntilIdle()
+        speech.enqueue("음 잘 모르겠어요")
+        vm.healthVoiceField.onMicClick()
+        assertEquals(FieldError.NotUnderstood("음 잘 모르겠어요"), vm.healthVoiceField.state.value.error)
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+        vm.healthByButtons()
         assertEquals(Step.DISEASES, vm.step)
+        vm.back()
+        assertEquals(Step.HEALTH_VOICE, vm.step)
+        vm.back()
+        assertEquals(Step.PROFILE_CONFIRM, vm.step)
     }
 
     @Test

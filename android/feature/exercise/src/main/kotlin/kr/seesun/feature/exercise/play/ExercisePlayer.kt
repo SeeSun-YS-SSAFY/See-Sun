@@ -553,6 +553,7 @@ fun ColumnScope.GuideBlock(
         hintEmphasis = hint?.second ?: false,
         scriptToggle = if (scriptOnly) null else (if (showScript) "그림 보기" else "대본 보기") to { showScript = !showScript }
     )
+    GuideProgressBar(guide)
     BottomActions(pushDown = false) {
         GuideControls(guide, actions.onPlayPause, actions.onReplay, actions.onPrevious, actions.onNext, actions.onSpeed)
         lastRow()

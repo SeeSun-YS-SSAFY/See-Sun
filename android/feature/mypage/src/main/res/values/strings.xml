@@ -225,7 +225,7 @@
     <string name="my_source_allergen_title">알레르기 항목</string>
     <string name="my_source_allergen">「식품 등의 표시·광고에 관한 법률」의 알레르기 유발물질 표시 대상 19종을 정해진 순서로 보여 드려요. 음식에 들어 있을 가능성을 알려 드리는 참고 정보예요.</string>
     <string name="my_source_kcal_title">하루 목표 열량</string>
-    <string name="my_source_kcal">목표 칼로리는 일반 공식으로 계산한 추정값이에요. Mifflin-St Jeor 기초대사량 식에 활동 계수 1.3을 곱하고 목표에 따라 조정해요(감량 500킬로칼로리 줄임, 근육 증진 300킬로칼로리 늘림). 감량 목표는 1,200킬로칼로리 아래로는 권하지 않아요.</string>
+    <string name="my_source_kcal">목표 칼로리는 일반 공식으로 계산한 추정값이에요. Mifflin-St Jeor 기초대사량 식에 활동 계수 1.3을 곱하고 목표에 따라 조정해요(감량 500킬로칼로리 줄임, 근육 증진 300킬로칼로리 늘림). 감량 목표는 1,200킬로칼로리 아래로는 권하지 않아요. 만 19세 미만은 2020 한국인 영양소 섭취기준(보건복지부)의 연령별 에너지필요추정량을 그대로 써요(만 12~14세 남 2,500·여 2,000, 만 15~18세 남 2,700·여 2,000킬로칼로리, 감량·증진 조정 없음).</string>
     <string name="my_source_exercise_title">운동 안내</string>
     <string name="my_source_exercise">운동 동작 그림과 음성 안내는 시선 1차 서비스에서 만든 콘텐츠예요.</string>
     <string name="my_source_voice_title">음성 인식</string>
@@ -257,6 +257,8 @@
     <string name="my_consent_ack_button">확인했어요</string>
     <string name="my_consent_acked_result">%1$s를 확인했어요.</string>
     <string name="my_kcal_estimate">목표 칼로리는 일반 공식으로 계산한 추정값이에요.</string>
+    <string name="my_kcal_minor">만 19세 미만이라 목표 칼로리는 연령별 섭취기준(2020 한국인 영양소 섭취기준 에너지필요추정량)을 써요.</string>
+    <string name="my_short_kcal_minor">청소년 연령별 섭취기준</string>
 
     <!-- A-04 내 개인정보 권리 -->
     <string name="my_rights_intro">개인정보에 대한 권리는 앱 안에서 버튼이나 음성으로, 또는 전화·문자·이메일로 언제든 행사할 수 있어요. 가입할 때보다 어렵지 않게 만들었어요.</string>
@@ -355,4 +357,27 @@
     <string name="my_version_available">새 버전이 있어요. 업데이트 안내 창을 확인해 주세요.</string>
     <string name="my_version_failed">확인하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.</string>
     <string name="my_version_store">업데이트는 Play 스토어에서 받아요.</string>
+    <!-- 설정 「물리 버튼」·「건강 정보」·「문의하기」(2차 의뢰서 p7, v1.8) -->
+    <string name="my_set_hw_button">물리 버튼</string>
+    <string name="my_set_hw_button_desc">버튼으로 듣기 켜기·끄기</string>
+    <string name="my_set_health">건강 정보</string>
+    <string name="my_set_health_desc">질환·알레르기·목표 수정</string>
+    <string name="my_set_contact">문의하기</string>
+    <string name="my_set_contact_desc">전화 걸기·이메일 보내기</string>
+    <string name="my_hw_body">물리 버튼을 누르면 음성 인식을 시작해요.</string>
+    <string name="my_hw_on">켜기</string>
+    <string name="my_hw_on_desc">이어폰·블루투스 버튼, TalkBack 두 손가락 두 번 탭으로 듣기 시작</string>
+    <string name="my_hw_off">끄기</string>
+    <string name="my_hw_off_desc">마이크 버튼으로만 듣기 시작</string>
+    <string name="my_hw_note">음성으로 입력하는 화면에서만 동작해요. 운동 재생 화면의 이어폰 버튼은 재생·일시정지예요.</string>
+    <string name="my_hw_changed">물리 버튼을 %1$s로 바꿨어요.</string>
+    <string name="my_contact_body">궁금한 점이나 불편한 점을 알려 주세요. 휴대폰의 전화 앱이나 메일 앱이 열려요.</string>
+    <string name="my_contact_phone_line">전화번호 %1$s</string>
+    <string name="my_contact_email_line">이메일 %1$s</string>
+    <string name="my_contact_call">전화 걸기</string>
+    <string name="my_contact_email">이메일 보내기</string>
+    <string name="my_contact_guide">전화 걸기, 이메일 보내기 중에서 골라 주세요. 전화는 번호만 채워 두고 바로 걸지 않아요.</string>
+    <string name="my_contact_pending">문의 연락처를 준비하고 있어요. 정해지면 이 화면에서 전화와 이메일로 문의할 수 있어요.</string>
+    <string name="my_contact_no_app">이 휴대폰에서 열 수 있는 앱이 없어요.</string>
+    <string name="my_contact_mail_subject">[시선] 앱 문의</string>
 </resources>

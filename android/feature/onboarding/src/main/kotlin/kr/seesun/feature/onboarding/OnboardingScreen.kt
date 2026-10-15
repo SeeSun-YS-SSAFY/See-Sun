@@ -112,6 +112,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit, onO
             Step.HEIGHT -> HeightStep(ctx)
             Step.WEIGHT -> WeightStep(ctx)
             Step.PROFILE_CONFIRM -> ProfileConfirmStep(ctx)
+            Step.HEALTH_VOICE -> HealthVoiceStep(ctx)
             Step.DISEASES -> DiseasesStep(ctx)
             Step.ALLERGENS -> AllergensStep(ctx)
             Step.OTHER_ALLERGY -> OtherAllergyStep(ctx)
@@ -224,6 +225,7 @@ private fun stepTitle(state: OnboardingUiState): String = when (state.step) {
     Step.HEIGHT -> stringResource(R.string.onb_height_title)
     Step.WEIGHT -> stringResource(R.string.onb_weight_title)
     Step.PROFILE_CONFIRM -> stringResource(R.string.onb_profile_confirm_title)
+    Step.HEALTH_VOICE -> stringResource(R.string.onb_health_voice_title)
     Step.DISEASES -> stringResource(R.string.onb_diseases_title)
     Step.ALLERGENS -> stringResource(R.string.onb_allergens_title)
     Step.OTHER_ALLERGY -> stringResource(R.string.onb_other_title)
@@ -276,6 +278,8 @@ private fun stepGuide(state: OnboardingUiState): String = when (state.step) {
         profileLines(state.form).joinToString(". ") + "."
     )
 
+    Step.HEALTH_VOICE -> stringResource(R.string.onb_health_voice_guide)
+
     Step.DISEASES -> stringResource(R.string.onb_diseases_guide)
 
     Step.ALLERGENS -> stringResource(R.string.onb_allergens_guide)
@@ -309,5 +313,6 @@ internal val PROMPT_STEPS = setOf(
     Step.GENDER,
     Step.HEIGHT,
     Step.WEIGHT,
+    Step.HEALTH_VOICE,
     Step.OTHER_ALLERGY
 )

@@ -56,6 +56,14 @@ interface VoicePreferences {
     val pressFeedback: StateFlow<PressFeedbackMode>
 
     fun setPressFeedback(mode: PressFeedbackMode)
+
+    /**
+     * 「물리 버튼」(2차 의뢰서 p2·p7 「음성 인식 시작 켜기/끄기」): 이어폰·블루투스 미디어 버튼과 TalkBack 두 손가락 두 번 탭으로
+     * 듣기를 시작한다. 기본 켜짐(v6부터의 동작 그대로). 끄면 음성 화면에서도 미디어 세션을 켜지 않는다.
+     */
+    val hardwareButton: StateFlow<Boolean>
+
+    fun setHardwareButton(enabled: Boolean)
 }
 
 @Singleton
@@ -81,6 +89,8 @@ class SharedVoicePreferences @Inject constructor(@ApplicationContext context: Co
     override val appVoice: StateFlow<AppVoiceMode> = _appVoice.asStateFlow()
     private val _pressFeedback = MutableStateFlow(enumOr(prefs.getString(KEY_PRESS, null), PressFeedbackMode.SPEAK_RESULT))
     override val pressFeedback: StateFlow<PressFeedbackMode> = _pressFeedback.asStateFlow()
+    private val _hardwareButton = MutableStateFlow(prefs.getBoolean(KEY_HW_BUTTON, DEFAULT_HW_BUTTON))
+    override val hardwareButton: StateFlow<Boolean> = _hardwareButton.asStateFlow()
 
     override fun setAutoListen(enabled: Boolean) = setListenMode(if (enabled) DEFAULT_LISTEN_MODE else AutoListenMode.OFF)
 
@@ -116,8 +126,14 @@ class SharedVoicePreferences @Inject constructor(@ApplicationContext context: Co
         _pressFeedback.value = mode
     }
 
+    override fun setHardwareButton(enabled: Boolean) {
+        prefs.edit { putBoolean(KEY_HW_BUTTON, enabled) }
+        _hardwareButton.value = enabled
+    }
+
     companion object {
         const val DEFAULT_AUTO_LISTEN = true
+        const val DEFAULT_HW_BUTTON = true
         val DEFAULT_LISTEN_MODE = AutoListenMode.AFTER_QUESTION_AND_VOICE
         const val DEFAULT_IDLE_MS = 60_000L
         val IDLE_CHOICES_MS = listOf(30_000L, 60_000L, 120_000L)
@@ -129,6 +145,7 @@ class SharedVoicePreferences @Inject constructor(@ApplicationContext context: Co
         private const val KEY_SPEED = "speed"
         private const val KEY_APP_VOICE = "app_voice"
         private const val KEY_PRESS = "press_feedback"
+        private const val KEY_HW_BUTTON = "hw_button_voice"
 
         private inline fun <reified E : Enum<E>> enumOr(name: String?, fallback: E): E =
             enumValues<E>().firstOrNull { it.name == name } ?: fallback
@@ -151,6 +168,8 @@ class InMemoryVoicePreferences(initial: Boolean = SharedVoicePreferences.DEFAULT
     override val appVoice: StateFlow<AppVoiceMode> = _appVoice.asStateFlow()
     private val _pressFeedback = MutableStateFlow(PressFeedbackMode.SPEAK_RESULT)
     override val pressFeedback: StateFlow<PressFeedbackMode> = _pressFeedback.asStateFlow()
+    private val _hardwareButton = MutableStateFlow(SharedVoicePreferences.DEFAULT_HW_BUTTON)
+    override val hardwareButton: StateFlow<Boolean> = _hardwareButton.asStateFlow()
 
     override fun setAutoListen(enabled: Boolean) =
         setListenMode(if (enabled) SharedVoicePreferences.DEFAULT_LISTEN_MODE else AutoListenMode.OFF)
@@ -178,5 +197,9 @@ class InMemoryVoicePreferences(initial: Boolean = SharedVoicePreferences.DEFAULT
 
     override fun setPressFeedback(mode: PressFeedbackMode) {
         _pressFeedback.value = mode
+    }
+
+    override fun setHardwareButton(enabled: Boolean) {
+        _hardwareButton.value = enabled
     }
 }

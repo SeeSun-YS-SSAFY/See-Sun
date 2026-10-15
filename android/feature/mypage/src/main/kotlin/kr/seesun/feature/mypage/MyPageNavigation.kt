@@ -82,6 +82,14 @@ data object PermissionSettingsRoute
 @Serializable
 data object AppVersionRoute
 
+/** 설정 「물리 버튼」: 음성 인식 시작 켜기/끄기(2차 의뢰서 p7, 로그인 전에도) */
+@Serializable
+data object HardwareButtonRoute
+
+/** 설정 「문의하기」: 전화 걸기·이메일 보내기(2차 의뢰서 p7, 로그인 전에도) */
+@Serializable
+data object ContactRoute
+
 /** SET-09 회원 탈퇴(2단계 확인) */
 @Serializable
 data object DeleteAccountRoute
@@ -132,4 +140,6 @@ fun NavGraphBuilder.myPageGraph(
     composable<HowToRoute> { HowToRoute(onBack = back) }
     composable<PermissionSettingsRoute> { PermissionSettingsRoute(onBack = back) }
     composable<AppVersionRoute> { AppVersionRoute(onBack = back, info = appInfo) }
+    composable<HardwareButtonRoute> { HardwareButtonRoute(onBack = back) }
+    composable<ContactRoute> { ContactRoute(onBack = back) }
 }

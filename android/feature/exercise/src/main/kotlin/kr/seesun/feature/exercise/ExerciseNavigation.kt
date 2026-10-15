@@ -99,10 +99,18 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
                 onOpen = { dest ->
                     entry.whenResumed {
                         when (dest) {
-                            HomeDestination.SINGLE -> nav.navigate(SingleMenuRoute)
-                            HomeDestination.ROUTINE -> nav.navigate(RoutineMenuRoute)
-                            HomeDestination.WEEKLY -> nav.navigate(ExerciseWeeklyRoute)
-                            HomeDestination.SAFETY -> nav.navigate(ExerciseSafetyRoute)
+                            is HomeDestination.Category -> nav.navigate(ExerciseListRoute(dest.id, dest.name))
+
+                            is HomeDestination.RecommendedRoutine ->
+                                nav.navigate(RoutinePlayRoute(title = dest.title, categoryId = dest.categoryId))
+
+                            HomeDestination.Single -> nav.navigate(SingleMenuRoute)
+
+                            HomeDestination.Routine -> nav.navigate(RoutineMenuRoute)
+
+                            HomeDestination.Weekly -> nav.navigate(ExerciseWeeklyRoute)
+
+                            HomeDestination.Safety -> nav.navigate(ExerciseSafetyRoute)
                         }
                     }
                 }

@@ -46,8 +46,10 @@ import kr.seesun.core.designsystem.component.ActionLabel
 import kr.seesun.core.designsystem.component.AdaptiveActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.PagedColumn
+import kr.seesun.core.designsystem.component.PlaybackProgressBar
 import kr.seesun.core.designsystem.component.SeeSunButton
 import kr.seesun.core.designsystem.component.pressable
+import kr.seesun.core.designsystem.component.progressPercent
 import kr.seesun.core.designsystem.theme.LayoutTier
 import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.designsystem.theme.SeeSunDimens
@@ -70,6 +72,30 @@ fun positionLine(state: GuideState): String {
     val section = state.section ?: return ""
     val voice = if (state.usingDeviceVoice) " · 기기 음성으로 읽는 중" else ""
     return "구간 ${state.sectionIndex + 1}/${state.sections.size}: ${section.title}$voice"
+}
+
+/**
+ * 안내 진행률(0~1, 진행 바): (앞 구간 문장 수 + 지금 구간에서 지난 문장 수) ÷ 전체 문장 수.
+ * 다 들으면 1, 안내가 없으면 0. 문장 위치는 재생기가 알려 주는 값([GuideState.sentenceIndex])이다.
+ */
+fun guideProgress(state: GuideState): Float {
+    if (state.sections.isEmpty()) return 0f
+    if (state.status == GuideStatus.FINISHED) return 1f
+    val counts = state.sections.map { ScriptTimeline.split(it.text).size.coerceAtLeast(1) }
+    val section = state.sectionIndex.coerceIn(0, counts.lastIndex)
+    val done = counts.take(section).sum() + state.sentenceIndex.coerceIn(0, counts[section] - 1)
+    return (done.toFloat() / counts.sum()).coerceIn(0f, 1f)
+}
+
+/** 진행 바의 TalkBack 상태 설명: "40퍼센트, 구간 2/5". */
+fun guideProgressState(state: GuideState): String =
+    "${progressPercent(guideProgress(state))}퍼센트, 구간 ${state.sectionIndex + 1}/${state.sections.size}"
+
+/** 운동 안내 진행 바(「구간 n/m」 글자와 함께). 값이 바뀌어도 낭독하지 않는다(초점이 있을 때만 읽음). */
+@Composable
+fun GuideProgressBar(state: GuideState) {
+    if (state.sections.isEmpty()) return
+    PlaybackProgressBar(fraction = guideProgress(state), label = "운동 안내 진행", state = guideProgressState(state))
 }
 
 /**

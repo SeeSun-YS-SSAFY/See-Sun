@@ -76,6 +76,17 @@ class AuthErrorsTest {
     }
 
     @Test
+    fun `결제 계정 없음(17499 BILLING_NOT_ENABLED)은 OTHER가 아니라 문자 발송 꺼짐 안내`() {
+        // 실기기 로그(2026-10-15): "An internal error has occurred. [ BILLING_NOT_ENABLED ]", 예외 종류 FirebaseException
+        val f = AuthErrors.map(Source.OTHER, null, "An internal error has occurred. [ BILLING_NOT_ENABLED ]")
+        assertEquals(AuthFailure(AuthError.SMS_BILLING_DISABLED, "BILLING_NOT_ENABLED"), f)
+        assertEquals(AuthError.SMS_BILLING_DISABLED, AuthErrors.map(Source.AUTH, "ERROR_BILLING_NOT_ENABLED", null).error)
+        val text = AuthErrors.describe(f.error, f.code)
+        assertTrue(text.contains("인증 문자 보내기가 꺼져"))
+        assertTrue(text.endsWith("(오류 코드 BILLING_NOT_ENABLED)"))
+    }
+
+    @Test
     fun `화면 문구는 안내 + 오류 코드, 고칠 수 있는 오류는 코드 없이`() {
         val unknown = AuthErrors.describe(AuthError.UNKNOWN, "17499")
         assertTrue(unknown.startsWith(AuthError.UNKNOWN.message))

@@ -26,6 +26,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -113,7 +114,9 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.RESUMED) {
                 try {
-                    autoListen.directStart.active.collect { mediaButtons.setActive(it) }
+                    // 설정 「물리 버튼」을 끄면 음성 화면에서도 켜지 않는다(2차 의뢰서 p7).
+                    combine(autoListen.directStart.active, voicePreferences.hardwareButton) { active, on -> active && on }
+                        .collect { mediaButtons.setActive(it) }
                 } finally {
                     mediaButtons.setActive(false)
                 }

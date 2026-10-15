@@ -19,10 +19,10 @@ import kr.seesun.core.data.model.ExerciseCategory
 import kr.seesun.core.data.repository.AuthRepository
 import kr.seesun.core.data.repository.ExerciseContentRepository
 import kr.seesun.core.data.repository.ExerciseLogRepository
+import kr.seesun.core.data.repository.ProfileRepository
 import kr.seesun.core.data.sync.ExerciseSyncScheduler
 import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.BottomActions
-import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.ListButtonGrid
 import kr.seesun.core.designsystem.component.ListButtonItem
 import kr.seesun.core.designsystem.component.LiveStatusText
@@ -33,18 +33,45 @@ import kr.seesun.core.ui.VoiceMenuButton
 import kr.seesun.core.ui.VoiceMenuOption
 import kr.seesun.feature.exercise.ui.ActionButton
 
-// ── EX-01 운동 첫 화면 ─────────────────────────────────────────────────
+// ── EX-01 운동 첫 화면(운동 방식, Figma 231:708) ──────────────────────────
 
-data class HomeUi(val signedIn: Boolean = false, val pending: Int = 0)
+/**
+ * @property categories 목표 순서로 늘어놓은 카테고리(근력·유산소·유연성·균형)
+ * @property goal 프로필 목표 코드(모르면 null — 서버를 못 읽으면 기본 순서)
+ */
+data class HomeUi(
+    val signedIn: Boolean = false,
+    val pending: Int = 0,
+    val loading: Boolean = true,
+    val categories: List<ExerciseCategory> = emptyList(),
+    val goal: String? = null,
+    val fromDevice: Boolean = false,
+    val error: String? = null
+) {
+    /** 추천 루틴 = 목표에서 가장 먼저 권하는 카테고리의 루틴(동작을 차례로, 휴식 포함). */
+    val recommended: ExerciseCategory? get() = categories.firstOrNull()
+}
+
+private data class HomeCatalog(
+    val loading: Boolean = true,
+    val categories: List<ExerciseCategory> = emptyList(),
+    val goal: String? = null,
+    val fromDevice: Boolean = false,
+    val error: String? = null
+)
 
 @HiltViewModel
 class ExerciseHomeViewModel @Inject constructor(
     auth: AuthRepository,
     private val logs: ExerciseLogRepository,
-    private val scheduler: ExerciseSyncScheduler
+    private val scheduler: ExerciseSyncScheduler,
+    private val content: ExerciseContentRepository,
+    private val profile: ProfileRepository
 ) : ViewModel() {
-    val ui: StateFlow<HomeUi> = combine(auth.signedIn, logs.observePendingCount()) { signedIn, pending ->
-        HomeUi(signedIn = signedIn, pending = pending)
+    private val catalog = MutableStateFlow(HomeCatalog())
+
+    val ui: StateFlow<HomeUi> = combine(auth.signedIn, logs.observePendingCount(), catalog) { signedIn, pending, c ->
+        HomeUi(signedIn, pending, c.loading, c.categories, c.goal, c.fromDevice, c.error)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_MS), HomeUi())
 
     init {
@@ -53,6 +80,26 @@ class ExerciseHomeViewModel @Inject constructor(
             logs.recoverInterrupted()
             scheduler.scheduleExerciseSync()
         }
+        load()
+    }
+
+    /** 카테고리와 목표(프로필)를 읽어 목표 순서로 늘어놓는다. 프로필을 못 읽어도 카테고리는 기본 순서로 보인다. */
+    fun load() {
+        catalog.update { it.copy(loading = true, error = null) }
+        viewModelScope.launch {
+            val me = (profile.me() as? ApiResult.Success)?.data
+            val order = ExerciseOrder.order(me?.goal, me?.recommendedExerciseCategories.orEmpty())
+            catalog.value = when (val r = content.categories()) {
+                is ApiResult.Success -> HomeCatalog(
+                    loading = false,
+                    categories = ExerciseOrder.sort(r.data.data, order),
+                    goal = me?.goal,
+                    fromDevice = r.data.fromDevice
+                )
+
+                is ApiResult.Failure -> HomeCatalog(loading = false, goal = me?.goal, error = r.failure.ttsMessage)
+            }
+        }
     }
 
     private companion object {
@@ -60,20 +107,38 @@ class ExerciseHomeViewModel @Inject constructor(
     }
 }
 
-enum class HomeDestination { SINGLE, ROUTINE, WEEKLY, SAFETY }
+/** 첫 화면에서 여는 곳. 카테고리·추천 루틴은 목표 순서에 따라 바뀐다. */
+sealed interface HomeDestination {
+    data class Category(val id: String, val name: String) : HomeDestination
+
+    data class RecommendedRoutine(val categoryId: String, val title: String) : HomeDestination
+
+    data object Single : HomeDestination
+
+    data object Routine : HomeDestination
+
+    data object Weekly : HomeDestination
+
+    data object Safety : HomeDestination
+}
 
 @Composable
 fun ExerciseHomeRoute(viewModel: ExerciseHomeViewModel, onBack: () -> Unit, onOpen: (HomeDestination) -> Unit) {
     val ui by viewModel.ui.collectAsStateWithLifecycle()
-    ExerciseHomeScreen(ui, onBack, onOpen)
+    ExerciseHomeScreen(ui, onBack, onOpen, onRetry = viewModel::load)
 }
 
+/**
+ * 운동 방식(Figma 231:708): [근력][유산소][유연성 운동][균형]을 목표 순서로 + [추천 루틴], 그 아래 루틴·기록·안전·전체 보기.
+ * 첫 칸이 목표에 맞는 카테고리이고, 그 사실을 화면 한 줄과 낭독으로 알린다(색만으로 구분하지 않음).
+ */
 @Composable
-fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination) -> Unit) {
+fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination) -> Unit, onRetry: () -> Unit = {}) {
+    val reason = ExerciseOrder.reason(ui.goal, ui.recommended)
     ScreenScaffold(title = "운동", onBack = onBack) {
         BodyText(
-            "운동 방식을 골라 주세요.",
-            spoken = "운동 방식을 골라 주세요. 한 가지 운동을 하거나, 여러 운동을 이어서 하는 루틴을 할 수 있어요."
+            reason ?: "운동 종류를 골라 주세요.",
+            spoken = "운동 종류를 골라 주세요. ${reason.orEmpty()} 추천 루틴은 여러 동작을 쉬면서 이어서 해요."
         )
         if (ui.pending > 0) {
             BodyText(
@@ -83,31 +148,88 @@ fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination)
         }
         // 앱에서는 로그인한 뒤에만 이 화면에 온다(로그인이 풀리면 온보딩으로 돌아감). 기능 단독 시험·만일을 위한 안내.
         if (!ui.signedIn) BodyText("로그인하지 않아 기기에 저장된 운동 정보로 안내해요. 운동 기록은 로그인한 뒤 서버에 보내요.")
-        // 말로 고르기(흐름 문서 P0-4): 안내가 「…중에서 골라 주세요」로 끝나므로 같은 말로 고를 수 있게.
+        MenuState(MenuUi(loading = ui.loading, categories = ui.categories, fromDevice = ui.fromDevice, error = ui.error), onRetry)
+        val recommended = ui.recommended
+        // 말로 고르기(흐름 문서 P0-4): "유산소", "추천 루틴", "루틴", "기록", "안전", "전체" 등.
         VoiceMenuButton(
-            options = listOf(
-                VoiceMenuOption(listOf("한 가지", "한가지", "하나", "단일")) { onOpen(HomeDestination.SINGLE) },
-                VoiceMenuOption(listOf("루틴", "이어서")) { onOpen(HomeDestination.ROUTINE) },
-                VoiceMenuOption(listOf("기록", "이번 주", "이번주")) { onOpen(HomeDestination.WEEKLY) },
-                VoiceMenuOption(listOf("안전", "건강 확인")) { onOpen(HomeDestination.SAFETY) }
-            ),
-            hint = "한 가지 운동, 루틴 운동, 이번 주 기록, 안전 안내 중에서 말씀해 주세요."
+            options = homeVoiceOptions(ui.categories, recommended, onOpen),
+            hint = "${ui.categories.joinToString(", ") { ExerciseOrder.shortName(it.name) }}, 추천 루틴 중에서 말씀해 주세요."
         )
-        // 메뉴는 화면 아래 누르는 영역에. 타일 설명은 두 줄 안의 짧은 말, 자세한 설명은 낭독(11_레이아웃_기준.md §3).
-        BottomActions {
-            ListButtonGrid(
-                items = listOf(
-                    tile(HomeDestination.SINGLE.name, "한 가지 운동", "골라서 안내 듣기", "운동을 골라 안내를 들어요"),
-                    tile(HomeDestination.ROUTINE.name, "루틴 운동", "쉬면서 이어 하기", "여러 운동을 휴식과 함께 이어서 해요"),
-                    tile(HomeDestination.WEEKLY.name, "이번 주 기록", "횟수와 시간", "이번 주 운동 기록. 횟수와 시간을 알려 드려요"),
-                    tile(HomeDestination.SAFETY.name, "안전 안내", "다시 듣기·건강 확인", "운동 안전 안내. 안전 안내를 다시 듣고 건강 확인을 다시 해요")
-                ),
-                onClick = { onOpen(HomeDestination.valueOf(it.key)) }
-            )
+        if (!ui.loading) {
+            BottomActions {
+                ListButtonGrid(items = homeTiles(ui.categories, recommended), onClick = { onOpen(destinationOf(it.key, ui)) })
+            }
         }
     }
-    EntryGuidance("exercise-home", "운동. 한 가지 운동, 루틴 운동, 이번 주 기록, 안전 안내 중에서 골라 주세요.")
+    if (!ui.loading) {
+        val names = ui.categories.joinToString(", ") { it.name }
+        EntryGuidance(
+            "exercise-home:${ui.categories.joinToString { it.id }}",
+            "운동 방식. ${reason.orEmpty()} ${if (names.isEmpty()) "" else "$names, "}추천 루틴, 루틴 운동, 이번 주 기록, 안전 안내, " +
+                "전체 운동 중에서 골라 주세요."
+        )
+    }
 }
+
+/** 첫 화면 타일: 카테고리 4개(목표 순서) → [추천 루틴][루틴 운동] → [이번 주 기록][안전 안내] → [전체 운동 보기]. */
+internal fun homeTiles(categories: List<ExerciseCategory>, recommended: ExerciseCategory?): List<ListButtonItem> =
+    categories.mapIndexed { i, c ->
+        if (i == 0) {
+            tile(CATEGORY_PREFIX + c.id, c.name, "목표에 맞춰 먼저", "${c.name}. 목표에 맞춰 먼저 권하는 운동이에요")
+        } else {
+            tile(CATEGORY_PREFIX + c.id, c.name, "골라서 안내 듣기", "${c.name}. 운동을 골라 안내를 들어요")
+        }
+    } + listOfNotNull(
+        recommended?.let {
+            tile(RECOMMENDED_KEY, "추천 루틴", "${it.name} 차례로", "추천 루틴. 목표에 맞춰 ${it.name}을 휴식과 함께 차례로 해요")
+        },
+        tile(ROUTINE_KEY, "루틴 운동", "기본·나만의 루틴", "루틴 운동. 운동별 루틴과 내가 만든 루틴을 해요"),
+        tile(WEEKLY_KEY, "이번 주 기록", "횟수와 시간", "이번 주 운동 기록. 횟수와 시간을 알려 드려요"),
+        tile(SAFETY_KEY, "안전 안내", "다시 듣기·건강 확인", "운동 안전 안내. 안전 안내를 다시 듣고 건강 확인을 다시 해요"),
+        tile(SINGLE_KEY, "전체 운동", "자주·즐겨찾기", "전체 운동. 모든 운동, 자주 하는 운동, 즐겨찾기를 봐요")
+    )
+
+internal fun destinationOf(key: String, ui: HomeUi): HomeDestination = when {
+    key.startsWith(CATEGORY_PREFIX) -> {
+        val id = key.removePrefix(CATEGORY_PREFIX)
+        HomeDestination.Category(id, ui.categories.firstOrNull { it.id == id }?.name ?: "운동")
+    }
+
+    key == RECOMMENDED_KEY -> ui.recommended?.let { recommendedRoutine(it) } ?: HomeDestination.Routine
+
+    key == ROUTINE_KEY -> HomeDestination.Routine
+
+    key == WEEKLY_KEY -> HomeDestination.Weekly
+
+    key == SAFETY_KEY -> HomeDestination.Safety
+
+    else -> HomeDestination.Single
+}
+
+/** 제목은 한 줄에 들어가게 「추천 루틴」만(어떤 운동인지는 루틴 화면의 운동 순서와 첫 화면 타일 설명에 있다). */
+private fun recommendedRoutine(c: ExerciseCategory) = HomeDestination.RecommendedRoutine(c.id, "추천 루틴")
+
+/** 말로 고르기 선택지. 「추천 루틴」이 「루틴」보다 길어 먼저 맞는다(VoiceMenuMatcher는 긴 낱말 먼저). */
+internal fun homeVoiceOptions(
+    categories: List<ExerciseCategory>,
+    recommended: ExerciseCategory?,
+    onOpen: (HomeDestination) -> Unit
+): List<VoiceMenuOption> = categories.map { c ->
+    VoiceMenuOption(listOf(ExerciseOrder.shortName(c.name))) { onOpen(HomeDestination.Category(c.id, c.name)) }
+} + listOfNotNull(
+    recommended?.let { c -> VoiceMenuOption(listOf("추천", "추천 루틴")) { onOpen(recommendedRoutine(c)) } },
+    VoiceMenuOption(listOf("루틴", "이어서")) { onOpen(HomeDestination.Routine) },
+    VoiceMenuOption(listOf("기록", "이번 주", "이번주")) { onOpen(HomeDestination.Weekly) },
+    VoiceMenuOption(listOf("안전", "건강 확인")) { onOpen(HomeDestination.Safety) },
+    VoiceMenuOption(listOf("전체", "즐겨찾기", "자주", "한 가지", "한가지")) { onOpen(HomeDestination.Single) }
+)
+
+private const val CATEGORY_PREFIX = "cat:"
+private const val RECOMMENDED_KEY = "recommended"
+private const val ROUTINE_KEY = "routine"
+private const val WEEKLY_KEY = "weekly"
+private const val SAFETY_KEY = "safety"
+private const val SINGLE_KEY = "single"
 
 // ── 메뉴: 단일 운동 고르기 / 루틴 고르기 ─────────────────────────────────
 
