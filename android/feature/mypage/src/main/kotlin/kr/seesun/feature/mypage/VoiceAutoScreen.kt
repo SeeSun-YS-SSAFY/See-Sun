@@ -16,6 +16,7 @@ import kr.seesun.core.a11y.rememberTalkBackEnabled
 import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.ListButton
 import kr.seesun.core.designsystem.component.LiveStatusText
+import kr.seesun.core.designsystem.component.LocalSettingsExtras
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.ui.AutoGuidance
 import kr.seesun.core.ui.GuidanceVoice
@@ -133,6 +134,8 @@ fun VoiceAutoScreen(
         BodyText(stringResource(R.string.my_voice_auto_body), emphasis = true)
         // 화면 낭독기가 켜져 있으면 설정과 관계없이 저절로 듣지 않는다(마이크·이어폰 버튼으로만) — 이유를 알린다.
         if (talkBackEnabled) BodyText(stringResource(R.string.my_voice_auto_talkback))
+        // v7 가운영 빌드: 관리자 모드 「음성 감지 시험」에서 맞춘 값을 쓰는 중이면 작은 알림.
+        LocalSettingsExtras.current.voiceAutoNote?.invoke(this)
         // 체크형 버튼: TalkBack이 "질문 뒤 + 말하면 듣기, …, 선택됨/선택 안 됨"으로 읽는다.
         AutoListenMode.entries.reversed().forEach { m ->
             val (label, desc) = labels.getValue(m)

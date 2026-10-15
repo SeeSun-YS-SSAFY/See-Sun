@@ -45,3 +45,9 @@ STORAGES = {  # noqa: F405
 
 # 테스트에서는 collectstatic 결과 폴더가 없으므로 WhiteNoise 미들웨어 제외
 MIDDLEWARE = [m for m in MIDDLEWARE if 'whitenoise' not in m]  # noqa: F405
+
+# 기존 관리자 화면 테스트는 문서용 공인 IP(203.0.113.x)를 X-Forwarded-For로 쓴다 → 장고의 /admin/ IP 확인은 끈다.
+# 막히는지는 apps/ops/tests 에서 override_settings(ADMIN_ALLOWED_IPS=...)로 따로 확인한다.
+# OPS_ALLOWED_IPS는 환경값이 없으면 'private_ranges'(제한 목록 경로를 기본으로 시험).
+ADMIN_ALLOWED_IPS = 'any'
+OPS_ALLOWED_IPS = 'private_ranges'

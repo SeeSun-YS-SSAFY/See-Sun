@@ -1,0 +1,115 @@
+{% extends 'ops/base.html' %}
+{% block title %}앱 버전{% endblock %}
+{% block content %}
+<h1>앱 버전</h1>
+<p class="lead">가운영 앱(자체 업데이트 빌드)은 시작할 때와 6시간마다 <span class="mono">latest.json</span>을 읽고, 설치된 것보다 높은 versionCode가 있으면 업데이트 창을 띄웁니다.</p>
+
+<div class="grid two">
+  <section class="card">
+    <h2>지금 공개된 매니페스트</h2>
+    {% if latest_error %}
+      <p class="msg error">{{ latest_error }}</p>
+    {% elif latest %}
+      <dl class="kv">
+        <dt>versionCode</dt><dd><strong>{{ latest.versionCode }}</strong></dd>
+        <dt>versionName</dt><dd>{{ latest.versionName }}</dd>
+        <dt>minVersionCode</dt><dd>{{ latest.minVersionCode }}{% if latest.minVersionCode %} <span class="hint">이보다 낮은 앱은 닫을 수 없는 업데이트 창</span>{% endif %}</dd>
+        <dt>게시</dt><dd>{{ latest.publishedAt }}</dd>
+        <dt>크기</dt><dd>{{ latest.sizeBytes|filesizeformat }}</dd>
+        <dt>sha256</dt><dd class="mono">{{ latest.sha256 }}</dd>
+        <dt>APK 주소</dt><dd class="mono">{{ latest.apkUrl }}</dd>
+        <dt>바뀐 점</dt><dd style="white-space: pre-line">{{ latest.notes }}</dd>
+      </dl>
+      <details class="table-view"><summary>latest.json 원문</summary><pre class="json">{{ latest_raw }}</pre></details>
+      <h3 class="sub-h">업데이트 알림(푸시)</h3>
+      <p>{% if current_push %}{% if current_push.ok %}<span class="badge active">푸시 보냄</span> <span class="hint">메시지 ID <span class="mono">{{ current_push.message_id }}</span> · {{ current_push.created_at|date:"m-d H:i" }} · {{ current_push.get_source_display }}</span>
+         {% else %}<span class="badge flag">푸시 실패</span> <span class="hint">{{ current_push.error }} · {{ current_push.created_at|date:"m-d H:i" }}</span>{% endif %}
+         {% else %}<span class="muted">이 버전은 아직 알림을 보내지 않았습니다.</span>{% endif %}</p>
+      <form method="post" action="{% url 'ops:app_push_resend' %}" data-confirm="versionCode {{ latest.versionCode }} 업데이트 알림을 토픽 {{ push_topic }}으로 다시 보낼까요? 이미 받은 앱은 같은 버전이라 다시 창을 띄우지 않습니다.">
+        {% csrf_token %}<button class="btn" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>업데이트 알림 다시 보내기</button>
+      </form>
+      {% if push_payload %}<details class="table-view"><summary>보내는 내용(토픽 <span class="mono">{{ push_topic }}</span>)</summary><pre class="json">{% for k, v in push_payload.items %}{{ k }}: {{ v }}
+{% endfor %}android: priority high · ttl 7일 · collapse_key app_update</pre></details>{% endif %}
+    {% else %}
+      <p class="muted">아직 게시한 버전이 없습니다(latest.json 없음).</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <h2>새 버전 게시</h2>
+    {% if not request.user.is_superuser %}<p class="note">조회 전용 직원 계정입니다. 게시는 최고 관리자만 할 수 있습니다.</p>{% endif %}
+    <form method="post" enctype="multipart/form-data" action="{% url 'ops:app_publish' %}"
+          data-confirm="이 APK를 게시할까요? 앱을 연 사람에게 바로 업데이트 창이 뜹니다.">
+      {% csrf_token %}
+      <div class="form-grid">
+        <label>versionCode<input type="number" name="version_code" min="{{ next_code }}" value="{{ next_code }}" required>
+          <span class="hint">지금보다 커야 합니다({{ next_code }} 이상)</span></label>
+        <label>versionName<input type="text" name="version_name" maxlength="64" placeholder="예: 0.4.0" required></label>
+        <label>minVersionCode<input type="number" name="min_version_code" min="0" value="0">
+          <span class="hint">0이면 강제 업데이트 없음</span></label>
+      </div>
+      <label class="field">바뀐 점(한국어, 앱 업데이트 창에 그대로 보임)
+        <textarea name="notes" maxlength="1000" required placeholder="예: 운동 중 화면이 꺼지지 않게 했어요."></textarea></label>
+      <label class="field" style="margin-top: 12px">서명한 APK ({{ max_mb }}MB 이하)
+        <input type="file" name="apk" accept=".apk,application/vnd.android.package-archive" required></label>
+      <p class="hint">서버가 확인하는 것: 서명 여부, 패키지 <span class="mono">{{ package }}</span>, APK 안의 versionCode·versionName이 입력과 같은지. 주소는 <span class="mono">{{ base_url }}/seesun-prov-&lt;versionCode&gt;.apk</span>. 최신과 이전 3개만 서버에 남깁니다.</p>
+      <button class="btn primary" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>게시</button>
+    </form>
+  </section>
+</div>
+
+<section class="card">
+  <h2>서버에 남은 버전</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th class="num">versionCode</th><th>versionName</th><th>게시</th><th class="num">크기</th><th>sha256</th><th>APK 파일</th><th>알림</th></tr></thead>
+    <tbody>
+    {% for d in disk %}
+      <tr><td class="num"><strong>{{ d.code }}</strong>{% if latest.versionCode == d.code %} <span class="badge active">공개 중</span>{% endif %}</td>
+        <td>{{ d.manifest.versionName|default:"-" }}</td><td>{{ d.manifest.publishedAt|default:"-" }}</td>
+        <td class="num">{{ d.manifest.sizeBytes|filesizeformat }}</td><td class="mono">{{ d.manifest.sha256|slice:":16" }}…</td>
+        <td>{% if d.apk_present %}있음{% else %}<span class="badge flag">없음</span>{% endif %}</td>
+        <td>{% include 'ops/_push_badge.html' with p=d.push %}</td></tr>
+    {% empty %}
+      <tr><td colspan="7" class="muted">서버의 app/ 폴더에 매니페스트가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="hint">되돌리기는 지금처럼 작업 PC에서 <span class="mono">publish_apk.sh --rollback &lt;versionCode&gt;</span> (이미 높은 버전을 설치한 기기는 내려가지 않습니다).</p>
+</section>
+
+<section class="card">
+  <h2>운영 콘솔 게시 이력</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th class="num">versionCode</th><th>versionName</th><th>게시</th><th>취급자</th><th>바뀐 점</th><th>알림</th></tr></thead>
+    <tbody>
+    {% for r in releases %}
+      <tr><td class="num">{{ r.version_code }}</td><td>{{ r.version_name }}</td><td>{{ r.published_at|date:"Y-m-d H:i" }}</td><td>{{ r.actor }}</td><td>{{ r.notes|truncatechars:60 }}</td><td>{% include 'ops/_push_badge.html' with p=r.push %}</td></tr>
+    {% empty %}
+      <tr><td colspan="6" class="muted">운영 콘솔에서 게시한 적이 없습니다(스크립트 게시분은 위 표에만 보입니다).</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+<section class="card">
+  <h2>업데이트 알림 기록</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>보낸 일시</th><th class="num">versionCode</th><th>결과</th><th>보낸 곳</th><th>취급자</th></tr></thead>
+    <tbody>
+    {% for p in pushes %}
+      <tr><td>{{ p.created_at|date:"Y-m-d H:i:s" }}</td><td class="num">{{ p.version_code }}</td>
+        <td>{% include 'ops/_push_badge.html' with p=p %} <span class="hint mono">{% if p.ok %}{{ p.message_id|truncatechars:48 }}{% else %}{{ p.error|truncatechars:60 }}{% endif %}</span></td>
+        <td>{{ p.get_source_display }}</td><td>{{ p.actor }}</td></tr>
+    {% empty %}
+      <tr><td colspan="5" class="muted">보낸 알림이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <p class="hint">토픽 <span class="mono">{{ push_topic }}</span>을 구독한 앱에 데이터 메시지로 갑니다. 실패해도 게시는 그대로이고, 앱은 다음 실행 때(또는 6시간 안에) latest.json을 스스로 확인합니다.</p>
+</section>
+{% endblock %}

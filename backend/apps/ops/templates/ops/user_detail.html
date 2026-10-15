@@ -1,0 +1,70 @@
+{% extends 'ops/base.html' %}
+{% block title %}사용자 {{ u.short_id }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'ops:users' %}">← 사용자 목록</a></p>
+<h1>{{ u.name }} <span class="badge {{ u.status }}">{{ u.status_label }}</span>{% if u.is_staff %} <span class="badge staff">직원</span>{% endif %}</h1>
+<p class="lead">계정 정보만 봅니다. 건강정보·식단·운동 기록은 이 화면에 없습니다(개인정보 처리방침 3절·11절).</p>
+
+<div class="grid two">
+  <section class="card">
+    <h2>계정</h2>
+    <dl class="kv">
+      <dt>사용자 ID</dt><dd class="mono">{{ u.id }}</dd>
+      <dt>계정 이름</dt><dd class="mono">{{ u.username }}</dd>
+      <dt>이름</dt><dd>{{ u.name }}</dd>
+      <dt>전화번호</dt><dd><span class="mono">{{ u.phone }}</span> <span class="hint">해시 조각(번호 아님)</span></dd>
+      <dt>로그인 방식</dt><dd>{% if u.firebase %}전화번호 인증(Firebase){% endif %}{% for p in providers %} · {{ p }}{% endfor %}{% if not u.firebase and not providers %}<span class="muted">-</span>{% endif %}</dd>
+      <dt>가입</dt><dd>{{ u.date_joined|date:"Y-m-d H:i" }}</dd>
+      <dt>마지막 접속</dt><dd>{% if u.last_login %}{{ u.last_login|date:"Y-m-d H:i" }}{% else %}<span class="muted">-</span>{% endif %}</dd>
+      <dt>프로필 입력</dt><dd>{% if u.profile_done %}완료{% else %}미완료{% endif %}</dd>
+    </dl>
+  </section>
+  <section class="card">
+    <h2>동의 상태</h2>
+    <table>
+      <thead><tr><th>항목</th><th>상태</th><th>버전</th><th>일시</th></tr></thead>
+      <tbody>
+      {% for c in consents %}
+        <tr><td>{{ c.label }}</td>
+          <td>{% if c.agreed is None %}<span class="muted">기록 없음</span>{% elif c.agreed %}<span class="badge active">동의</span>{% else %}<span class="badge withdrawn">미동의·철회</span>{% endif %}</td>
+          <td class="mono">{{ c.version|default:"-" }}</td><td>{% if c.at %}{{ c.at|date:"Y-m-d" }}{% else %}-{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+
+{% if u.status != 'withdrawn' and not u.is_staff %}
+<section class="card danger-zone">
+  <h2>계정 조치</h2>
+  {% if not request.user.is_superuser %}
+    <p class="note">조회 전용 직원 계정입니다. 이용 중지·탈퇴 처리는 최고 관리자 계정만 할 수 있습니다.</p>
+  {% endif %}
+  <div class="grid two">
+    <div class="action-block">
+      <h3>{% if u.status == 'active' %}이용 중지{% else %}이용 다시 열기{% endif %}</h3>
+      <p class="hint">{% if u.status == 'active' %}앱 로그인과 API 사용을 바로 막습니다. 기록은 그대로 두고, 나중에 다시 열 수 있습니다.{% else %}지금 이용 중지 상태입니다. 다시 열면 앱에서 바로 로그인할 수 있습니다.{% endif %}</p>
+      {% if u.status == 'active' %}
+      <form method="post" action="{% url 'ops:user_suspend' u.id %}" data-confirm="이 사용자의 이용을 중지할까요? 앱 로그인과 API 사용이 바로 막힙니다. 나중에 다시 열 수 있습니다.">
+        {% csrf_token %}<button class="btn warn" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>이용 중지</button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'ops:user_unsuspend' u.id %}" data-confirm="이용 중지를 풀까요?">
+        {% csrf_token %}<button class="btn" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>이용 다시 열기</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="action-block">
+      <h3>탈퇴 처리(파기)</h3>
+      <p class="hint">개인정보와 건강·식단·운동 기록을 바로 파기하며 되돌릴 수 없습니다. 확인 칸에 사용자 ID 앞 8자 <strong class="mono">{{ u.short_id }}</strong>를 넣어야 합니다.</p>
+      <form class="controls" method="post" action="{% url 'ops:user_withdraw' u.id %}" data-confirm="탈퇴 처리하면 이 사람의 개인정보와 건강·식단·운동 기록이 바로 파기되고 되돌릴 수 없습니다. 계속할까요?">
+        {% csrf_token %}
+        <input type="text" name="confirm" autocomplete="off" size="10" required pattern="[0-9a-f]{8}" aria-label="확인: 사용자 ID 앞 8자">
+        <button class="btn danger" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>탈퇴 처리</button>
+      </form>
+    </div>
+  </div>
+  <p class="hint">탈퇴 처리는 앱의 「회원 탈퇴」와 같은 절차(User.withdraw)를 씁니다: 토큰 폐기 → 각 기록 파기 → 동의 이력 보존 → Firebase 계정 삭제(실패 시 대기열).</p>
+</section>
+{% endif %}
+{% endblock %}

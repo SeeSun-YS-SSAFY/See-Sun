@@ -1,0 +1,24 @@
+{% extends 'ops/account_base.html' %}
+{% block title %}2단계 인증 등록{% endblock %}
+{% block steps %}<li class="done">비밀번호</li><li aria-current="step">2단계 인증 등록</li>{% endblock %}
+{% block content %}
+<h1>2단계 인증 등록</h1>
+<p class="lead">관리자 화면은 비밀번호 다음에 휴대폰 앱의 6자리 코드를 한 번 더 받습니다(개인정보 처리방침 11절).</p>
+<div class="otp-setup">
+  <div class="qr" role="img" aria-label="2단계 인증 등록 QR 코드">{{ qr_svg|safe }}</div>
+  <ol class="howto">
+    <li>휴대폰에서 <strong>Google OTP</strong>(Google Authenticator) 앱을 엽니다.</li>
+    <li><strong>+</strong> → <strong>QR 코드 스캔</strong>으로 왼쪽 그림을 찍습니다.<br>
+      <span class="hint">찍을 수 없으면 「설정 키 입력」에 아래 키를 넣습니다(시간 기준).</span>
+      <div class="secret mono" aria-label="설정 키">{% for g in secret_groups %}<span>{{ g }}</span>{% endfor %}</div></li>
+    <li>앱에 보이는 6자리 숫자를 넣고 등록을 마칩니다.</li>
+  </ol>
+</div>
+{% if error %}<div class="msg error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" class="controls">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <input class="code-input" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" maxlength="7" required autofocus aria-label="6자리 코드">
+  <button class="btn primary" type="submit">등록</button>
+</form>
+{% endblock %}

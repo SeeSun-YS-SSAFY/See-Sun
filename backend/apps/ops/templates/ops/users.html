@@ -1,0 +1,52 @@
+{% extends 'ops/base.html' %}
+{% block title %}사용자{% endblock %}
+{% block content %}
+<h1>사용자</h1>
+<p class="lead">전화번호는 복호화하지 않고 저장된 해시의 앞 8자(조각)만 보여 줍니다. 이름은 가운데를 가립니다. 이 화면을 열면 접속기록에 남습니다.</p>
+
+<form class="filters" method="get" role="search">
+  <label>검색<input type="search" name="q" value="{{ q }}" placeholder="전화번호(숫자 전체)·이름·ID 앞자리" size="30"></label>
+  <label>상태
+    <select name="status">
+      <option value="" {% if not status %}selected{% endif %}>전체</option>
+      <option value="active" {% if status == 'active' %}selected{% endif %}>정상</option>
+      <option value="suspended" {% if status == 'suspended' %}selected{% endif %}>이용 중지</option>
+      <option value="withdrawn" {% if status == 'withdrawn' %}selected{% endif %}>탈퇴</option>
+      <option value="staff" {% if status == 'staff' %}selected{% endif %}>직원 계정</option>
+    </select>
+  </label>
+  <button class="btn primary" type="submit">찾기</button>
+  {% if q or status %}<a class="btn" href="{% url 'ops:users' %}">초기화</a>{% endif %}
+</form>
+
+<section class="card">
+  <div class="chart-head"><h2>{{ total }}명</h2><span class="total">가입일 최신순 · 한 쪽에 50명</span></div>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>이름</th><th>전화번호 해시 조각</th><th>가입</th><th>마지막 접속</th><th>상태</th><th></th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td class="mono">{{ r.short_id }}</td>
+        <td>{{ r.name }}{% if r.is_staff %} <span class="badge staff">직원</span>{% endif %}</td>
+        <td class="mono">{{ r.phone }}</td>
+        <td>{{ r.date_joined|date:"Y-m-d H:i" }}</td>
+        <td>{% if r.last_login %}{{ r.last_login|date:"Y-m-d H:i" }}{% else %}<span class="muted">-</span>{% endif %}</td>
+        <td><span class="badge {{ r.status }}">{{ r.status_label }}</span></td>
+        <td><a href="{% url 'ops:user_detail' r.id %}">자세히</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="7" class="muted">해당하는 사용자가 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if page.has_other_pages %}
+  <div class="pager">
+    {% if page.has_previous %}<a class="btn small" href="?q={{ q|urlencode }}&status={{ status }}&page={{ page.previous_page_number }}">이전</a>{% endif %}
+    <span>{{ page.number }} / {{ page.paginator.num_pages }}</span>
+    {% if page.has_next %}<a class="btn small" href="?q={{ q|urlencode }}&status={{ status }}&page={{ page.next_page_number }}">다음</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

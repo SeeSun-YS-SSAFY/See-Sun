@@ -1,6 +1,7 @@
 package kr.seesun.core.voice
 
 import dagger.Binds
+import dagger.BindsOptionalOf
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -11,6 +12,7 @@ import kr.seesun.core.voice.lifecycle.AppVisibility
 import kr.seesun.core.voice.parse.FoodMatcher
 import kr.seesun.core.voice.parse.MealUtteranceParser
 import kr.seesun.core.voice.recognition.AndroidSpeechInput
+import kr.seesun.core.voice.recognition.OnsetTuningSource
 import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.recognition.SpeechOnsetDetector
 import kr.seesun.core.voice.recognition.VadOnsetDetector
@@ -36,6 +38,10 @@ internal abstract class VoiceBindings {
 
     @Binds
     abstract fun bindOnsetDetector(impl: VadOnsetDetector): SpeechOnsetDetector
+
+    /** v7 말 시작 판정 값(feature:admin이 넣는다, 없으면 기본값). */
+    @BindsOptionalOf
+    abstract fun onsetTuningSource(): OnsetTuningSource
 }
 
 @Module

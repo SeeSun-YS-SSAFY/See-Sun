@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     'apps.diet.apps.DietConfig',
     'apps.exercises.apps.ExercisesConfig',
     'apps.logs.apps.LogsConfig',
+    'apps.ops.apps.OpsConfig',  # 운영 콘솔(/ops/, 직원 전용)
 ]
 
 # 1차 웹 데모의 서버 STT·Gemini 코드(apps/stt)는 운영 이미지에서 빠져 있다(Dockerfile source 단계, 법적 검토 S-07).
@@ -114,6 +115,9 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.ops.middleware.AdminIPRestrictionMiddleware',  # /admin/ 허용 IP(S-01, Caddy와 같은 목록)
+    'apps.ops.middleware.OpsSessionSecurityMiddleware',  # 직원 세션 시간 제한·no-store·noindex 헤더
+    'apps.ops.middleware.AdminTwoFactorMiddleware',  # /admin/·/ops/ 2단계 인증(처리방침 11절)
     'apps.core.audit.AdminAccessLogMiddleware',  # 관리자 화면 접속기록(법적 검토 S-02)
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -359,6 +363,37 @@ ACCESS_LOG_RETENTION_DAYS = max(730, _env_int('ACCESS_LOG_RETENTION_DAYS', 730))
 WITHDRAWN_HISTORY_RETENTION_DAYS = _env_int('WITHDRAWN_HISTORY_RETENTION_DAYS', 3 * 365)
 # 장기 미이용자 파기 기준(마지막 접속 후 일수, 법적 검토 D-08). purge_inactive_users(cron)
 INACTIVE_USER_DAYS = _env_int('INACTIVE_USER_DAYS', 2 * 365)
+
+# ---------------------------------------------------------------------------
+# 운영 콘솔(/ops/) — 직원 전용, 관리자 화면과 같은 로그인·잠금·IP 제한
+# ---------------------------------------------------------------------------
+# 허용 IP(Caddy remote_ip 형식: 공백 구분 CIDR, private_ranges 가능)
+# - ADMIN_ALLOWED_IPS: 장고 기본 관리자 화면(/admin/). Caddy가 먼저 막고 장고가 한 번 더 확인한다(밖이면 404).
+# - OPS_ALLOWED_IPS: 운영 콘솔(/ops/). any = IP 제한 없음(비밀번호 + 2단계 인증으로 보호, 가운영 결정 2026-10-15 msg 993).
+#   비워 두면 ADMIN_ALLOWED_IPS와 같은 목록으로 제한한다(안전한 기본값).
+ADMIN_ALLOWED_IPS = (os.environ.get('ADMIN_ALLOWED_IPS') or 'private_ranges').strip()
+OPS_ALLOWED_IPS = (os.environ.get('OPS_ALLOWED_IPS') or ADMIN_ALLOWED_IPS).strip()
+# 직원 세션: 유휴 30분, 로그인 후 8시간이면 다시 로그인(/admin/·/ops/)
+OPS_SESSION_IDLE_SECONDS = _env_int('OPS_SESSION_IDLE_SECONDS', 30 * 60)
+OPS_SESSION_MAX_SECONDS = _env_int('OPS_SESSION_MAX_SECONDS', 8 * 60 * 60)
+SESSION_COOKIE_AGE = OPS_SESSION_MAX_SECONDS  # 세션은 직원 화면에서만 쓴다(앱은 JWT)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_HTTPONLY = True  # 콘솔 JS는 쿠키를 읽지 않는다(폼의 csrf_token 사용)
+CSRF_COOKIE_SAMESITE = 'Lax'
+# 앱 자체 업데이트(가운영): media 볼륨의 app/ 폴더. 형식은 deploy/provisional/publish_apk.sh 와 같다.
+APP_UPDATE_DIR = Path(os.environ.get('APP_UPDATE_DIR', str(MEDIA_ROOT / 'app')))
+# 매니페스트 apkUrl의 앞부분. 비우면 지금 latest.json의 apkUrl 폴더 → https://<API_DOMAIN>/media/app 순서로 정한다.
+APP_UPDATE_BASE_URL = os.environ.get('APP_UPDATE_BASE_URL', '').rstrip('/')
+APP_UPDATE_PACKAGE = os.environ.get('APP_UPDATE_PACKAGE', 'kr.seesun.app')
+# 새 버전을 게시하면 앱에 바로 알리는 FCM 토픽(앱이 같은 이름을 구독한다). 서비스 계정(FIREBASE_CREDENTIALS_FILE) 필요
+OPS_APP_UPDATE_TOPIC = os.environ.get('OPS_APP_UPDATE_TOPIC', 'seesun-app-updates')
+APP_UPDATE_KEEP_PREVIOUS = _env_int('APP_UPDATE_KEEP_PREVIOUS', 3)
+# 2단계 인증(TOTP) 앱에 보일 발급자 이름(영문 권장)
+OPS_OTP_ISSUER = os.environ.get('OPS_OTP_ISSUER', 'SeeSun ops')
+OPS_APK_MAX_BYTES = _env_int('OPS_APK_MAX_BYTES', 150 * 1024 * 1024)
+OPS_IMAGE_MAX_BYTES = _env_int('OPS_IMAGE_MAX_BYTES', 5 * 1024 * 1024)
+OPS_AUDIO_MAX_BYTES = _env_int('OPS_AUDIO_MAX_BYTES', 10 * 1024 * 1024)
 
 # 일괄 업로드 한도(오프라인 큐)
 BULK_MAX_ITEMS = _env_int('BULK_MAX_ITEMS', 50)
