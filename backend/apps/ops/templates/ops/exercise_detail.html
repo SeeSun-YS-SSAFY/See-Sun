@@ -1,0 +1,84 @@
+{% extends 'ops/base.html' %}
+{% block title %}{{ e.exercise_name }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'ops:exercises' %}">← 운동 목록</a></p>
+<h1>{{ e.exercise_name }}</h1>
+<p class="lead">{{ e.category.display_name }}{% if e.name_en %} · <span class="mono">{{ e.name_en }}</span>{% endif %}
+  {% if not e.is_active %} · <span class="badge withdrawn">숨김</span>{% endif %}
+  {% if e.script_revised %} <span class="badge flag">대본 수정(의뢰인 확인 필요)</span>{% endif %}
+  {% if e.audio_stale %} <span class="badge flag">녹음이 대본과 다름 → 앱은 기기 음성으로 읽음</span>{% endif %}</p>
+
+{% if cdn %}<p class="note">CDN(MEDIA_CDN_BASE_URL)을 쓰는 환경이라 파일 교체를 막아 두었습니다. 서버 디스크에 둔 파일은 CDN에 올라가지 않습니다.</p>{% endif %}
+{% if not request.user.is_superuser %}<p class="note">조회 전용 직원 계정입니다. 파일 교체·되돌리기는 최고 관리자만 할 수 있습니다.</p>{% endif %}
+
+<section class="card">
+  <h2>픽토그램 {{ pictograms|length }}장</h2>
+  <p class="hint">그림 JPEG·PNG·WebP, {{ image_limit_mb }}MB 이하. 바꾸면 새 이름으로 저장하고 이전 파일은 그대로 둡니다. 보기용 사본(여백 자른 그림)은 비워져 앱이 새 원본을 씁니다.</p>
+  <div class="pics">
+  {% for m in pictograms %}
+    <div class="pic">
+      <div class="img">{% if m.public_url %}<a href="{{ m.public_url }}" target="_blank" rel="noopener"><img src="{{ m.public_url }}" alt="{{ m.label_ko|default:'픽토그램' }} {{ m.sequence }}" loading="lazy"></a>{% endif %}</div>
+      <div class="body">
+        <strong>{{ m.sequence }}번{% if m.label_ko %} · {{ m.label_ko }}{% endif %}</strong>
+        <span class="muted mono" title="{{ m.public_url }}">{{ m.public_url|truncatechars:42 }}</span>
+        <span>{% if m.redrawn %}<span class="badge flag">다시 그림</span>{% endif %}{% if m.needs_client %} <span class="badge flag">의뢰인 확인</span>{% endif %}{% if m.ops_revisions.exists %} <span class="badge staff">교체됨</span>{% endif %}</span>
+        <form class="replace" method="post" enctype="multipart/form-data" action="{% url 'ops:media_replace' m.media_id %}"
+              data-confirm="{{ m.sequence }}번 그림을 고른 파일로 바꿀까요? 이전 파일은 남아 되돌릴 수 있습니다.">
+          {% csrf_token %}
+          <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required aria-label="{{ m.sequence }}번 그림 새 파일">
+          <button class="btn small primary" type="submit" {% if cdn or not request.user.is_superuser %}disabled{% endif %}>바꾸기</button>
+        </form>
+      </div>
+    </div>
+  {% empty %}
+    <p class="muted">픽토그램이 없습니다.</p>
+  {% endfor %}
+  </div>
+</section>
+
+<section class="card">
+  <h2>안내 음성 {{ audios|length }}개</h2>
+  <p class="hint">MP3, {{ audio_limit_mb }}MB 이하. 바꾸면 주소 끝 ?v= 값이 바뀌어 앱이 새 녹음을 받습니다.</p>
+  {% for m in audios %}
+    <div class="audio-row">
+      <div><strong>{{ m.sequence }}. {{ m.section_name|default:"구간" }}</strong>{% if m.ops_revisions.exists %} <span class="badge staff">교체됨</span>{% endif %}<div class="hint mono">{{ m.checksum|slice:":12"|default:"-" }}</div></div>
+      <div>
+        {% if m.public_url %}<audio controls preload="none" src="{{ m.public_url }}{% if m.checksum %}?v={{ m.checksum|slice:':12' }}{% endif %}"></audio>{% endif %}
+        <form class="replace" method="post" enctype="multipart/form-data" action="{% url 'ops:media_replace' m.media_id %}"
+              data-confirm="{{ m.section_name }} 녹음을 고른 파일로 바꿀까요? 이전 파일은 남아 되돌릴 수 있습니다.">
+          {% csrf_token %}
+          <input type="file" name="file" accept="audio/mpeg,.mp3" required aria-label="{{ m.section_name }} 새 녹음 파일">
+          <button class="btn small primary" type="submit" {% if cdn or not request.user.is_superuser %}disabled{% endif %}>바꾸기</button>
+        </form>
+      </div>
+    </div>
+  {% empty %}
+    <p class="muted">안내 음성이 없습니다. 앱은 기기 음성(TTS)으로 읽습니다.</p>
+  {% endfor %}
+</section>
+
+<section class="card">
+  <h2>교체 이력</h2>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>일시</th><th>대상</th><th>새 파일</th><th>이전 파일</th><th>취급자</th><th></th></tr></thead>
+    <tbody>
+    {% for r in revisions %}
+      <tr>
+        <td>{{ r.created_at|date:"Y-m-d H:i" }}</td>
+        <td>{% if r.media_type == 'PICTOGRAM' %}그림 {{ r.sequence }}번{% else %}음성 {{ r.section }}{% endif %}</td>
+        <td class="mono">{{ r.new_key|truncatechars:40 }}<div class="hint">{{ r.size_bytes|filesizeformat }} · {{ r.new_checksum|slice:":12" }}</div></td>
+        <td class="mono">{{ r.old_s3_key|default:r.old_url|truncatechars:40 }}</td>
+        <td>{{ r.actor }}</td>
+        <td>{% if r.reverted_at %}<span class="muted">되돌림 {{ r.reverted_at|date:"m-d H:i" }}</span>
+            {% elif r.media_id %}<form class="inline" method="post" action="{% url 'ops:media_revert' r.pk %}" data-confirm="이 교체를 되돌려 이전 파일을 다시 쓸까요?">{% csrf_token %}<button class="btn small" type="submit" {% if not request.user.is_superuser %}disabled{% endif %}>되돌리기</button></form>
+            {% else %}<span class="muted">행 없음</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="muted">교체한 적이 없습니다.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endblock %}

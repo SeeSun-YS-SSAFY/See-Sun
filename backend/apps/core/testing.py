@@ -47,3 +47,21 @@ def load_sample_foods():
 def food(name):
     from apps.nutrition.models import Food
     return Food.objects.get(name=name)
+
+
+def staff_login(client, user):
+    """직원 로그인 + 2단계 인증(TOTP)까지 마친 세션(테스트용). /admin/·/ops/ 는 2단계 확인 전에는 열리지 않는다."""
+    from django.utils import timezone
+
+    from apps.ops.twofactor import SESSION_KEY, _marker, new_secret, security_for
+
+    client.force_login(user)
+    security = security_for(user)
+    if not security.otp_confirmed_at:
+        security.otp_secret = new_secret()
+        security.otp_confirmed_at = timezone.now()
+        security.save()
+    session = client.session
+    session[SESSION_KEY] = _marker(user, security)
+    session.save()
+    return client

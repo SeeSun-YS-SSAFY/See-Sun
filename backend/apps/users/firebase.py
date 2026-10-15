@@ -121,6 +121,7 @@ class FirebaseAdminVerifier(FirebaseVerifier):
 
     def verify(self, id_token: str) -> FirebaseIdentity:
         from firebase_admin import auth
+        from firebase_admin.exceptions import FirebaseError
 
         # 폐기 확인(check_revoked)은 서비스 계정 자격 증명이 있어야 한다
         check_revoked = self.check_revoked and bool(self.credentials_file)
@@ -131,8 +132,13 @@ class FirebaseAdminVerifier(FirebaseVerifier):
             logger.error('Firebase 공개 인증서 조회 실패: %s', type(exc).__name__)
             raise FirebaseNotConfigured() from exc
         except (ValueError, auth.InvalidIdTokenError, auth.ExpiredIdTokenError,
-                auth.RevokedIdTokenError, auth.UserDisabledError) as exc:
+                auth.RevokedIdTokenError, auth.UserDisabledError, auth.UserNotFoundError) as exc:
+            # UserNotFoundError: 폐기 확인(check_revoked, 서비스 계정이 있을 때만)에서 Firebase 사용자가 이미 지워진 경우
             raise InvalidIdToken(type(exc).__name__) from exc
+        except FirebaseError as exc:
+            # 서비스 계정 모드의 폐기 확인은 Firebase Auth API를 부른다 → 일시 장애·권한 오류는 503(토큰 문제 아님)
+            logger.error('Firebase 토큰 폐기 확인 실패: %s', type(exc).__name__)
+            raise FirebaseNotConfigured() from exc
         return FirebaseIdentity(uid=claims['uid'], phone_number=claims.get('phone_number'))
 
     def delete_user(self, uid: str) -> None:
@@ -157,24 +163,44 @@ def set_verifier_for_tests(verifier: FirebaseVerifier | None) -> None:
     _override = verifier
 
 
-def get_verifier() -> FirebaseVerifier:
-    global _admin_verifier
-    if _override is not None:
-        return _override
-    if settings.FIREBASE_AUTH_FAKE:
-        return FakeFirebaseVerifier()
+def _credentials_file() -> str:
     credentials_file = settings.FIREBASE_CREDENTIALS_FILE
     if credentials_file and not os.path.exists(credentials_file):
         # 경로만 있고 파일이 없으면(마운트 누락) 프로젝트 ID만으로 검증하거나 미설정으로 처리
         logger.error('FIREBASE_CREDENTIALS_FILE 경로에 파일이 없습니다.')
-        credentials_file = ''
+        return ''
+    return credentials_file
+
+
+def _shared_admin_verifier(credentials_file: str) -> FirebaseAdminVerifier:
+    global _admin_verifier
+    if (_admin_verifier is None or _admin_verifier.credentials_file != credentials_file
+            or _admin_verifier.project_id != settings.FIREBASE_PROJECT_ID):
+        _admin_verifier = FirebaseAdminVerifier(
+            credentials_file=credentials_file,
+            project_id=settings.FIREBASE_PROJECT_ID,
+            check_revoked=settings.FIREBASE_CHECK_REVOKED,
+        )
+    return _admin_verifier
+
+
+def get_verifier() -> FirebaseVerifier:
+    if _override is not None:
+        return _override
+    if settings.FIREBASE_AUTH_FAKE:
+        return FakeFirebaseVerifier()
+    credentials_file = _credentials_file()
     if credentials_file or settings.FIREBASE_PROJECT_ID:
-        if (_admin_verifier is None or _admin_verifier.credentials_file != credentials_file
-                or _admin_verifier.project_id != settings.FIREBASE_PROJECT_ID):
-            _admin_verifier = FirebaseAdminVerifier(
-                credentials_file=credentials_file,
-                project_id=settings.FIREBASE_PROJECT_ID,
-                check_revoked=settings.FIREBASE_CHECK_REVOKED,
-            )
-        return _admin_verifier
+        return _shared_admin_verifier(credentials_file)
     raise FirebaseNotConfigured()
+
+
+def admin_app():
+    """
+    서비스 계정이 필요한 기능(FCM 푸시 등)용 firebase_admin 앱. 토큰 검증기와 같은 'seesun' 앱을 같이 써서
+    두 번 초기화하지 않는다. 서비스 계정(FIREBASE_CREDENTIALS_FILE)이 없으면 FirebaseNotConfigured.
+    """
+    credentials_file = _credentials_file()
+    if not credentials_file:
+        raise FirebaseNotConfigured()
+    return _shared_admin_verifier(credentials_file)._get_app()

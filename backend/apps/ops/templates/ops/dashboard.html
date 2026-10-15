@@ -1,0 +1,43 @@
+{% extends 'ops/base.html' %}
+{% block title %}대시보드{% endblock %}
+{% block content %}
+<h1>대시보드</h1>
+<p class="lead">가입·이용 현황을 개수로만 봅니다. 직원 계정은 세지 않고, 사람별 건강·식단·운동 기록은 이 화면에 나오지 않습니다.</p>
+
+<div class="grid tiles">
+  <div class="tile"><div class="label">가입자</div><div class="num">{{ s.totals.total }}</div><div class="sub">탈퇴 제외</div></div>
+  <div class="tile"><div class="label">최근 7일 활성</div><div class="num">{{ s.active_7d }}</div><div class="sub">접속 또는 운동 기록이 있는 사람</div></div>
+  <div class="tile"><div class="label">최근 14일 신규 가입</div><div class="num">{{ s.signups_sum }}</div><div class="sub">한국 시간 기준</div></div>
+  <div class="tile"><div class="label">최근 7일 운동 세션</div><div class="num">{{ s.sessions_7d }}</div><div class="sub">시작한 세션 수</div></div>
+  <div class="tile"><div class="label">이용 중지 · 탈퇴</div><div class="num">{{ s.totals.suspended }} · {{ s.totals.withdrawn }}</div><div class="sub">탈퇴는 비식별 행만 남음</div></div>
+</div>
+
+<div class="grid two">
+  <section class="card" aria-labelledby="h-signup">
+    <div class="chart-head"><h2 id="h-signup">일별 신규 가입</h2><span class="total">14일 합계 {{ s.signups_sum }}명</span></div>
+    {% include 'ops/_bars.html' with series=s.signups label='신규 가입' unit='명' peak=s.signups_peak %}
+  </section>
+  <section class="card" aria-labelledby="h-sessions">
+    <div class="chart-head"><h2 id="h-sessions">일별 운동 세션</h2><span class="total">14일 합계 {{ s.sessions_sum }}회</span></div>
+    {% include 'ops/_bars.html' with series=s.sessions label='운동 세션' unit='회' peak=s.sessions_peak %}
+  </section>
+</div>
+
+<div class="grid two">
+  {% if s.versions %}
+  <section class="card" aria-labelledby="h-ver">
+    <h2 id="h-ver">앱 버전 분포</h2>
+    <p class="hint">사람마다 가장 최근 동의 기록에 앱이 보낸 버전 기준(앱을 업데이트한 뒤 새 동의가 없으면 이전 버전으로 남습니다).</p>
+    {% for v in s.versions %}
+    <div class="hbar"><span class="mono">{{ v.version }}</span><div class="track"><div class="fill" style="width: {{ v.pct }}%"></div></div><span class="n">{{ v.n }}명</span></div>
+    {% endfor %}
+  </section>
+  {% endif %}
+  <section class="card" aria-labelledby="h-queue">
+    <h2 id="h-queue">처리 대기</h2>
+    <dl class="kv">
+      <dt>Firebase 삭제 대기</dt><dd>{{ s.firebase_pending }}건 {% if s.firebase_pending %}<span class="badge flag">재시도 필요</span>{% endif %}<div class="hint">탈퇴 뒤 Firebase 계정 삭제가 실패한 건. cron의 retry_firebase_deletions가 다시 시도합니다.</div></dd>
+    </dl>
+  </section>
+</div>
+{% endblock %}

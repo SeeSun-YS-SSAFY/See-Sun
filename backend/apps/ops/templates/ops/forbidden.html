@@ -1,0 +1,7 @@
+{% extends 'ops/base.html' %}
+{% block title %}권한 없음{% endblock %}
+{% block content %}
+<h1>들어갈 수 없습니다</h1>
+<p class="lead">{{ reason }}</p>
+<p><a href="{% url 'ops:dashboard' %}">대시보드로 돌아가기</a></p>
+{% endblock %}

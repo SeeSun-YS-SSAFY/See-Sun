@@ -18,6 +18,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from apps.health.models import HealthProfile
+        from apps.ops.models import AdminSecurity
         from apps.users.models import User
 
         users = profiles = 0
@@ -30,4 +31,6 @@ class Command(BaseCommand):
             for profile in HealthProfile.objects.all().iterator():
                 profile.save()  # 저장 시 현재 첫 번째 키로 암호화
                 profiles += 1
+            for security in AdminSecurity.objects.exclude(otp_secret__isnull=True).iterator():
+                security.save(update_fields=['otp_secret'])  # 관리자 2단계 인증 비밀값
         self.stdout.write(self.style.SUCCESS(f'사용자 {users}명, 건강 설정 {profiles}건을 다시 암호화했습니다.'))
