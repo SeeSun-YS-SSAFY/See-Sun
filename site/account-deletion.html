@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>계정 삭제 요청 — 시선(See:Sun)</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main">본문으로 건너뛰기</a>
+<header class="site-header">
+<p class="brand">시선(See:Sun)</p>
+<nav class="site-nav" aria-label="사이트 메뉴">
+<ul>
+<li><a href="index.html">처음</a></li>
+<li><a href="privacy.html">개인정보 처리방침</a></li>
+<li><a href="terms.html">이용약관</a></li>
+<li><a href="account-deletion.html" aria-current="page">계정 삭제 요청</a></li>
+</ul>
+</nav>
+</header>
+<main id="main" tabindex="-1">
+<h1>시선(See:Sun) 계정 삭제 요청</h1>
+
+<ul>
+<li>앱 이름: 시선(See:Sun)</li>
+<li>운영자: enVision(연세대학교 학생 동아리), 대표 ○○○ <code>[확인 필요: 동아리 공식 명칭과 대표 이름]</code></li>
+</ul>
+
+<p>이 페이지는 시선 계정과 데이터를 지우는 방법을 알려 드립니다. 앱을 지웠거나 휴대폰을 바꿨어도 여기 적힌 방법으로 요청할 수 있습니다.</p>
+
+<h2 id="in-app">방법 1. 앱 안에서 바로 지우기</h2>
+<ol class="steps">
+<li>시선 앱을 엽니다.</li>
+<li>설정으로 갑니다. 음성 명령으로 "설정"이라고 말해도 됩니다.</li>
+<li>계정을 고릅니다.</li>
+<li>회원 탈퇴를 고릅니다. 음성 명령으로 "회원 탈퇴"라고 말해도 됩니다. <code>[확인 필요: 앱 화면 경로와 음성 명령어 확정]</code></li>
+<li>앱이 지워지는 것과 남는 것을 읽어 드립니다.</li>
+<li>한 번 더 확인하면 바로 지워집니다.</li>
+</ol>
+
+<h2 id="outside">방법 2. 앱 밖에서 요청하기</h2>
+<p>아래 연락처 중 편한 곳으로 요청해 주세요.</p>
+<ul>
+<li>이메일: ○○○</li>
+<li>전화: ○○○</li>
+<li>문자: ○○○ (문자로 요청하셔도 됩니다)</li>
+</ul>
+<p>요청할 때 알려 주실 것:</p>
+<ol>
+<li>시선에 가입한 전화번호</li>
+<li>원하시는 것: 계정 전체 삭제, 또는 일부 데이터만 삭제(아래 "일부만 지우기" 참고)</li>
+</ol>
+<p>본인 확인을 위해 가입한 전화번호로 확인 문자를 보내 드립니다. 그 문자에 답해 주시면 삭제를 진행합니다. <code>[확인 필요: 본인 확인 방법 확정]</code></p>
+
+<p>이메일이나 문자에 이렇게 쓰시면 됩니다.</p>
+<blockquote>
+<p>시선 계정 삭제를 요청합니다. 가입한 전화번호는 010-0000-0000입니다. 계정 전체를 지워 주세요.</p>
+</blockquote>
+
+<h2 id="partial">일부만 지우기</h2>
+<ul>
+<li>건강정보(질환, 알레르기)만 지우기: 앱의 설정에서 건강정보 동의를 철회하면 바로 지워집니다. 질환을 반영한 식단 점수도 함께 지워집니다.</li>
+<li>식사 기록 하나 지우기: 식사 기록에서 그 기록을 골라 지울 수 있습니다.</li>
+<li>식사 기록 전체나 운동 기록 전체 지우기: 방법 2의 연락처로 요청해 주세요. <code>[확인 필요: A-03 앱 안 경로가 생기면 이 문장 수정]</code></li>
+</ul>
+
+<h2 id="deleted">지워지는 데이터</h2>
+<p>탈퇴하면 서버에서 다음 데이터를 바로 지웁니다.</p>
+<ul>
+<li>이름, 전화번호, 생년월일, 성별, 키, 몸무게, 목표, 앱 설정</li>
+<li>건강정보: 질환, 알레르기</li>
+<li>식사 기록, 식단 점수, 즐겨 찾는 음식</li>
+<li>운동 기록, 운동 루틴</li>
+<li>로그인 정보(토큰)</li>
+<li>전화번호 인증 계정(Firebase): 탈퇴할 때 삭제를 요청합니다</li>
+</ul>
+
+<h2 id="kept">남는 데이터와 기간</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="남는 데이터 표, 좌우로 넘겨 볼 수 있음">
+<table>
+<thead>
+<tr><th scope="col">남는 것</th><th scope="col">기간</th><th scope="col">이유</th></tr>
+</thead>
+<tbody>
+<tr><td>백업 파일 속 데이터(암호화됨)</td><td>백업을 만든 날부터 최대 ○일 <code>[확인 필요: D-09]</code></td><td>장애가 났을 때 복구하려고 매일 백업합니다. 기간이 지나면 자동으로 지워집니다</td></tr>
+<tr><td>전화번호 인증 계정(Google Firebase)</td><td>삭제 요청 후 최대 180일</td><td>Google이 자기 시스템에서 지우는 데 걸리는 기간입니다</td></tr>
+<tr><td>계정의 빈 기록(가입일, 마지막 접속일, 탈퇴일만)</td><td>탈퇴 후 ○년 <code>[확인 필요: D-07]</code></td><td>이 값만으로는 누구인지 알 수 없습니다. 기간이 지나면 지웁니다</td></tr>
+<tr><td>동의·철회·탈퇴 이력(항목, 버전, 시각, 방법만)</td><td>탈퇴 후 ○년 <code>[확인 필요: D-06 — 정하기 전까지는 탈퇴 즉시 삭제]</code></td><td>동의를 받았다는 사실을 증명하기 위해서입니다. 이름과 전화번호는 남기지 않습니다</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2 id="time">처리 기간</h2>
+<ul>
+<li>앱 안에서 탈퇴하면 그 자리에서 바로 지워집니다.</li>
+<li>앱 밖에서 요청하면, 본인 확인을 마친 날부터 10일 안에 지우고 결과를 알려 드립니다. <code>[확인 필요: 처리 기한 확정]</code></li>
+<li>늦어지면 이유와 예정일을 알려 드립니다.</li>
+</ul>
+
+<h2 id="more">더 알아보기</h2>
+<ul>
+<li><a href="privacy.html#s4">개인정보 처리방침 4. 처리 기간과 보유 기간</a></li>
+<li><a href="privacy.html#s5">개인정보 처리방침 5. 파기 절차와 방법</a></li>
+<li><a href="privacy.html#s10">개인정보 처리방침 10. 정보주체의 권리와 행사 방법</a></li>
+</ul>
+</main>
+<footer class="site-footer">
+<p>운영: enVision(연세대학교 학생 동아리), 대표 ○○○ · 문의 ○○○</p>
+<p>이 사이트는 쿠키와 방문 분석 도구를 쓰지 않습니다.</p>
+</footer>
+</body>
+</html>

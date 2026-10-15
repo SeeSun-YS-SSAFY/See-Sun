@@ -99,6 +99,7 @@ def weekly(user, start: date):
     if reliability == 'LOW':
         tts += '기록한 날이 적어 분석 신뢰도가 낮아요.'
     return {
+        'disclaimer': tables.DIET_SCORE['disclaimer'],
         'period': 'week', 'from': start.isoformat(), 'to': end.isoformat(),
         'average': average, 'grade': grade, 'grade_label': label, 'one_liner': phrase,
         'days': day_rows, 'feedback': feedback, 'reliability': reliability,
@@ -129,6 +130,7 @@ def monthly(user, any_day: date):
     tts = (f'{first.month}월 평균 {round_half_up(average)}점, {label}입니다.' if average is not None
            else f'{first.month}월 기록이 없어요.')
     return {
+        'disclaimer': tables.DIET_SCORE['disclaimer'],
         'period': 'month', 'from': first.isoformat(), 'to': last.isoformat(),
         'average': average, 'grade': grade, 'grade_label': label, 'one_liner': phrase,
         'weeks': weeks, 'feedback': _feedback(days, tables), 'recorded_days': recorded,

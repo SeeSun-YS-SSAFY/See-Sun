@@ -55,7 +55,6 @@ class ExerciseSession(models.Model):
         verbose_name="상태"
     )
     abnormal_end_reason = models.CharField(max_length=20, choices=ABNORMAL_END_REASON_CHOICES, blank=True, null=True, verbose_name="비정상 종료 사유")
-    device_id_hash = models.CharField(max_length=64, blank=True, null=True, verbose_name="디바이스 해시")
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="생성일")
 

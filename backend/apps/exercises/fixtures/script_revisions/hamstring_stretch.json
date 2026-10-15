@@ -1,0 +1,150 @@
+{
+ "exercise_no": 15,
+ "exercise_id": "2dd7f517402f44eb9f14d68e6df4d6b4",
+ "exercise_name": "햄스트링 스트레칭",
+ "name_en": "hamstring_stretch",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "",
+ "fields": {
+  "exercise_description": "[추천] 2세트, 각 30초, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 햄스트링 스트레칭에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 매트를 펴고 바닥에 앉아 다리를 앞으로 쭉 펴줍니다. 2. 두 다리를 앞으로 뻗고, 이때 두 다리를 직선으로 뻗기 어렵다면 무릎을 조금 구부려도 좋습니다. 손은 편안하게 몸 옆에 둡니다. 3. 허리를 곧게 펴고 상체를 바르게 세웁니다. 가슴을 펴고 자연스럽게 숨을 쉽니다.",
+  "main_form": "동작 시작 : 1. 동작을 시작할때 숨을 천천히 들이쉬고, 상체를 굽힐때 천천히 내쉽니다. 2. 허리를 곧게 유지한 상태로 천천히 상체를 숙입니다. 이때 무리하지 않고 개인이 가능한 범위 내에서 상체를 굽혀줍니다. 손은 뻗은 다리의 발목이나 발끝을 향해 뻗습니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 상체를 굽힌 상태에서 30초간 자세를 유지합니다. 햄스트링이 늘어나는 느낌에 집중하고 통증이 느껴지면 상체를 조금 들어올려 자세를 조정해 줍니다. 2. 숨을 천천히 들이마시고 내쉬면서 근육을 이완시킵니다. 3. 무릎이 너무 굽어지지 않도록 주의하고 척추가 곧게 펴지도록 유지합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 상체를 들어올리면서 몸을 일으키고 원래 앉은 자세로 돌아옵니다.",
+  "exercise_guide_text": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 2세트, 각 30초, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 햄스트링 스트레칭에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 매트를 펴고 바닥에 앉아 다리를 앞으로 쭉 펴줍니다. 2. 두 다리를 앞으로 뻗고, 이때 두 다리를 직선으로 뻗기 어렵다면 무릎을 조금 구부려도 좋습니다. 손은 편안하게 몸 옆에 둡니다. 3. 허리를 곧게 펴고 상체를 바르게 세웁니다. 가슴을 펴고 자연스럽게 숨을 쉽니다.",
+  "main_form": "동작 시작 : 1. 동작을 시작할때 숨을 천천히 들이쉬고, 상체를 굽힐때 천천히 내쉽니다. 2. 허리를 곧게 유지한 상태로 천천히 상체를 숙입니다. 이때 무리하지 않고 개인이 가능한 범위 내에서 상체를 굽혀줍니다. 손은 뻗은 다리의 발목이나 발끝을 향해 뻗습니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 상체를 굽힌 상태에서 10-15초간 자세를 유지합니다. 햄스트링이 늘어나는 느낌에 집중하고 통증이 느껴지면 상체를 조금 들어올려 자세를 조정해 줍니다. 2. 숨을 천천히 들이마시고 내쉬면서 근육을 이완시킵니다. 3. 무릎이 너무 굽어지지 않도록 주의하고 척추가 곧게 펴지도록 유지합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 상체를 들어올리면서 몸을 일으키고 원래 앉은 자세로 돌아옵니다.",
+  "exercise_guide_text": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "stay_form",
+   "section": "자세 유지",
+   "original": "1. 상체를 굽힌 상태에서 10-15초간 자세를 유지합니다.",
+   "new": "1. 상체를 굽힌 상태에서 30초간 자세를 유지합니다.",
+   "reason": "운동 소개·따라 하기의 30초와 맞춤. 고령자 정적 스트레칭 권장 30-60초, 근육 길이 변화는 30초 무렵 가장 큼(판정 script_correct). 그림 3도 '30s'로 고침.",
+   "verdict": {
+    "verdict_index": 10,
+    "item": "유지 시간 '10~15초'(그림·자세 유지) vs '30초'(운동 소개·따라 하기)",
+    "verdict": "script_correct",
+    "confidence": "high",
+    "sources": [
+     "ACSM — Stretching and Flexibility Guidelines Update (2021) — https://www.acsm.org/blog-detail/acsm-certified-blog/2021/03/18/stretching-and-flexibility-guidelines-update",
+     "Harvard Health — Take time to stretch — https://www.health.harvard.edu/staying-healthy/take-time-to-stretch",
+     "Mayo Clinic — Hamstring stretch — https://www.mayoclinic.org/diseases-conditions/hamstring-injury/multimedia/hamstring-stretch/img-20006930"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/exercise_description.mp3",
+   "mp3_seconds": 12.05,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 12.1
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/first_description.mp3",
+   "mp3_seconds": 37.3,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 7,
+   "sentences_after": 7,
+   "est_seconds_after": 37.3
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/main_form.mp3",
+   "mp3_seconds": 26.16,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 5,
+   "sentences_after": 5,
+   "est_seconds_after": 26.2
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/stay_form.mp3",
+   "mp3_seconds": 29.98,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 5,
+   "sentences_after": 5,
+   "est_seconds_after": 29.5
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/fixed_form.mp3",
+   "mp3_seconds": 9.65,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 9.7
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/hamstring_stretch/exercise_guide_text.mp3",
+   "mp3_seconds": 9.12,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 9.1
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

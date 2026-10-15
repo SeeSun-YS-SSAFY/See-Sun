@@ -1,0 +1,2331 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-10-14T15:17:54+09:00",
+  "method": "육안 검토 2회",
+  "section_keys": {
+    "source": "05-seesun-uxfb/android core/data model/Exercise.kt GuideSections.ORDER + feature/exercise player/ScriptTimeline.split",
+    "order": [
+      {
+        "key": "exercise_description",
+        "title": "운동 소개"
+      },
+      {
+        "key": "first_description",
+        "title": "준비 자세"
+      },
+      {
+        "key": "main_form",
+        "title": "동작 시작"
+      },
+      {
+        "key": "form_description",
+        "title": "동작 설명"
+      },
+      {
+        "key": "stay_form",
+        "title": "자세 유지"
+      },
+      {
+        "key": "fixed_form",
+        "title": "원래 자세로"
+      },
+      {
+        "key": "exercise_guide_text",
+        "title": "따라 하기"
+      }
+    ],
+    "sentence_rule": "대본을 줄바꿈으로 나눈 뒤 ScriptTimeline.SPLIT 정규식(한글·닫는 괄호 뒤 . ! ? 다음 공백, \" : \", 한글 뒤 \"-\" 다음 공백)으로 나누고 빈 문장은 버림. sentence_index는 0부터.",
+    "skipped": "대본이 비었거나 \"x\"인 구간은 앱에서 빠지므로 앵커에 쓰지 않음(form_description은 29개 모두 비어 있음).",
+    "anchor_meaning": "그 구간의 그 문장이 재생되기 시작할 때부터 다음 그림의 앵커 전까지 이 그림을 보여 줌.",
+    "cycle_meaning": "cycle.section_key 구간(따라 하기)에서는 cycle.sequences 그림을 차례로 되풀이. kind=유지면 hold_sequence 그림을 유지 시간 동안 보여 줌. start_sentence_index 문장부터 되풀이 시작."
+  },
+  "exercises": [
+    {
+      "no": 1,
+      "exercise_id": "2288dbb4f7e94a01b10a4c35684450e7",
+      "exercise_name": "조깅",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic01_jogging_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5분 웜업 후 1분 달리고 2분 걸으면서 전체 20분 동안 운동하기를 권장합니다.",
+          "label_ko": "똑바로 서서 팔을 내린 기본 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic01_jogging_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "팔을 굽히고 한 발을 앞으로 내디뎌 달리는 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": null,
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form"
+      ],
+      "data_notes": [
+        "따라 하기(exercise_guide_text) 구간이 없어 반복 그림을 지정하지 않음(조깅은 시간 기반 운동)."
+      ]
+    },
+    {
+      "no": 2,
+      "exercise_id": "510d083befd9489090384aa4558f5caa",
+      "exercise_name": "스텝박스를 활용한 운동",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic02_step_box_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 한 세트마다 양발 각 10회, 전체 30분 동안 운동하기를 권장합니다.",
+          "label_ko": "스텝박스 앞에 바르게 선 자세(옆모습)",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic02_step_box_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "한 발을 스텝박스 위에 올린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic02_step_box_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 2
+          },
+          "anchor_sentence": "2. 계단을 오르듯 오른발 또한 왼발 옆에 올립니다.",
+          "label_ko": "한 발을 스텝박스에 올린 자세, 좌우 각 10회 표시",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지'인데 대본에 자세 유지 구간이 없음. 그림 2와 같은 자세라 '오른발도 올림' 문장에 연결",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic02_step_box_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "한 발을 스텝박스에 올린 자세, 5세트 표시",
+          "confidence": "medium",
+          "reason": "그림 제목 '원래 자세로 돌아가기'. 다만 그림은 내려오는 모습이 아니라 올린 자세 그대로",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          1,
+          2
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "선 자세 ↔ 한 발 올림. 두 발 모두 올린 그림은 없음"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 3·4가 그림 2와 같은 자세(두 발을 모두 올린 모습·내려오는 모습 없음)."
+      ]
+    },
+    {
+      "no": 3,
+      "exercise_id": "9703e89224d94fb19d802cc7978ff3fc",
+      "exercise_name": "요가 - 우르드바하스타사나",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic03_urdhva_hastasana_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 5회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "바르게 서서 가슴 앞에 합장한 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic03_urdhva_hastasana_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "합장한 두 손을 머리 위로 뻗어 올린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic03_urdhva_hastasana_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "두 손을 머리 위로 올린 채 5초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '5초간 유지'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic03_urdhva_hastasana_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "가슴 앞 합장으로 돌아온 자세, 5회 3세트 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "올리기 → 5초 유지 → 합장으로 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 4,
+      "exercise_id": "bfc3fc834cb54087bf072b9aeafc6a3a",
+      "exercise_name": "점핑잭",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic04_jumping_jack_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 15회, 전체 20분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 모으고 팔을 내린 차렷 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic04_jumping_jack_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "발을 벌리며 양팔을 옆으로 들어 올리는 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic04_jumping_jack_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 5
+          },
+          "anchor_sentence": "2. 발을 벌리는 동작과 함께 양팔은 옆으로 머리 위로 들어 올립니다.",
+          "label_ko": "다리를 벌리고 두 손을 머리 위에서 맞댄 자세",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지 5s'지만 대본에 자세 유지 구간·5초 유지가 없음. 내용상 '양팔을 머리 위로 들어 올립니다' 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic04_jumping_jack_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "다리를 모으고 팔을 내린 자세, 15회 3세트 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "팔 벌리기 → 머리 위 → 모으기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 3의 '5s' 유지 표시가 대본(연속 점프)과 맞지 않음."
+      ]
+    },
+    {
+      "no": 5,
+      "exercise_id": "9c251915e2cb4f0c8514c102000d9296",
+      "exercise_name": "암워킹",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic05_arm_walking_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 10회, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "정면을 보고 바르게 선 자세(옆모습)",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic05_arm_walking_02.jpg",
+          "anchor": {
+            "section_key": "first_description",
+            "sentence_index": 4
+          },
+          "anchor_sentence": "2. 무릎을 편 채로 상체를 천천히 앞으로 숙이면서 두 손을 바닥에 짚어주세요.",
+          "label_ko": "무릎을 편 채 상체를 숙여 두 손으로 바닥을 짚은 자세",
+          "confidence": "high",
+          "reason": "그림 제목은 '동작 시작'이지만 그림 내용은 기본 자세 4번 문장 '상체를 숙이면서 두 손을 바닥에 짚어주세요'와 같음 [2차 검토 수정]",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic05_arm_walking_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지하기",
+          "label_ko": "손을 앞으로 옮겨 몸이 길게 늘어난 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '엎드린 자세 지점까지 이동'",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic05_arm_walking_04.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 2
+          },
+          "anchor_sentence": "2. 엎드린 자세로 도달한 후에는, 5초 간 멈추고 중심을 다시 잡은 후 원래 위치로 돌아갈 준비를 합니다.",
+          "label_ko": "엎드린 자세에 도달해 5초 멈춘 자세, 10회 3세트 표시",
+          "confidence": "medium",
+          "reason": "그림 제목은 '원래 자세로 돌아가기'지만 그림은 도착한 엎드린 자세라 '도달 후 5초 멈춤' 문장에 연결. 돌아가는 구간 동안 그대로 보임 [2차 검토 수정]",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4,
+          3
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "숙이기 → 손 걸어 나가기 → 엎드린 자세 → 손을 뒤로 걸어 돌아오기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 6,
+      "exercise_id": "366785c0207b4071aa0a7f3ce11297ea",
+      "exercise_name": "스탠스잭",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic06_stance_jack_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 각 10회, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 어깨너비로 벌리고 선 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic06_stance_jack_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "무릎을 굽히고 팔을 뒤로 당겨 몸을 낮춘 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic06_stance_jack_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "팔을 앞으로 휘두르며 위로 점프하는 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 이 운동의 자세 유지 구간은 점프 설명",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic06_stance_jack_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "착지 후 바로 선 자세, 10회 2세트 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "낮추기 → 점프 → 착지"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 7,
+      "exercise_id": "e731c7d887204d8293549be07a09e0bd",
+      "exercise_name": "마운틴 클라이머",
+      "category": "유산소 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/aerobic/aerobic07_mountain_climber_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 각 10회, 전체 15분 동안 운동하기를 권장합니다.",
+          "label_ko": "두 손으로 바닥을 짚고 다리를 뒤로 뻗은 플랭크 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/aerobic/aerobic07_mountain_climber_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "한쪽 무릎을 가슴 쪽으로 당긴 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/aerobic/aerobic07_mountain_climber_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 3
+          },
+          "anchor_sentence": "2. 오른쪽 다리를 원래 위치로 되돌리면서 이번엔 왼쪽 무릎을 같은 방식으로 가슴 쪽으로 당겨주세요.",
+          "label_ko": "반대쪽 무릎을 가슴 쪽으로 당긴 자세",
+          "confidence": "medium",
+          "reason": "그림 제목은 '자세 유지'지만 그림은 반대 다리 당기기. 대본 '이번엔 왼쪽 무릎을' 문장에 연결",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/aerobic/aerobic07_mountain_climber_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "플랭크 자세로 돌아온 자세, 10회 2세트 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "왼·오른 무릎 번갈아 당기기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 8,
+      "exercise_id": "f5041aa4c2f047a5adb19861733da754",
+      "exercise_name": "타이치 운동",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance01_taichi_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 어깨너비로 벌리고 팔을 내린 선 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance01_taichi_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "한 발을 옆으로 들고 팔을 벌려 몸을 기울인 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance01_taichi_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "몸을 옆으로 크게 기울여 한 발로 균형을 잡은 자세, 10~15초 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10-15초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance01_taichi_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "다리를 내리고 팔을 살짝 벌린 채 선 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "들기 → 기울여 유지 → 내리기. 유지 시간 동안 그림 3"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 9,
+      "exercise_id": "cc0c3e2be33d476580fd85c6a2898e55",
+      "exercise_name": "명상 및 호흡 운동",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance02_meditation_breathing_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 1세트, 한 세트마다 10분 유지, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "매트에 반듯이 누운 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance02_meditation_breathing_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "누운 채 호흡하는 자세(그림 1과 같은 모습)",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance02_meditation_breathing_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "누운 자세로 5~10분 호흡 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '운동 진행'. 대본의 자세 유지(10분 반복) 구간",
+          "needs_client": false
+        }
+      ],
+      "cycle": null,
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form"
+      ],
+      "data_notes": [
+        "따라 하기 구간이 없음. 세 그림이 같은 누운 자세라 반복 그림이 의미 없음.",
+        "그림 3은 '5~10m', 대본은 10분.",
+        "대본은 '앉거나 누운 상태'인데 그림은 누운 자세만 있음."
+      ]
+    },
+    {
+      "no": 10,
+      "exercise_id": "46b36e1a65c14c14a63f811ccce346b3",
+      "exercise_name": "버드 도그 홀드",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance03_bird_dog_hold_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2 세트, 좌우 각 7회, 전체 15분 동안 운동하기를 권장합니다.",
+          "label_ko": "매트에 네 발로 엎드린 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance03_bird_dog_hold_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "한쪽 팔과 반대쪽 다리를 뻗어 든 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance03_bird_dog_hold_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "팔과 다리를 뻗은 채 3~5초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '3-5초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance03_bird_dog_hold_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "네 발 자세로 돌아온 자세, 좌우 각 3회 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "뻗기 → 3~5초 유지 → 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 4는 '좌우 각 3회', 대본은 '좌우 각 7회'."
+      ]
+    },
+    {
+      "no": 11,
+      "exercise_id": "b1a434abc1524c36a13ef36de79333f4",
+      "exercise_name": "T 밸런스 자세",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance04_t_balance_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2 세트, 좌우 각 3회, 전체 7분 동안 운동하기를 권장합니다.",
+          "label_ko": "한 발로 서고 다른 발을 살짝 뒤로 든 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'. 대본 '왼발만으로 섭니다'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance04_t_balance_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "상체를 앞으로 숙이고 한 다리를 뒤로 뻗은 T자 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance04_t_balance_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "T자 자세로 10초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance04_t_balance_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "두 발로 바로 선 자세, 좌우 각 3회 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "T자 → 10초 유지 → 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 12,
+      "exercise_id": "332ca283b8d445db9a572bc2a0d728d3",
+      "exercise_name": "체중 이동",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance05_weight_shift_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 좌우 각 2회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 엉덩이 너비로 벌리고 선 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance05_weight_shift_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "상체를 한쪽으로 45도 기울이고 반대 발을 든 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장. 45도 표시",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance05_weight_shift_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "기울인 자세로 30초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '최대 30초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance05_weight_shift_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "두 발로 바로 선 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "기울이기 → 30초 유지 → 바로 서기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "대본 안에서 횟수가 다름: 운동 소개 '좌우 각 2회', 따라 하기 '좌우 각 1회'."
+      ]
+    },
+    {
+      "no": 13,
+      "exercise_id": "a0c7f4f007ae4696a398358b2205d492",
+      "exercise_name": "하이 런지 자세",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance06_high_lunge_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 좌우 각 5회, 전체 7분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 골반 너비로 벌리고 바로 선 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance06_high_lunge_02.jpg",
+          "anchor": {
+            "section_key": "first_description",
+            "sentence_index": 3
+          },
+          "anchor_sentence": "골반 너비를 유지하며, 왼쪽 다리가 90도로 ㄱ 모양이 되도록 무릎을 굽히며 앞으로 내딥니다.",
+          "label_ko": "한 발을 앞으로 굽히고 다른 다리를 뒤로 뻗어 두 팔을 머리 위로 올린 런지 자세",
+          "confidence": "medium",
+          "reason": "그림 제목은 '동작 시작'이지만 대본은 기본 자세 단계에서 이미 앞으로 내딛어 런지 자세를 잡음",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance06_high_lunge_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "런지 자세로 10초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance06_high_lunge_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "두 발을 골반 너비로 모으고 선 자세, 좌우 각 5회 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "내딛기 → 유지 → 모으기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 14,
+      "exercise_id": "3b747cdbe699434b8c4eb6ee2ad134ac",
+      "exercise_name": "발끝 합장 자세",
+      "category": "균형 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/balance/balance07_feet_together_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 10회, 전체 7분 동안 진행하기를 권장합니다.",
+          "label_ko": "무릎을 굽혀 자세를 낮추고 두 팔을 앞으로 뻗은 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/balance/balance07_feet_together_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "까치발로 쪼그려 앉아 가슴 앞에 합장한 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/balance/balance07_feet_together_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "까치발 합장 자세로 10초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/balance/balance07_feet_together_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 4
+          },
+          "anchor_sentence": "2. 손을 짚은 상태에서 엉덩이를 천천히 위로 들어 올리세요.",
+          "label_ko": "손을 바닥에 짚고 엉덩이를 들어 상체를 숙인 자세(일어나는 화살표)",
+          "confidence": "medium",
+          "reason": "그림 제목 '원래 자세로 돌아가기'. 엉덩이를 든 모습은 '엉덩이를 천천히 위로 들어 올리세요' 문장부터 [2차 검토 수정]",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          1,
+          2,
+          3
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "낮추기 → 까치발 합장 → 10초 유지"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 15,
+      "exercise_id": "2dd7f517402f44eb9f14d68e6df4d6b4",
+      "exercise_name": "햄스트링 스트레칭",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility01_hamstring_stretch_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 각 30초, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "바닥에 앉아 다리를 앞으로 뻗고 상체를 세운 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility01_hamstring_stretch_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "상체를 숙여 손을 발끝 쪽으로 뻗은 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility01_hamstring_stretch_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "상체를 숙인 채 10~15초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10-15초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility01_hamstring_stretch_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "상체를 천천히 일으키는 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "숙이기 → 유지 → 일으키기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "유지 시간이 다름: 자세 유지 '10-15초', 운동 소개·따라 하기 '30초'."
+      ]
+    },
+    {
+      "no": 16,
+      "exercise_id": "2470b9fd398944f69bb3c01bc73b5683",
+      "exercise_name": "나비자세",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility02_butterfly_pose_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 1회, 전체 1분 동안 운동하기를 권장합니다.",
+          "label_ko": "발바닥을 맞대고 앉아 두 손으로 발을 잡은 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility02_butterfly_pose_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "발을 잡은 채 상체를 앞으로 숙인 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility02_butterfly_pose_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "숙인 채 10~15초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10~15초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility02_butterfly_pose_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "상체를 세우고 다리를 앞으로 뻗어 앉은 자세",
+          "confidence": "medium",
+          "reason": "그림 제목 '원래 자세로 돌아가기'. 다리 뻗기는 이 구간 3번 문장이지만 상체 세우기가 0~2번이라 구간 시작에 연결",
+          "needs_client": false
+        }
+      ],
+      "cycle": null,
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form"
+      ],
+      "data_notes": [
+        "따라 하기 구간이 없음(운동 소개는 '2세트, 1회')."
+      ]
+    },
+    {
+      "no": 17,
+      "exercise_id": "d2aa91255c20496ab0aab7163569e2a3",
+      "exercise_name": "벽에 다리 올리기",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility03_legs_up_wall_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 한 세트마다 3분 유지, 전체 20분 동안 운동하기를 권장합니다.",
+          "label_ko": "벽 가까이 누워 무릎을 세운 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility03_legs_up_wall_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "누워서 두 다리를 벽에 곧게 올린 자세(엉덩이와 벽 사이 15cm 표시)",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility03_legs_up_wall_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "다리를 벽에 올린 채 3분 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 따라 하기 '3분 유지'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility03_legs_up_wall_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "다리를 벽에서 떼어 무릎을 굽혀 내리는 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "올리기 → 3분 유지 → 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 18,
+      "exercise_id": "5474e18720a340cfb8b482a417cf1d08",
+      "exercise_name": "고양이-소 자세",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 고양이, 소 자세 각각 3-5초씩 유지, 전체 2분 동안 운동하기를 권장합니다.",
+          "label_ko": "네 발로 엎드린 기본 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "등을 둥글게 말고 머리를 숙인 고양이 자세, 10~15초 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작 1 - 고양이 자세'",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 6
+          },
+          "anchor_sentence": "이번엔 소 자세입니다.",
+          "label_ko": "등을 아래로 내리고 머리를 든 소 자세, 10~15초 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작 2 - 소 자세'. 대본 '이번엔 소 자세입니다'",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_04.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "네 발 자세, 5~10회 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "고양이 ↔ 소 번갈아"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림은 각 자세 '10~15s', 대본은 '3-5초'.",
+        "그림 4는 '5~10회', 대본은 '5세트'."
+      ]
+    },
+    {
+      "no": 19,
+      "exercise_id": "78f36d5f97c242f78379f5f463c88f21",
+      "exercise_name": "다리 스트레칭",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 한 세트마다 30초 유지, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "바닥에 앉아 다리를 앞으로 뻗은 자세",
+          "confidence": "low",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'. 그런데 대본은 '바르게 눕습니다'라 그림(앉은 자세)과 다름",
+          "needs_client": true
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "앉은 채 한쪽 무릎을 굽혀 다리를 들어 올리는 자세",
+          "confidence": "medium",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장. 대본은 누운 자세 기준",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 4
+          },
+          "anchor_sentence": "3. 손깍지를 유지한 상태에서, 왼쪽 발바닥이 하늘을 향하도록 천천히 다리를 일자로 펴줍니다.",
+          "label_ko": "두 손으로 허벅지를 잡고 다리를 들어 30초 유지",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지 30s'인데 대본에 자세 유지 구간이 없음. 다리를 곧게 펴 발바닥이 위를 향한 모습이 '다리를 일자로 펴줍니다' 문장과 같음. 앉음/누움 질문은 그림 1에 모음 [2차 검토 수정]",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "들었던 다리를 내리는 자세, 5회 표시",
+          "confidence": "medium",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "들기 → 30초 유지 → 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림은 앉은 자세, 대본은 누운 자세(바르게 눕습니다).",
+        "그림 4 '5회', 대본 '5세트·30초 유지'."
+      ]
+    },
+    {
+      "no": 20,
+      "exercise_id": "38e69682332a4e0b9f3149559459c29f",
+      "exercise_name": "허리 비틀기",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility06_waist_twist_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 좌우 각 5회, 전체 7분 동안 운동하기를 권장합니다.",
+          "label_ko": "팔다리를 펴고 바로 누운 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility06_waist_twist_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "누워서 한쪽 무릎을 세운 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility06_waist_twist_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 3
+          },
+          "anchor_sentence": "2. 세워진 왼쪽 다리를 오른쪽으로 넘깁니다.",
+          "label_ko": "세운 무릎을 반대쪽으로 넘겨 바닥 쪽으로 누르는 자세, 10초 표시",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지 10s'. 대본에 자세 유지 구간이 없어 '오른쪽으로 넘깁니다' 문장에 연결",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility06_waist_twist_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "넘겼던 무릎을 제자리로 되돌리는 자세, 5회 3세트 표시",
+          "confidence": "medium",
+          "reason": "그림 제목은 '자세 유지'지만 되돌리는 화살표라 원래 위치로 구간에 연결",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "세우기 → 넘겨 10초 유지 → 되돌리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 4 제목이 '자세 유지'로 잘못 표기된 것으로 보임(내용은 되돌리기)."
+      ]
+    },
+    {
+      "no": 21,
+      "exercise_id": "784aec1160d0444d9e60d7874169a8aa",
+      "exercise_name": "트렁크 트위스트 (Lying trunk twist)",
+      "category": "유연성 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility07_trunk_twist_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 좌우 각 1회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "등을 대고 누워 두 팔을 T자로 벌린 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility07_trunk_twist_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "누워서 두 무릎을 모아 구부린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility07_trunk_twist_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 4
+          },
+          "anchor_sentence": "2. 천천히 무릎을 오른쪽으로 내립니다.",
+          "label_ko": "모은 무릎을 한쪽 바닥으로 내린 자세",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지'. 대본에 자세 유지 구간이 없어 '무릎을 오른쪽으로 내립니다' 문장에 연결",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/flexibilty/flexibility07_trunk_twist_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "무릎을 다시 가운데로 들어 올리는 자세",
+          "confidence": "medium",
+          "reason": "그림 제목은 '자세 유지'지만 들어 올리는 화살표라 원래 위치로 구간에 연결",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "무릎 모으기 → 옆으로 내리기 → 가운데로"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 4 표시 'xR1+L3 5세트'는 대본 '좌우 각 1회, 5세트'와 다름(오타 추정)."
+      ]
+    },
+    {
+      "no": 22,
+      "exercise_id": "72b12c60d356424ca2f9d111908992fe",
+      "exercise_name": "맨몸 스쿼트",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength01_bodyweight_squat_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 각 10회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "바로 서서 두 팔을 앞으로 뻗은 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength01_bodyweight_squat_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 3
+          },
+          "anchor_sentence": "2. 천천히 무릎을 구부려 엉덩이를 뒤쪽으로 밀어내듯이 앉기 시작하세요.",
+          "label_ko": "무릎을 굽혀 엉덩이를 뒤로 빼고 앉은 자세",
+          "confidence": "high",
+          "reason": "그림 제목은 '동작 시작'. 앉은 모습이라 '무릎을 구부려 앉기 시작하세요' 문장에 연결(1~2번은 아직 선 채 발 확인) [2차 검토 수정]",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength01_bodyweight_squat_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 5
+          },
+          "anchor_sentence": "3. 엉덩이가 무릎 높이와 평행하거나 그보다 살짝 낮은 위치까지 내려갑니다.",
+          "label_ko": "앉은 자세로 1초 멈춘 자세",
+          "confidence": "medium",
+          "reason": "그림 제목 '자세 유지 1s'. 대본에 자세 유지 구간이 없어 '무릎 높이까지 내려갑니다' 문장에 연결",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength01_bodyweight_squat_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "무릎을 펴고 다시 선 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 5,
+        "hold_sequence": null,
+        "note": "'하나, 들이쉬고-'(5번 문장)부터: 내려가기(들이쉬기) → 멈춤 → 올라오기(내쉬기)"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 23,
+      "exercise_id": "d1638bb562764f0eb02a3da02de372ac",
+      "exercise_name": "플랭크",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength02_plank_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 한 세트마다 10-30초 유지, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "팔꿈치와 무릎을 바닥에 댄 네 발 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength02_plank_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "다리를 뒤로 뻗어 팔꿈치로 몸을 받친 플랭크 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength02_plank_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "플랭크 자세로 10~30초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 대본 '10초에서 30초'와 일치",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength02_plank_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "무릎을 바닥에 내린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "다리 뻗기 → 유지 → 무릎 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 24,
+      "exercise_id": "7c362f80bc2441e3ae09f576abf9307a",
+      "exercise_name": "밴드 풀 어파트",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength03_band_pull_apart_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 10회, 전체 7분 동안 운동하기를 권장합니다.",
+          "label_ko": "발을 어깨너비로 벌리고 두 손으로 밴드를 허리 앞에 잡고 선 자세(정면)",
+          "confidence": "medium",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'. 정면·어깨너비 표시는 대본과 맞음. 밴드를 허리 높이에 든 것은 팔을 들기 전 단계로 봄 [2차 검토 수정]",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength03_band_pull_apart_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "다리를 앞뒤로 벌리고 밴드를 대각선으로 당겨 뻗은 자세",
+          "confidence": "low",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장. 대본(양손 수평으로 벌리기)과 그림(대각선, 앞뒤 다리)이 다름",
+          "needs_client": true
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength03_band_pull_apart_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "대각선으로 당긴 밴드 자세 유지",
+          "confidence": "low",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장. 그림 2와 같은 대각선 동작",
+          "needs_client": true
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength03_band_pull_apart_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "바로 서서 밴드를 대각선으로 든 자세",
+          "confidence": "low",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장. 대본은 '양손을 가슴 앞으로 모음'",
+          "needs_client": true
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "그림 동작이 대본과 달라 고객 확인 후 확정"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림은 다리를 앞뒤로 벌린 대각선 당기기, 대본은 어깨너비로 서서 양손을 수평으로 벌리는 동작."
+      ]
+    },
+    {
+      "no": 25,
+      "exercise_id": "eab9237454634a95ab4ca1a18ffb8d14",
+      "exercise_name": "푸쉬업",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength04_push_up_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 2세트, 각 7회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "팔을 펴고 몸을 일직선으로 든 엎드린 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength04_push_up_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "팔꿈치를 굽혀 가슴을 반쯤 내린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength04_push_up_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "가슴을 바닥 가까이 내린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength04_push_up_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "팔을 펴고 몸을 다시 올린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "내리기 → 바닥 가까이 → 올리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": []
+    },
+    {
+      "no": 26,
+      "exercise_id": "b09b403f4962401cb46b0f8fd0a52e87",
+      "exercise_name": "런지",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength05_lunge_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 한 세트마다 양다리 각 6회, 전체 3분 동안 운동하기를 권장합니다.",
+          "label_ko": "바로 선 자세(정면)",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength05_lunge_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "한 발을 앞으로 내딛고 뒷무릎을 바닥 가까이 굽힌 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength05_lunge_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "런지 자세로 3초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength05_lunge_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "두 발을 모으고 바로 선 자세(옆모습)",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "내딛기 → 유지 → 돌아오기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 3은 '3s', 대본은 '5초 정도 유지'."
+      ]
+    },
+    {
+      "no": 27,
+      "exercise_id": "cae119843d814b53bbca8193702e7331",
+      "exercise_name": "힙 브릿지",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength06_hip_bridge_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 5세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.",
+          "label_ko": "누워서 무릎을 세운 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength06_hip_bridge_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "누워서 엉덩이를 들어 올린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength06_hip_bridge_03.jpg",
+          "anchor": {
+            "section_key": "stay_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "자세 유지",
+          "label_ko": "엉덩이를 든 채 2초 유지",
+          "confidence": "high",
+          "reason": "그림 제목 '자세 유지'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength06_hip_bridge_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "원래 위치로 돌아가기",
+          "label_ko": "엉덩이를 바닥에 내린 자세, 5~10회 표시",
+          "confidence": "high",
+          "reason": "그림 제목 '원래 자세로 돌아가기'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3,
+          4
+        ],
+        "kind": "유지",
+        "start_sentence_index": 0,
+        "hold_sequence": 3,
+        "note": "들기 → 유지 → 내리기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "stay_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 3은 '2s', 대본은 '5초간 유지', 운동 소개는 '10-20초 유지'.",
+        "그림 4 '5~10회', 대본 '5세트'."
+      ]
+    },
+    {
+      "no": 28,
+      "exercise_id": "845c6389e84c4a3eace7fb2bf534bf68",
+      "exercise_name": "버피테스트",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength07_burpee_test_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 4세트, 각 5회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "바로 선 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength07_burpee_test_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "쪼그려 앉아 두 손으로 바닥을 짚은 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength07_burpee_test_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 4
+          },
+          "anchor_sentence": "4. 오른쪽 다리 또한 뒤로 쭉 펴줍니다.",
+          "label_ko": "두 다리를 뒤로 뻗고 팔을 편 엎드린 자세",
+          "confidence": "high",
+          "reason": "제목 없는 그림. 대본 '오른쪽 다리도 뒤로 쭉 펴줍니다'(두 다리 모두 뻗음)",
+          "needs_client": false
+        },
+        {
+          "sequence": 4,
+          "file": "/media/exercises/pictograms/strength/strength07_burpee_test_04.jpg",
+          "anchor": {
+            "section_key": "fixed_form",
+            "sentence_index": 2
+          },
+          "anchor_sentence": "2. 왼쪽 다리를 다시 앞으로 가져온 후 오른쪽 다리도 다시 앞으로 가져와 쪼그려 앉은 상태를 만들어줍니다.",
+          "label_ko": "다시 쪼그려 앉아 손으로 바닥을 짚은 자세, 5회 4세트 표시",
+          "confidence": "medium",
+          "reason": "그림 제목 '원래 자세로 돌아가기'. 쪼그려 앉은 모습은 이 구간 2번 문장(다리를 앞으로 가져와 쪼그려 앉기)",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "서기 → 쪼그려 앉기 → 다리 뻗기 → 쪼그려 앉기"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "대본 5번 문장 '가슴을 바닥에 대고 상체를 내립니다' 그림은 없음."
+      ]
+    },
+    {
+      "no": 29,
+      "exercise_id": "13aa226cee924a47b4d96fc292f6f004",
+      "exercise_name": "레그레이즈",
+      "category": "근력 운동",
+      "pictograms": [
+        {
+          "sequence": 1,
+          "file": "/media/exercises/pictograms/strength/strength08_leg_raise_01.jpg",
+          "anchor": {
+            "section_key": "exercise_description",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "[추천] 3세트, 각 15-20회, 전체 10분 동안 운동하기를 권장합니다.",
+          "label_ko": "누워서 두 다리를 바닥에서 15~20cm 든 자세",
+          "confidence": "high",
+          "reason": "첫 그림은 첫 구간 0번 문장에 고정(규칙). 그림 제목 '기본 자세 잡기'. 15~20cm 표시",
+          "needs_client": false
+        },
+        {
+          "sequence": 2,
+          "file": "/media/exercises/pictograms/strength/strength08_leg_raise_02.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 0
+          },
+          "anchor_sentence": "동작 시작",
+          "label_ko": "두 다리를 90도까지 들어 올린 자세",
+          "confidence": "high",
+          "reason": "그림 제목 '동작 시작'과 같은 이름의 구간 첫 문장. 90도 표시",
+          "needs_client": false
+        },
+        {
+          "sequence": 3,
+          "file": "/media/exercises/pictograms/strength/strength08_leg_raise_03.jpg",
+          "anchor": {
+            "section_key": "main_form",
+            "sentence_index": 3
+          },
+          "anchor_sentence": "2. 이번엔 45도 각도까지 다리를 천천히 내립니다.",
+          "label_ko": "다리를 45도까지 내리는 자세, 30회 표시",
+          "confidence": "medium",
+          "reason": "그림 제목은 '원래 자세로 돌아가기'지만 그림은 '45도까지 내립니다' 문장 내용",
+          "needs_client": false
+        }
+      ],
+      "cycle": {
+        "section_key": "exercise_guide_text",
+        "sequences": [
+          2,
+          3
+        ],
+        "kind": "반복",
+        "start_sentence_index": 0,
+        "hold_sequence": null,
+        "note": "90도 ↔ 45도"
+      },
+      "sections_present": [
+        "exercise_description",
+        "first_description",
+        "main_form",
+        "fixed_form",
+        "exercise_guide_text"
+      ],
+      "data_notes": [
+        "그림 3 '30회', 대본 '15-20회, 3세트'."
+      ]
+    }
+  ]
+}

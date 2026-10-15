@@ -1,9 +1,13 @@
 # 개발·테스트 의존성(CI도 이 파일을 설치)
 -r requirements.txt
+-r requirements-media.txt
 
 pytest==9.0.2
 pytest-django==4.11.1
 pytest-asyncio==1.4.0
+
+# 픽토그램 보기용 사본(make_pictogram_display, 콘텐츠 준비 명령). 앱 응답에는 필요 없다(사본은 MEDIA에 미리 만든다).
+Pillow==11.3.0
 
 # 1차 웹 데모 호환(LEGACY_STT_ENABLED=true): 서버 STT·WebSocket. 운영 이미지에는 넣지 않는다.
 channels==4.3.2

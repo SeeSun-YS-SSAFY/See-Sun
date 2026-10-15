@@ -18,6 +18,7 @@ from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from apps.consents.permissions import DATA_API_PERMISSIONS
+from apps.core.dates import RANGE_MESSAGE, parse_api_date
 from apps.core.responses import validation_error
 from apps.exercises.models import Exercise, Playlist
 from apps.users.profile import local_today
@@ -27,6 +28,8 @@ from .models import ExerciseSession, ExerciseSessionItem
 
 MIN_VALID_SECONDS = 10.0
 CLOCK_SKEW = timedelta(minutes=5)
+# 한 세션 최대 길이(항목 duration_ms 상한과 같다)
+MAX_SESSION_DURATION = timedelta(hours=24)
 
 
 class SyncRateThrottle(UserRateThrottle):
@@ -63,6 +66,9 @@ class SessionInputSerializer(serializers.Serializer):
         ended = attrs.get('ended_at')
         if ended and ended < attrs['started_at']:
             raise serializers.ValidationError({'ended_at': '종료 시각이 시작보다 빠릅니다.'})
+        if ended and ended - attrs['started_at'] > MAX_SESSION_DURATION:
+            # duration_ms(IntegerField)는 약 24.8일까지만 담긴다 → 넘으면 DB integer out of range 500(배포 리허설 B-09)
+            raise serializers.ValidationError({'ended_at': '운동 세션은 24시간을 넘을 수 없습니다.'})
         user = self.context['user']
         playlist_id = attrs.pop('playlist_id', None)
         attrs['playlist'] = None
@@ -180,7 +186,8 @@ def weekly_summary(user, any_day: date):
         days[day]['seconds'] += seconds or 0
     total_seconds = int(sum(d['seconds'] for d in days.values()))
     count = sum(d['count'] for d in days.values())
-    minutes = round(total_seconds / 60)
+    # 반올림은 0.5에서 올린다(앱 요일별 분 표시와 같게). round()는 은행가 반올림이라 30초를 0분으로 읽었다(통합 E2E BUG-06).
+    minutes = (total_seconds + 30) // 60
     label = '이번 주' if start == local_today() - timedelta(days=local_today().weekday()) else f'{start.month}월 {start.day}일 주'
     tts = f'{label} 운동 {count}회, 총 {minutes}분이에요.' if count else f'{label}에는 운동 기록이 없어요.'
     return {
@@ -198,9 +205,7 @@ class WeeklyExerciseView(APIView):
     @extend_schema(summary='주간 운동 리포트', tags=['Exercise'], responses=WeeklyExerciseSerializer,
                    parameters=[OpenApiParameter('from', str, description='YYYY-MM-DD(그 주 월요일로 맞춤), 기본 이번 주')])
     def get(self, request):
-        raw = request.query_params.get('from')
-        try:
-            day = date.fromisoformat(raw) if raw else local_today()
-        except ValueError:
-            return validation_error({'from': ['YYYY-MM-DD 형식이어야 합니다.']})
+        day = parse_api_date(request.query_params.get('from'), local_today())
+        if day is None:
+            return validation_error({'from': ['YYYY-MM-DD 형식이어야 합니다.', RANGE_MESSAGE]})
         return Response(WeeklyExerciseSerializer(weekly_summary(request.user, day)).data)

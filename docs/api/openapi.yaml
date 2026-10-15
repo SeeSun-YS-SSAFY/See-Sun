@@ -109,9 +109,8 @@ paths:
   /api/v1/auth/token/refresh/:
     post:
       operationId: auth_token_refresh_create
-      description: |-
-        Takes a refresh type JSON web token and returns an access type JSON web
-        token if the refresh token is valid.
+      description: POST /auth/token/refresh/ — 앱은 7일 회전 refresh로 오래 로그인 상태를 유지하므로
+        갱신 때도 last_login을 남긴다
       tags:
       - auth
       requestBody:
@@ -988,7 +987,7 @@ paths:
   /api/v1/me/health/:
     get:
       operationId: me_health_retrieve
-      description: 질환·알레르기·목표(민감정보 동의 필요)
+      description: 질환·알레르기·목표(민감정보 동의 필요). 삭제는 동의와 상관없이 언제든 할 수 있다(권리 행사, 법적 검토 A-03·A-04).
       summary: 건강 설정 조회
       tags:
       - Health
@@ -1027,6 +1026,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthProfile'
+          description: ''
+    delete:
+      operationId: me_health_destroy
+      description: 질환·알레르기·기타 알레르기와 질환 기반 식단 점수를 지운다. 계정·동의·목표·식사 기록은 남는다.
+      summary: 건강 정보만 삭제(데이터 초기화)
+      tags:
+      - Health
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialDeleteResponse'
+          description: ''
+  /api/v1/me/meals/:
+    delete:
+      operationId: me_meals_destroy
+      description: 식사 기록과 식단 점수를 모두 지운다. 계정·동의·건강 정보·선호 식단은 남는다.
+      summary: 식사 기록 전체 삭제(데이터 초기화)
+      tags:
+      - Meals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartialDeleteResponse'
           description: ''
   /api/v1/meals/:
     get:
@@ -1767,6 +1797,18 @@ components:
           type: boolean
         method:
           $ref: '#/components/schemas/MethodEnum'
+        app_version:
+          type: string
+          description: 앱 버전(입증용)
+          maxLength: 32
+        screen_id:
+          type: string
+          description: 동의를 받은 화면 ID(입증용)
+          maxLength: 40
+        voice_confirmed:
+          type: boolean
+          nullable: true
+          description: 음성 동의 재확인 통과 여부
       required:
       - agreed
       - method
@@ -1779,6 +1821,10 @@ components:
           allOf:
           - $ref: '#/components/schemas/ConsentTypeEnum'
           title: 동의 항목
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/KindEnum'
+          title: 종류
         version:
           type: string
           title: 버전
@@ -1829,6 +1875,8 @@ components:
       properties:
         type:
           $ref: '#/components/schemas/ConsentTypeEnum'
+        kind:
+          $ref: '#/components/schemas/KindEnum'
         title:
           type: string
         required:
@@ -1854,6 +1902,7 @@ components:
       - agreed_at
       - agreed_version
       - current_version
+      - kind
       - method
       - needs_reconsent
       - required
@@ -1920,10 +1969,14 @@ components:
           type: string
         tts_message:
           type: string
+        disclaimer:
+          type: string
+          description: '점수 화면 고지: 영양 성분으로 계산한 참고 점수(건강 상태 평가 아님)'
       required:
       - algo_version
       - components
       - date
+      - disclaimer
       - grade
       - grade_label
       - notice
@@ -1982,7 +2035,12 @@ components:
             $ref: '#/components/schemas/Warning'
         tts_message:
           type: string
+        indicator_notice:
+          type: string
+          nullable: true
+          description: '당뇨 선택 사용자에게만: 지표 안내(앱이 최초 1회 낭독)'
       required:
+      - indicator_notice
       - items
       - tts_message
       - warnings
@@ -2088,15 +2146,40 @@ components:
           items:
             type: string
           readOnly: true
+        pictogram_frames:
+          type: array
+          items:
+            $ref: '#/components/schemas/PictogramFrame'
+          readOnly: true
+        pictogram_cycle:
+          allOf:
+          - $ref: '#/components/schemas/PictogramCycle'
+          nullable: true
+          readOnly: true
+        audios:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
         merged_audio_url:
           type: string
           readOnly: true
+        script_revised:
+          type: boolean
+          title: 대본 수정됨(의뢰인 확인 필요)
+        audio_stale:
+          type: boolean
+          title: 녹음 음성이 대본과 다름(기기 음성으로 읽기)
       required:
+      - audios
       - category_name
       - exercise_guide
       - exercise_id
       - exercise_name
       - merged_audio_url
+      - pictogram_cycle
+      - pictogram_frames
       - pictograms
     ExerciseSession:
       type: object
@@ -2382,6 +2465,10 @@ components:
           format: date
           nullable: true
           title: 데이터 기준일자
+        source_name:
+          type: string
+          title: 출처명(원 자료 기관)
+          maxLength: 100
       required:
       - allergens
       - basis
@@ -2553,6 +2640,14 @@ components:
         * `VOICE` - 음성
         * `PHOTO` - 촬영
         * `MANUAL` - 직접 입력
+    KindEnum:
+      enum:
+      - CONSENT
+      - NOTICE
+      type: string
+      description: |-
+        * `CONSENT` - 동의
+        * `NOTICE` - 고지 확인
     LegacyGenderEnum:
       enum:
       - M
@@ -2760,8 +2855,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DayScore'
+        indicator_notice:
+          type: string
+          nullable: true
+          description: '당뇨 선택 사용자에게만: 지표 안내(앱이 최초 1회 낭독)'
       required:
       - day_scores
+      - indicator_notice
       - meals
       - results
       - warnings
@@ -2993,6 +3093,22 @@ components:
       - consents_required
       - profile_completed
       - sensitive_consent
+    PartialDeleteResponse:
+      type: object
+      properties:
+        deleted:
+          type: array
+          items:
+            type: string
+          description: 지운 데이터 종류
+        count:
+          type: integer
+          description: 지운 식사 기록 수(식사 삭제일 때)
+        tts_message:
+          type: string
+      required:
+      - deleted
+      - tts_message
     PatchedMeUpdateRequest:
       type: object
       properties:
@@ -3132,6 +3248,67 @@ components:
           format: date
           nullable: true
           title: 생년월일
+    PictogramCycle:
+      type: object
+      description: '반복·유지 구간: section의 start_sentence_index번째 문장부터 sequences 그림을 1초마다
+        되풀이(kind 반복|유지, 유지 그림 hold_sequence).'
+      properties:
+        section:
+          type: string
+        sequences:
+          type: array
+          items:
+            type: integer
+        kind:
+          type: string
+          nullable: true
+        start_sentence_index:
+          type: integer
+        hold_sequence:
+          type: integer
+          nullable: true
+      required:
+      - hold_sequence
+      - kind
+      - section
+      - sequences
+      - start_sentence_index
+    PictogramFrame:
+      type: object
+      description: |-
+        픽토그램 한 장과 대본 위치. section·sentence_index는 이 그림이 보이기 시작하는 대본 위치(앱 문장 나누기 기준),
+        label은 그림 이름(낭독용). 연결이 없으면 null(앱은 1초마다 모든 그림을 돌림).
+        display_url은 여백·인쇄 글자를 잘라 그림을 크게 한 보기용 사본(원본은 url), redrawn은 대본에 맞게 다시 그린 그림(의뢰인 확인 필요).
+      properties:
+        url:
+          type: string
+        sequence:
+          type: integer
+        section:
+          type: string
+          nullable: true
+        sentence_index:
+          type: integer
+          nullable: true
+        label:
+          type: string
+          nullable: true
+        needs_client:
+          type: boolean
+        display_url:
+          type: string
+          nullable: true
+        redrawn:
+          type: boolean
+      required:
+      - display_url
+      - label
+      - needs_client
+      - redrawn
+      - section
+      - sentence_index
+      - sequence
+      - url
     Playlist:
       type: object
       description: 플레이리스트(루틴) 시리얼라이저
@@ -3233,6 +3410,22 @@ components:
           items:
             type: string
           readOnly: true
+        pictogram_frames:
+          type: array
+          items:
+            $ref: '#/components/schemas/PictogramFrame'
+          readOnly: true
+        pictogram_cycle:
+          allOf:
+          - $ref: '#/components/schemas/PictogramCycle'
+          nullable: true
+          readOnly: true
+        script_revised:
+          type: boolean
+          readOnly: true
+        audio_stale:
+          type: boolean
+          readOnly: true
         sequence_no:
           type: integer
           maximum: 9223372036854775807
@@ -3269,12 +3462,16 @@ components:
           nullable: true
           title: 큐 오버라이드
       required:
+      - audio_stale
       - audios
       - exercise_guide_text
       - exercise_id
       - exercise_name
+      - pictogram_cycle
+      - pictogram_frames
       - pictograms
       - playlist_item_id
+      - script_revised
       - sequence_no
       - set_count
     PlaylistItemAddRequest:
@@ -3602,6 +3799,9 @@ components:
           type: array
           items:
             type: string
+        disclaimer:
+          type: string
+          description: 점수 화면 고지(참고 점수)
         tts_message:
           type: string
         from:
@@ -3609,6 +3809,7 @@ components:
           format: date
       required:
       - average
+      - disclaimer
       - feedback
       - from
       - grade

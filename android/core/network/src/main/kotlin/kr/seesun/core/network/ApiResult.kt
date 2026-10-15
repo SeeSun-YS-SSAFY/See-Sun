@@ -33,12 +33,19 @@ data class ApiFailure(
         const val SENSITIVE_CONSENT_REQUIRED = "SENSITIVE_CONSENT_REQUIRED"
         private const val SERVER_ERROR = 500
         private const val TOO_MANY = 429
+        const val THROTTLED = "THROTTLED"
+        const val UNAUTHORIZED = "UNAUTHORIZED"
         const val NETWORK_MESSAGE = "인터넷 연결을 확인해 주세요."
         const val GENERIC_MESSAGE = "잠시 후 다시 시도해 주세요."
+        const val THROTTLED_MESSAGE = "요청이 많아 잠시 막혔어요. 잠시 후 다시 시도해 주세요."
+        const val UNAUTHORIZED_MESSAGE = "로그인이 필요해요. 다시 로그인해 주세요."
     }
 }
 
-/** Retrofit 호출을 감싸 예외를 [ApiResult]로 바꾼다. 서버 오류 본문({"error","tts_message"})을 읽는다. */
+/**
+ * Retrofit 호출을 감싸 예외를 [ApiResult]로 바꾼다. 서버 오류 본문({"error","tts_message"})을 읽는다.
+ * 401·429의 DRF 기본 본문({"detail"})은 영어일 수 있어 낭독하지 않고 앱 문구로 바꾼다(계약 §0).
+ */
 suspend fun <T> apiCall(json: Json, block: suspend () -> T): ApiResult<T> = try {
     ApiResult.Success(block())
 } catch (e: CancellationException) {
@@ -54,10 +61,24 @@ suspend fun <T> apiCall(json: Json, block: suspend () -> T): ApiResult<T> = try 
 internal fun HttpException.toFailure(json: Json): ApiFailure {
     val body = response()?.errorBody()?.string()
     val dto = body?.let { runCatching { json.decodeFromString(ApiErrorDto.serializer(), it) }.getOrNull() }
+    val status = code()
+    val fallbackCode = when (status) {
+        HTTP_UNAUTHORIZED -> ApiFailure.UNAUTHORIZED
+        HTTP_TOO_MANY -> ApiFailure.THROTTLED
+        else -> "HTTP_$status"
+    }
+    val fallbackMessage = when (status) {
+        HTTP_UNAUTHORIZED -> ApiFailure.UNAUTHORIZED_MESSAGE
+        HTTP_TOO_MANY -> ApiFailure.THROTTLED_MESSAGE
+        else -> ApiFailure.GENERIC_MESSAGE
+    }
     return ApiFailure(
-        code = dto?.error ?: "HTTP_${code()}",
-        ttsMessage = dto?.ttsMessage ?: ApiFailure.GENERIC_MESSAGE,
-        httpStatus = code(),
+        code = dto?.error ?: fallbackCode,
+        ttsMessage = dto?.ttsMessage ?: fallbackMessage,
+        httpStatus = status,
         fieldErrors = dto?.errors.orEmpty()
     )
 }
+
+private const val HTTP_UNAUTHORIZED = 401
+private const val HTTP_TOO_MANY = 429

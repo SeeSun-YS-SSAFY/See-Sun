@@ -5,15 +5,20 @@
 - GET/PATCH/DELETE /api/v1/me/ : 내 정보·수정(목표 칼로리 재계산)·탈퇴(전체 파기)
 """
 import logging
+from datetime import timedelta
 
 from django.db import IntegrityError, transaction
+from django.db.models import Q
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.settings import api_settings as jwt_settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from apps.core import crypto
 from apps.core.responses import error_response, validation_error
@@ -106,6 +111,7 @@ class FirebaseAuthView(APIView):
             if changed:
                 user.save(update_fields=changed)
 
+        touch_last_login(user.pk)  # 장기 미이용 판단 기준(법적 검토 D-08)
         refresh = RefreshToken.for_user(user)
         return Response({
             'access_token': str(refresh.access_token),
@@ -116,6 +122,27 @@ class FirebaseAuthView(APIView):
             'onboarding': onboarding_state(user),
             'tts_message': '전화번호 인증이 완료되었습니다.' if is_new else '로그인되었습니다.',
         })
+
+
+def touch_last_login(user_id, min_interval=timedelta(hours=1)):
+    """last_login 갱신(잦은 토큰 갱신마다 쓰지 않도록 1시간 간격)"""
+    now = timezone.now()
+    User.objects.filter(pk=user_id).filter(
+        Q(last_login__isnull=True) | Q(last_login__lt=now - min_interval)).update(last_login=now)
+
+
+class TrackingTokenRefreshView(TokenRefreshView):
+    """POST /auth/token/refresh/ — 앱은 7일 회전 refresh로 오래 로그인 상태를 유지하므로 갱신 때도 last_login을 남긴다"""
+
+    def post(self, request, *args, **kwargs):
+        response = super().post(request, *args, **kwargs)
+        if response.status_code == 200 and response.data.get('refresh'):
+            try:
+                token = RefreshToken(response.data['refresh'])
+                touch_last_login(token.get(jwt_settings.USER_ID_CLAIM))
+            except Exception:  # noqa: BLE001 — 기록 실패가 토큰 갱신을 막지 않게
+                logger.exception('last_login 갱신 실패')
+        return response
 
 
 class MeView(APIView):

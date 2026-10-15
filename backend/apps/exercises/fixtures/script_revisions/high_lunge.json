@@ -1,0 +1,149 @@
+{
+ "exercise_no": 13,
+ "exercise_id": "a0c7f4f007ae4696a398358b2205d492",
+ "exercise_name": "하이 런지 자세",
+ "name_en": "high_lunge",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "13의 '10' 단위(초/회)는 원작자 확인이 있으면 더 확실(정오 조사 한계).",
+ "fields": {
+  "exercise_description": "[추천] 3세트, 좌우 각 5회, 전체 7분 동안 운동하기를 권장합니다.\n\n[유의사항] 여유 공간 확보가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 하이 런지 자세에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 바닥에 다리를 골반 너비만큼 벌립니다. 골반 너비를 유지하며, 왼쪽 다리가 90도로 ㄱ 모양이 되도록 무릎을 굽히며 앞으로 내딥니다. 2. 오른쪽 다리를 뒤로 쭉 뻗고 팔도 일자로 쭉편 상태로 귀 옆에 위치시킵니다. 이때 왼쪽 다리는 앞으로 뻗은 상태로 90도를 유지하고, 오른쪽 다리는 뒤로 쭉 뻗어있습니다.",
+  "main_form": "동작 시작 : 1. 엉덩이를 처음보다 더욱 낮추고 공중으로 올린 손을 위로 길게 뻗면서 척추를 스트레칭합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 유지하면서 10초 동안 천천히 호흡합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 위로 들어올렸던 팔을 편안하게 내리고 무게 중심을 오른발로 옮기며 왼쪽 다리를 끌고 와 오른발 옆에 골반 너비만큼 벌려 위치시킵니다. 2. 반대로도 똑같이 시행합니다.",
+  "exercise_guide_text": "한 세트당 좌우 각 5회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 3세트, 좌우 각 5회, 전체 7분 동안 운동하기를 권장합니다.\n\n[유의사항] 여유 공간 확보가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 하이 런지 자세에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 바닥에 다리를 골반 너비만큼 벌립니다. 골반 너비를 유지하며, 왼쪽 다리가 90도로 ㄱ 모양이 되도록 무릎을 굽히며 앞으로 내딥니다. 2. 오른쪽 다리를 뒤로 쭉 뻗고 팔도 일자로 쭉편 상태로 귀 옆에 위치시킵니다. 이때 왼쪽 다리는 앞으로 뻗은 상태로 90도를 유지하고, 오른쪽 다리는 뒤로 쭉 뻗어있습니다.",
+  "main_form": "동작 시작 : 1. 엉덩이를 처음보다 더욱 낮추고 공중으로 올린 손을 위로 길게 뻗면서 척추를 스트레칭합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 유지하면서 10회 이상 천천히 호흡합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 위로 들어올렸던 팔을 편안하게 내리고 무게 중심을 오른발로 옮기며 왼쪽 다리를 끌고 와 오른발 옆에 골반 너비만큼 벌려 위치시킵니다. 2. 반대로도 똑같이 시행합니다.",
+  "exercise_guide_text": "한 세트당 좌우 각 5회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "stay_form",
+   "section": "자세 유지",
+   "original": "1. 자세를 유지하면서 10회 이상 천천히 호흡합니다.",
+   "new": "1. 자세를 유지하면서 10초 동안 천천히 호흡합니다.",
+   "reason": "그림의 스톱워치 '10'(시간)과 맞춤. 호흡 10회 이상이면 40~60초라 불안정한 런지 자세에서 과함, 균형 유지 표준 상한(30초) 안의 10초가 안전(판정 both_valid_keep_picture).",
+   "verdict": {
+    "verdict_index": 9,
+    "item": "유지: 그림 '⏱10' vs 대본 '10회 이상 천천히 호흡' (검토표에 없던 불일치)",
+    "verdict": "both_valid_keep_picture",
+    "confidence": "medium",
+    "sources": [
+     "Mayo Clinic — Balance exercises — https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/balance-exercises/art-20546836",
+     "Northumbria University — Can exercise help older people with vision problems avoid falls? — https://northumbria.ac.uk/about-us/news-events/news/2015/06/can-exercise-help-older-people-with-vision-problems-avoid-falls"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/high_lunge/exercise_description.mp3",
+   "mp3_seconds": 13.39,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 13.4
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/high_lunge/first_description.mp3",
+   "mp3_seconds": 40.22,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 6,
+   "sentences_after": 6,
+   "est_seconds_after": 40.2
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/high_lunge/main_form.mp3",
+   "mp3_seconds": 11.06,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 11.1
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/high_lunge/stay_form.mp3",
+   "mp3_seconds": 6.84,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 6.8
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/high_lunge/fixed_form.mp3",
+   "mp3_seconds": 18.65,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 18.6
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/high_lunge/exercise_guide_text.mp3",
+   "mp3_seconds": 9.55,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 9.6
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "first_description",
+    "sentence_index": 3
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

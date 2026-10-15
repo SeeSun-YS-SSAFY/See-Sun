@@ -5,3 +5,9 @@ plugins {
 android {
     namespace = "kr.seesun.feature.main"
 }
+
+dependencies {
+    androidTestImplementation(project(":core:uitest"))
+    implementation(project(":core:ui"))
+    implementation(project(":core:data"))
+}

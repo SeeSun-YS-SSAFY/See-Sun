@@ -44,7 +44,11 @@ COLUMN_ALIASES = {
     'serving_ref': ['1인(회)분량참고량', 'SERV_SIZE'],
     'maker': ['업체명', 'REST_NM'],
     'data_date': ['데이터기준일자', 'CRTR_YMD'],
+    'source_name': ['출처명', 'SRC_NM'],
 }
+# 이용 조건이 맞지 않아 기본으로 적재하지 않는 원 출처(출처명에 포함되면 제외, 법적 검토 D-13·05 문서 L-08)
+# 농진청 국가표준식품성분표는 공공누리 제2유형(상업 이용 금지). TODO(lawyer): 데이터셋 이용허락범위 최종 확인
+DEFAULT_EXCLUDED_SOURCES = ('농촌진흥청',)
 REQUIRED = ('source_code', 'name', 'basis', 'kcal')
 METRIC_FIELDS = ('carb_ratio', 'protein_ratio', 'fat_ratio', 'unsat_fat_share', 'serving_sodium_mg',
                  'sugar_index_score', 'sugar_index_grade')
@@ -150,6 +154,7 @@ def row_to_food_fields(row, header_map):
         'serving_amount': serving_amount,
         'serving_unit': serving_unit,
         'data_date': parse_date(get('data_date')),
+        'source_name': (_clean(get('source_name')) or '')[:100],
     }
     for key in NUMERIC:
         fields[key] = parse_decimal(get(key))
@@ -191,10 +196,12 @@ class ImportResult:
     updated: int = 0
     skipped: int = 0
     allergen_tags: int = 0
+    excluded: int = 0
     errors: list = field(default_factory=list)
 
 
-def import_rows(headers, rows, *, source='MFDS', limit=None, dry_run=False, batch_size=1000) -> ImportResult:
+def import_rows(headers, rows, *, source='MFDS', limit=None, dry_run=False, batch_size=1000,
+                exclude_sources=DEFAULT_EXCLUDED_SOURCES) -> ImportResult:
     from apps.health.models import Allergen
     from apps.health.services import match_allergen_keywords
 
@@ -209,6 +216,9 @@ def import_rows(headers, rows, *, source='MFDS', limit=None, dry_run=False, batc
         fields = row_to_food_fields(row, header_map)
         if fields is None:
             result.skipped += 1
+            continue
+        if any(ex and ex in fields['source_name'] for ex in exclude_sources or ()):
+            result.excluded += 1
             continue
         parsed[fields['source_code']] = fields  # 같은 코드가 또 나오면 뒤 행 사용
     if dry_run:

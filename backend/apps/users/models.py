@@ -138,38 +138,46 @@ class User(AbstractUser):
 
     def withdraw(self):
         """
-        회원탈퇴: 토큰 폐기 + 개인정보 즉시 파기(비식별화) 후 비활성화.
-        식사·점수·건강정보·동의 기록·운동 기록 등 서비스 기록은 각 앱이
-        ``account_withdrawn`` 신호를 받아 삭제한다(05 문서 §2 "탈퇴 시 파기").
+        회원탈퇴: 토큰 폐기 + 개인정보 즉시 파기(비식별화) 후 비활성화(한 트랜잭션).
+        식사·점수·건강정보·운동 기록 등 서비스 기록은 각 앱이 ``account_withdrawn`` 신호를 받아 삭제한다.
+        - 비식별 행에는 date_joined·last_login·deleted_at만 남긴다(법적 검토 D-07)
+        - 동의·철회 이력은 이 UUID에 묶어 WITHDRAWN_HISTORY_RETENTION_DAYS 동안 남기고
+          ``purge_withdrawn_users`` 가 행째 지운다(D-06, apps.consents.receivers)
+        - Firebase 사용자 삭제가 실패하면 FirebaseDeletionTask에 남겨 재시도한다(D-05)
         """
+        from django.db import transaction
         from django.utils import timezone
         from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
 
-        for token in OutstandingToken.objects.filter(user=self):
-            BlacklistedToken.objects.get_or_create(token=token)
-        self.auth_providers.all().delete()
+        with transaction.atomic():
+            for token in OutstandingToken.objects.filter(user=self):
+                BlacklistedToken.objects.get_or_create(token=token)
+            self.auth_providers.all().delete()
 
-        account_withdrawn.send(sender=User, user=self, firebase_uid=self.firebase_uid)
-
-        self.username = f'deleted_{self.id}'
-        self.email = ''
-        self.name = None
-        self.phone_number = None
-        self.firebase_uid = None
-        self.pin_hash = None
-        self.birthdate = None
-        self.gender = None
-        self.height_cm = None
-        self.weight_kg = None
-        self.goal = None
-        self.target_kcal = None
-        self.app_settings = {}
-        self.is_profile_completed = False
-        self.set_unusable_password()
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.is_active = False
-        self.save()
+            account_withdrawn.send(sender=User, user=self, firebase_uid=self.firebase_uid)
+            self.groups.clear()
+            self.user_permissions.clear()
+            self.username = f'deleted_{self.id}'
+            self.email = ''
+            self.name = None
+            self.phone_number = None
+            self.firebase_uid = None
+            self.pin_hash = None
+            self.birthdate = None
+            self.gender = None
+            self.height_cm = None
+            self.weight_kg = None
+            self.goal = None
+            self.target_kcal = None
+            self.app_settings = {}
+            self.is_profile_completed = False
+            self.is_staff = False
+            self.is_superuser = False
+            self.set_unusable_password()
+            self.is_deleted = True
+            self.deleted_at = timezone.now()
+            self.is_active = False
+            self.save()
 
     class Meta:
         db_table = 'users'
@@ -222,3 +230,26 @@ class UserAuthProvider(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.provider}"
+
+
+class FirebaseDeletionTask(models.Model):
+    """
+    탈퇴 후 Firebase 사용자 삭제 재시도 큐(법적 검토 D-05)
+
+    삭제가 실패하거나 서비스 계정이 없어 삭제할 수 없으면 여기에 남는다. ``manage.py retry_firebase_deletions``
+    (cron)가 다시 시도하고 성공하면 행을 지운다. Firebase UID는 삭제가 끝날 때까지만 보관한다.
+    """
+    firebase_uid = models.CharField(max_length=128, unique=True, verbose_name='Firebase UID')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='등록 일시')
+    attempts = models.PositiveIntegerField(default=0, verbose_name='시도 횟수')
+    last_attempt_at = models.DateTimeField(null=True, blank=True, verbose_name='마지막 시도')
+    last_error = models.CharField(max_length=300, blank=True, verbose_name='마지막 오류')
+
+    class Meta:
+        db_table = 'firebase_deletion_tasks'
+        verbose_name = 'Firebase 사용자 삭제 대기'
+        verbose_name_plural = 'Firebase 사용자 삭제 대기'
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f'Firebase 삭제 대기 #{self.pk} ({self.attempts}회)'

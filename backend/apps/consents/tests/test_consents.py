@@ -1,5 +1,5 @@
 """동의 기록·철회·게이트 테스트 (05 문서 §3(B)·§4, L-02)"""
-from datetime import date
+from datetime import date, timedelta
 
 import pytest
 from rest_framework.test import APIClient
@@ -8,6 +8,7 @@ from apps.consents.models import ConsentDocument, ConsentRecord
 from apps.core.testing import agree, client_for, make_user
 from apps.diet.models import DailyDietScore
 from apps.health.models import HealthProfile
+from apps.users.profile import local_today
 
 URL = '/api/v1/me/consents/'
 V = '2026-10-01'
@@ -68,14 +69,25 @@ class TestConsents:
 
     def test_문서가_바뀌면_재동의_필요(self):
         user = make_user()
-        ConsentDocument.objects.create(type='TOS', version='2026-12-01', title='약관 v2', required=True,
-                                       effective_at=date(2026, 12, 1))
+        ConsentDocument.objects.create(type='TOS', version='v2-today', title='약관 v2', required=True,
+                                       effective_at=local_today())
         data = client_for(user).get(URL).data
         tos = next(i for i in data['items'] if i['type'] == 'TOS')
         assert tos['needs_reconsent'] is True and tos['agreed'] is False
         assert data['all_required_agreed'] is False
         r = client_for(user).get('/api/v1/meals/')
         assert r.status_code == 403 and r.data['error'] == 'CONSENT_REQUIRED'
+
+    def test_시행일_전_개정본은_아직_현재_문서가_아니다(self):
+        """배포 리허설 B-10: 미래 시행일 개정본을 미리 등록(사전 고지)해도 기존 동의가 유효"""
+        user = make_user()
+        ConsentDocument.objects.create(type='TOS', version='v2-future', title='약관 v2', required=True,
+                                       effective_at=local_today() + timedelta(days=7))
+        docs = {d['type']: d['version'] for d in client_for(user).get('/api/v1/consents/documents/').data}
+        assert docs['TOS'] != 'v2-future'
+        assert client_for(user).get('/api/v1/meals/').status_code == 200
+        tos = next(i for i in client_for(user).get(URL).data['items'] if i['type'] == 'TOS')
+        assert tos['needs_reconsent'] is False and tos['agreed'] is True
 
 
 @pytest.mark.django_db

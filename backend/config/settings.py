@@ -88,8 +88,13 @@ INSTALLED_APPS = [
     'apps.diet.apps.DietConfig',
     'apps.exercises.apps.ExercisesConfig',
     'apps.logs.apps.LogsConfig',
-    'apps.stt.apps.SttConfig',
 ]
+
+# 1차 웹 데모의 서버 STT·Gemini 코드(apps/stt)는 운영 이미지에서 빠져 있다(Dockerfile source 단계, 법적 검토 S-07).
+# 소스 트리(개발·테스트)에 있을 때만 앱·URL을 붙인다. 켜는 것은 여전히 LEGACY_STT_ENABLED.
+LEGACY_STT_CODE_PRESENT = _installed('apps.stt')
+if LEGACY_STT_CODE_PRESENT:
+    INSTALLED_APPS.append('apps.stt.apps.SttConfig')
 
 # 1차 웹 데모의 WebSocket STT(daphne·channels)는 설치돼 있고 켜져 있을 때만 사용
 # (운영 이미지에는 설치하지 않는다 → requirements-dev.txt)
@@ -101,6 +106,7 @@ if LEGACY_WEBSOCKET_AVAILABLE:
 
 MIDDLEWARE = [
     'apps.core.middleware.HealthCheckMiddleware',  # 호스트 검사·HTTPS 리다이렉트 이전에 응답
+    'apps.core.middleware.RejectNullBytesMiddleware',  # 경로·쿼리의 NUL → 400(DB DataError 500 방지)
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -108,6 +114,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'apps.core.audit.AdminAccessLogMiddleware',  # 관리자 화면 접속기록(법적 검토 S-02)
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -151,6 +158,14 @@ DATABASES = {
         'OPTIONS': {'sslmode': os.environ['POSTGRES_SSLMODE']} if os.environ.get('POSTGRES_SSLMODE') else {},
     }
 }
+
+# 로컬 데모 전용: Docker(PostgreSQL) 없이 SQLite 파일로 실행한다(scripts/demo/run_local_backend.ps1).
+# 운영 실수를 막기 위해 DEBUG에서만 허용한다.
+DJANGO_SQLITE_PATH = os.environ.get('DJANGO_SQLITE_PATH', '').strip()
+if DJANGO_SQLITE_PATH:
+    if not DEBUG:
+        raise ImproperlyConfigured('DJANGO_SQLITE_PATH는 DJANGO_DEBUG=true(로컬 개발·데모)에서만 쓸 수 있습니다.')
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': DJANGO_SQLITE_PATH}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -210,6 +225,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    # JSON 중첩 폭탄(RecursionError)도 400으로. 나머지는 DRF 기본과 같다
+    'DEFAULT_PARSER_CLASSES': (
+        'apps.core.parsers.SafeJSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+    ),
+    # Caddy 한 단계 뒤: X-Forwarded-For의 마지막 값(Caddy가 본 주소)으로 IP 요청 제한(위조 헤더 무시)
+    'NUM_PROXIES': 1,
     'DEFAULT_THROTTLE_RATES': {
         'login': os.environ.get('THROTTLE_LOGIN', '10/min'),
         'signup': os.environ.get('THROTTLE_SIGNUP', '5/min'),
@@ -220,7 +243,7 @@ REST_FRAMEWORK = {
     },
 }
 
-# 로그인 실패 잠금(4자리 PIN 무차별 대입 방지)
+# 로그인 실패 잠금(4자리 PIN 무차별 대입 방지, Django 관리자 로그인도 같은 값 — 법적 검토 S-01)
 LOGIN_MAX_FAILURES = _env_int('LOGIN_MAX_FAILURES', 5)
 LOGIN_LOCKOUT_SECONDS = _env_int('LOGIN_LOCKOUT_SECONDS', 900)
 
@@ -229,6 +252,14 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+if not DEBUG:
+    # 운영: gunicorn 워커가 여러 개라 메모리 캐시면 요청 제한·로그인 잠금 카운터가 워커마다 따로 센다
+    # (한도가 워커 수만큼 느슨해짐). 같은 컨테이너의 워커가 공유하는 파일 캐시를 기본으로 쓴다.
+    CACHES['default'] = {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': os.environ.get('DJANGO_CACHE_DIR', '/tmp/seesun-cache'),
+        'OPTIONS': {'MAX_ENTRIES': 20000},
+    }
 if os.environ.get('REDIS_URL'):
     CACHES['default'] = {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -319,6 +350,15 @@ CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS')
 # STT 업로드·WebSocket 버퍼 상한(1차 웹 데모)
 STT_MAX_UPLOAD_BYTES = _env_int('STT_MAX_UPLOAD_BYTES', 10 * 1024 * 1024)
 STT_WS_MAX_BUFFER_BYTES = _env_int('STT_WS_MAX_BUFFER_BYTES', 16000 * 2 * 30)  # 16kHz PCM16 30초
+
+# 개인정보 접속기록 보관 일수(법적 검토 S-02: 민감정보 처리 → 2년 이상). 730보다 작게 줄 수 없다
+ACCESS_LOG_RETENTION_DAYS = max(730, _env_int('ACCESS_LOG_RETENTION_DAYS', 730))
+
+# 탈퇴자 동의·철회·탈퇴 이력 보관 일수(법적 검토 D-06·D-07). 지나면 purge_withdrawn_users가 행째 삭제
+# TODO(lawyer): 보관 기간 확정(기본안 3년 = 1095일)
+WITHDRAWN_HISTORY_RETENTION_DAYS = _env_int('WITHDRAWN_HISTORY_RETENTION_DAYS', 3 * 365)
+# 장기 미이용자 파기 기준(마지막 접속 후 일수, 법적 검토 D-08). purge_inactive_users(cron)
+INACTIVE_USER_DAYS = _env_int('INACTIVE_USER_DAYS', 2 * 365)
 
 # 일괄 업로드 한도(오프라인 큐)
 BULK_MAX_ITEMS = _env_int('BULK_MAX_ITEMS', 50)

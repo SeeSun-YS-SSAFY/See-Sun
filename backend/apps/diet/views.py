@@ -1,22 +1,24 @@
-from datetime import date
 
 from django.conf import settings
 from django.db.models import Prefetch
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
 
 from apps.consents.permissions import DATA_API_PERMISSIONS
+from apps.core.dates import parse_api_date
 from apps.core.responses import error_response, validation_error
 from apps.health.services import get_health_context
+from apps.health.views import PartialDeleteResponseSerializer
 from apps.nutrition.models import Food
 from apps.nutrition.serializers import FoodSummarySerializer
 from apps.users.profile import local_today
 
 from . import recommendations, reports, services
-from .models import FavoriteFood, MealItem, MealRecord
+from .models import DailyDietScore, FavoriteFood, MealItem, MealRecord
 from .serializers import (
     DailyReportSerializer, EvaluateRequestSerializer, EvaluateResponseSerializer, MealBulkRequestSerializer,
     MealBulkResponseSerializer, MealInputSerializer, MealSerializer, MealUpdateSerializer,
@@ -31,12 +33,8 @@ class SyncRateThrottle(UserRateThrottle):
 
 
 def _parse_date(value, default=None):
-    if value in (None, ''):
-        return default
-    try:
-        return date.fromisoformat(value)
-    except ValueError:
-        return None
+    """형식 오류·허용 범위(1900~2100) 밖이면 None → 400"""
+    return parse_api_date(value, default)
 
 
 def _meals_qs(user):
@@ -99,7 +97,8 @@ class MealBulkView(APIView):
             report = services.daily_report(request.user, day, ctx)
             day_scores.append({'date': day, 'total': report['total_display'], 'grade': report['grade']})
         meals_data = MealSerializer(_meals_qs(request.user).filter(id__in=created_meals), many=True).data
-        return Response({'results': results, 'meals': meals_data, 'warnings': warnings, 'day_scores': day_scores})
+        return Response({'results': results, 'meals': meals_data, 'warnings': warnings, 'day_scores': day_scores,
+                         'indicator_notice': services.indicator_notice(ctx)})
 
 
 class MealListView(APIView):
@@ -235,3 +234,18 @@ class FavoriteDetailView(APIView):
     def delete(self, request, food_id):
         FavoriteFood.objects.filter(user=request.user, food_id=food_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class MyMealsDeleteView(APIView):
+    """식사 기록 전체 삭제(데이터 초기화, 법적 검토 A-03). 동의와 상관없이 언제든 할 수 있다."""
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(summary='식사 기록 전체 삭제(데이터 초기화)', tags=['Meals'], request=None,
+                   responses={200: PartialDeleteResponseSerializer},
+                   description='식사 기록과 식단 점수를 모두 지운다. 계정·동의·건강 정보·선호 식단은 남는다.')
+    def delete(self, request):
+        count = MealRecord.objects.filter(user=request.user).count()
+        MealRecord.objects.filter(user=request.user).delete()
+        DailyDietScore.objects.filter(user=request.user).delete()
+        return Response({'deleted': ['diet_scores', 'meals'], 'count': count,
+                         'tts_message': f'식사 기록 {count}건을 삭제했어요.'})

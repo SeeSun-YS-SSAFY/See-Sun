@@ -1,6 +1,6 @@
 # 2차 API 계약 (Android 앱용)
 
-> 버전: **v1.0 — 구현 완료(브랜치 `feat/phase2-backend`)** · 2026-10-12
+> 버전: **v1.1 + 배포 리허설 수정 통합(가운영 브랜치 `deploy/provisional-20261015`)** · 2026-10-15 (앱: 국외이전 고지 확인, 동의 입증 정보, 데이터 초기화, 감량 목표 하한 · 서버: `feat/deploy-verify` 배포 리허설·법적 검토 수정)
 > 기준: `docs/design/03_아키텍처_설계.md` §4.2–4.3, `02_요구사항_분석.md`(ONB·HLT·DREC·DRCM·DRPT·DSCR·DSUG·EX), 2차 의뢰서 §4·§5
 > 기계 판독용 명세: **`docs/api/openapi.yaml`**(drf-spectacular 생성, CI가 최신 여부 검사). 이 문서와 다르면 openapi.yaml이 우선입니다.
 > 개발 서버의 Swagger UI: `/api/v1/docs/`
@@ -18,6 +18,8 @@
 | 멱등 | 오프라인 큐로 보내는 기록(식사·운동)은 앱이 만든 `client_uuid`(UUID v4)로 멱등. 같은 키 재전송 → `duplicate`(새로 만들지 않음) |
 | 요청 제한 | 토큰 교환 10/분(IP), 음식 검색 60/분, 일괄 업로드 60/분(사용자) |
 | 일괄 한도 | `meals`·`sessions` 한 번에 최대 50건 |
+| 날짜 범위 | 날짜 파라미터·식사 날짜는 **1900-01-01 ~ 2100-12-31**(밖이면 400). 경로·쿼리에 NUL(`%00`)이 있으면 400 VALIDATION_ERROR |
+| 본문 | 최대 2MB(Caddy 413), JSON 중첩이 너무 깊으면 400 |
 
 ## 1. 인증 (Auth)
 
@@ -40,12 +42,12 @@
   "tts_message": "전화번호 인증이 완료되었습니다."
 }
 ```
-오류: `400 VALIDATION_ERROR` · `400 BIRTHDATE_REQUIRED` · `400 PHONE_REQUIRED` · `401 INVALID_ID_TOKEN`(만료·위조·폐기) · `403 AGE_RESTRICTED` · `403 ACCOUNT_DISABLED` · `503 AUTH_NOT_CONFIGURED`
+오류: `400 VALIDATION_ERROR` · `400 BIRTHDATE_REQUIRED` · `400 PHONE_REQUIRED` · `401 INVALID_ID_TOKEN`(만료·위조·폐기) · `403 AGE_RESTRICTED` · `403 ACCOUNT_DISABLED` · `503 AUTH_NOT_CONFIGURED`(자격 증명 없음 또는 Google 공개 인증서 조회 일시 장애 — 재인증하지 말고 잠시 후 재시도)
 
 > 로컬 개발 서버(`DJANGO_DEBUG=true`, `FIREBASE_AUTH_FAKE=true`)에서만 `id_token = "fake:<uid>:+821012345678"` 이 통과합니다. 운영에서는 이 설정으로 서버가 기동하지 않습니다.
 
 ### 1.2 `POST /auth/token/refresh/` — `{"refresh": "…"}` → `{"access": "…", "refresh": "…"}`
-### 1.3 `POST /auth/logout/` — `{"refresh_token": "…"}` → 200
+### 1.3 `POST /auth/logout/` — `{"refresh_token": "…"}` → 200 (본인 토큰만, 다른 사용자의 토큰이면 `400 INVALID_TOKEN`)
 1차 PIN 가입·로그인(`/users/auth/signup/`, `/users/auth/login/`)은 **`410 PIN_LOGIN_DISABLED`** 입니다.
 
 ## 2. 내 정보 (Me)
@@ -64,7 +66,7 @@
 }
 ```
 - `goal`: `LOSE_WEIGHT`(체중 감량) · `GAIN_MUSCLE`(근육 증진) · `MAINTAIN`(건강 유지) · `null`
-- `target_kcal`: Mifflin-St Jeor × 1.3, 감량 −500·근육 +300(성별 `M`/`F`·키·몸무게·생년월일이 모두 있어야 계산, 없으면 `null`)
+- `target_kcal`: Mifflin-St Jeor × 1.3, 감량 −500·근육 +300(성별 `M`/`F`·키·몸무게·생년월일이 모두 있어야 계산, 없으면 `null`). **감량 목표는 1,200 아래로 내려가지 않는다**(법적 검토 T-07, 추정값)
 - `recommended_exercise_categories`: 운동 카테고리 ID 순서(1 근력, 2 유산소, 3 유연성, 4 균형). 감량=유산소, 근육=근력, 유지=유연성·균형 먼저
 - `profile_completed`: 이름·생년월일·성별(M/F)·키·몸무게가 모두 있으면 true
 
@@ -74,7 +76,8 @@
 - `settings`는 보낸 키만 덮어씁니다. 목표 칼로리는 자동 재계산. 전화번호는 수정 불가(Firebase 재인증).
 
 ### `DELETE /me/` — 탈퇴 `{"confirmation": true}`
-토큰 폐기 + 개인정보 파기 + 식사·점수·즐겨찾기·건강정보·동의 기록·운동 기록·루틴 삭제 + Firebase 사용자 삭제(서비스 계정 설정 시). 확인 없으면 `400 CONFIRMATION_REQUIRED`.
+토큰 폐기 + 개인정보 파기 + 식사·점수·즐겨찾기·건강정보·운동 기록·루틴 삭제 + Firebase 사용자 삭제(실패하면 서버가 재시도). 확인 없으면 `400 CONFIRMATION_REQUIRED`.
+동의·철회 이력은 이름·전화번호가 지워진 비식별 ID에 묶어 보관 기간(기본 3년, 법률 검토 중) 동안 남고 이후 삭제됩니다. 마지막 접속 후 2년 동안 쓰지 않은 계정은 같은 방식으로 파기됩니다(토큰 교환·갱신이 접속으로 기록됨).
 
 ## 3. 동의 (Consents)
 
@@ -82,17 +85,18 @@
 |---|---|---|
 | `TOS` | 이용약관 | 필수 |
 | `PRIVACY` | 개인정보 수집·이용 | 필수 |
-| `OVERSEAS` | 국외이전 고지(Firebase) | 선택 |
+| `OVERSEAS` | 국외이전 고지(Firebase) | **고지 확인**(`kind: NOTICE`) — 동의가 아니라 확인. 거부(`agreed: false`)는 `400 NOTICE_ACK_ONLY`. 전화번호 인증 전에 앱이 반드시 보여 준다. 데이터 API 게이트에는 들지 않음 |
 | `SENSITIVE` | 건강정보(민감정보) 처리 | **선택** — 거부하면 일반 모드(질환·알레르기 기능 없음) |
 | `MARKETING` | 광고성 정보 | 1단계 비활성 |
 
-- `GET /consents/documents/`(인증 불필요) → `[{"type","version","title","required","url","summary","effective_at"}]` — `summary`는 낭독용 요약
-- `GET /me/consents/` → `{"items":[{"type","title","required","current_version","agreed","agreed_version","agreed_at","method","needs_reconsent"}],"all_required_agreed":true}`
+- `GET /consents/documents/`(인증 불필요) → `[{"type","kind","version","title","required","url","summary","effective_at"}]` — `kind`: `CONSENT`(동의)·`NOTICE`(고지 확인), `summary`는 낭독용 요약(국외이전은 법정 항목 전체)
+- `GET /me/consents/` → `{"items":[{"type","kind","title","required","current_version","agreed","agreed_version","agreed_at","method","needs_reconsent"}],"all_required_agreed":true}`
 - `POST /me/consents/` → 같은 형식 + `deleted`
 ```json
 { "items": [ { "type": "TOS", "version": "2026-10-01", "agreed": true, "method": "VOICE" },
              { "type": "PRIVACY", "version": "2026-10-01", "agreed": true, "method": "TOUCH" } ] }
 ```
+  - 항목마다 선택 필드 `app_version`(앱 버전)·`screen_id`(화면 ID, 예 `LGL-03`)·`voice_confirmed`(음성 동의 재확인 통과)를 남긴다(입증용, 법적 검토 C-07).
   - `version`은 현재 문서 버전과 같아야 함(`400 VERSION_MISMATCH`). 문서가 바뀌면 `needs_reconsent: true` → 다시 동의할 때까지 데이터 API 403.
   - 철회 = `agreed: false`. 필수 동의 철회는 `400 REQUIRED_CONSENT`(탈퇴로 안내).
   - **SENSITIVE 철회 → 건강정보와 질환 기반 점수 즉시 삭제**, 응답 `deleted: ["diet_scores", "health_profile"]`.
@@ -106,6 +110,7 @@
 { "diseases": ["DIABETES", "HYPERTENSION"], "allergens": ["PEANUT", "MILK"], "other_allergies": ["키위"], "goal": "MAINTAIN" }
 ```
   `diseases: []` = 없음. 저장값은 서버에서 필드 암호화. `goal`을 보내면 목표 칼로리도 재계산.
+- `DELETE /me/health/` — **건강 정보만 삭제**(데이터 초기화): 질환·알레르기·기타와 질환 기반 점수를 지운다. 계정·동의·목표·식사는 남는다. 동의 없이도 가능(인증만 필요) → `{"deleted":["diet_scores","health_profile"],"tts_message"}`
 
 ## 5. 음식 (Foods) — 식약처 「전국통합식품영양성분정보(음식)」 약 2만 건
 
@@ -122,7 +127,7 @@
 ```
 - 원자료는 100g(또는 100ml) 기준이고 `serving`(식품중량)으로 환산합니다. `display_name`은 낭독용(`떡볶이_치즈` → `떡볶이 치즈`). 값이 없는 영양소는 `null`.
 
-`FoodDetail` = `FoodSummary` + `basis`·`per_basis`(100g 기준 원값) + `allergens[]` + `sugar_index`(1회 제공량) + `tags[]`(`CARB|PROTEIN|FAT|DIABETES_CAUTION|HYPERTENSION_CAUTION`) + `is_favorite` + `data_date`
+`FoodDetail` = `FoodSummary` + `basis`·`per_basis`(100g 기준 원값) + `allergens[]` + `sugar_index`(1회 제공량) + `tags[]`(`CARB|PROTEIN|FAT|DIABETES_CAUTION|HYPERTENSION_CAUTION`) + `is_favorite` + `data_date` + `source_name`(원 자료 기관, 예: 식품의약품안전처)
 - `allergens[]`: `{"code","name_ko","status":"CONFIRMED|NONE|UNKNOWN","basis":"LABEL|KEYWORD|null"}` — 포함 항목 전부 + 내 알레르기의 없음·확인 불가. 일반 메뉴는 음식명 키워드로 추정한 **"포함 가능성"**(`basis: KEYWORD`).
 
 ## 6. 식사 기록 (Meals) — 오프라인 큐 대상
@@ -137,7 +142,7 @@
   "label_allergens": ["MILK"] }
 ```
 - `food_id` 또는 `food_name` 중 하나 필수. DB에 없는 음식은 `food_name`만(영양 정보 없음 → 점수 신뢰도 낮음).
-- 섭취량: `ratio`(1회 제공량 배수: 한 그릇·1인분 1, 반 0.5, 두 2, 많이 1.5) 또는 `grams`(`serving_g`나 DB 1회 제공량으로 배수 계산). 둘 다 없으면 1인분.
+- 섭취량: `ratio`(1회 제공량 배수: 한 그릇·1인분 1, 반 0.5, 두 2, 많이 1.5) 또는 `grams`(`serving_g`나 DB 1회 제공량으로 배수 계산). 둘 다 없으면 1인분. **배수는 최대 20**(grams로 계산한 배수가 20을 넘으면 그 항목 invalid). 영양값 `NaN`·무한대는 거부.
 - **영양값 우선순위**: 앱이 보낸 `nutrition`(1회 제공량 기준, `nutrition_source` = `LABEL` 영양성분표 · `BARCODE` · `USER`) > 식약처 DB.
 - `label_allergens`: 원재료명에서 읽은 알레르기 코드 → 표시 정보로 확정(`basis: LABEL`).
 
@@ -158,6 +163,8 @@
   "tts_message": "포장 과자 두 봉지, 300kcal. 당류·탄수화물 지표 높음, 50점." }
 ```
 - **경고 순서: 알레르기(포함) → 알레르기(확인 불가, `level: INFO`, 진동 없음) → 당류·탄수화물 지표**(DREC-08)
+- 문구(법적 검토 T-02~T-05): 알레르기 "알레르기 주의. ○○에 △△ 성분이 들어 있어요(음식명 추정이면 들어 있을 수 있어요). 제품 포장의 표시와 본인의 진단 결과를 먼저 확인하세요." · 지표 경고 끝에 "식품 성분을 기준으로 한 참고 정보예요." · 등급명은 낮음/보통/높음/매우 높음만
+- `indicator_notice`(평가·일괄 저장 응답): 당뇨를 선택한 사용자에게만 "당뇨를 선택하셔서 당류·탄수화물 정보를 함께 알려 드려요. 식사 계획은 담당 의료진의 안내를 따르세요.", 아니면 `null`. 앱이 최초 1회 낭독
 - 지표 경고는 **당뇨를 선택한 사용자(민감정보 동의)**만, 등급 `HIGH`(높음, `level: WARNING`)·`VERY_HIGH`(매우 높음, `level: DANGER`)일 때. 당뇨 미선택자는 `tts_message`에도 지표를 넣지 않음(DSUG-04).
 - 진동 코드(03 §6): `ALLERGY` 짧게 3회 · `SUGAR_HIGH` 길게 1회 · `SUGAR_VERY_HIGH` 길게 2회
 - `actions`: `ALTERNATIVE_DIET` → §8 `type=allergy`, `RECOMMENDED_FOODS` → §8 `type=disease&key=DIABETES`
@@ -183,6 +190,7 @@
 - 수정·삭제하면 해당 날짜(옮긴 경우 양쪽) 점수를 다시 계산합니다.
 
 `Meal` = `{id, client_uuid, date, meal_type, input_method, recorded_at, items:[{id, food_id, food_name, amount_ratio, grams, amount_text, nutrition_source, is_beverage, nutrition, sugar_index:{computable, score, grade, label}, label_allergens}], totals:{kcal, carb_g, protein_g, fat_g, sodium_mg, sugar_g, fiber_g}, created_at, updated_at}`
+- `DELETE /me/meals/` — **식사 기록 전체 삭제**(데이터 초기화): 식사 기록과 식단 점수를 지운다. 계정·동의·건강 정보·선호 식단은 남는다. 동의 없이도 가능 → `{"deleted":["diet_scores","meals"],"count":n,"tts_message"}`
 
 ## 7. 점수·리포트 (Diet)
 
@@ -204,7 +212,8 @@
   "tts_message": "오늘의 식단 점수는 82점, 좋음입니다. 잘 드셨어요. 지방 비율을 조금 줄여 보세요." }
 ```
 - 배점: 3대 영양소 50 · 칼로리 30 · 질환 10 · 알레르기 10. 도넛 색은 앱(의뢰서 §5-3).
-- 등급: `VERY_GOOD`(90~) 매우 좋음 · `GOOD`(80~) 좋음 · `FAIR`(70~) 보통 · `NEEDS_IMPROVEMENT`(60~) 개선 필요 · `CAUTION`(~59) 주의
+- 등급: `VERY_GOOD`(90~) 매우 좋음 · `GOOD`(80~) 좋음 · `FAIR`(70~) 보통 · `NEEDS_IMPROVEMENT`(60~) 개선 필요 · `CAUTION`(~59) **조정 필요**(표시명, 코드는 그대로)
+- `disclaimer`(일별·주간·월간): "식단 점수는 기록하신 음식의 영양 성분으로 계산한 참고 점수예요. 건강 상태를 평가하는 점수가 아닙니다." — 점수 화면에 표시
 - `status`: `OK` · `NO_RECORD`(기록 없음, 점수 null — 누락을 낮은 점수로 보지 않음) · `NO_TARGET`(목표 칼로리 없음 → 프로필 입력 필요) · `INSUFFICIENT_DATA`(영양 정보 없음)
 - `disease.hypertension = {score, sodium_mg, rate, high_sodium_foods[]}`, `disease.diabetes = {score, warning_ratio, warning_foods[], evaluated_count}` — 막대 상세 화면용
 - `reliability: LOW` 사유: `MISSING_NUTRITION`(영양 정보 없는 음식 30% 이상) · `FEW_MEALS`(아침·점심·저녁 중 2끼 미만) · `SUGAR_INDEX_UNAVAILABLE`(당뇨 사용자인데 지표 산출 불가 음식)
@@ -242,6 +251,7 @@
 ```
 - 모든 추천은 **사용자의 알레르기(포함·확인 불가)와 질환 주의 기준에 걸리는 음식을 뺍니다**. 최대 20개(주의 목록 10개).
 - 카드 `sugar_index`는 당뇨 사용자 또는 `disease=DIABETES`일 때만. 잘못된 type·key는 `400 INVALID_TYPE|INVALID_KEY`.
+- 이유(`reason`)는 성분만 말한다(효능 표현 금지, T-06): "당류·탄수화물이 적은 편이에요(당류·탄수화물 지표 낮음).", "나트륨이 적은 편이에요(1회 230mg)." · 알레르기 `notice`는 "제품 포장의 표시와 본인의 진단 결과를 먼저 확인하세요."
 
 ## 9. 선호 식단 (Favorites)
 - `GET /favorites/foods/` → `[FoodSummary]`
@@ -249,7 +259,8 @@
 
 ## 10. 운동 (Exercise)
 - 1차 API 유지: `GET /exercises/category/`, `GET /exercises/category/{id}/`, `GET /exercises/{id}/`, 루틴(`/exercises/playlist/…`).
-  픽토그램·음성 URL은 `MEDIA_CDN_BASE_URL`(Cloudflare R2) 설정 시 **CDN 절대 주소**, 미설정 시 `/media/…`. 루틴 항목 `audios[] = {"type", "section", "url"}`(`section` = 구간 이름).
+  픽토그램·음성 URL은 `MEDIA_CDN_BASE_URL`(Cloudflare R2) 설정 시 **CDN 절대 주소**, 미설정 시 `/media/…`. 운동 상세(`GET /exercises/{id}/`)와 루틴 항목의 `audios[] = {"type", "section", "url"}`(`section` = 구간 이름, 재생 순서대로). `pictograms[]`도 순서대로.
+  로컬 데모는 `MEDIA_CDN_BASE_URL=http://127.0.0.1:8000/media`로 절대 주소를 주고, 미디어 연결은 `python manage.py link_exercise_media`(복구 mp3 기준).
 - `POST /exercise-sessions/bulk/` — 멱등 일괄 업로드
 ```json
 { "sessions": [ { "client_uuid": "…", "exercise_name": "맨몸 스쿼트", "playlist_id": null, "mode": "MANUAL",
@@ -258,7 +269,8 @@
 ```
   → `{"results":[{"client_uuid","status":"created|duplicate|invalid","session_id","is_valid","errors"}]}`
   - `exercise_name` 또는 **본인** `playlist_id` 필수. `status`: `COMPLETED|ABORTED|IN_PROGRESS`. 미래 시작 시각·종료<시작·없는 운동 ID는 invalid.
-  - 완료되고 10초 이상이면 `is_valid: true`(1차 규칙과 같음).
+  - 완료되고 10초 이상이면 `is_valid: true`(1차 규칙과 같음). 한 세션은 **최대 24시간**(넘으면 invalid).
+- 1차 서버 음성: `/exercises/google-tts/`·루틴 안내 음성은 운영에서 `503 TTS_UNAVAILABLE`(앱은 기기 TTS), `/exercises/{id}/audio/`는 미리 병합한 파일만(없으면 `404 AUDIO_NOT_PREPARED`). `/api/v1/stt/`는 운영에 없음(404).
 - `GET /exercise/weekly/?from=2026-10-06`(기본 이번 주) → `{week_start, week_end, session_count, total_seconds, total_minutes, days:[{date, weekday, session_count, seconds}], tts_message:"이번 주 운동 3회, 총 45분이에요."}` — 유효 세션만 집계
 
 ## 11. 산식 모듈·테스트 벡터 (Android `core:domain`과 공유)
@@ -272,5 +284,9 @@
 - `GET /healthz/`(인증 불필요) → `{"status":"ok","db":"ok"}` / DB 장애 시 503
 
 ## 변경 이력
+- 가운영 통합 (2026-10-15) `feat/figma-align`(앱 v1.1)과 `feat/deploy-verify`(v1.1-deploy) 병합. 필드 변경 없음
+- v1.0.1 (2026-10-12) 운동 상세에 구간별 `audios[]` 추가(필드 추가만, 하위 호환), `audios`·`pictograms` 순서 보장
+- v1.1 (2026-10-12) 법적 검토 반영: `OVERSEAS`를 고지 확인(`kind: NOTICE`, 버전 2026-10-12, 법정 항목 본문)으로, 동의 기록에 `app_version`·`screen_id`·`voice_confirmed`, `DELETE /me/meals/`·`DELETE /me/health/`(데이터 초기화), 감량 목표 하한 1,200kcal
+- v1.1-deploy (2026-10-12, `feat/deploy-verify`) 배포 리허설·법적 검토 반영: NUL·날짜 범위·중첩 400, 배수 20 상한, NaN 거부, 세션 24시간, 로그아웃 본인 토큰만, 시행일 전 개정 약관은 현재 문서 아님, 동의 이력 보관, 문구(T-02~T-06)·`indicator_notice`·`disclaimer`·`source_name`, 점수 등급명 "조정 필요", 서버 TTS 503
 - v1.0 (2026-10-12) 구현 반영: 오류 형식(401·429는 `detail`), 목표 칼로리 예시 수정, 지표 점수 10의 배수, `label_allergens`·`serving_g`, 점수 `status`·`rules_version`, 월간 `weeks`, 운동 `is_valid`, 미디어 `section`
 - v0.1 (2026-10-12) 설계 초안

@@ -110,16 +110,18 @@ def recommend(user, rtype: str, key: str | None):
             bad = _general_first(base.filter(sugar_index_grade__in=r['diabetes_caution_grades']),
                                  F('sugar_index_score').asc())
             labels = {g[1]: g[2] for g in get_tables().SUGAR_INDEX['grades']}
-            result['items'] = [card(f, f'{name} {labels.get(f.sugar_index_grade)}이에요.', ctx, True) for f in good[:limit]]
-            result['caution_items'] = [card(f, f'{name} {labels.get(f.sugar_index_grade)} — 주의가 필요해요.', ctx, True)
-                                       for f in bad[:limit // 2]]
+            # 법적 검토 T-06: 효능 표현 없이 성분만 말한다
+            result['items'] = [card(f, f'당류·탄수화물이 적은 편이에요({name} {labels.get(f.sugar_index_grade)}).', ctx, True)
+                               for f in good[:limit]]
+            result['caution_items'] = [card(f, f'당류·탄수화물이 많은 편이에요({name} {labels.get(f.sugar_index_grade)}).',
+                                            ctx, True) for f in bad[:limit // 2]]
         else:
             limit_mg = r['hypertension_sodium_mg_per_serving']
             good = _general_first(base.filter(serving_sodium_mg__lt=limit_mg), F('serving_sodium_mg').asc())
             bad = _general_first(base.filter(serving_sodium_mg__gte=limit_mg), F('serving_sodium_mg').desc())
-            result['items'] = [card(f, f'나트륨 {round(f.serving_sodium_mg)}mg으로 1회 {limit_mg}mg 미만이에요.', ctx)
+            result['items'] = [card(f, f'나트륨이 적은 편이에요(1회 {round(f.serving_sodium_mg)}mg).', ctx)
                                for f in good[:limit]]
-            result['caution_items'] = [card(f, f'나트륨 {round(f.serving_sodium_mg)}mg — 주의가 필요해요.', ctx)
+            result['caution_items'] = [card(f, f'나트륨이 많은 편이에요(1회 {round(f.serving_sodium_mg)}mg).', ctx)
                                        for f in bad[:limit // 2]]
         result['notice'] = get_tables().SUGAR_INDEX['error_notice']
 

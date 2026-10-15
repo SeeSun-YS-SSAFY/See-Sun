@@ -1,3 +1,5 @@
 # 셸 스크립트·Caddyfile은 리눅스 컨테이너·VM에서 실행되므로 항상 LF
 *.sh text eol=lf
 Caddyfile text eol=lf
+# 가운영 env 템플릿은 서버(리눅스)에서 그대로 .env 가 되므로 LF
+deploy/provisional/env.template text eol=lf

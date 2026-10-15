@@ -233,6 +233,8 @@ class TestMe:
         assert user.firebase_uid is None and user.goal is None
         assert not MealRecord.objects.filter(user=user).exists()
         assert not HealthProfile.objects.filter(user=user).exists()
-        assert not ConsentRecord.objects.filter(user=user).exists()
+        # 동의·철회 이력은 비식별 UUID에 묶어 보관(법적 검토 D-06), 모두 철회 표시
+        assert ConsentRecord.objects.filter(user=user).exists()
+        assert not ConsentRecord.objects.filter(user=user, agreed=True, withdrawn_at__isnull=True).exists()
         assert not ExerciseSession.objects.filter(user=user).exists()
         assert stub.deleted == ['uid-del']

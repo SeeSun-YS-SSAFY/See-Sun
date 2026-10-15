@@ -89,9 +89,12 @@ class OfflineSyncTest {
         items = listOf(MealItem(foodName = "떡볶이", foodId = 12, ratio = 1.0, amountText = "한 그릇"))
     )
 
+    /** 서버 식사 ID는 UUID 문자열(계약 v1.0). */
     private fun created(uuid: String, id: Long) = MockResponse.Builder().code(200)
         .addHeader("Content-Type", "application/json")
-        .body("""{"results":[{"client_uuid":"$uuid","status":"created","id":$id}],"meals":[],"warnings":[],"day_scores":[]}""")
+        .body(
+            """{"results":[{"client_uuid":"$uuid","status":"created","id":"${serverUuid(id)}"}],"meals":[],"warnings":[],"day_scores":[]}"""
+        )
         .build()
 
     @Test
@@ -113,7 +116,7 @@ class OfflineSyncTest {
         assertEquals(0, repository.observePendingCount().first())
         val synced = repository.observeMeals(LocalDate.now()).first().single()
         assertEquals(SyncState.SYNCED, synced.syncState)
-        assertEquals(77L, synced.serverId)
+        assertEquals(serverUuid(77), synced.serverId)
 
         server.takeRequest() // 503 요청
         val body = server.takeRequest().body!!.utf8()
@@ -127,7 +130,7 @@ class OfflineSyncTest {
         val record = repository.record(draft())
         server.enqueue(
             MockResponse.Builder().code(200).addHeader("Content-Type", "application/json")
-                .body("""{"results":[{"client_uuid":"${record.clientUuid}","status":"duplicate","id":5}]}""").build()
+                .body("""{"results":[{"client_uuid":"${record.clientUuid}","status":"duplicate","id":"${serverUuid(5)}"}]}""").build()
         )
         assertEquals(SyncOutcome.DONE, syncer.syncPending())
         assertEquals(SyncState.SYNCED, repository.observeMeals(LocalDate.now()).first().single().syncState)
@@ -186,4 +189,6 @@ class OfflineSyncTest {
         }
         db = SeeSunDatabase.create(context, KeystoreSecretStore(context), dbName) // tearDown에서 닫을 수 있게 다시 연다
     }
+
+    private fun serverUuid(n: Long) = "00000000-0000-4000-8000-%012d".format(n)
 }

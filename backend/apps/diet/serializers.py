@@ -1,7 +1,9 @@
+import math
 from decimal import Decimal
 
 from rest_framework import serializers
 
+from apps.core.dates import RANGE_MESSAGE, in_api_range
 from apps.nutrition.serializers import FoodAllergenSerializer, NutritionSerializer, SugarIndexSerializer
 from apps.users.profile import local_today
 
@@ -17,16 +19,26 @@ class AmountSerializer(serializers.Serializer):
     text = serializers.CharField(max_length=50, required=False, allow_blank=True, help_text='예: 반 그릇')
 
 
+class FiniteFloatField(serializers.FloatField):
+    """NaN·무한대를 거부하는 실수 필드(DRF FloatField는 'NaN'을 받아 min/max 검사도 통과시킨다)"""
+
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        if not math.isfinite(value):
+            self.fail('invalid')
+        return value
+
+
 class NutritionInputSerializer(serializers.Serializer):
     """앱이 영양성분표·바코드로 읽은 값(1회 제공량 기준). 식약처 DB보다 우선한다."""
-    kcal = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=10000)
-    carb_g = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=2000)
-    protein_g = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=2000)
-    fat_g = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=2000)
-    sodium_mg = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=100000)
-    sugar_g = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=2000)
-    fiber_g = serializers.FloatField(required=False, allow_null=True, min_value=0, max_value=2000)
-    serving_g = serializers.FloatField(required=False, allow_null=True, min_value=0.1, max_value=5000)
+    kcal = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=10000)
+    carb_g = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=2000)
+    protein_g = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=2000)
+    fat_g = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=2000)
+    sodium_mg = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=100000)
+    sugar_g = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=2000)
+    fiber_g = FiniteFloatField(required=False, allow_null=True, min_value=0, max_value=2000)
+    serving_g = FiniteFloatField(required=False, allow_null=True, min_value=0.1, max_value=5000)
     is_beverage = serializers.BooleanField(required=False)
 
 
@@ -79,6 +91,7 @@ class EvaluateResponseSerializer(serializers.Serializer):
     items = EvaluatedItemSerializer(many=True)
     warnings = WarningSerializer(many=True)
     tts_message = serializers.CharField()
+    indicator_notice = serializers.CharField(allow_null=True, help_text='당뇨 선택 사용자에게만: 지표 안내(앱이 최초 1회 낭독)')
 
 
 class MealInputSerializer(serializers.Serializer):
@@ -92,6 +105,8 @@ class MealInputSerializer(serializers.Serializer):
     def validate_date(self, value):
         if value > local_today():
             raise serializers.ValidationError('미래 날짜에는 기록할 수 없습니다.')
+        if not in_api_range(value):  # 조회·리포트가 받는 범위와 같게(배포 리허설 B-08)
+            raise serializers.ValidationError(RANGE_MESSAGE)
         return value
 
 
@@ -161,6 +176,7 @@ class MealBulkResponseSerializer(serializers.Serializer):
     meals = MealSerializer(many=True)
     warnings = WarningSerializer(many=True)
     day_scores = DayScoreSerializer(many=True)
+    indicator_notice = serializers.CharField(allow_null=True, help_text='당뇨 선택 사용자에게만: 지표 안내(앱이 최초 1회 낭독)')
 
 
 class DailyReportSerializer(serializers.Serializer):
@@ -179,6 +195,7 @@ class DailyReportSerializer(serializers.Serializer):
     algo_version = serializers.CharField()
     rules_version = serializers.CharField()
     tts_message = serializers.CharField()
+    disclaimer = serializers.CharField(help_text='점수 화면 고지: 영양 성분으로 계산한 참고 점수(건강 상태 평가 아님)')
 
 
 class StatsSerializer(serializers.Serializer):
@@ -193,6 +210,7 @@ class StatsSerializer(serializers.Serializer):
     feedback = serializers.DictField()
     reliability = serializers.CharField()
     list_tts = serializers.ListField(child=serializers.CharField())
+    disclaimer = serializers.CharField(help_text='점수 화면 고지(참고 점수)')
     tts_message = serializers.CharField()
 
     def get_fields(self):

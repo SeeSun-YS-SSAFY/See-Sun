@@ -1,0 +1,149 @@
+{
+ "exercise_no": 12,
+ "exercise_id": "332ca283b8d445db9a572bc2a0d728d3",
+ "exercise_name": "체중 이동",
+ "name_en": "weight_shift",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "",
+ "fields": {
+  "exercise_description": "[추천] 3세트, 좌우 각 2회, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트 및 여유 공간 확보가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 체중 이동에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 양 발을 엉덩이 너비로 벌리고 섭니다.",
+  "main_form": "동작 시작 : 1. 천천히 상체를 왼쪽으로 45도 기울여 왼쪽 다리에 모든 체중이 실리게 합니다. 2. 이 때 오른쪽 다리는 땅에서 손 한 뼘정도 떨어지게 합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 최대 30초간 유지합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 땅에서 떨어진 오른쪽 다리를 바닥에 내려놓습니다. 2. 왼쪽 상체를 천천히 원위치합니다. 3. 상체를 오른쪽으로 기울여 위 자세를 반복합니다.",
+  "exercise_guide_text": "한 세트당 좌우 각 2회 시행하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 3세트, 좌우 각 2회, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트 및 여유 공간 확보가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 체중 이동에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 양 발을 엉덩이 너비로 벌리고 섭니다.",
+  "main_form": "동작 시작 : 1. 천천히 상체를 왼쪽으로 45도 기울여 왼쪽 다리에 모든 체중이 실리게 합니다. 2. 이 때 오른쪽 다리는 땅에서 손 한 뼘정도 떨어지게 합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 최대 30초간 유지합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 땅에서 떨어진 오른쪽 다리를 바닥에 내려놓습니다. 2. 왼쪽 상체를 천천히 원위치합니다. 3. 상체를 오른쪽으로 기울여 위 자세를 반복합니다.",
+  "exercise_guide_text": "한 세트당 좌우 각 1회 시행하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "exercise_guide_text",
+   "section": "따라 하기",
+   "original": "한 세트당 좌우 각 1회 시행하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다.",
+   "new": "한 세트당 좌우 각 2회 시행하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다.",
+   "reason": "운동 소개의 '좌우 각 2회'·'전체 10분'과 맞춤(1회면 약 5분). 표준(쪽마다 최대 3회) 범위 안(판정 both_valid_keep_script).",
+   "verdict": {
+    "verdict_index": 8,
+    "item": "대본 내부 횟수 '좌우 각 2회'(운동 소개) vs '좌우 각 1회'(따라 하기)",
+    "verdict": "both_valid_keep_script",
+    "confidence": "medium",
+    "sources": [
+     "Mayo Clinic — Balance exercises — https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/balance-exercises/art-20546836",
+     "Healthline — Balance exercises for seniors — https://www.healthline.com/health/exercise-fitness/balance-exercises-for-seniors"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/weight_shift/exercise_description.mp3",
+   "mp3_seconds": 14.09,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 14.1
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/weight_shift/first_description.mp3",
+   "mp3_seconds": 12.98,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 13.0
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/weight_shift/main_form.mp3",
+   "mp3_seconds": 16.22,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 16.2
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/weight_shift/stay_form.mp3",
+   "mp3_seconds": 4.49,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 4.5
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/weight_shift/fixed_form.mp3",
+   "mp3_seconds": 17.21,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 4,
+   "sentences_after": 4,
+   "est_seconds_after": 17.2
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/weight_shift/exercise_guide_text.mp3",
+   "mp3_seconds": 9.41,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 9.4
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

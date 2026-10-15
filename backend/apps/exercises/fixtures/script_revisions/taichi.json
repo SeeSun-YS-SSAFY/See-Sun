@@ -1,0 +1,166 @@
+{
+ "exercise_no": 8,
+ "exercise_id": "f5041aa4c2f047a5adb19861733da754",
+ "exercise_name": "타이치 운동",
+ "name_en": "taichi",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "",
+ "fields": {
+  "exercise_description": "[추천] 3세트, 한 세트마다 10-15초 유지, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 타이치 운동에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 요가매트 위에 발을 어깨 너비로 벌립니다. 2. 어깨를 아래로 잡아당기고 머리는 위로 잡아당기는 듯한 느낌으로 상체를 꼿꼿하게 세웁니다. 3. 팔은 아래로 늘어뜨려 편안하게 자세를 유지합니다.",
+  "main_form": "동작 시작 : 1. 손바닥이 바닥을 향하도록 한 후 양팔을 옆으로 최대한 벌립니다. 2. 오른쪽 발바닥에 힘을 주어 바닥에 단단히 고정시킵니다. 3. 왼쪽 발은 천천히 바닥에서 떼어주어 쭉 펴줍니다. 몸이 수직이 되도록 오른쪽으로 기울도록 합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 유지하며 깊게 호흡하고, 10-15초 후에 똑같은 과정을 왼쪽 발과 오른쪽 팔로 다시 진행합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 왼쪽 팔을 먼저 천천히 원래 상태로 내려줍니다. 2. 상체를 천천히 세워주며 몸을 올곧은 상태로 만들어줍니다. 3. 왼쪽 다리를 천천히 내려주며 왼쪽 발이 바닥을 짚을 수 있도록 합니다. 4. 몸의 무게중심이 완전히 오른쪽으로 기울었다면 왼쪽 팔이 귀와 만날 만큼 위로 올립니다.",
+  "exercise_guide_text": "한 세트당 10-15초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 3세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 타이치 운동에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 요가매트 위에 발을 어깨 너비로 벌립니다. 2. 어깨를 아래로 잡아당기고 머리는 위로 잡아당기는 듯한 느낌으로 상체를 꼿꼿하게 세웁니다. 3. 팔은 아래로 늘어뜨려 편안하게 자세를 유지합니다.",
+  "main_form": "동작 시작 : 1. 손바닥이 바닥을 향하도록 한 후 양팔을 옆으로 최대한 벌립니다. 2. 오른쪽 발바닥에 힘을 주어 바닥에 단단히 고정시킵니다. 3. 왼쪽 발은 천천히 바닥에서 떼어주어 쭉 펴줍니다. 몸이 수직이 되도록 오른쪽으로 기울도록 합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 자세를 유지하며 깊게 호흡하고, 10-15초 후에 똑같은 과정을 왼쪽 발과 오른쪽 팔로 다시 진행합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 왼쪽 팔을 먼저 천천히 원래 상태로 내려줍니다. 2. 상체를 천천히 세워주며 몸을 올곧은 상태로 만들어줍니다. 3. 왼쪽 다리를 천천히 내려주며 왼쪽 발이 바닥을 짚을 수 있도록 합니다. 4. 몸의 무게중심이 완전히 오른쪽으로 기울었다면 왼쪽 팔이 귀와 만날 만큼 위로 올립니다.",
+  "exercise_guide_text": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 3세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "exercise_description",
+   "section": "운동 소개",
+   "original": "[추천] 3세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.",
+   "new": "[추천] 3세트, 한 세트마다 10-15초 유지, 전체 5분 동안 운동하기를 권장합니다.",
+   "reason": "자세 유지 구간(10-15초)·그림과 맞춤. 한 발로 몸을 옆으로 크게 기울이는 고난도 자세라 시각장애 고령자에게는 짧은 쪽이 안전(판정 picture_correct).",
+   "verdict": {
+    "verdict_index": 3,
+    "item": "유지 시간: 운동 소개·따라 하기 '10-20초' vs 자세 유지·그림 '10~15초' (검토표에 없던 대본 내부 불일치)",
+    "verdict": "picture_correct",
+    "confidence": "medium",
+    "sources": [
+     "Mayo Clinic — Balance exercises — https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/balance-exercises/art-20546836",
+     "Northumbria University — Can exercise help older people with vision problems avoid falls? — https://northumbria.ac.uk/about-us/news-events/news/2015/06/can-exercise-help-older-people-with-vision-problems-avoid-falls"
+    ]
+   }
+  },
+  {
+   "section_key": "exercise_guide_text",
+   "section": "따라 하기",
+   "original": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 3세트 반복합니다.",
+   "new": "한 세트당 10-15초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 3세트 반복합니다.",
+   "reason": "위와 같은 이유로 따라 하기 값을 10-15초로 맞춤.",
+   "verdict": {
+    "verdict_index": 3,
+    "item": "유지 시간: 운동 소개·따라 하기 '10-20초' vs 자세 유지·그림 '10~15초' (검토표에 없던 대본 내부 불일치)",
+    "verdict": "picture_correct",
+    "confidence": "medium",
+    "sources": [
+     "Mayo Clinic — Balance exercises — https://www.mayoclinic.org/healthy-lifestyle/fitness/in-depth/balance-exercises/art-20546836",
+     "Northumbria University — Can exercise help older people with vision problems avoid falls? — https://northumbria.ac.uk/about-us/news-events/news/2015/06/can-exercise-help-older-people-with-vision-problems-avoid-falls"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/taichi/exercise_description.mp3",
+   "mp3_seconds": 13.9,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 13.9
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/taichi/first_description.mp3",
+   "mp3_seconds": 28.03,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 5,
+   "sentences_after": 5,
+   "est_seconds_after": 28.0
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/taichi/main_form.mp3",
+   "mp3_seconds": 23.76,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 5,
+   "sentences_after": 5,
+   "est_seconds_after": 23.8
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/taichi/stay_form.mp3",
+   "mp3_seconds": 12.84,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 12.8
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/taichi/fixed_form.mp3",
+   "mp3_seconds": 29.5,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 5,
+   "sentences_after": 5,
+   "est_seconds_after": 29.5
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/taichi/exercise_guide_text.mp3",
+   "mp3_seconds": 9.7,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 9.7
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

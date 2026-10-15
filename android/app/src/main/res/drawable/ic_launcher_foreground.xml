@@ -1,14 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 시선 런처 아이콘(임시): 노란 눈 모양. 디자인팀 아이콘 수령 시 교체. -->
+<!-- 의뢰인 로고 Seesunlogo.png를 scripts/design/build_logo.py로 벡터화(원판·점자 점 실측). 둘레 글자 윤곽: Pretendard Bold(SIL OFL 1.1). 런처 전경(남색 바탕 위) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF53"
-        android:pathData="M54,36C40,36 29,45 24,54C29,63 40,72 54,72C68,72 79,63 84,54C79,45 68,36 54,36Z" />
-    <path
-        android:fillColor="#FF241BA2"
-        android:pathData="M54,44A10,10 0,1 1,54 64A10,10 0,1 1,54 44Z" />
+    <group
+        android:scaleX="0.25"
+        android:scaleY="0.25"
+        android:translateX="28"
+        android:translateY="28">
+        <path
+            android:fillColor="#FFDB65"
+            android:fillType="nonZero"
+            android:pathData="M0,105.52a105.52,105.52 0 1,0 211.05,0a105.52,105.52 0 1,0 -211.05,0Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:fillType="nonZero"
+            android:pathData="M64.05,61.06a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.89,61.06a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM83.69,80.89a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM150.17,81.03a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.82,80.89a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM30.2,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM64.01,100.92a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM116.33,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM150.13,100.92a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0ZM169.89,100.91a4.96,4.96 0 1,0 9.93,0a4.96,4.96 0 1,0 -9.93,0Z" />
+    </group>
 </vector>

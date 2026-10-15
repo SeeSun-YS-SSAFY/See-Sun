@@ -62,6 +62,6 @@ data class MealRecord(
     val recordedAt: OffsetDateTime,
     val items: List<MealItem>,
     val syncState: SyncState,
-    val serverId: Long? = null,
+    val serverId: String? = null,
     val lastError: String? = null
 )

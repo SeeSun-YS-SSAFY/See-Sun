@@ -95,6 +95,7 @@ class NetworkFoodRepository @Inject constructor(private val api: SeeSunApi, priv
 @Singleton
 class DefaultAuthRepository @Inject constructor(
     private val authApi: AuthApi,
+    private val api: SeeSunApi,
     private val tokens: TokenStore,
     private val authProvider: AuthProvider,
     private val json: Json
@@ -126,7 +127,8 @@ class DefaultAuthRepository @Inject constructor(
     }
 
     override suspend fun signOut() {
-        tokens.refreshToken?.let { refresh -> apiCall(json) { authApi.logout(LogoutRequest(refresh)) } }
+        // 로그아웃은 access 토큰 인증이 필요하다(서버 IsAuthenticated). 실패해도 기기에서는 로그아웃한다.
+        tokens.refreshToken?.let { refresh -> apiCall(json) { api.logout(LogoutRequest(refresh)) } }
         tokens.clear()
         authProvider.signOut()
     }

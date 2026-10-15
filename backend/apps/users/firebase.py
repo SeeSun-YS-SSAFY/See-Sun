@@ -7,6 +7,9 @@ Firebase ID 토큰 검증 (09 문서 2-5)
 - FakeFirebaseVerifier: 로컬 개발 전용. 토큰 형식 ``fake:<uid>:<전화번호>``.
   FIREBASE_AUTH_FAKE=true 이고 DEBUG=True일 때만 쓸 수 있다. DEBUG=False면 설정 로드 단계
   (settings.py)와 여기(get_verifier)에서 모두 거부한다.
+  예외: 배포 리허설 E2E용 staging 설정(``deploy/e2e/settings_staging.py``, 운영 이미지에 없음, 실행 시
+  볼륨으로만 넣는다)이 ``SEESUN_STAGING_FAKE_AUTH = True`` 를 직접 정의한 경우. 운영 설정(settings.py)은
+  이 값을 환경변수로 읽지 않으므로 운영 컨테이너에서는 켤 방법이 없다.
 
 테스트는 ``set_verifier_for_tests()`` 로 검증기를 바꿔 끼운다.
 """
@@ -34,6 +37,10 @@ class FirebaseNotConfigured(Exception):
     """운영 자격 증명이 없고 가짜 검증기도 꺼져 있음"""
 
 
+class FirebaseDeletionFailed(Exception):
+    """Firebase 사용자 삭제 실패(서비스 계정 없음 포함) → 재시도 큐(FirebaseDeletionTask, 법적 검토 D-05)"""
+
+
 class FirebaseVerifier:
     def verify(self, id_token: str) -> FirebaseIdentity:  # pragma: no cover - 인터페이스
         raise NotImplementedError
@@ -42,17 +49,22 @@ class FirebaseVerifier:
         """탈퇴 시 Firebase 사용자 삭제(지원하지 않으면 아무것도 하지 않음)"""
 
 
+def fake_verifier_allowed() -> bool:
+    """가짜 검증기 허용: 로컬 개발(DEBUG) 또는 staging 설정 모듈이 직접 켠 경우만"""
+    return bool(settings.DEBUG or getattr(settings, 'SEESUN_STAGING_FAKE_AUTH', False) is True)
+
+
 class FakeFirebaseVerifier(FirebaseVerifier):
     """``fake:<uid>:<전화번호>`` 형식만 받는 개발용 검증기"""
 
     PREFIX = 'fake:'
 
     def __init__(self):
-        if not settings.DEBUG:
+        if not fake_verifier_allowed():
             raise ImproperlyConfigured('가짜 Firebase 검증기는 DEBUG=True에서만 쓸 수 있습니다.')
 
     def verify(self, id_token: str) -> FirebaseIdentity:
-        if not settings.DEBUG:
+        if not fake_verifier_allowed():
             raise ImproperlyConfigured('가짜 Firebase 검증기는 DEBUG=True에서만 쓸 수 있습니다.')
         if not isinstance(id_token, str) or not id_token.startswith(self.PREFIX):
             raise InvalidIdToken('fake 토큰 형식이 아닙니다.')
@@ -60,6 +72,21 @@ class FakeFirebaseVerifier(FirebaseVerifier):
         if len(parts) != 2 or not parts[0]:
             raise InvalidIdToken('fake 토큰 형식이 아닙니다.')
         return FirebaseIdentity(uid=parts[0], phone_number=parts[1] or None)
+
+
+def _anonymous_credential_class():
+    from firebase_admin import credentials
+    from google.auth.credentials import AnonymousCredentials
+
+    class AnonymousCredential(credentials.Base):
+        def get_credential(self):
+            return AnonymousCredentials()
+
+    return AnonymousCredential
+
+
+def _AnonymousCredential():  # noqa: N802 — 지연 import용 팩토리
+    return _anonymous_credential_class()()
 
 
 class FirebaseAdminVerifier(FirebaseVerifier):
@@ -83,7 +110,12 @@ class FirebaseAdminVerifier(FirebaseVerifier):
             self._app = firebase_admin.get_app(self.APP_NAME)
         except ValueError:
             options = {'projectId': self.project_id} if self.project_id else None
-            cred = credentials.Certificate(self.credentials_file) if self.credentials_file else None
+            if self.credentials_file:
+                cred = credentials.Certificate(self.credentials_file)
+            else:
+                # 프로젝트 ID만 있는 모드: 서명 검증(공개 인증서)에는 자격 증명이 필요 없다.
+                # cred=None이면 firebase-admin이 Google 기본 자격 증명(ADC)을 찾다가 실패해 500이 났다(배포 리허설 B-01).
+                cred = _AnonymousCredential()
             self._app = firebase_admin.initialize_app(cred, options=options, name=self.APP_NAME)
         return self._app
 
@@ -94,21 +126,26 @@ class FirebaseAdminVerifier(FirebaseVerifier):
         check_revoked = self.check_revoked and bool(self.credentials_file)
         try:
             claims = auth.verify_id_token(id_token, app=self._get_app(), check_revoked=check_revoked)
+        except auth.CertificateFetchError as exc:
+            # Google 공개 인증서를 못 받음(일시 장애): 토큰 문제가 아니므로 401(재인증 유도) 대신 503
+            logger.error('Firebase 공개 인증서 조회 실패: %s', type(exc).__name__)
+            raise FirebaseNotConfigured() from exc
         except (ValueError, auth.InvalidIdTokenError, auth.ExpiredIdTokenError,
-                auth.RevokedIdTokenError, auth.UserDisabledError, auth.CertificateFetchError) as exc:
+                auth.RevokedIdTokenError, auth.UserDisabledError) as exc:
             raise InvalidIdToken(type(exc).__name__) from exc
         return FirebaseIdentity(uid=claims['uid'], phone_number=claims.get('phone_number'))
 
     def delete_user(self, uid: str) -> None:
+        """성공(이미 없음 포함)이면 반환, 실패하면 FirebaseDeletionFailed(호출 측이 재시도 큐에 남긴다)"""
         if not self.credentials_file:
-            return
+            raise FirebaseDeletionFailed('NO_SERVICE_ACCOUNT')
         from firebase_admin import auth
         try:
             auth.delete_user(uid, app=self._get_app())
         except auth.UserNotFoundError:
             pass
-        except Exception:  # noqa: BLE001 — 탈퇴 자체는 막지 않고 운영자가 확인
-            logger.exception('Firebase 사용자 삭제 실패')
+        except Exception as exc:  # noqa: BLE001
+            raise FirebaseDeletionFailed(type(exc).__name__) from exc
 
 
 _override: FirebaseVerifier | None = None
@@ -132,7 +169,8 @@ def get_verifier() -> FirebaseVerifier:
         logger.error('FIREBASE_CREDENTIALS_FILE 경로에 파일이 없습니다.')
         credentials_file = ''
     if credentials_file or settings.FIREBASE_PROJECT_ID:
-        if _admin_verifier is None or _admin_verifier.credentials_file != credentials_file:
+        if (_admin_verifier is None or _admin_verifier.credentials_file != credentials_file
+                or _admin_verifier.project_id != settings.FIREBASE_PROJECT_ID):
             _admin_verifier = FirebaseAdminVerifier(
                 credentials_file=credentials_file,
                 project_id=settings.FIREBASE_PROJECT_ID,

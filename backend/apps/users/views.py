@@ -16,6 +16,7 @@ from rest_framework.exceptions import ValidationError, AuthenticationFailed
 from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiResponse
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.settings import api_settings
 from .containers import Container
 from . import throttles
 from .throttles import LoginRateThrottle, SignupRateThrottle
@@ -351,7 +352,14 @@ class LogoutView(APIView):
         try:
             refresh_token = serializer.validated_data['refresh_token']
             token = RefreshToken(refresh_token)
-            
+
+            # 본인 토큰만 폐기한다(남의 refresh를 넣어 강제 로그아웃시키지 못하게 — 배포 리허설 B-11)
+            if str(token.get(api_settings.USER_ID_CLAIM)) != str(getattr(request.user, api_settings.USER_ID_FIELD)):
+                return Response({
+                    'error': 'INVALID_TOKEN',
+                    'tts_message': '유효하지 않은 토큰입니다.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             # Refresh Token 블랙리스트 등록
             token.blacklist()
             

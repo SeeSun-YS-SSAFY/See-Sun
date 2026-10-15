@@ -242,3 +242,15 @@ backend/staticfiles/
 deploy/.env
 deploy/secrets/
 deploy/backups/
+deploy/e2e/*.env
+deploy/e2e/results/
+deploy/e2e/.venv/
+
+# 가운영 번들(deploy/provisional): 서버에서 생기는 파일·큰 산출물은 커밋하지 않는다
+deploy/provisional/.env
+deploy/provisional/.state/
+deploy/provisional/backups/
+deploy/provisional/handover_*/
+deploy/provisional/secrets/
+deploy/provisional/*.tar.gz
+deploy/provisional/seed/

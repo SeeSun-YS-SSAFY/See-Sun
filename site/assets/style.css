@@ -1,0 +1,163 @@
+/* 시선(See:Sun) 안내 사이트 — 외부 글꼴·스크립트 없음.
+   기준: WCAG 2.2 AA, KS X 3253 취지(대비 4.5:1 이상, 200% 확대, 초점 표시, 색만으로 구분하지 않음). */
+
+:root {
+  --bg: #ffffff;
+  --fg: #1a1a1a;
+  --muted: #4a4a4a;
+  --brand: #241ba2;      /* 1차 디자인 토큰. 흰 바탕 대비 약 12:1 */
+  --brand-fg: #ffffff;
+  --accent: #ffff53;     /* 1차 디자인 토큰. 초점 표시에 남색과 함께 사용 */
+  --line: #6b6b6b;
+  --note-bg: #fff7cc;
+  --note-line: #8a6d00;
+  --code-bg: #fff3b0;
+  --code-fg: #1a1a1a;
+  --table-head: #ecebfa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212;
+    --fg: #f2f2f2;
+    --muted: #cfcfcf;
+    --brand: #b9b4ff;
+    --brand-fg: #121212;
+    --line: #9a9a9a;
+    --note-bg: #2b2600;
+    --note-line: #ffe066;
+    --code-bg: #3a3300;
+    --code-fg: #fff6bf;
+    --table-head: #26244a;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 100%;               /* 사용자의 글자 크기 설정을 그대로 따른다 */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  padding: 0.75rem 1rem;
+  background: var(--brand);
+  color: var(--brand-fg);
+  font-weight: 700;
+  z-index: 10;
+}
+.skip-link:focus { top: 1rem; }
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px var(--accent);
+}
+
+a { color: var(--brand); text-decoration: underline; text-underline-offset: 0.2em; }
+a:hover { text-decoration-thickness: 3px; }
+
+.site-header, .site-footer {
+  border-bottom: 2px solid var(--line);
+  padding: 1rem;
+}
+.site-footer { border-bottom: 0; border-top: 2px solid var(--line); color: var(--muted); }
+
+.site-header .brand {
+  font-size: 1.375rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.site-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+}
+.site-nav a {
+  display: inline-block;
+  min-height: 44px;              /* 터치 영역(WCAG 2.5.8 이상) */
+  padding: 0.5rem 0.25rem;
+}
+.site-nav a[aria-current="page"] { font-weight: 800; text-decoration-thickness: 3px; }
+
+main {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+h1 { font-size: 1.875rem; line-height: 1.35; margin: 0.5rem 0 1rem; }
+h2 { font-size: 1.5rem; line-height: 1.4; margin: 2.5rem 0 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.25rem; margin: 1.75rem 0 0.5rem; }
+p, li { max-width: 70ch; }
+li + li { margin-top: 0.25rem; }
+
+blockquote, .note {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: var(--note-bg);
+  border-left: 6px solid var(--note-line);
+}
+blockquote p:first-child, .note p:first-child { margin-top: 0; }
+blockquote p:last-child, .note p:last-child { margin-bottom: 0; }
+
+code {
+  background: var(--code-bg);
+  color: var(--code-fg);
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+  font-family: inherit;          /* 고정폭 글꼴을 쓰지 않아 낭독·확대에 무리가 없게 */
+  font-weight: 600;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  margin: 1rem 0;
+  border: 1px solid var(--line);
+}
+.table-wrap:focus-visible { outline-offset: 0; }
+table { border-collapse: collapse; width: 100%; min-width: 32rem; }
+th, td {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+th { background: var(--table-head); font-weight: 700; }
+
+.card-list { list-style: none; padding: 0; }
+.card-list li {
+  border: 2px solid var(--line);
+  padding: 1rem;
+  margin: 0 0 1rem;
+}
+.card-list a { font-size: 1.25rem; font-weight: 700; }
+
+.steps li { margin-bottom: 0.5rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
+@media print {
+  .site-nav, .skip-link { display: none; }
+  a::after { content: " (" attr(href) ")"; font-size: 0.875em; }
+}

@@ -1,0 +1,166 @@
+{
+ "exercise_no": 16,
+ "exercise_id": "2470b9fd398944f69bb3c01bc73b5683",
+ "exercise_name": "나비자세",
+ "name_en": "butterfly_pose",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "소유자 결정(msg 803)으로 권장안 A 적용(apply=true). 따라 하기 구간이 새로 생겨 반복 그림(cycle)을 따라 하기 구간에 둠 — 기존 앵커는 그대로.",
+ "fields": {
+  "exercise_description": "[추천] 2세트, 1회, 전체 1분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다. 초보자는 수건이나 담요를 이용해서 무릎 아래를 받쳐주어도 됩니다.",
+  "first_description": "3초 안에 나비 자세에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 요가매트를 바닥에 깔고 그 위에 앉아 다리를 쭉 펴고 엉덩이를 바닥에 고정합니다. 이 상태에서 척추를 길게 펴준다는 느낌으로 상체를 곧게 세웁니다. 2. 발바닥을 서로 맞대주는 방향으로 두 다리를 구부립니다. 이때 다리는 최대한 바닥에 붙인다는 는 느낌으로 하며, 서로 맞닿은 양발은 몸쪽으로 최대한 붙입니다. 3. 두 손으로 발이나 발목을 감싸며 발을 고정합니다.",
+  "main_form": "동작 시작 : 1. 숨을 크게 들이쉬고 내쉴 때 상체를 맞닿은 양발쪽으로 천천히 기울입니다. 척추를 최대한 곧게 유지하고 상체에 무리가 안 가도록 주의합니다. 2. 무릎이 바닥에 무조건 닿지 않아도 되니 무리하지 않고 허벅지 안쪽 근육이 늘어나는 것에 집중합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 상체를 기울인 상태에서 30초 정도 유지해줍니다. 허벅지 안쪽과 엉덩이 앞쪽, 다리와 몸통이 연결되는 부위가 늘어나는 느낌에 집중합니다. 2. 호흡 조절 : 자세를 유지할동안 깊고 천천히 숨을 들이쉬고 내쉽니다. 이때 몸이 이완되도록 집중합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 상체를 들어올리고 원래 자세로 돌아옵니다. 이때, 허리를 곧게 펴고 척추를 곧게 세워줍니다. 2. 천천히 다리를 앞으로 뻗어 가볍게 털어주며 다리를 풀어줍니다. 이때 엉덩이와 허벅지를 이완시키고 편한 자세를 유지합니다. 3. 상체를 세우고 숨을 크게 들이쉬고 내쉬어줍니다. 편한 상태로 휴식을 취해줍니다.",
+  "exercise_guide_text": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 2세트, 1회, 전체 1분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다. 초보자는 수건이나 담요를 이용해서 무릎 아래를 받쳐주어도 됩니다.",
+  "first_description": "3초 안에 나비 자세에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 요가매트를 바닥에 깔고 그 위에 앉아 다리를 쭉 펴고 엉덩이를 바닥에 고정합니다. 이 상태에서 척추를 길게 펴준다는 느낌으로 상체를 곧게 세웁니다. 2. 발바닥을 서로 맞대주는 방향으로 두 다리를 구부립니다. 이때 다리는 최대한 바닥에 붙인다는 는 느낌으로 하며, 서로 맞닿은 양발은 몸쪽으로 최대한 붙입니다. 3. 두 손으로 발이나 발목을 감싸며 발을 고정합니다.",
+  "main_form": "동작 시작 : 1. 숨을 크게 들이쉬고 내쉴 때 상체를 맞닿은 양발쪽으로 천천히 기울입니다. 척추를 최대한 곧게 유지하고 상체에 무리가 안 가도록 주의합니다. 2. 무릎이 바닥에 무조건 닿지 않아도 되니 무리하지 않고 허벅지 안쪽 근육이 늘어나는 것에 집중합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 상체를 기울인 상태에서 10~15초 정도 유지해줍니다. 허벅지 안쪽과 엉덩이 앞쪽, 다리와 몸통이 연결되는 부위가 늘어나는 느낌에 집중합니다. 2. 호흡 조절 : 자세를 유지할동안 깊고 천천히 숨을 들이쉬고 내쉽니다. 이때 몸이 이완되도록 집중합니다.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 상체를 들어올리고 원래 자세로 돌아옵니다. 이때, 허리를 곧게 펴고 척추를 곧게 세워줍니다. 2. 천천히 다리를 앞으로 뻗어 가볍게 털어주며 다리를 풀어줍니다. 이때 엉덩이와 허벅지를 이완시키고 편한 자세를 유지합니다. 3. 상체를 세우고 숨을 크게 들이쉬고 내쉬어줍니다. 편한 상태로 휴식을 취해줍니다.",
+  "exercise_guide_text": "x"
+ },
+ "changes": [
+  {
+   "section_key": "exercise_guide_text",
+   "section": "따라 하기",
+   "original": null,
+   "new": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다.",
+   "reason": "따라 하기 구간 신설(현재 'x'라 앱에서 빠짐). 소유자 결정 msg 803 「2세트로 따라하기 넣어주면 될거같아」 — 권장안 A(30초 유지·30초 휴식·2세트). 운동 소개 '2세트·전체 1분' = 세트당 약 30초, 나비 스트레칭 권장 15-30초 × 2-4회·고령자 30-60초(판정 needs_client).",
+   "verdict": {
+    "verdict_index": 11,
+    "item": "따라 하기 구간 없음(운동 소개 '2세트, 1회, 전체 1분')",
+    "verdict": "needs_client",
+    "confidence": "medium",
+    "sources": [
+     "ColumbiaDoctors — Groin stretch — https://www.columbiadoctors.org/health-library/multimedia/groin-stretch/",
+     "ACSM — Stretching and Flexibility Guidelines Update (2021) — https://www.acsm.org/blog-detail/acsm-certified-blog/2021/03/18/stretching-and-flexibility-guidelines-update"
+    ]
+   }
+  },
+  {
+   "section_key": "stay_form",
+   "section": "자세 유지",
+   "original": "1. 상체를 기울인 상태에서 10~15초 정도 유지해줍니다.",
+   "new": "1. 상체를 기울인 상태에서 30초 정도 유지해줍니다.",
+   "reason": "권장안 A에 따라 따라 하기(30초)와 맞춤. 그림 3도 '10~15s'→'30s'로 고침.",
+   "verdict": {
+    "verdict_index": 11,
+    "item": "따라 하기 구간 없음(운동 소개 '2세트, 1회, 전체 1분')",
+    "verdict": "needs_client",
+    "confidence": "medium",
+    "sources": [
+     "ColumbiaDoctors — Groin stretch — https://www.columbiadoctors.org/health-library/multimedia/groin-stretch/",
+     "ACSM — Stretching and Flexibility Guidelines Update (2021) — https://www.acsm.org/blog-detail/acsm-certified-blog/2021/03/18/stretching-and-flexibility-guidelines-update"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/butterfly_pose/exercise_description.mp3",
+   "mp3_seconds": 17.5,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 3,
+   "sentences_after": 3,
+   "est_seconds_after": 17.5
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/butterfly_pose/first_description.mp3",
+   "mp3_seconds": 44.86,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 7,
+   "sentences_after": 7,
+   "est_seconds_after": 44.9
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/butterfly_pose/main_form.mp3",
+   "mp3_seconds": 25.34,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 4,
+   "sentences_after": 4,
+   "est_seconds_after": 25.3
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/butterfly_pose/stay_form.mp3",
+   "mp3_seconds": 26.3,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 6,
+   "sentences_after": 6,
+   "est_seconds_after": 25.8
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/butterfly_pose/fixed_form.mp3",
+   "mp3_seconds": 32.59,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 7,
+   "sentences_after": 7,
+   "est_seconds_after": 32.6
+  },
+  "exercise_guide_text": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": true,
+   "stale": false,
+   "needs_new_mp3": true,
+   "sentences_before": 0,
+   "sentences_after": 1,
+   "est_seconds_after": null
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

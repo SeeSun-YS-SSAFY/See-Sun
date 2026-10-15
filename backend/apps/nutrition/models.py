@@ -32,6 +32,8 @@ class AllergenBasis(models.TextChoices):
 class Food(models.Model):
     source = models.CharField(max_length=20, choices=FoodSource.choices, verbose_name='출처')
     source_code = models.CharField(max_length=64, verbose_name='출처 식품코드')
+    # 행별 원 출처 기관(통합 DB에 여러 기관 자료가 섞여 있다 — 법적 검토 D-13). 예: 식품의약품안전처
+    source_name = models.CharField(max_length=100, blank=True, verbose_name='출처명(원 자료 기관)')
     name = models.CharField(max_length=255, verbose_name='식품명')
     search_name = models.CharField(max_length=255, db_index=True, verbose_name='검색용 이름(공백 제거)')
     representative_name = models.CharField(max_length=255, blank=True, verbose_name='대표식품명')

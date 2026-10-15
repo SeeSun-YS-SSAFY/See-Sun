@@ -4,6 +4,7 @@
 이 모듈은 운동 카테고리, 상세 정보, 루틴(Playlist), 세션(ExerciseSession) 등
 운동 기능과 관련된 데이터의 변환 및 검증 로직을 담고 있다.
 """
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from apps.core.media import media_url
@@ -19,6 +20,85 @@ class ExerciseCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = ExerciseCategory
         fields = ('category_id', 'display_name')
+
+# -------------------------------------------------------------------------
+
+def guide_audios(exercise) -> list[dict]:
+    """운동의 안내 음성 구간 목록 ``[{type, section, url}]`` (sequence 순). prefetch된 media_contents를 쓴다."""
+    media = sorted((m for m in exercise.media_contents.all() if m.media_type == 'GUIDE_AUDIO'), key=lambda m: m.sequence)
+    return [{'type': m.section_name, 'section': m.section_name, 'url': _versioned(m)} for m in media]
+
+
+def _versioned(media):
+    """녹음 주소 + 내용 해시(?v=, 다시 만든 녹음을 같은 경로에 깔아도 앱·CDN 캐시가 새 녹음을 받게)."""
+    url = media.public_url
+    if url and media.checksum:
+        return f"{url}{'&' if '?' in url else '?'}v={media.checksum[:12]}"
+    return url
+
+def pictogram_urls(exercise) -> list[str]:
+    """픽토그램 URL 목록(sequence 순)"""
+    media = sorted((m for m in exercise.media_contents.all() if m.media_type == 'PICTOGRAM'), key=lambda m: m.sequence)
+    return [m.public_url for m in media]
+
+
+class PictogramFrameSerializer(serializers.Serializer):
+    """
+    픽토그램 한 장과 대본 위치. section·sentence_index는 이 그림이 보이기 시작하는 대본 위치(앱 문장 나누기 기준),
+    label은 그림 이름(낭독용). 연결이 없으면 null(앱은 1초마다 모든 그림을 돌림).
+    display_url은 여백·인쇄 글자를 잘라 그림을 크게 한 보기용 사본(원본은 url), redrawn은 대본에 맞게 다시 그린 그림(의뢰인 확인 필요).
+    """
+    url = serializers.CharField()
+    sequence = serializers.IntegerField()
+    section = serializers.CharField(allow_null=True)
+    sentence_index = serializers.IntegerField(allow_null=True)
+    label = serializers.CharField(allow_null=True)
+    needs_client = serializers.BooleanField()
+    display_url = serializers.CharField(allow_null=True)
+    redrawn = serializers.BooleanField()
+
+
+class PictogramCycleSerializer(serializers.Serializer):
+    """반복·유지 구간: section의 start_sentence_index번째 문장부터 sequences 그림을 1초마다 되풀이(kind 반복|유지, 유지 그림 hold_sequence)."""
+    section = serializers.CharField()
+    sequences = serializers.ListField(child=serializers.IntegerField())
+    kind = serializers.CharField(allow_null=True)
+    start_sentence_index = serializers.IntegerField()
+    hold_sequence = serializers.IntegerField(allow_null=True)
+
+
+def pictogram_cycle(exercise):
+    """운동의 픽토그램 반복 구간(PictogramCycleSerializer 형식) 또는 None."""
+    cycle = exercise.pictogram_cycle
+    if not cycle:
+        return None
+    return {
+        'section': cycle.get('section_key'),
+        'sequences': list(cycle.get('sequences') or []),
+        'kind': cycle.get('kind'),
+        'start_sentence_index': cycle.get('start_sentence_index') or 0,
+        'hold_sequence': cycle.get('hold_sequence'),
+    }
+
+
+def pictogram_frames(exercise) -> list[dict]:
+    """픽토그램과 대본 위치 목록(sequence 순, PictogramFrameSerializer 형식). 연결표: apps/exercises/pictogram_map.py"""
+    media = sorted((m for m in exercise.media_contents.all() if m.media_type == 'PICTOGRAM'), key=lambda m: m.sequence)
+    return [
+        {
+            'url': m.public_url,
+            'sequence': m.sequence,
+            'section': m.section or None,
+            'sentence_index': m.sentence_index,
+            'label': m.label_ko or None,
+            'needs_client': m.needs_client,
+            # 보기용 사본(여백·인쇄 글자를 잘라 그림을 크게). 없으면 null → 앱은 url(원본)을 쓴다.
+            'display_url': media_url(m.display_key) if m.display_key else None,
+            # 대본에 맞게 다시 그린 그림(의뢰인 확인 필요)
+            'redrawn': m.redrawn,
+        }
+        for m in media
+    ]
 
 # -------------------------------------------------------------------------
 
@@ -54,6 +134,9 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source='category.display_name', read_only=True)
     exercise_guide = serializers.CharField(source='exercise_guide_text', read_only=True)
     pictograms = serializers.SerializerMethodField()
+    pictogram_frames = serializers.SerializerMethodField()
+    pictogram_cycle = serializers.SerializerMethodField()
+    audios = serializers.SerializerMethodField()
     merged_audio_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -63,15 +146,25 @@ class ExerciseDetailSerializer(serializers.ModelSerializer):
             'exercise_description',
             'first_description', 'main_form', 'form_description', 
             'stay_form', 'fixed_form',
-            'exercise_guide', 'pictograms', 'merged_audio_url'
+            'exercise_guide', 'pictograms', 'pictogram_frames', 'pictogram_cycle', 'audios', 'merged_audio_url',
+            'script_revised', 'audio_stale'
         )
 
     def get_pictograms(self, obj) -> list[str]:
-        # 픽토그램 이미지 URL 리스트 반환
-        return [
-            m.public_url for m in obj.media_contents.all()
-            if m.media_type == 'PICTOGRAM'
-        ]
+        # 픽토그램 이미지 URL 리스트 반환(1차 웹·이전 앱 호환. 대본 위치는 pictogram_frames)
+        return pictogram_urls(obj)
+
+    @extend_schema_field(PictogramFrameSerializer(many=True))
+    def get_pictogram_frames(self, obj):
+        return pictogram_frames(obj)
+
+    @extend_schema_field(PictogramCycleSerializer(allow_null=True))
+    def get_pictogram_cycle(self, obj):
+        return pictogram_cycle(obj)
+
+    def get_audios(self, obj) -> list[dict]:
+        # 2차(Android 문장 싱크): 구간별 안내 음성. 루틴 항목 audios[]와 같은 형식, 재생 순서(sequence)대로
+        return guide_audios(obj)
 
     def get_merged_audio_url(self, obj) -> str:
         # 병합된 오디오 URL 반환
@@ -111,30 +204,36 @@ class PlaylistItemSerializer(serializers.ModelSerializer):
     exercise_guide_text = serializers.CharField(source='exercise.exercise_guide_text', read_only=True)
     audios = serializers.SerializerMethodField()
     pictograms = serializers.SerializerMethodField()
+    pictogram_frames = serializers.SerializerMethodField()
+    pictogram_cycle = serializers.SerializerMethodField()
+    # 대본을 고친 운동(의뢰인 확인 필요)·녹음 음성이 대본과 다름(앱은 운동 전체를 기기 음성으로 읽음)
+    script_revised = serializers.BooleanField(source='exercise.script_revised', read_only=True)
+    audio_stale = serializers.BooleanField(source='exercise.audio_stale', read_only=True)
 
     class Meta:
         model = PlaylistItem
         fields = (
             'playlist_item_id', 'exercise_id', 'exercise_name', 'exercise_guide_text',
-            'audios', 'pictograms',
+            'audios', 'pictograms', 'pictogram_frames', 'pictogram_cycle', 'script_revised', 'audio_stale',
             'sequence_no', 'set_count', 'reps_count', 
             'duration_sec', 'rest_sec', 'cue_overrides'
         )
 
     def get_audios(self, obj) -> list[dict]:
-        # 해당 운동의 모든 TTS 오디오 URL 반환
-        return [
-            {'type': m.section_name, 'section': m.section_name, 'url': m.public_url}
-            for m in obj.exercise.media_contents.all()
-            if m.media_type == 'GUIDE_AUDIO'
-        ]
+        # 해당 운동의 모든 안내 음성 URL(재생 순서대로)
+        return guide_audios(obj.exercise)
 
     def get_pictograms(self, obj) -> list[str]:
         # 해당 운동의 모든 픽토그램 URL 반환
-        return [
-            m.public_url for m in obj.exercise.media_contents.all()
-            if m.media_type == 'PICTOGRAM'
-        ]
+        return pictogram_urls(obj.exercise)
+
+    @extend_schema_field(PictogramFrameSerializer(many=True))
+    def get_pictogram_frames(self, obj):
+        return pictogram_frames(obj.exercise)
+
+    @extend_schema_field(PictogramCycleSerializer(allow_null=True))
+    def get_pictogram_cycle(self, obj):
+        return pictogram_cycle(obj.exercise)
 
 # ----------------------------------------------------------------------------
 

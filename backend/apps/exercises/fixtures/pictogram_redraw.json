@@ -1,0 +1,467 @@
+[
+ {
+  "no": 24,
+  "exercise_id": "7c362f80bc2441e3ae09f576abf9307a",
+  "exercise_name": "밴드 풀 어파트",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "strength03_band_pull_apart_01_v2.jpg",
+  "script_basis": {
+   "section_key": "first_description",
+   "sentence_index": 4
+  },
+  "needs_client_confirm": true,
+  "reason": "정오 조사(verdicts #19 script_correct): 대본·표준 시작 자세는 팔을 가슴 높이로 앞으로 뻗음 — 허리 앞 밴드 그림을 다시 그림",
+  "sequence": 1,
+  "original_url": "/media/exercises/pictograms/strength/strength03_band_pull_apart_01.jpg",
+  "anchor": {
+   "section_key": "exercise_description",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength03_band_pull_apart_01_v2.jpg"
+ },
+ {
+  "no": 24,
+  "exercise_id": "7c362f80bc2441e3ae09f576abf9307a",
+  "exercise_name": "밴드 풀 어파트",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "strength03_band_pull_apart_02_v2.jpg",
+  "script_basis": {
+   "section_key": "main_form",
+   "sentence_index": 2
+  },
+  "needs_client_confirm": true,
+  "reason": "대본(어깨너비로 서서 양손을 수평으로 벌림)에 맞춰 대각선·앞뒤 다리 그림을 정면 수평 동작으로 다시 그림",
+  "sequence": 2,
+  "original_url": "/media/exercises/pictograms/strength/strength03_band_pull_apart_02.jpg",
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength03_band_pull_apart_02_v2.jpg"
+ },
+ {
+  "no": 24,
+  "exercise_id": "7c362f80bc2441e3ae09f576abf9307a",
+  "exercise_name": "밴드 풀 어파트",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "strength03_band_pull_apart_03_v2.jpg",
+  "script_basis": {
+   "section_key": "stay_form",
+   "sentence_index": 1
+  },
+  "needs_client_confirm": true,
+  "reason": "양손이 몸 옆까지 와 수평이 된 자세 유지",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/strength/strength03_band_pull_apart_03.jpg",
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength03_band_pull_apart_03_v2.jpg"
+ },
+ {
+  "no": 24,
+  "exercise_id": "7c362f80bc2441e3ae09f576abf9307a",
+  "exercise_name": "밴드 풀 어파트",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "strength03_band_pull_apart_04_v2.jpg",
+  "script_basis": {
+   "section_key": "fixed_form",
+   "sentence_index": 1
+  },
+  "needs_client_confirm": true,
+  "reason": "양손을 다시 가운데로 모으는 되돌리기 동작",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/strength/strength03_band_pull_apart_04.jpg",
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength03_band_pull_apart_04_v2.jpg"
+ },
+ {
+  "no": 2,
+  "exercise_id": "510d083befd9489090384aa4558f5caa",
+  "exercise_name": "스텝박스를 활용한 운동",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "aerobic02_step_box_03_v2.jpg",
+  "script_basis": {
+   "section_key": "main_form",
+   "sentence_index": 2
+  },
+  "needs_client_confirm": true,
+  "reason": "그림 2와 같은 한 발 올림 그림이던 것을 '오른발 또한 왼발 옆에 올립니다'(두 발 모두 올림)로 다시 그림",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/aerobic/aerobic02_step_box_03.jpg",
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 2
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\aerobic02_step_box_03_v2.jpg"
+ },
+ {
+  "no": 2,
+  "exercise_id": "510d083befd9489090384aa4558f5caa",
+  "exercise_name": "스텝박스를 활용한 운동",
+  "action": "replace",
+  "kind": "figure",
+  "new_file": "aerobic02_step_box_04_v2.jpg",
+  "script_basis": {
+   "section_key": "fixed_form",
+   "sentence_index": 1
+  },
+  "needs_client_confirm": true,
+  "reason": "그림 2와 같은 그림이던 것을 '바닥으로 왼발을 내리고, 오른발을 내립니다'(내려오기)로 다시 그림",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/aerobic/aerobic02_step_box_04.jpg",
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\aerobic02_step_box_04_v2.jpg"
+ },
+ {
+  "no": 20,
+  "exercise_id": "38e69682332a4e0b9f3149559459c29f",
+  "exercise_name": "허리 비틀기",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility06_waist_twist_04.jpg",
+  "new_file": "flexibility06_waist_twist_04_v2.jpg",
+  "old_text": "자세 유지",
+  "new_text": "원래 자세로 돌아가기",
+  "script_basis": {
+   "section_key": "fixed_form",
+   "sentence": "원래 위치로 돌아가기"
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility06_waist_twist_04_v2.jpg"
+ },
+ {
+  "no": 4,
+  "exercise_id": "bfc3fc834cb54087bf072b9aeafc6a3a",
+  "exercise_name": "점핑잭",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/aerobic/aerobic04_jumping_jack_03.jpg",
+  "new_file": "aerobic04_jumping_jack_03_v2.jpg",
+  "old_text": "자세 유지 / (스톱워치) 5s",
+  "new_text": "동작 시작 / (삭제)",
+  "script_basis": {
+   "section_key": "main_form",
+   "sentence": "2. 발을 벌리는 동작과 함께 양팔은 옆으로 머리 위로 들어 올립니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 5
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\aerobic04_jumping_jack_03_v2.jpg"
+ },
+ {
+  "no": 9,
+  "exercise_id": "cc0c3e2be33d476580fd85c6a2898e55",
+  "exercise_name": "명상 및 호흡 운동",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/balance/balance02_meditation_breathing_03.jpg",
+  "new_file": "balance02_meditation_breathing_03_v2.jpg",
+  "old_text": "5~10m",
+  "new_text": "10분",
+  "script_basis": {
+   "section_key": "stay_form",
+   "sentence": "1. 이러한 과정을 10분 동안 반복하면서 자세를 유지합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\balance02_meditation_breathing_03_v2.jpg"
+ },
+ {
+  "no": 10,
+  "exercise_id": "46b36e1a65c14c14a63f811ccce346b3",
+  "exercise_name": "버드 도그 홀드",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/balance/balance03_bird_dog_hold_04.jpg",
+  "new_file": "balance03_bird_dog_hold_04_v2.jpg",
+  "old_text": "x R 3 / x L 3",
+  "new_text": "x R 7 / x L 7",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 좌우 각 7회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 2세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\balance03_bird_dog_hold_04_v2.jpg"
+ },
+ {
+  "no": 15,
+  "exercise_id": "2dd7f517402f44eb9f14d68e6df4d6b4",
+  "exercise_name": "햄스트링 스트레칭",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility01_hamstring_stretch_03.jpg",
+  "new_file": "flexibility01_hamstring_stretch_03_v2.jpg",
+  "old_text": "10~15s",
+  "new_text": "30s",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility01_hamstring_stretch_03_v2.jpg"
+ },
+ {
+  "no": 16,
+  "exercise_id": "2470b9fd398944f69bb3c01bc73b5683",
+  "exercise_name": "나비자세",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility02_butterfly_pose_03.jpg",
+  "new_file": "flexibility02_butterfly_pose_03_v2.jpg",
+  "old_text": "10~15s",
+  "new_text": "30s",
+  "script_basis": {
+   "section_key": "stay_form",
+   "sentence": "1. 상체를 기울인 상태에서 30초 정도 유지해줍니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility02_butterfly_pose_03_v2.jpg"
+ },
+ {
+  "no": 18,
+  "exercise_id": "5474e18720a340cfb8b482a417cf1d08",
+  "exercise_name": "고양이-소 자세",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 2,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_02.jpg",
+  "new_file": "flexibility04_cat_cow_02_v2.jpg",
+  "old_text": "10~15s",
+  "new_text": "3~5s",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 고양이, 소 자세를 각각 3-5초씩 유지하고, 세트 사이마다 15초씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility04_cat_cow_02_v2.jpg"
+ },
+ {
+  "no": 18,
+  "exercise_id": "5474e18720a340cfb8b482a417cf1d08",
+  "exercise_name": "고양이-소 자세",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_03.jpg",
+  "new_file": "flexibility04_cat_cow_03_v2.jpg",
+  "old_text": "10~15s",
+  "new_text": "3~5s",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 고양이, 소 자세를 각각 3-5초씩 유지하고, 세트 사이마다 15초씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 6
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility04_cat_cow_03_v2.jpg"
+ },
+ {
+  "no": 18,
+  "exercise_id": "5474e18720a340cfb8b482a417cf1d08",
+  "exercise_name": "고양이-소 자세",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility04_cat_cow_04.jpg",
+  "new_file": "flexibility04_cat_cow_04_v2.jpg",
+  "old_text": "x5~10회",
+  "new_text": "x5세트",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 고양이, 소 자세를 각각 3-5초씩 유지하고, 세트 사이마다 15초씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility04_cat_cow_04_v2.jpg"
+ },
+ {
+  "no": 21,
+  "exercise_id": "784aec1160d0444d9e60d7874169a8aa",
+  "exercise_name": "트렁크 트위스트 (Lying trunk twist)",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility07_trunk_twist_04.jpg",
+  "new_file": "flexibility07_trunk_twist_04_v2.jpg",
+  "old_text": "자세 유지 / xR1+L3 5세트",
+  "new_text": "원래 자세로 돌아가기 / xR1+L1 5세트",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 좌우 각 1회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\flexibility07_trunk_twist_04_v2.jpg"
+ },
+ {
+  "no": 27,
+  "exercise_id": "cae119843d814b53bbca8193702e7331",
+  "exercise_name": "힙 브릿지",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/strength/strength06_hip_bridge_03.jpg",
+  "new_file": "strength06_hip_bridge_03_v2.jpg",
+  "old_text": "2s",
+  "new_text": "10~20s",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "stay_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength06_hip_bridge_03_v2.jpg"
+ },
+ {
+  "no": 27,
+  "exercise_id": "cae119843d814b53bbca8193702e7331",
+  "exercise_name": "힙 브릿지",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/strength/strength06_hip_bridge_04.jpg",
+  "new_file": "strength06_hip_bridge_04_v2.jpg",
+  "old_text": "x 5~10",
+  "new_text": "x 5세트",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 5세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "fixed_form",
+   "sentence_index": 0
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength06_hip_bridge_04_v2.jpg"
+ },
+ {
+  "no": 29,
+  "exercise_id": "13aa226cee924a47b4d96fc292f6f004",
+  "exercise_name": "레그레이즈",
+  "action": "replace",
+  "kind": "text",
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/strength/strength08_leg_raise_03.jpg",
+  "new_file": "strength08_leg_raise_03_v2.jpg",
+  "old_text": "x30회",
+  "new_text": "x15~20회 3세트",
+  "script_basis": {
+   "section_key": "exercise_guide_text",
+   "sentence": "한 세트당 15-20회 반복하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다."
+  },
+  "needs_client_confirm": true,
+  "anchor": {
+   "section_key": "main_form",
+   "sentence_index": 3
+  },
+  "new_path": "<WORKDIR>\\uiux\\pictogram_redraw\\strength08_leg_raise_03_v2.jpg"
+ },
+ {
+  "no": 26,
+  "exercise_id": "b09b403f4962401cb46b0f8fd0a52e87",
+  "exercise_name": "런지",
+  "action": "revert",
+  "kind": "text",
+  "removed_file": "strength05_lunge_03_v2.jpg",
+  "reason": "정오 조사(verdicts #22): 안전 쪽 3초 채택 → 원본 '3s' 그림 사용, 대본을 3초로 고침",
+  "needs_client_confirm": true,
+  "sequence": 3,
+  "original_url": "/media/exercises/pictograms/strength/strength05_lunge_03.jpg",
+  "use": "original_url"
+ },
+ {
+  "no": 28,
+  "exercise_id": "845c6389e84c4a3eace7fb2bf534bf68",
+  "exercise_name": "버피테스트",
+  "action": "revert",
+  "kind": "figure",
+  "removed_file": "strength07_burpee_test_03b_v2.jpg",
+  "reason": "정오 조사(verdicts #25): 원형 4동작 버피 — 추가 그림 넣지 않음, 대본의 가슴 대기 문장 삭제",
+  "needs_client_confirm": true,
+  "sequence": null,
+  "original_url": null,
+  "insert_after_sequence": 3,
+  "use": "remove_added_frame"
+ },
+ {
+  "no": 19,
+  "exercise_id": "78f36d5f97c242f78379f5f463c88f21",
+  "exercise_name": "다리 스트레칭",
+  "action": "revert",
+  "kind": "figure",
+  "removed_file": "flexibility05_leg_stretch_01_v2.jpg",
+  "reason": "소유자 결정(msg 765): 원본 앉은 그림 사용, 대본을 그림에 맞춤",
+  "needs_client_confirm": true,
+  "sequence": 1,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_01.jpg",
+  "use": "original_url"
+ },
+ {
+  "no": 19,
+  "exercise_id": "78f36d5f97c242f78379f5f463c88f21",
+  "exercise_name": "다리 스트레칭",
+  "action": "revert",
+  "kind": "figure",
+  "removed_file": "flexibility05_leg_stretch_04_v2.jpg",
+  "reason": "소유자 결정(msg 765): 원본 앉은 그림 사용, 대본을 그림에 맞춤",
+  "needs_client_confirm": true,
+  "sequence": 4,
+  "original_url": "/media/exercises/pictograms/flexibilty/flexibility05_leg_stretch_04.jpg",
+  "use": "original_url"
+ }
+]

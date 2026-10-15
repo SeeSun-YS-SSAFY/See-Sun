@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 음성·키보드 입력 칸 -->
+    <string name="ui_confirm_question">맞으면 확인, 고치려면 수정을 눌러 주세요. 마이크를 누르고 네 또는 수정이라고 말씀하셔도 돼요.</string>
+    <string name="ui_confirm_question_short">맞으면 확인, 고치려면 수정을 눌러 주세요.</string>
+    <string name="ui_confirm_prompt">%1$s. 맞으면 확인, 고치려면 수정이라고 말씀해 주세요.</string>
+    <string name="ui_not_understood">잘 알아듣지 못했어요. %1$s</string>
+    <string name="ui_heard_not_understood">%1$s(이)라고 들었는데 알맞은 값이 아니에요. %2$s</string>
+    <string name="ui_invalid">입력하신 값이 맞지 않아요. %1$s</string>
+    <string name="ui_suggest_keyboard">음성 인식이 계속 어려워요. 키보드로 직접 입력할 수 있어요.</string>
+    <string name="ui_mic_permission_denied">마이크 권한이 없어 음성으로 입력할 수 없어요. 키보드로 직접 입력해 주세요. 설정에서 마이크를 허용하면 음성으로도 입력할 수 있어요.</string>
+
+    <string name="ui_heard_not_choice">%1$s(이)라고 들었어요. %2$s</string>
+    <string name="ui_suggest_buttons">음성 인식이 계속 어려워요. 아래 버튼으로 고를 수 있어요.</string>
+    <string name="ui_mic_permission_denied_buttons">마이크 권한이 없어 음성으로 고를 수 없어요. 아래 버튼으로 골라 주세요.</string>
+    <string name="ui_mic_rationale">음성으로 입력하려고 마이크를 사용해요. 말소리는 휴대폰의 음성 인식으로 글자로 바꾸고, 시선 서버에는 소리를 저장하지 않아요. 기기에 따라 Google 음성 인식 서버를 거칠 수 있어요.</string>
+    <string name="ui_mic_rationale_alternative">마이크를 허용하지 않아도 키보드와 버튼으로 모든 입력을 할 수 있어요.</string>
+    <string name="ui_mic_allow">마이크 허용하기</string>
+    <string name="ui_mic_decline">키보드로 입력하기</string>
+    <string name="ui_voice_command_idle">말로 고르기</string>
+    <string name="ui_voice_command_listening">듣는 중, 누르면 멈춰요</string>
+    <string name="ui_voice_command_processing">인식 중</string>
+    <string name="ui_voice_command_wait">잠시만 기다려 주세요</string>
+    <string name="ui_voice_unavailable_buttons">이 기기에서는 음성 인식을 쓸 수 없어요. 아래 버튼으로 골라 주세요.</string>
+
+    <!-- 목표·질환 -->
+    <string name="ui_goal_lose">체중 감량</string>
+    <string name="ui_goal_lose_desc">하루 500킬로칼로리 줄여요</string>
+    <!-- 목표 고르기 화면 본문(선택지 설명은 두 줄 안으로, 11_레이아웃_기준.md §3) -->
+    <string name="ui_goal_floor_note">감량은 하루 1,200킬로칼로리 아래로 내리지 않아요.</string>
+    <string name="ui_goal_gain">근육 증진</string>
+    <string name="ui_goal_gain_desc">하루 300킬로칼로리 늘려요</string>
+    <string name="ui_goal_maintain">건강 유지</string>
+    <string name="ui_goal_maintain_desc">지금 몸무게를 유지해요</string>
+    <string name="ui_disease_diabetes">당뇨</string>
+    <string name="ui_disease_hypertension">고혈압</string>
+    <string name="ui_disease_none">없음</string>
+    <string name="ui_none">없음</string>
+    <string name="ui_keyboard_input">키보드로 직접 입력</string>
+</resources>

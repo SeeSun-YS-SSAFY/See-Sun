@@ -1,0 +1,84 @@
+# See:Sun 가운영(1주~1달) 구성 — Lightsail 서울 2GB 1대, 미디어는 Caddy가 media 볼륨에서 직접 서빙(R2 없음)
+#   deploy/docker-compose.prod.yml 과 같은 3개 컨테이너(django·postgres·caddy)이고, 다른 점은 두 가지뿐:
+#   1) 서버에서 빌드하지 않는다(build 절 없음). PC에서 만든 이미지 묶음을 deploy.sh가 docker load 한다.
+#   2) 이미지 기본값이 가운영 태그(seesun-backend:prov-20261015).
+#   파일 이름을 docker-compose.prod.yml 로 두는 것은 deploy/backup.sh를 그대로 쓰기 위해서다.
+#   사용: 이 파일이 있는 폴더에서 ./deploy.sh (직접 쓸 때: docker compose -f docker-compose.prod.yml --env-file .env up -d)
+name: seesun
+
+services:
+  django:
+    image: ${DJANGO_IMAGE:-seesun-backend:prov-20261015}
+    pull_policy: never
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-1}
+    volumes:
+      # Firebase 서비스 계정 JSON 등 자격 증명(읽기 전용). FIREBASE_CREDENTIALS_FILE=/run/secrets/seesun/firebase-service-account.json
+      - ./secrets:/run/secrets/seesun:ro
+      # 공개 미디어(픽토그램·운동 음성). MEDIA_CDN_BASE_URL(R2)을 비우면 Caddy가 /media/ 로 직접 서빙
+      - media:/app/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    expose:
+      - "8000"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  postgres:
+    image: postgres:15-alpine
+    # DB 직접 접속 기록(법적 검토 S-02 보완): 접속·종료를 로그에 남긴다(컨테이너 로그 → 장기 보관은 런북 §10)
+    command: ["postgres", "-c", "log_connections=on", "-c", "log_disconnections=on"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-seesun}
+      POSTGRES_USER: ${POSTGRES_USER:-seesun}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD를 .env에 설정하세요}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # 외부 포트를 열지 않는다(같은 네트워크의 django만 접속)
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  caddy:
+    image: caddy:2.8-alpine
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?API_DOMAIN을 .env에 설정하세요}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL을 .env에 설정하세요}
+      # /admin/ 허용 IP(공백 구분, Caddy remote_ip 형식). 기본: 사설 대역(VM 안·SSH 터널)만
+      ADMIN_ALLOWED_IPS: ${ADMIN_ALLOWED_IPS:-private_ranges}
+    ports:
+      # 호스트 포트는 기본 80/443. 로컬 리허설처럼 이미 쓰는 포트가 있으면 .env에서 바꾼다
+      - "${CADDY_HTTP_PORT:-80}:80"
+      - "${CADDY_HTTPS_PORT:-443}:443"
+      - "${CADDY_HTTPS_PORT:-443}:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+      - media:/srv/media:ro
+    depends_on:
+      django:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

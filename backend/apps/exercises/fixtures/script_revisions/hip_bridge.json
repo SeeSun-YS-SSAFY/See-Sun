@@ -1,0 +1,150 @@
+{
+ "exercise_no": 27,
+ "exercise_id": "cae119843d814b53bbca8193702e7331",
+ "exercise_name": "힙 브릿지",
+ "name_en": "hip_bridge",
+ "apply": true,
+ "status": "초안 — 고객 확인 전, DB 미반영",
+ "decision": "정오 조사(exercise_fact_check/FACT_CHECK.md · verdicts.json) 판정 반영",
+ "memo": "자세 유지 구간 문장이 1개 늘어남(앵커는 자세 유지 0번만 써서 영향 없음).",
+ "fields": {
+  "exercise_description": "[추천] 5세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 힙 브릿지에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 매트 위에 등을 대고 눕습니다. 무릎을 90도로 구부리고 두 발바닥은 바닥에 고정합니다. 2. 발을 엉덩이 너비로 벌리고, 발뒤꿈치가 무릎 바로 아래에 위치하도록 합니다. 손으로 발뒤꿈치가 몸과 너무 멀지 않은지 확인할 수 있습니다. 발가락은 살짝 밖으로 향하게 하여 자연스러운 자세를 유지합니다. 3. 팔은 몸 옆에 내려놓고 손바닥이 바닥을 향하게 둡니다. 팔로 바닥을 살짝 눌러 균형을 잡습니다.",
+  "main_form": "동작 시작 : 1. 천천히 엉덩이를 들어 올립니다. 허리와 엉덩이를 바닥에서 천천히 떼어 올리며, 어깨부터 무릎까지 일직선이 되도록 합니다. 2. 체중이 발뒤꿈치에 실리도록 합니다. 발뒤꿈치를 바닥에 단단히 고정한 상태에서 엉덩이를 들어 올리는 것을 느껴보세요. 3. 허리를 너무 과도하게 아치형으로 만들지 않도록 주의하세요. 허리와 복부에 긴장감을 유지하면서 부드럽게 들어 올립니다. 4. 상체는 바닥에 단단히 고정되어 있고, 어깨가 바닥에 잘 닿아있는지 확인합니다. 발바닥이 바닥에 고르게 닿아있는지 발로 바닥을 느끼면서 체크합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 정점에서 자세를 유지합니다. 엉덩이가 완전히 들어올려졌을 때, 어깨부터 무릎까지 일직선이 되었는지 확인하세요. 무릎이 바깥쪽으로 벌어지지 않도록 주의하세요. 이 자세를 10-20초간 유지합니다. 처음에는 10초부터 시작하세요. 2. 복부에 힘을 주고, 배꼽을 등쪽으로 당기듯이 복부를 긴장시켜 코어 근육을 사용합니다. 이때 허리가 과도하게 휘지 않도록 복부 근육을 계속해서 긴장 상태로 유지합니다. 3. 숨을 천천히 들이마시고 내쉬면서 자세를 유지합니다. 숨을 참지 않도록 주의하세요.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 엉덩이를 바닥으로 내립니다. 허리를 천천히 바닥에 붙이며, 엉덩이가 완전히 매트에 닿을 때까지 천천히 내려옵니다. 2. 엉덩이를 내릴 때 서두르지 않고 천천히, 부드럽게 내려와야 합니다. 체중이 발뒤꿈치에서 발 전체로 자연스럽게 옮겨지는 것을 느껴보세요. 3. 엉덩이를 내리면서 숨을 천천히 내쉽니다.",
+  "exercise_guide_text": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 5세트 반복합니다."
+ },
+ "original_fields": {
+  "exercise_description": "[추천] 5세트, 한 세트마다 10-20초 유지, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+  "first_description": "3초 안에 힙 브릿지에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 매트 위에 등을 대고 눕습니다. 무릎을 90도로 구부리고 두 발바닥은 바닥에 고정합니다. 2. 발을 엉덩이 너비로 벌리고, 발뒤꿈치가 무릎 바로 아래에 위치하도록 합니다. 손으로 발뒤꿈치가 몸과 너무 멀지 않은지 확인할 수 있습니다. 발가락은 살짝 밖으로 향하게 하여 자연스러운 자세를 유지합니다. 3. 팔은 몸 옆에 내려놓고 손바닥이 바닥을 향하게 둡니다. 팔로 바닥을 살짝 눌러 균형을 잡습니다.",
+  "main_form": "동작 시작 : 1. 천천히 엉덩이를 들어 올립니다. 허리와 엉덩이를 바닥에서 천천히 떼어 올리며, 어깨부터 무릎까지 일직선이 되도록 합니다. 2. 체중이 발뒤꿈치에 실리도록 합니다. 발뒤꿈치를 바닥에 단단히 고정한 상태에서 엉덩이를 들어 올리는 것을 느껴보세요. 3. 허리를 너무 과도하게 아치형으로 만들지 않도록 주의하세요. 허리와 복부에 긴장감을 유지하면서 부드럽게 들어 올립니다. 4. 상체는 바닥에 단단히 고정되어 있고, 어깨가 바닥에 잘 닿아있는지 확인합니다. 발바닥이 바닥에 고르게 닿아있는지 발로 바닥을 느끼면서 체크합니다.",
+  "form_description": null,
+  "stay_form": "자세 유지 : 1. 정점에서 자세를 유지합니다. 엉덩이가 완전히 들어올려졌을 때, 어깨부터 무릎까지 일직선이 되었는지 확인하세요. 무릎이 바깥쪽으로 벌어지지 않도록 주의하세요. 이 자세를 5초간 유지합니다. 2. 복부에 힘을 주고, 배꼽을 등쪽으로 당기듯이 복부를 긴장시켜 코어 근육을 사용합니다. 이때 허리가 과도하게 휘지 않도록 복부 근육을 계속해서 긴장 상태로 유지합니다. 3. 숨을 천천히 들이마시고 내쉬면서 자세를 유지합니다. 숨을 참지 않도록 주의하세요.",
+  "fixed_form": "원래 위치로 돌아가기 : 1. 천천히 엉덩이를 바닥으로 내립니다. 허리를 천천히 바닥에 붙이며, 엉덩이가 완전히 매트에 닿을 때까지 천천히 내려옵니다. 2. 엉덩이를 내릴 때 서두르지 않고 천천히, 부드럽게 내려와야 합니다. 체중이 발뒤꿈치에서 발 전체로 자연스럽게 옮겨지는 것을 느껴보세요. 3. 엉덩이를 내리면서 숨을 천천히 내쉽니다.",
+  "exercise_guide_text": "한 세트당 10-20초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 5세트 반복합니다."
+ },
+ "changes": [
+  {
+   "section_key": "stay_form",
+   "section": "자세 유지",
+   "original": "이 자세를 5초간 유지합니다.",
+   "new": "이 자세를 10-20초간 유지합니다. 처음에는 10초부터 시작하세요.",
+   "reason": "운동 소개·따라 하기·그림 4(x5세트)가 '5회 × 10-20초 유지' 틀(Mayo 처방)이라 5초 문장만 벗어남. 처음엔 10초부터(판정 both_wrong). 그림 3도 '10~20s'로 고침. 표기는 이 대본의 다른 곳과 같은 '10-20초'.",
+   "verdict": {
+    "verdict_index": 22,
+    "item": "유지 시간 '2s'(그림) vs '5초'(자세 유지) vs '10-20초'(운동 소개·따라 하기)",
+    "verdict": "both_wrong",
+    "confidence": "medium",
+    "sources": [
+     "Mayo Clinic — Back exercises in 15 minutes a day — https://www.mayoclinic.org/healthy-lifestyle/adult-health/in-depth/back-pain/art-20546859",
+     "AARP — Best exercise for your glutes (bridge) — https://www.aarp.org/health/healthy-living/best-exercise-butt-glutes/",
+     "Linsenbardt ST et al., Br J Sports Med 1992 — Breathing technique and BP during resistance exercise — https://bjsm.bmj.com/content/26/2/97"
+    ]
+   }
+  }
+ ],
+ "audio": {
+  "exercise_description": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/exercise_description.mp3",
+   "mp3_seconds": 13.82,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 2,
+   "sentences_after": 2,
+   "est_seconds_after": 13.8
+  },
+  "first_description": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/first_description.mp3",
+   "mp3_seconds": 47.28,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 9,
+   "sentences_after": 9,
+   "est_seconds_after": 47.3
+  },
+  "main_form": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/main_form.mp3",
+   "mp3_seconds": 50.16,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 9,
+   "sentences_after": 9,
+   "est_seconds_after": 50.2
+  },
+  "form_description": {
+   "mp3": null,
+   "mp3_seconds": null,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 0,
+   "sentences_after": 0,
+   "est_seconds_after": null
+  },
+  "stay_form": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/stay_form.mp3",
+   "mp3_seconds": 44.69,
+   "changed": true,
+   "stale": true,
+   "needs_new_mp3": true,
+   "sentences_before": 9,
+   "sentences_after": 10,
+   "est_seconds_after": 48.5
+  },
+  "fixed_form": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/fixed_form.mp3",
+   "mp3_seconds": 32.06,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 6,
+   "sentences_after": 6,
+   "est_seconds_after": 32.1
+  },
+  "exercise_guide_text": {
+   "mp3": "backend/media/exercises/audio/hip_bridge/exercise_guide_text.mp3",
+   "mp3_seconds": 9.55,
+   "changed": false,
+   "stale": false,
+   "needs_new_mp3": false,
+   "sentences_before": 1,
+   "sentences_after": 1,
+   "est_seconds_after": 9.6
+  }
+ },
+ "current_anchors": [
+  {
+   "sequence": 1,
+   "anchor": {
+    "section_key": "exercise_description",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 2,
+   "anchor": {
+    "section_key": "main_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 3,
+   "anchor": {
+    "section_key": "stay_form",
+    "sentence_index": 0
+   }
+  },
+  {
+   "sequence": 4,
+   "anchor": {
+    "section_key": "fixed_form",
+    "sentence_index": 0
+   }
+  }
+ ]
+}

@@ -72,7 +72,7 @@ class FoodDetailSerializer(FoodSummarySerializer):
 
     class Meta(FoodSummarySerializer.Meta):
         fields = FoodSummarySerializer.Meta.fields + (
-            'basis', 'per_basis', 'allergens', 'sugar_index', 'tags', 'is_favorite', 'data_date')
+            'basis', 'per_basis', 'allergens', 'sugar_index', 'tags', 'is_favorite', 'data_date', 'source_name')
 
     def _classified(self, obj):
         if not hasattr(obj, '_classified'):

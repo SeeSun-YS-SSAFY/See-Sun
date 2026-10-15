@@ -1,6 +1,5 @@
 package kr.seesun.core.designsystem.component
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +43,7 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
  *
  * 지연 목록을 쓰므로 세로 스크롤이 없는 화면([ScreenScaffold]의 scrollable=false)에 둔다.
  *
+ * @param highlightImage 가운데(강조) 항목 글자 위에 그릴 그림(운동 픽토그램, Figma 11:629).
  * @param isSelected null이면 단일 선택(누르면 [onItemClick]), 값이 있으면 체크형 복수 선택.
  */
 @Composable
@@ -56,7 +55,8 @@ fun <T> ScrollHighlightList(
     onItemClick: (T) -> Unit,
     modifier: Modifier = Modifier,
     isSelected: ((T) -> Boolean)? = null,
-    listState: LazyListState = rememberLazyListState()
+    listState: LazyListState = rememberLazyListState(),
+    highlightImage: (@Composable (T) -> Unit)? = null
 ) {
     val colors = SeeSunTheme.colors
     val current = highlightedIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
@@ -121,19 +121,23 @@ fun <T> ScrollHighlightList(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(items) { index, item ->
-                val highlighted = index == current
-                val shape = RoundedCornerShape(SeeSunDimens.CornerRadius + 4.dp)
+                // Figma 휠(1031:3748·11:629): 가운데(강조) 항목은 크고 노랑, 멀어질수록 좁고 올리브.
+                val distance = abs(index - current).coerceAtMost(MAX_STEPS)
+                val highlighted = distance == 0
                 ListButton(
                     text = itemLabel(item),
                     selected = isSelected?.invoke(item),
                     textStyle = if (highlighted) SeeSunTheme.typography.listItemHighlighted else SeeSunTheme.typography.listItem,
+                    containerColor = if (highlighted) colors.primary else colors.dimmed,
+                    minHeight = if (highlighted) HIGHLIGHT_MIN_HEIGHT else SeeSunDimens.SmallButtonMinHeight,
+                    leading = if (highlighted && highlightImage != null) ({ highlightImage(item) }) else null,
                     onClick = {
                         onHighlightedIndexChange(index)
                         onItemClick(item)
                     },
                     modifier = Modifier
                         .semantics { collectionItemInfo = CollectionItemInfo(index, 1, 0, 1) }
-                        .then(if (highlighted) Modifier.border(4.dp, colors.emphasis, shape).padding(6.dp) else Modifier)
+                        .padding(horizontal = INSET_STEP * distance)
                 )
             }
         }
@@ -153,6 +157,10 @@ fun <T> ScrollHighlightList(
         LiveAnnouncement(boundaryMessage)
     }
 }
+
+private const val MAX_STEPS = 2
+private val INSET_STEP = 12.dp
+private val HIGHLIGHT_MIN_HEIGHT = 96.dp
 
 /** 같은 안내를 연달아 해도 liveRegion이 다시 읽도록 보이지 않는 문자를 번갈아 붙인다. */
 private val ZERO_WIDTH_SPACE = Char(0x200B)

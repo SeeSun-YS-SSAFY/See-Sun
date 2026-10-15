@@ -1,0 +1,430 @@
+{
+ "generated_at": "2026-10-14T23:02:25",
+ "engine": "gTTS 2.5.4 lang='ko' (Google 번역 TTS)",
+ "method": "update_media.py 와 동일: gTTS(text=<구간 원문>, lang='ko').save()",
+ "files": [
+  {
+   "exercise_no": 28,
+   "exercise": "버피테스트",
+   "slug": "burpee_test",
+   "section": "main_form",
+   "apply": true,
+   "file": "burpee_test/main_form.mp3",
+   "text_sha256": "1a59f8c6548e7d956eeffe7bb7b82faa5e5317cb8290bbb284d80400172c392b",
+   "text": "동작 시작 : 1. 바르게 선 상태에서 두 다리를 구부려 쪼그려 앉습니다. 2. 앉은 후 양손으로 앞쪽 바닥을 짚습니다. 3. 바닥을 짚은 상태에서 왼쪽 다리를 뒤로 쭉 펴줍니다. 4. 오른쪽 다리 또한 뒤로 쭉 펴줍니다.",
+   "replaces": "backend/media/exercises/audio/burpee_test/main_form.mp3",
+   "old_seconds": 29.4,
+   "seconds": 21.816,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 28,
+   "exercise": "버피테스트",
+   "slug": "burpee_test",
+   "section": "fixed_form",
+   "apply": true,
+   "file": "burpee_test/fixed_form.mp3",
+   "text_sha256": "324b44b0aa4f619a9dfc469ba8c9a391e0a6a907e5589b64fb07669c553cfe70",
+   "text": "원래 위치로 돌아가기 : 1. 왼쪽 다리를 다시 앞으로 가져온 후 오른쪽 다리도 다시 앞으로 가져와 쪼그려 앉은 상태를 만들어줍니다. 2. 바닥에서 손을 천천히 떼어주며 천천히 일어섭니다.",
+   "replaces": "backend/media/exercises/audio/burpee_test/fixed_form.mp3",
+   "old_seconds": 22.8,
+   "seconds": 17.928,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 15,
+   "exercise": "햄스트링 스트레칭",
+   "slug": "hamstring_stretch",
+   "section": "stay_form",
+   "apply": true,
+   "file": "hamstring_stretch/stay_form.mp3",
+   "text_sha256": "aa4ccd632cfdbb33be68ec0593adbda98fa563842b20637c059c363a42f8edca",
+   "text": "자세 유지 : 1. 상체를 굽힌 상태에서 30초간 자세를 유지합니다. 햄스트링이 늘어나는 느낌에 집중하고 통증이 느껴지면 상체를 조금 들어올려 자세를 조정해 줍니다. 2. 숨을 천천히 들이마시고 내쉬면서 근육을 이완시킵니다. 3. 무릎이 너무 굽어지지 않도록 주의하고 척추가 곧게 펴지도록 유지합니다.",
+   "replaces": "backend/media/exercises/audio/hamstring_stretch/stay_form.mp3",
+   "old_seconds": 29.976,
+   "seconds": 29.328,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 13,
+   "exercise": "하이 런지 자세",
+   "slug": "high_lunge",
+   "section": "stay_form",
+   "apply": true,
+   "file": "high_lunge/stay_form.mp3",
+   "text_sha256": "44534f8257a11e47226658d245ec12e9e1c1ee8c7cbff88e89775470f72d7af0",
+   "text": "자세 유지 : 1. 자세를 유지하면서 10초 동안 천천히 호흡합니다.",
+   "replaces": "backend/media/exercises/audio/high_lunge/stay_form.mp3",
+   "old_seconds": 6.84,
+   "seconds": 6.96,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 27,
+   "exercise": "힙 브릿지",
+   "slug": "hip_bridge",
+   "section": "stay_form",
+   "apply": true,
+   "file": "hip_bridge/stay_form.mp3",
+   "text_sha256": "e2a840ef24fdaaaa44bd80fc6a2ece0a1d6afe02129076c64d981bee8ec84b97",
+   "text": "자세 유지 : 1. 정점에서 자세를 유지합니다. 엉덩이가 완전히 들어올려졌을 때, 어깨부터 무릎까지 일직선이 되었는지 확인하세요. 무릎이 바깥쪽으로 벌어지지 않도록 주의하세요. 이 자세를 10-20초간 유지합니다. 처음에는 10초부터 시작하세요. 2. 복부에 힘을 주고, 배꼽을 등쪽으로 당기듯이 복부를 긴장시켜 코어 근육을 사용합니다. 이때 허리가 과도하게 휘지 않도록 복부 근육을 계속해서 긴장 상태로 유지합니다. 3. 숨을 천천히 들이마시고 내쉬면서 자세를 유지합니다. 숨을 참지 않도록 주의하세요.",
+   "replaces": "backend/media/exercises/audio/hip_bridge/stay_form.mp3",
+   "old_seconds": 44.688,
+   "seconds": 48.552,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": null,
+   "exercise": "다리 스트레칭",
+   "slug": "leg_stretch",
+   "section": "exercise_description",
+   "apply": true,
+   "file": "leg_stretch/exercise_description.mp3",
+   "text_sha256": "d6ef02b4b9c7f8f174654917129b6ac25a1e7c765ba9f8e6509bd01125db09a0",
+   "text": "[추천] 5회, 한 회마다 30초 유지, 전체 10분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다. 반동 없이 천천히, 통증이 있으면 멈춥니다.",
+   "replaces": "backend/media/exercises/audio/leg_stretch/exercise_description.mp3",
+   "old_seconds": 13.248,
+   "seconds": 17.256,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": null,
+   "exercise": "다리 스트레칭",
+   "slug": "leg_stretch",
+   "section": "first_description",
+   "apply": true,
+   "file": "leg_stretch/first_description.mp3",
+   "text_sha256": "72ecdcb52b8565a5826e6a166b0eb05e4c860bd431499d2794dac9dc37f46c59",
+   "text": "3초 안에 다리 스트레칭에 대한 음성 가이드가 시작됩니다. (3, 2, 1) 기본 자세 잡기 : 1. 평평한 바닥에 다리를 앞으로 쭉 편 상태로 허리를 세워 바르게 앉습니다",
+   "replaces": "backend/media/exercises/audio/leg_stretch/first_description.mp3",
+   "old_seconds": 15.408,
+   "seconds": 16.344,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": null,
+   "exercise": "다리 스트레칭",
+   "slug": "leg_stretch",
+   "section": "main_form",
+   "apply": true,
+   "file": "leg_stretch/main_form.mp3",
+   "text_sha256": "daad5bfc3c974cac5dd6ed1e95ef6c02130aa023ce315f4421de4e4d6d8b82b9",
+   "text": "동작 시작 : 1. 왼쪽 무릎을 굽혀 다리를 몸통 쪽으로 당기며 천천히 들어줍니다. 2. 왼쪽 허벅지 밑에 양손으로 깍지를 끼워 다리가 떨어지지 않도록 다리 밑에 고정 시킵니다. 이때 오른쪽 다리가 따라 올라가지 않도록 유의합니다. 3. 손깍지를 유지한 상태에서, 왼쪽 발바닥이 앞쪽 위를 향하도록 천천히 무릎을 펴줍니다. 이때 다리는 편하게 구부린 상태도 괜찮습니다. 4. 무릎을 폈다면, 왼쪽 발목을 위아래로 천천히 움직여 종아리가 당겨지는 듯한 느낌을 느낍니다. 5. 호흡을 편하게 이어가며 왼쪽 다리를 30초동안 유지한 뒤, 오른쪽 다리도 동일한 방법으로 30초동안 유지합니다.",
+   "replaces": "backend/media/exercises/audio/leg_stretch/main_form.mp3",
+   "old_seconds": 56.184,
+   "seconds": 56.208,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": null,
+   "exercise": "다리 스트레칭",
+   "slug": "leg_stretch",
+   "section": "exercise_guide_text",
+   "apply": true,
+   "file": "leg_stretch/exercise_guide_text.mp3",
+   "text_sha256": "30095a450cac6d4948dec56de7d45dd0bfe06272af682e864e5f3be19515e449",
+   "text": "한 회당 30초 유지하고, 회 사이마다 30초씩 휴식을 취하면서 5회 반복합니다.",
+   "replaces": "backend/media/exercises/audio/leg_stretch/exercise_guide_text.mp3",
+   "old_seconds": 9.048,
+   "seconds": 8.448,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 26,
+   "exercise": "런지",
+   "slug": "lunge",
+   "section": "main_form",
+   "apply": true,
+   "file": "lunge/main_form.mp3",
+   "text_sha256": "5a3a3b67d420b4d1b2abd76d0c56c82958d299ab275f12b8ee20f9fdc98d487b",
+   "text": "동작 시작 : 1. 오른쪽 다리를 크게 한 걸음(발 길이 세 개 정도) 앞으로 내딛습니다. 2. 양 무릎을 90도 각도로 천천히 구부리면서, 뒤쪽 다리의 무릎은 거의 바닥에 닿도록 합니다. 다만 바닥에 쿵 찍지 않도록 주의합니다. 3. 체중은 앞다리의 발뒤꿈치에 실리도록 합니다. 4. 상체를 최대한 수직으로 유지해 앞쪽 무릎이 발끝을 넘지 않도록 주의합니다.",
+   "replaces": "backend/media/exercises/audio/lunge/main_form.mp3",
+   "old_seconds": 32.184,
+   "seconds": 35.16,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 26,
+   "exercise": "런지",
+   "slug": "lunge",
+   "section": "stay_form",
+   "apply": true,
+   "file": "lunge/stay_form.mp3",
+   "text_sha256": "6a49515ef913eb119dddc208ce44c9529977d825810da2c2000e2494cc67bbfe",
+   "text": "자세 유지 : 1. 자세를 3초 정도 유지하며 균형을 잡으세요. 2. 다리를 굽히는 동안에도 머리부터 허리까지는 일직선을 유지해주어야 합니다.",
+   "replaces": "backend/media/exercises/audio/lunge/stay_form.mp3",
+   "old_seconds": 13.536,
+   "seconds": 13.608,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 8,
+   "exercise": "타이치 운동",
+   "slug": "taichi",
+   "section": "exercise_description",
+   "apply": true,
+   "file": "taichi/exercise_description.mp3",
+   "text_sha256": "1d718b39dcb8a0ed843c20d0d83e5f149c23690f8c5c79b51ad0f8e7ef1cfcc1",
+   "text": "[추천] 3세트, 한 세트마다 10-15초 유지, 전체 5분 동안 운동하기를 권장합니다.\n\n[유의사항] 매트가 필요한 실내 운동입니다.",
+   "replaces": "backend/media/exercises/audio/taichi/exercise_description.mp3",
+   "old_seconds": 13.896,
+   "seconds": 13.896,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 8,
+   "exercise": "타이치 운동",
+   "slug": "taichi",
+   "section": "exercise_guide_text",
+   "apply": true,
+   "file": "taichi/exercise_guide_text.mp3",
+   "text_sha256": "d3f28e9041d54468e0c0eab1108d2ce5891fd99bd33f5076598740845170137f",
+   "text": "한 세트당 10-15초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 3세트 반복합니다.",
+   "replaces": "backend/media/exercises/audio/taichi/exercise_guide_text.mp3",
+   "old_seconds": 9.696,
+   "seconds": 9.744,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 12,
+   "exercise": "체중 이동",
+   "slug": "weight_shift",
+   "section": "exercise_guide_text",
+   "apply": true,
+   "file": "weight_shift/exercise_guide_text.mp3",
+   "text_sha256": "fbc9ed2d5a2176e14d2cff5c983c9c706d1b7ba2493c221e7802bdab69d7de01",
+   "text": "한 세트당 좌우 각 2회 시행하고, 세트 사이마다 1분씩 휴식을 취하면서 3세트 반복합니다.",
+   "replaces": "backend/media/exercises/audio/weight_shift/exercise_guide_text.mp3",
+   "old_seconds": 9.408,
+   "seconds": 9.456,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 16,
+   "exercise": "나비자세",
+   "slug": "butterfly_pose",
+   "section": "stay_form",
+   "apply": true,
+   "file": "butterfly_pose/stay_form.mp3",
+   "text_sha256": "fe21168695a44080659ae56ef4b3ddd2897fdaed947b9958126b2357e09ab23c",
+   "text": "자세 유지 : 1. 상체를 기울인 상태에서 30초 정도 유지해줍니다. 허벅지 안쪽과 엉덩이 앞쪽, 다리와 몸통이 연결되는 부위가 늘어나는 느낌에 집중합니다. 2. 호흡 조절 : 자세를 유지할동안 깊고 천천히 숨을 들이쉬고 내쉽니다. 이때 몸이 이완되도록 집중합니다.",
+   "replaces": "backend/media/exercises/audio/butterfly_pose/stay_form.mp3",
+   "old_seconds": 26.304,
+   "seconds": 25.728,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "exercise_no": 16,
+   "exercise": "나비자세",
+   "slug": "butterfly_pose",
+   "section": "exercise_guide_text",
+   "apply": true,
+   "file": "butterfly_pose/exercise_guide_text.mp3",
+   "text_sha256": "9ead379a478797f07b7ed68878ceeac55a8a033c344ba8aba993fc477a3651fa",
+   "text": "한 세트당 30초 유지하고, 세트 사이마다 30초씩 휴식을 취하면서 2세트 반복합니다.",
+   "replaces": null,
+   "old_seconds": null,
+   "seconds": 9.12,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "64000",
+   "decodes": true,
+   "decode_errors": ""
+  }
+ ],
+ "merged": [
+  {
+   "slug": "burpee_test",
+   "file": "burpee_test/burpee_test_merged.mp3",
+   "replaces": "backend/media/exercises/audio_merged/burpee_test_merged.mp3",
+   "old_seconds": 96.483,
+   "parts": [
+    {
+     "section": "exercise_description",
+     "source": "original:exercise_description.mp3"
+    },
+    {
+     "section": "first_description",
+     "source": "original:first_description.mp3"
+    },
+    {
+     "section": "main_form",
+     "source": "new:main_form.mp3"
+    },
+    {
+     "section": "fixed_form",
+     "source": "new:fixed_form.mp3"
+    },
+    {
+     "section": "exercise_guide_text",
+     "source": "original:exercise_guide_text.mp3"
+    }
+   ],
+   "texts_sha256": {
+    "exercise_description": "468510010d0e95cc72ac68bc5104f7a6a4ae763582227fae9330f8da5a9745cd",
+    "first_description": "905aeb610f86f1a72886d557773a23684074412e89085269f7ef088638b16e21",
+    "main_form": "1a59f8c6548e7d956eeffe7bb7b82faa5e5317cb8290bbb284d80400172c392b",
+    "fixed_form": "324b44b0aa4f619a9dfc469ba8c9a391e0a6a907e5589b64fb07669c553cfe70",
+    "exercise_guide_text": "f61804825a86589a5a0b9fd57735ccb2af8495b32e45a499d6f53d35260feb32"
+   },
+   "seconds": 84.027,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "32000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "slug": "hip_bridge",
+   "file": "hip_bridge/hip_bridge_merged.mp3",
+   "replaces": "backend/media/exercises/audio_merged/hip_bridge_merged.mp3",
+   "old_seconds": 200.591,
+   "parts": [
+    {
+     "section": "exercise_description",
+     "source": "original:exercise_description.mp3"
+    },
+    {
+     "section": "first_description",
+     "source": "original:first_description.mp3"
+    },
+    {
+     "section": "main_form",
+     "source": "original:main_form.mp3"
+    },
+    {
+     "section": "stay_form",
+     "source": "new:stay_form.mp3"
+    },
+    {
+     "section": "fixed_form",
+     "source": "original:fixed_form.mp3"
+    },
+    {
+     "section": "exercise_guide_text",
+     "source": "original:exercise_guide_text.mp3"
+    }
+   ],
+   "texts_sha256": {
+    "exercise_description": "dc3e21f17431212ea17e2b2c9537560998748696e142209e5e49639243de5f3f",
+    "first_description": "40aa3e45bed550217603a364212ac3829413417644e747cb683a76ed85420b96",
+    "main_form": "1e27ca15a7e733217f97d2dfe651fb2f39b6c2a7dac46a4699b09dd5d3cb5807",
+    "stay_form": "e2a840ef24fdaaaa44bd80fc6a2ece0a1d6afe02129076c64d981bee8ec84b97",
+    "fixed_form": "fdd47cba06deeb2e85759467f6ac1d83bfc773087769ec8b521b26ee6eb55490",
+    "exercise_guide_text": "9f7d285856eebd92a31d2285e34d0dd9ced30db8a89db2a206a2087bd9415d12"
+   },
+   "seconds": 204.431,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "32000",
+   "decodes": true,
+   "decode_errors": ""
+  },
+  {
+   "slug": "lunge",
+   "file": "lunge/lunge_merged.mp3",
+   "replaces": "backend/media/exercises/audio_merged/lunge_merged.mp3",
+   "old_seconds": 136.391,
+   "parts": [
+    {
+     "section": "exercise_description",
+     "source": "original:exercise_description.mp3"
+    },
+    {
+     "section": "first_description",
+     "source": "original:first_description.mp3"
+    },
+    {
+     "section": "main_form",
+     "source": "new:main_form.mp3"
+    },
+    {
+     "section": "stay_form",
+     "source": "new:stay_form.mp3"
+    },
+    {
+     "section": "fixed_form",
+     "source": "original:fixed_form.mp3"
+    },
+    {
+     "section": "exercise_guide_text",
+     "source": "original:exercise_guide_text.mp3"
+    }
+   ],
+   "texts_sha256": {
+    "exercise_description": "687365ea7de2e7d2a7412017fa04578d4888e9bc581e8926e8301bf8e147938d",
+    "first_description": "9466d0c384f30c4fb67e8d33459083ee7dad03b5d0a5298aef58f0d46db83811",
+    "main_form": "5a3a3b67d420b4d1b2abd76d0c56c82958d299ab275f12b8ee20f9fdc98d487b",
+    "stay_form": "6a49515ef913eb119dddc208ce44c9529977d825810da2c2000e2494cc67bbfe",
+    "fixed_form": "3cd0722f67acd4ea0c59face728435cba122807ec588c924134f3025f3272bf2",
+    "exercise_guide_text": "8a146db430f986abdb9eb10c44d8228fec7f0f98618da1f8ecc44876b748fd0b"
+   },
+   "seconds": 139.439,
+   "sample_rate": "24000",
+   "channels": 1,
+   "bit_rate": "32000",
+   "decodes": true,
+   "decode_errors": ""
+  }
+ ]
+}
