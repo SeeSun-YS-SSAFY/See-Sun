@@ -10,7 +10,6 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -34,7 +33,6 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -48,6 +46,7 @@ import kr.seesun.core.designsystem.R as DsR
 import kr.seesun.core.designsystem.component.BottomActions
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.component.SeeSunButton
+import kr.seesun.core.designsystem.component.pressable
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
@@ -115,7 +114,7 @@ fun openAppSettings(context: Context): Boolean = runCatching {
  * @param updateNotices 가운영 자체 업데이트 빌드인가(알림 설명에 「새 버전 안내」를 넣는다)
  */
 @Composable
-fun PermissionPrimerGate(speaker: Speaker, updateNotices: Boolean, content: @Composable () -> Unit) {
+fun PermissionPrimerGate(speaker: Speaker, updateNotices: Boolean, onOpenSettings: (() -> Unit)? = null, content: @Composable () -> Unit) {
     val context = LocalContext.current
     val inspection = LocalInspectionMode.current
     val store = remember(context) { PermissionPrimerStore(context) }
@@ -136,6 +135,8 @@ fun PermissionPrimerGate(speaker: Speaker, updateNotices: Boolean, content: @Com
         updateNotices = updateNotices,
         speaker = speaker,
         onAllow = {
+            // 시스템 창이 뜨기 전에 앱 안내를 멈춘다(창 글자와 겹치지 않게, 연구 문서 G6).
+            speaker.stop()
             store.markAsked()
             launcher.launch(missing.toTypedArray())
         },
@@ -143,6 +144,16 @@ fun PermissionPrimerGate(speaker: Speaker, updateNotices: Boolean, content: @Com
             Log.i(TAG, "permission primer skipped")
             store.markAsked()
             show = false
+        },
+        // v6: 첫 화면부터 같은 머리([화면 다시 듣기]·[설정]). 톱니를 누르면 이번에는 안내를 닫고 설정을 연다
+        // (묻지 않은 것으로 남겨 다음 실행 때 다시 안내한다. 설정 → 권한 상태에서도 켤 수 있다).
+        onOpenSettings = onOpenSettings?.let { open ->
+            {
+                Log.i(TAG, "permission primer: settings opened")
+                speaker.stop()
+                show = false
+                open()
+            }
         }
     )
 }
@@ -152,14 +163,22 @@ fun PermissionPrimerGate(speaker: Speaker, updateNotices: Boolean, content: @Com
  * + [허용하기](시스템 권한 창 한 번) + 작은 [나중에]. 문단·권한별 카드 없음. 안내 음성도 한 문장.
  */
 @Composable
-fun PermissionPrimerScreen(missing: List<String>, updateNotices: Boolean, speaker: Speaker, onAllow: () -> Unit, onSkip: () -> Unit) {
+fun PermissionPrimerScreen(
+    missing: List<String>,
+    updateNotices: Boolean,
+    speaker: Speaker,
+    onAllow: () -> Unit,
+    onSkip: () -> Unit,
+    onOpenSettings: (() -> Unit)? = null
+) {
     val talkBack = rememberTalkBackEnabled()
     val voice = remember(speaker) { GuidanceVoice(speaker) }
     val guide = stringResource(R.string.ui_perm_guide)
     ScreenScaffold(
         title = stringResource(R.string.ui_perm_title),
         modifier = Modifier.testTag("permission-primer"),
-        onSpeakSummary = if (talkBack) null else ({ voice.onDemand(guide, talkBack) })
+        onSpeakSummary = if (talkBack) null else ({ voice.onDemand(guide, talkBack) }),
+        onOpenSettings = onOpenSettings
     ) {
         if (AppPermissions.RECORD_AUDIO in missing) {
             PermissionLine(DsR.drawable.ic_mic, stringResource(R.string.ui_perm_mic_title), stringResource(R.string.ui_perm_mic_short))
@@ -183,7 +202,7 @@ fun PermissionPrimerScreen(missing: List<String>, updateNotices: Boolean, speake
                 modifier = Modifier
                     .heightIn(min = SeeSunDimens.MinTouchTarget)
                     .widthIn(min = SeeSunDimens.MinTouchTarget)
-                    .clickable(role = Role.Button, onClick = onSkip)
+                    .pressable(label = stringResource(R.string.ui_perm_skip), onClick = onSkip)
                     .wrapContentHeight()
                     .padding(horizontal = SeeSunSpace.M)
             )

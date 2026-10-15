@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -44,11 +45,13 @@ import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.BottomActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.LiveStatusText
+import kr.seesun.core.designsystem.component.LocalAppSettingsAction
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.ui.GuidanceVoice
+import kr.seesun.core.ui.LocalVoiceMediaButtons
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.core.voice.lifecycle.AppStop
 import kr.seesun.core.voice.lifecycle.AppVisibility
@@ -102,7 +105,9 @@ data class RoutineUi(
     val closeRequested: Boolean = false,
     val fromDevice: Boolean = false,
     /** 다른 앱으로 나가 안내·휴식 타이머를 멈췄다 → 돌아오면 「이어서 시작」. */
-    val pausedByLeaving: Boolean = false
+    val pausedByLeaving: Boolean = false,
+    /** 「이어서 시작」이 설정 톱니바퀴 때문인가(문구가 다르다). */
+    val pausedForSettings: Boolean = false
 )
 
 /** 항목별 실제 수행 기록(기록 items[]). */
@@ -299,7 +304,12 @@ class RoutinePlayerViewModel @Inject constructor(
      * 다른 앱으로 나갔을 때: 운동 안내(재생 중이거나 막 틀 참)·휴식 타이머(세는 중)를 멈추고 「이어서 시작」을 기다린다.
      * 사용자가 이미 멈춰 둔 것은 그대로 둔다. 세션 중이면 포그라운드 서비스를 내린다.
      */
-    private fun onLeftApp() {
+    private fun onLeftApp() = pauseForLeaving(forSettings = false)
+
+    /** 루틴 중 톱니바퀴(소유자 결정 v6): 안내·휴식을 먼저 멈추고 설정을 연다. 돌아오면 「이어서 시작」. */
+    fun pauseForSettings() = pauseForLeaving(forSettings = true)
+
+    private fun pauseForLeaving(forSettings: Boolean) {
         val ui = _ui.value
         if (!recorder.isActive || !ui.sessionActive) return
         val guide = player.state.value
@@ -311,7 +321,13 @@ class RoutinePlayerViewModel @Inject constructor(
         speaker.stop()
         if (running) {
             if (ui.phase == RoutinePhase.EXERCISE) player.pause()
-            _ui.update { it.copy(pausedByLeaving = true, restPaused = it.restPaused || it.phase == RoutinePhase.REST) }
+            _ui.update {
+                it.copy(
+                    pausedByLeaving = true,
+                    pausedForSettings = forSettings,
+                    restPaused = it.restPaused || it.phase == RoutinePhase.REST
+                )
+            }
         }
         recorder.suspendKeepAlive()
     }
@@ -320,14 +336,26 @@ class RoutinePlayerViewModel @Inject constructor(
     fun resume() {
         val ui = _ui.value
         if (!ui.pausedByLeaving) return
-        _ui.update { it.copy(pausedByLeaving = false, restPaused = if (it.phase == RoutinePhase.REST) false else it.restPaused) }
+        _ui.update {
+            it.copy(
+                pausedByLeaving = false,
+                pausedForSettings = false,
+                restPaused = if (it.phase ==
+                    RoutinePhase.REST
+                ) {
+                    false
+                } else {
+                    it.restPaused
+                }
+            )
+        }
         recorder.resumeKeepAlive()
         if (ui.phase == RoutinePhase.EXERCISE) player.play()
     }
 
     /** 멈춘 채로 다른 조작(건너뛰기 등)을 골랐을 때: 「이어서 시작」 화면을 닫고 서비스를 다시 올린다(재생은 그 조작이 한다). */
     private fun leaveResolved() {
-        if (_ui.value.pausedByLeaving) _ui.update { it.copy(pausedByLeaving = false) }
+        if (_ui.value.pausedByLeaving) _ui.update { it.copy(pausedByLeaving = false, pausedForSettings = false) }
         recorder.resumeKeepAlive()
     }
 
@@ -499,28 +527,34 @@ private fun RoutinePlayerContent(viewModel: RoutinePlayerViewModel, title: Strin
         ExerciseForegroundPolicy.keepScreenOnRoutine(ui.sessionActive, ui.phase == RoutinePhase.EXERCISE || ui.phase == RoutinePhase.REST)
     )
     val talkBack = rememberTalkBackEnabled()
-    RoutinePlayerScreen(
-        title = title,
-        ui = ui,
-        guide = guide,
-        resume = ResumeSlot(viewModel::resume, back, viewModel.resumeVoice, talkBack) { viewModel.voice.auto(it, talkBack) },
-        actions = RoutineActions(
-            onBack = back,
-            onStart = viewModel::start,
-            onRetry = viewModel::load,
-            onPlayPause = viewModel::playPause,
-            onReplay = viewModel::replay,
-            onPrevious = viewModel::previous,
-            onNext = viewModel::next,
-            onSpeed = viewModel::cycleSpeed,
-            onSkipExercise = viewModel::skipExercise,
-            onSkipRest = viewModel::skipRest,
-            onToggleRest = viewModel::toggleRestPause,
-            onEnd = back,
-            onDone = onClose,
-            onSeek = viewModel::seek
+    val openSettings = LocalAppSettingsAction.current
+    CompositionLocalProvider(
+        LocalAppSettingsAction provides openSettings?.let { open -> { viewModel.pauseForSettings().also { open() } } },
+        LocalVoiceMediaButtons provides false
+    ) {
+        RoutinePlayerScreen(
+            title = title,
+            ui = ui,
+            guide = guide,
+            resume = ResumeSlot(viewModel::resume, back, viewModel.resumeVoice, talkBack) { viewModel.voice.auto(it, talkBack) },
+            actions = RoutineActions(
+                onBack = back,
+                onStart = viewModel::start,
+                onRetry = viewModel::load,
+                onPlayPause = viewModel::playPause,
+                onReplay = viewModel::replay,
+                onPrevious = viewModel::previous,
+                onNext = viewModel::next,
+                onSpeed = viewModel::cycleSpeed,
+                onSkipExercise = viewModel::skipExercise,
+                onSkipRest = viewModel::skipRest,
+                onToggleRest = viewModel::toggleRestPause,
+                onEnd = back,
+                onDone = onClose,
+                onSeek = viewModel::seek
+            )
         )
-    )
+    }
     if (ui.showExitDialog) {
         ExerciseDialog(
             title = "루틴을 끝낼까요?",
@@ -566,7 +600,15 @@ fun RoutinePlayerScreen(title: String, ui: RoutineUi, guide: GuideState, actions
 
             ui.phase == RoutinePhase.READY -> ReadyBody(routine, ui.fromDevice, actions.onStart)
 
-            ui.pausedByLeaving && resume != null -> ResumePrompt(resume.onResume, resume.onEnd, resume.voice, resume.talkBack, resume.speak)
+            ui.pausedByLeaving && resume != null ->
+                ResumePrompt(
+                    resume.onResume,
+                    resume.onEnd,
+                    resume.voice,
+                    resume.talkBack,
+                    resume.speak,
+                    fromSettings = ui.pausedForSettings
+                )
 
             ui.phase == RoutinePhase.EXERCISE -> ExerciseBody(ui, routine, guide, actions)
 

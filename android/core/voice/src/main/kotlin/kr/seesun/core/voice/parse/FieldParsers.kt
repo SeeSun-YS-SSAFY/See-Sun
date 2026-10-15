@@ -290,3 +290,18 @@ object AnswerParser {
         }
     }
 }
+
+/**
+ * 「이대로 저장할까요?」 답(가입 확인 화면, 흐름 문서 P0-5): [AnswerParser]에 "저장"·"저장할게요"·"이대로"를 네로 더 받는다.
+ * "아니요"·"고칠게요"·"수정"은 고치기로 본다(되돌릴 수 없는 탈퇴·초기화 확인에는 쓰지 않는다 — 버튼만).
+ */
+object SaveAnswerParser {
+    private val SAVE = listOf("저장", "이대로", "그대로")
+
+    fun parse(text: String): Answer? {
+        val base = AnswerParser.parse(text)
+        if (base != null) return base
+        val t = text.replace(" ", "")
+        return if (SAVE.any { t.contains(it) } && !t.contains("저장안") && !t.contains("저장하지")) Answer.YES else null
+    }
+}

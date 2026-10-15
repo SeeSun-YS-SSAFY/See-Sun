@@ -65,7 +65,9 @@ fun VoiceInputField(
     // 권한이 없으면 목적 안내(T-13) → [마이크 허용하기] → 시스템 창. [키보드로 입력하기]면 바로 편집칸으로.
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onEditRequest)
     // 음성 자동 인식: 안내(진입·되읽기 질문)가 끝나면 저절로 듣는다. 새 질문(되읽기 값·다시 듣기)마다 한도를 새로 받는다.
-    AutoListenEffect(Triple(controller, state.pending, state.repeatCount), talkBackEnabled, speak, controller::listenAuto)
+    val press = rememberDirectStart(gate.request)
+    VoiceTriggers(Triple(controller, state.pending, state.repeatCount), talkBackEnabled, speak, controller::listenAuto, press)
+    val mic = displayedMic(state.mic)
     val focus = remember { FocusRequester() }
     LaunchedEffect(state.inputState) {
         if (state.inputState == InputState.EDITING && !inspection) runCatching { focus.requestFocus() }
@@ -89,10 +91,10 @@ fun VoiceInputField(
         // Figma 1031:2840~2849: 큰 마이크(최대 188dp) 가운데 → 결과(밑줄 + 연필). 되묻기 중에는 마이크를 줄이고 결과칸을 숨긴다
         // (같은 값이 확인 카드에 있다). 포커스 순서: 마이크 → 결과칸 → 연필([키보드로 직접 입력]). 글꼴을 키우면 본문이 스크롤된다.
         MicButton(
-            state = state.mic,
-            onClick = gate.request,
+            state = mic,
+            onClick = press,
             size = if (pending != null) confirmMicSize() else adaptiveMicSize(micReserve),
-            showState = state.mic != MicState.IDLE,
+            showState = mic != MicState.IDLE,
             showHint = true
         )
         if (pending == null) {

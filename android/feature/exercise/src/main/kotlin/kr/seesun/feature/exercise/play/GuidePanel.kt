@@ -2,7 +2,6 @@ package kr.seesun.feature.exercise.play
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -48,6 +47,7 @@ import kr.seesun.core.designsystem.component.AdaptiveActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.PagedColumn
 import kr.seesun.core.designsystem.component.SeeSunButton
+import kr.seesun.core.designsystem.component.pressable
 import kr.seesun.core.designsystem.theme.LayoutTier
 import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.designsystem.theme.SeeSunDimens
@@ -232,7 +232,7 @@ private fun ScriptLineButton(text: String, number: Int, current: Boolean, onClic
                     Modifier.border(1.dp, colors.chip, shape)
                 }
             )
-            .clickable(role = Role.Button, onClick = onClick)
+            .pressable(label = text, onClick = onClick)
             .clearAndSetSemantics {
                 contentDescription = "${number}번째 문장으로 이동: $text"
                 role = Role.Button

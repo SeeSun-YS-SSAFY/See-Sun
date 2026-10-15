@@ -58,7 +58,10 @@ class Media3GuidePlayer(context: Context, mediaSourceFactory: MediaSource.Factor
         .setId("seesun-guide-${SESSION_IDS.incrementAndGet()}")
         .build()
 
-    private val tts = SentenceSpeaker(context.applicationContext)
+    private val tts = SentenceSpeaker(context.applicationContext) {
+        // 대본 읽기 중 전화 등으로 포커스를 잃으면 mp3와 같이 [재생]을 눌러야 이어진다.
+        scope.launch { if (_state.value.status == GuideStatus.PLAYING) setStatus(GuideStatus.INTERRUPTED) }
+    }
     private var timeline: ScriptTimeline = ScriptTimeline.of("")
     private var ticker: Job? = null
     private val pendingSeek = PendingSeek()
@@ -307,7 +310,26 @@ class Media3GuidePlayer(context: Context, mediaSourceFactory: MediaSource.Factor
  * 기기 TTS로 문장을 하나씩 읽는다(문장마다 발화 ID를 달아 지금 문장을 정확히 안다).
  * 사용자가 [재생]을 눌러 시작하는 콘텐츠 재생이라 TalkBack이 켜져 있어도 읽는다(자동 낭독 아님, A9와 무관).
  */
-internal class SentenceSpeaker(context: Context) {
+internal class SentenceSpeaker(context: Context, private val onFocusLost: () -> Unit = {}) {
+    private val audio = context.getSystemService(android.media.AudioManager::class.java)
+
+    /** 운동 mp3와 같은 미디어 속성(연구 문서 §6 P0-2: TalkBack 덕킹 대상이 되게, CONTENT_TYPE_SPEECH는 덕킹 대신 멈춤을 부른다). */
+    private val attributes = android.media.AudioAttributes.Builder()
+        .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+        .build()
+
+    /** 읽는 동안 미디어 포커스를 잡는다. 전화·다른 앱 재생으로 잃으면 멈추고 [onFocusLost](재생기는 INTERRUPTED). */
+    private val focusRequest = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN)
+        .setAudioAttributes(attributes)
+        .setOnAudioFocusChangeListener { change ->
+            if (change == android.media.AudioManager.AUDIOFOCUS_LOSS || change == android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT) {
+                stop()
+                onFocusLost()
+            }
+        }
+        .build()
+
     private var ready = false
     private var pending: (() -> Boolean)? = null
     private var generation = 0
@@ -320,6 +342,7 @@ internal class SentenceSpeaker(context: Context) {
     private val tts: TextToSpeech = TextToSpeech(context) { status ->
         ready = status == TextToSpeech.SUCCESS && tts.setLanguage(Locale.KOREAN) >= TextToSpeech.LANG_AVAILABLE
         if (ready) {
+            tts.setAudioAttributes(attributes)
             tts.setSpeechRate(rate)
             pending?.invoke()
         }
@@ -327,7 +350,7 @@ internal class SentenceSpeaker(context: Context) {
     }
 
     fun speak(sentences: List<String>, from: Int, onSentence: (Int) -> Unit, onDone: () -> Unit): Boolean {
-        val run = {
+        val run = speakAll@{
             val myGeneration = ++generation
             tts.setOnUtteranceProgressListener(
                 object : UtteranceProgressListener() {
@@ -336,7 +359,10 @@ internal class SentenceSpeaker(context: Context) {
                     }
 
                     override fun onDone(utteranceId: String) {
-                        if (parse(utteranceId, myGeneration) == sentences.lastIndex) onDone()
+                        if (parse(utteranceId, myGeneration) == sentences.lastIndex) {
+                            audio?.abandonAudioFocusRequest(focusRequest)
+                            onDone()
+                        }
                     }
 
                     @Deprecated("API 21 미만 호환용", ReplaceWith(""))
@@ -344,6 +370,10 @@ internal class SentenceSpeaker(context: Context) {
                 }
             )
             tts.stop()
+            if (audio != null && audio.requestAudioFocus(focusRequest) == android.media.AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+                // 통화 중 등: 지금은 읽지 않는다(재생기가 멈춤 상태로 둔다).
+                return@speakAll false
+            }
             var ok = true
             for (i in from..sentences.lastIndex) {
                 val mode = if (i == from) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD
@@ -367,6 +397,7 @@ internal class SentenceSpeaker(context: Context) {
         generation++
         pending = null
         if (ready) tts.stop()
+        audio?.abandonAudioFocusRequest(focusRequest)
     }
 
     fun shutdown() {

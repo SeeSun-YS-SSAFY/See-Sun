@@ -12,6 +12,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // 음성 시작 감지(WebRTC VAD, MIT) 하나만 JitPack에서 받는다. 다른 의존성이 이 저장소를 쓰지 않게 묶어 둔다.
+        exclusiveContent {
+            forRepository { maven("https://jitpack.io") }
+            filter { includeGroup("com.github.gkonovalov.android-vad") }
+        }
     }
 }
 

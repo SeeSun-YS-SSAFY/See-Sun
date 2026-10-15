@@ -3,7 +3,6 @@ package kr.seesun.core.designsystem.component
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -28,7 +26,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -82,10 +79,10 @@ fun ListButton(
     val content = colors.onPrimary
     val shape = RoundedCornerShape(SeeSunDimens.CornerRadius)
     val interaction = if (selected == null) {
-        Modifier.clickable(role = Role.Button, onClick = onClick)
+        Modifier.pressable(label = text, onClick = onClick)
     } else {
         Modifier
-            .toggleable(value = isOn, role = Role.Checkbox, onValueChange = { onClick() })
+            .togglePressable(label = text, value = isOn, onToggle = onClick)
             .semantics { stateDescription = if (isOn) SELECTED_LABEL else NOT_SELECTED_LABEL }
     }
     Row(
@@ -217,7 +214,7 @@ private fun MenuTile(item: ListButtonItem, titleStyle: TextStyle, onClick: () ->
             .shadow(SeeSunDimens.Elevation, shape, clip = false, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(colors.primary, shape)
             .border(SeeSunDimens.BorderWidth, colors.border, shape)
-            .clickable(role = Role.Button, onClick = onClick)
+            .pressable(label = item.text, onClick = onClick)
             .then(if (item.spoken != null) Modifier.semantics { contentDescription = item.spoken } else Modifier)
             .padding(horizontal = TILE_PADDING, vertical = 8.dp),
         verticalArrangement = Arrangement.Center
@@ -252,7 +249,7 @@ fun IconTile(
             .shadow(SeeSunDimens.Elevation, shape, clip = false, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(colors.primary, shape)
             .border(SeeSunDimens.BorderWidth, colors.border, shape)
-            .clickable(role = Role.Button, onClick = onClick)
+            .pressable(label = spoken ?: text, onClick = onClick)
             .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier)
             .padding(horizontal = TILE_PADDING, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

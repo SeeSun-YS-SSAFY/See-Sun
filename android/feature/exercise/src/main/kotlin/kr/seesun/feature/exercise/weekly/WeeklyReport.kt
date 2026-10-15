@@ -45,6 +45,7 @@ import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.network.model.ExerciseWeekDto
+import kr.seesun.core.ui.EntryGuidance
 import kr.seesun.feature.exercise.ui.ActionButton
 import kr.seesun.feature.exercise.ui.SectionHeading
 
@@ -140,6 +141,17 @@ fun WeeklyScreen(ui: WeeklyUi, onBack: () -> Unit, onPrevious: () -> Unit, onNex
                 )
             )
         }
+    }
+    val week = ui.week
+    if (!ui.loading) {
+        EntryGuidance(
+            "weekly:${ui.weekStart}:${week != null}",
+            if (week == null) {
+                "$title. ${ui.error ?: "운동 기록을 불러오지 못했어요."}"
+            } else {
+                "$title. ${week.ttsMessage ?: "운동 ${week.sessionCount}회, 총 ${week.totalMinutes}분이에요."} 지난주 보기를 누르면 앞 주 기록을 들을 수 있어요."
+            }
+        )
     }
 }
 

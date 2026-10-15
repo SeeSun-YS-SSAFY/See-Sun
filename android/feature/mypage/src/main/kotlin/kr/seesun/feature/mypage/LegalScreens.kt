@@ -212,7 +212,8 @@ fun DataResetScreen(
             AutoGuidance("reset-choose", intro, talkBackEnabled, speak)
         }
 
-        ResetStep.EXPLAIN -> ScreenScaffold(title = stringResource(targetLabel(state.target)), onBack = onBack) {
+        // 초기화 확인 단계에는 톱니를 숨긴다(소유자 결정 v6).
+        ResetStep.EXPLAIN -> ScreenScaffold(title = stringResource(targetLabel(state.target)), onBack = onBack, onOpenSettings = null) {
             BodyText(explain, emphasis = true)
             BodyText(backup)
             BottomActions {
@@ -222,7 +223,11 @@ fun DataResetScreen(
             AutoGuidance("reset-explain:${state.target}", "$explain $backup", talkBackEnabled, speak)
         }
 
-        ResetStep.CONFIRM -> ScreenScaffold(title = stringResource(R.string.my_reset_confirm_title), onBack = onBack) {
+        ResetStep.CONFIRM -> ScreenScaffold(
+            title = stringResource(R.string.my_reset_confirm_title),
+            onBack = onBack,
+            onOpenSettings = null
+        ) {
             StatusMessage(
                 state.error ?: stringResource(R.string.my_reset_deleting).takeIf {
                     state.busy
@@ -248,7 +253,7 @@ fun DataResetScreen(
             AutoGuidance("reset-confirm:${state.target}", question, talkBackEnabled, speak)
         }
 
-        ResetStep.DONE -> ScreenScaffold(title = stringResource(R.string.my_reset_done_title)) {
+        ResetStep.DONE -> ScreenScaffold(title = stringResource(R.string.my_reset_done_title), onOpenSettings = null) {
             val message = state.doneMessage ?: stringResource(R.string.my_reset_done)
             BodyText(message, emphasis = true)
             BottomActions { SeeSunButton(text = stringResource(R.string.my_ok), onClick = onDone) }
@@ -368,7 +373,11 @@ private fun licenseLabel(lib: OssLibrary, sqlcipherName: String): String {
 object SettingsVoiceMatcher {
     private val RULES: List<Pair<List<String>, Any>> = listOf(
         listOf("탈퇴", "계정삭제", "계정지워", "회원삭제") to DeleteAccountRoute,
-        listOf("자동인식", "자동듣기", "음성자동", "자동마이크", "마이크자동") to VoiceAutoRoute,
+        listOf("자동인식", "자동듣기", "음성자동", "자동마이크", "마이크자동", "말하면듣기") to VoiceAutoRoute,
+        listOf("말속도", "속도", "빠르기", "천천히", "빨리") to VoiceSpeedRoute,
+        listOf("앱음성", "음성안내", "안내음성", "앱소리") to AppVoiceRoute,
+        listOf("누름", "누를때", "진동") to PressFeedbackRoute,
+        listOf("사용법", "도움말", "처음안내") to HowToRoute,
         listOf("권한", "마이크허용", "알림허용") to PermissionSettingsRoute,
         listOf("버전", "업데이트") to AppVersionRoute,
         listOf("초기화", "식사기록지워", "식사기록삭제", "건강정보지워", "건강정보삭제", "일부삭제", "일부지워") to DataResetRoute,

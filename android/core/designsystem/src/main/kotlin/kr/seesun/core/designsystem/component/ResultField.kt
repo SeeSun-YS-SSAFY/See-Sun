@@ -2,7 +2,6 @@ package kr.seesun.core.designsystem.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -137,7 +135,7 @@ fun PencilButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifi
             .shadow(SeeSunDimens.Elevation, shape, clip = false, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(colors.surface, shape)
             .border(SeeSunDimens.BorderWidth, colors.border, shape)
-            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .pressable(label = label, onClick = onClick, onClickLabel = label)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {

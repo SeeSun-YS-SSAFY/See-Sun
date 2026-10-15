@@ -20,6 +20,9 @@ val selfUpdate = providers.gradleProperty("seesun.selfUpdate").map(String::toBoo
 val selfUpdateManifestUrl = providers.gradleProperty("seesun.selfUpdate.manifestUrl")
     .getOrElse(apiBaseUrl.replace(Regex("/api/v1/?$"), "/media/app/latest.json"))
 
+// 업데이트 푸시 FCM 토픽. 시험 빌드만 -Pseesun.selfUpdate.pushTopic=seesun-app-updates-test 로 바꾼다(실제 토픽에 시험 푸시 금지).
+val selfUpdatePushTopic = providers.gradleProperty("seesun.selfUpdate.pushTopic").getOrElse("seesun-app-updates")
+
 if (firebaseEnabled) {
     // Firebase를 켤 때만 google-services 플러그인을 적용한다. app/google-services.json이 있어야 한다.
     if (file("google-services.json").exists()) {
@@ -69,6 +72,7 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         buildConfigField("boolean", "SELF_UPDATE", selfUpdate.toString())
         buildConfigField("String", "SELF_UPDATE_MANIFEST_URL", "\"$selfUpdateManifestUrl\"")
+        buildConfigField("String", "SELF_UPDATE_PUSH_TOPIC", "\"$selfUpdatePushTopic\"")
         buildConfigField("boolean", "USE_FAKE_DATA", useFakeData.toString())
         // 실서버 기기 시험(@RealServer)은 평소 게이트에서 뺀다. scripts/e2e 실행기가 클래스를 직접 골라 돌린다.
         testInstrumentationRunnerArguments["notAnnotation"] = "kr.seesun.app.RealServer"

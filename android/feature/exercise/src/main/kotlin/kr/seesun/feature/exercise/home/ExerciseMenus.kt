@@ -28,6 +28,9 @@ import kr.seesun.core.designsystem.component.ListButtonItem
 import kr.seesun.core.designsystem.component.LiveStatusText
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.EntryGuidance
+import kr.seesun.core.ui.VoiceMenuButton
+import kr.seesun.core.ui.VoiceMenuOption
 import kr.seesun.feature.exercise.ui.ActionButton
 
 // ── EX-01 운동 첫 화면 ─────────────────────────────────────────────────
@@ -80,6 +83,16 @@ fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination)
         }
         // 앱에서는 로그인한 뒤에만 이 화면에 온다(로그인이 풀리면 온보딩으로 돌아감). 기능 단독 시험·만일을 위한 안내.
         if (!ui.signedIn) BodyText("로그인하지 않아 기기에 저장된 운동 정보로 안내해요. 운동 기록은 로그인한 뒤 서버에 보내요.")
+        // 말로 고르기(흐름 문서 P0-4): 안내가 「…중에서 골라 주세요」로 끝나므로 같은 말로 고를 수 있게.
+        VoiceMenuButton(
+            options = listOf(
+                VoiceMenuOption(listOf("한 가지", "한가지", "하나", "단일")) { onOpen(HomeDestination.SINGLE) },
+                VoiceMenuOption(listOf("루틴", "이어서")) { onOpen(HomeDestination.ROUTINE) },
+                VoiceMenuOption(listOf("기록", "이번 주", "이번주")) { onOpen(HomeDestination.WEEKLY) },
+                VoiceMenuOption(listOf("안전", "건강 확인")) { onOpen(HomeDestination.SAFETY) }
+            ),
+            hint = "한 가지 운동, 루틴 운동, 이번 주 기록, 안전 안내 중에서 말씀해 주세요."
+        )
         // 메뉴는 화면 아래 누르는 영역에. 타일 설명은 두 줄 안의 짧은 말, 자세한 설명은 낭독(11_레이아웃_기준.md §3).
         BottomActions {
             ListButtonGrid(
@@ -93,6 +106,7 @@ fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination)
             )
         }
     }
+    EntryGuidance("exercise-home", "운동. 한 가지 운동, 루틴 운동, 이번 주 기록, 안전 안내 중에서 골라 주세요.")
 }
 
 // ── 메뉴: 단일 운동 고르기 / 루틴 고르기 ─────────────────────────────────
@@ -146,6 +160,13 @@ fun SingleMenuRoute(viewModel: CategoryMenuViewModel, onBack: () -> Unit, onOpen
             )
         if (!ui.loading) BottomActions { ListButtonGrid(items = items, onClick = { onOpenList(it.key, it.text) }) }
     }
+    if (!ui.loading) {
+        val names = ui.categories.joinToString(", ") { it.name }
+        EntryGuidance(
+            "exercise-single:${ui.categories.size}",
+            "한 가지 운동. ${if (names.isEmpty()) "" else "$names, "}전체 운동, 자주 하는 운동, 즐겨찾기 중에서 골라 주세요."
+        )
+    }
 }
 
 /** EX-02 루틴: 카테고리 기본 루틴(카테고리 운동을 차례로) + 나만의 루틴. */
@@ -169,6 +190,13 @@ fun RoutineMenuRoute(
                 )
             }
         }
+    }
+    if (!ui.loading) {
+        val names = ui.categories.joinToString(", ") { "${it.name} 루틴" }
+        EntryGuidance(
+            "exercise-routine-menu:${ui.categories.size}",
+            "루틴 운동. ${if (names.isEmpty()) "" else "$names, "}나만의 루틴 중에서 골라 주세요. 운동이 끝나면 휴식 시간과 다음 운동을 알려 드려요."
+        )
     }
 }
 

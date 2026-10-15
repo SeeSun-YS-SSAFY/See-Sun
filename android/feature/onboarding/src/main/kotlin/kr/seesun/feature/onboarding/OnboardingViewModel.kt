@@ -48,6 +48,7 @@ import kr.seesun.core.voice.parse.AnswerParser
 import kr.seesun.core.voice.parse.DateParser
 import kr.seesun.core.voice.parse.PhoneNumberParser
 import kr.seesun.core.voice.parse.ProfileParsers
+import kr.seesun.core.voice.parse.SaveAnswerParser
 import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.tts.Speaker
 
@@ -153,6 +154,19 @@ class OnboardingViewModel @Inject constructor(
         }
         true
     }
+
+    /** 입력 확인 「이대로 저장할까요?」: "네·저장·맞아요" → 저장, "아니요·고칠게요·수정" → 고치기(흐름 문서 P0-5). */
+    val profileConfirmVoice = command { c -> answerSave(c, ::saveProfile, ::editProfile) }
+
+    /** 건강 정보 확인 「이대로 저장할까요?」. */
+    val healthConfirmVoice = command { c -> answerSave(c, ::saveHealth, ::editHealth) }
+
+    private fun answerSave(candidates: List<String>, save: () -> Unit, edit: () -> Unit): Boolean =
+        when (candidates.firstNotNullOfOrNull(SaveAnswerParser::parse)) {
+            Answer.YES -> true.also { save() }
+            Answer.NO, Answer.EDIT -> true.also { edit() }
+            Answer.REPEAT, null -> false
+        }
 
     private val _settingsRequests = MutableStateFlow(0)
 

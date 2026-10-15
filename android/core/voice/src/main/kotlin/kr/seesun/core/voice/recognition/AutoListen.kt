@@ -4,14 +4,15 @@ package kr.seesun.core.voice.recognition
  * 음성 자동 인식(소유자 결정 2026-10-15 msg 920): 화면 안내 음성이 끝나면 마이크를 저절로 켜되, 사람 말소리로 알아들은
  * 쓸 수 있는 말에만 반응한다. 잡음·무음에는 아무 말도, 아무 소리도, 아무 동작도 하지 않고 조용히 다시 듣거나 멈춘다.
  *
- * 걸러 내는 순서(인식기가 주는 신호만 쓴다 — 마이크를 인식기와 동시에 따로 열 수 없어 자체 VAD는 두지 않는다):
+ * 걸러 내는 순서(인식기가 주는 신호만 쓴다 — v6의 말하면 듣기 VAD는 인식기를 열기 전에만 마이크를 쓰고, 열기 전에 놓는다):
  * 1. 말소리 흔적([SpeechEvidence]): 말 시작(onBeginningOfSpeech)·중간 결과(partial)·소리 크기 상승 중 하나도 없으면 버린다.
  *    소리 크기(RMS)를 받았는데 바닥보다 [MIN_RMS_RISE_DB] 이상 오른 적이 없으면(일정한 웅웅거림) 버린다.
  * 2. 신뢰도: 첫 후보 신뢰도를 인식기가 줬는데 [MIN_CONFIDENCE]보다 낮으면 버린다. 신뢰도가 0 이하(모름)면 이 단계는 건너뛴다.
  * 3. 화면 맞춤: 남은 후보를 화면의 명령·입력 해석기에 넘겨 아무것도 맞지 않으면 버린다(화면 쪽에서 판단).
  * 4. 무음·못 알아들음·클라이언트 오류는 오류 안내 없이 다시 듣는다. 권한·인식기 없음·네트워크 오류면 자동 듣기를 멈춘다.
  * 5. 다시 듣기는 [AutoListenBudget] 안에서만: 조용한 회차가 [AutoListenBudget.maxSilentCycles]번이거나 들은 시간이
- *    [AutoListenBudget.maxListenMs]를 넘으면 멈추고 보통 마이크 버튼으로 돌아간다(전지·인식기 시작음 반복 방지).
+ *    [AutoListenBudget.maxListenMs]를 넘으면 질문 뒤 듣기(T1)를 마친다(v6: 8초 × 2번). 그 뒤는 설정에 따라 말하면 듣기(VAD 대기)로 넘어간다.
+ * v6: 말소리 흔적 검사 앞에 되울림 필터([EchoFilter])가 있다(앱이 한 말·화면 글자·화면 낭독기 상태 낭독을 버림).
  */
 enum class AutoListenOutcome {
     /** 화면이 말을 받아 처리했다. */
@@ -42,10 +43,10 @@ enum class AutoListenOutcome {
  * @param backoffMs 다시 듣기 전 쉼(회차마다 늘어난다)
  */
 data class AutoListenBudget(
-    val maxSilentCycles: Int = 3,
-    val maxListenMs: Long = 30_000L,
-    val maxCycleMs: Long = 15_000L,
-    val settleMs: Long = 600L,
+    val maxSilentCycles: Int = 2,
+    val maxListenMs: Long = 20_000L,
+    val maxCycleMs: Long = 8_000L,
+    val settleMs: Long = 400L,
     val backoffMs: Long = 400L
 )
 

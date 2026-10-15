@@ -42,6 +42,7 @@ import kr.seesun.core.designsystem.component.ScrollHighlightList
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.network.ApiFailure
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.EntryGuidance
 import kr.seesun.feature.exercise.RoutineDetailRoute
 import kr.seesun.feature.exercise.RoutineEditRoute
 import kr.seesun.feature.exercise.ui.ActionButton
@@ -92,6 +93,16 @@ fun CustomRoutineListRoute(viewModel: CustomRoutineListViewModel, onBack: () -> 
                 onClick = { item -> ui.routines.firstOrNull { it.playlistId == item.key }?.let(onOpen) }
             )
         }
+    }
+    if (!ui.loading) {
+        EntryGuidance(
+            "custom-routines:${ui.routines.size}:${ui.error != null}",
+            when {
+                ui.error != null -> "나만의 루틴. ${ui.error}"
+                ui.routines.isEmpty() -> "나만의 루틴. 만든 루틴이 없어요. 새 루틴 만들기를 눌러 주세요."
+                else -> "나만의 루틴. 루틴 ${ui.routines.size}개가 있어요. 루틴을 고르거나 새 루틴 만들기를 눌러 주세요."
+            }
+        )
     }
 }
 
@@ -176,6 +187,12 @@ fun RoutineDetailScreenRoute(
                 )
             }
         }
+    }
+    if (!ui.loading && routine != null) {
+        EntryGuidance(
+            "routine-detail:${routine.playlistId}:${routine.items.size}",
+            "${routine.title}. 운동 ${routine.items.size}개. 루틴 시작, 루틴 수정, 루틴 삭제 중에서 골라 주세요."
+        )
     }
     if (ui.confirmDelete) {
         ExerciseDialog(
@@ -379,6 +396,12 @@ private fun EditBody(ui: EditorUi, viewModel: RoutineEditorViewModel, onBack: ()
             )
         }
     }
+    if (!ui.loading) {
+        EntryGuidance(
+            "routine-edit:${viewModel.playlistId}",
+            "${if (viewModel.playlistId == null) "루틴 만들기" else "루틴 수정"}. 루틴 이름을 쓰고, 운동 넣기로 운동을 더한 뒤 루틴 저장을 눌러 주세요."
+        )
+    }
 }
 
 @Composable
@@ -398,6 +421,9 @@ private fun PickBody(ui: EditorUi, onPick: (ExerciseSummary) -> Unit, onBack: ()
             onItemClick = onPick
         )
     }
+    if (ui.exercises.isNotEmpty()) {
+        EntryGuidance("routine-pick:${ui.exercises.size}", "운동 고르기. 운동 ${ui.exercises.size}개 가운데 넣을 운동을 눌러 주세요.")
+    }
 }
 
 @Composable
@@ -412,6 +438,10 @@ private fun ConfigBody(ui: EditorUi, viewModel: RoutineEditorViewModel, onBack: 
             ActionButton(text = "다른 운동 고르기", kind = ButtonKind.OUTLINE, onClick = onBack)
         }
     }
+    EntryGuidance(
+        "routine-config:${ex.id}",
+        "세트와 횟수. ${ex.name}, 지금 ${ui.sets}세트 ${ui.reps}회예요. 바꾼 뒤 이 운동 넣기를 눌러 주세요."
+    )
 }
 
 private const val HTTP_UNAUTHORIZED = 401

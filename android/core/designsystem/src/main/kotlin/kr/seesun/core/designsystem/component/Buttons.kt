@@ -3,7 +3,6 @@ package kr.seesun.core.designsystem.component
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -26,7 +25,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
@@ -86,7 +84,7 @@ fun SeeSunButton(
             .shadow(SeeSunDimens.Elevation, shape, clip = false, ambientColor = colors.shadow, spotColor = colors.shadow)
             .background(container, shape)
             .border(SeeSunDimens.BorderWidth, colors.border, shape)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .pressable(label = text, onClick = onClick, enabled = enabled)
             .padding(horizontal = SeeSunDimens.ButtonPaddingHorizontal, vertical = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -175,7 +173,7 @@ fun SeeSunIconButton(
         modifier = modifier
             .heightIn(min = SeeSunDimens.MinTouchTarget)
             .widthIn(min = SeeSunDimens.MinTouchTarget)
-            .clickable(role = Role.Button, onClickLabel = label, onClick = onClick)
+            .pressable(label = label, onClick = onClick, onClickLabel = label)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center

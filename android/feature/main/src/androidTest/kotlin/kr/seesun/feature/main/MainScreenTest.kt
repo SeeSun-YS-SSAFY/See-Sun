@@ -46,15 +46,16 @@ class MainScreenTest {
         rule.checkA11y()
         rule.shot("50_main")
 
-        // 화면 위에서 아래로·왼쪽에서 오른쪽으로: 식단 → 운동 → 약 → 마이페이지 → 설정(포커스 순서 = 배치 순서).
+        // 화면 위에서 아래로·왼쪽에서 오른쪽으로: 식단 → 운동 → 약 → 마이페이지(포커스 순서 = 배치 순서). 하단 [설정]은 v6에서 없앴다.
         // 큰 글꼴·가로 화면에서는 화면 아래로 스크롤되므로 잘리지 않은 위치(positionInRoot)로 비교한다.
-        val labels = listOf("식단", "운동", "약", "마이페이지", "설정")
+        val labels = listOf("식단", "운동", "약", "마이페이지")
         val positions = labels.map { label ->
             rule.onNode(tile(label)).fetchSemanticsNode().positionInRoot.let { it.y to it.x }
         }
         assertEquals(positions.sortedWith(compareBy({ it.first }, { it.second })), positions)
-        listOf("식단", "운동", "마이페이지", "설정").forEach { rule.onNode(tile(it)).performScrollTo().performClick() }
-        assertEquals(MainDestination.MENU, visited)
+        listOf("식단", "운동", "마이페이지").forEach { rule.onNode(tile(it)).performScrollTo().performClick() }
+        assertEquals(MainDestination.MENU - MainDestination.SETTINGS, visited)
+        rule.onAllNodesWithText("설정").assertCountEquals(0)
         rule.onAllNodesWithText("공통 컴포넌트 보기").assertCountEquals(0)
     }
 

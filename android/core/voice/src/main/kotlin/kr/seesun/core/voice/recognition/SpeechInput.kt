@@ -2,8 +2,13 @@ package kr.seesun.core.voice.recognition
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
+import android.os.ParcelFileDescriptor
+import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -15,18 +20,40 @@ import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
+import kr.seesun.core.a11y.GuidancePolicy
+import kr.seesun.core.a11y.TalkBackMonitor
 
 /** 음성 인식 옵션(03 §5: ko-KR, partial result, 무음 종료, 가능하면 기기 안 인식). */
 data class ListenOptions(
     val language: String = "ko-KR",
     val preferOnDevice: Boolean = true,
     val partialResults: Boolean = true,
-    val maxResults: Int = 3
+    val maxResults: Int = 3,
+    /** VAD 대기가 잡은 말 시작 직전 소리(API 33+면 인식기에 그대로 넘겨 첫 음절을 살린다). null이면 마이크로 듣는다. */
+    val preRoll: PreRollAudio? = null,
+    /** 사용자가 직접 시작했다(마이크·이어폰 버튼). 화면 낭독기가 켜져 있으면 신호음 뒤 조금 늦게 듣는다(C1). */
+    val manual: Boolean = false
 )
+
+/**
+ * VAD가 들고 있는 녹음(16kHz 모노 PCM16). [openPipe]는 직전 소리(약 500ms)와 이어지는 소리를 흘려 주는 파이프의 읽는 쪽을 돌려준다.
+ * [release]는 녹음을 멈추고 놓는다 — 인식기가 마이크를 직접 열기 전에 반드시 부른다(동시 녹음이면 한쪽이 무음, 레퍼런스 확인 §4.3).
+ */
+interface PreRollAudio {
+    val sampleRate: Int
+
+    fun openPipe(): ParcelFileDescriptor?
+
+    fun release()
+}
 
 /** 인식 오류 종류와 사용자 안내 문구(오류 문구는 행동 제안 포함, 04 §4). */
 enum class RecognitionError(val message: String) {
@@ -94,7 +121,12 @@ interface SpeechInput {
 
     /** 듣는 중인 것을 모두 멈춘다(결과 없이 끝남). 앱을 떠날 때 [kr.seesun.core.voice.lifecycle.AppAudioGuard]가 부른다. */
     fun cancelAll() = Unit
+
+    /** 인식기가 마이크를 쓰는 중인가(VAD 대기가 마이크를 열지 않도록). */
+    val listening: StateFlow<Boolean> get() = IDLE_FLOW
 }
+
+private val IDLE_FLOW: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
 
 /**
  * Android SpeechRecognizer 래퍼.
@@ -109,6 +141,13 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
 
     override fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)
 
+    private val talkBack = TalkBackMonitor(context)
+    private val _listening = MutableStateFlow(false)
+    override val listening: StateFlow<Boolean> = _listening.asStateFlow()
+
+    /** 인식기가 EXTRA_AUDIO_SOURCE(직전 소리 넘기기)를 받지 않는다고 확인했다(앱이 살아 있는 동안 기억). */
+    @Volatile private var audioSourceUnsupported = false
+
     /** 기기 안 인식기에 한국어 언어 팩이 없다고 확인했다(앱이 살아 있는 동안 기억). */
     @Volatile private var onDeviceLanguageMissing = false
 
@@ -120,6 +159,17 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
         putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, preferOffline)
     }
 
+    /** API 33+: VAD가 들고 있던 소리를 인식기에 넘긴다. 파이프를 못 열면 false(마이크로 듣는다). */
+    private fun Intent.withAudioSource(preRoll: PreRollAudio): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+        val pipe = preRoll.openPipe() ?: return false
+        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, pipe)
+        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
+        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, AudioFormat.ENCODING_PCM_16BIT)
+        putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, preRoll.sampleRate)
+        return true
+    }
+
     private fun onDeviceAvailable(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
 
@@ -127,6 +177,7 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
     private val active = CopyOnWriteArraySet<() -> Unit>()
 
     override fun cancelAll() {
+        if (MicArbiter.preempt()) Log.i(TAG, "vad standby recording stopped")
         if (active.isNotEmpty()) Log.i(TAG, "cancel all listening (${active.size})")
         active.forEach { it() }
     }
@@ -141,6 +192,16 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
             return@callbackFlow
         }
         var recognizer: SpeechRecognizer? = null
+        var preRoll = options.preRoll
+        var usingAudioSource = false
+        var startedAt = 0L
+        var heardAnything = false
+
+        /** 직전 소리 경로를 버리고 녹음을 놓는다(인식기가 마이크를 직접 열기 전에). */
+        fun releasePreRoll() {
+            preRoll?.release()
+            preRoll = null
+        }
 
         fun start(onDevice: Boolean, preferOffline: Boolean) {
             recognizer?.destroy()
@@ -156,6 +217,7 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
                 }
 
                 override fun onBeginningOfSpeech() {
+                    heardAnything = true
                     trySend(RecognitionEvent.SpeechStarted)
                 }
 
@@ -170,7 +232,18 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
                 }
 
                 override fun onError(error: Int) {
-                    Log.w(TAG, "recognizer error=$error (${RecognitionError.fromCode(error)}) onDevice=$onDevice")
+                    Log.w(
+                        TAG,
+                        "recognizer error=$error (${RecognitionError.fromCode(error)}) onDevice=$onDevice audioSource=$usingAudioSource"
+                    )
+                    // 직전 소리 넘기기를 인식기가 받지 않으면(곧바로 오류) 이번부터 마이크로 다시 듣는다.
+                    if (usingAudioSource && !heardAnything && SystemClock.elapsedRealtime() - startedAt < AUDIO_SOURCE_REJECT_MS) {
+                        audioSourceUnsupported = true
+                        Log.i(TAG, "preroll path rejected by recognizer -> fallback to mic (first syllable may be lost)")
+                        releasePreRoll()
+                        start(onDevice = onDevice, preferOffline = preferOffline)
+                        return
+                    }
                     // 기기 안 인식기는 있는데 한국어 언어 팩이 없으면(에뮬레이터·일부 폰, 오류 12·13) 기본 인식기로 한 번 다시 듣고,
                     // 이 앱이 살아 있는 동안은 기본 인식기를 쓴다. 기본 인식기는 Google 서버를 거칠 수 있다(Ready.onDevice=false).
                     if (onDevice && RecognitionError.fromCode(error) == RecognitionError.LANGUAGE_UNAVAILABLE) {
@@ -184,11 +257,15 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
 
                 override fun onResults(results: Bundle?) {
                     val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
-                    if (list.isEmpty()) {
+                    val scores = results?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)?.toList().orEmpty()
+                    // 되울림 필터: 앱이 방금 한 말·화면 글자·화면 낭독기의 상태 낭독과 같은 후보는 버린다(C1·C5).
+                    val sources = ScreenSpeechLog.echoSources(SystemClock.elapsedRealtime())
+                    val kept = EchoFilter.filter(RecognitionEvent.Final(list, scores), sources)
+                    if (list.isNotEmpty() && kept.candidates.isEmpty()) Log.i(TAG, "result discarded as echo (${list.size} candidates)")
+                    if (kept.candidates.isEmpty()) {
                         trySend(RecognitionEvent.Failed(RecognitionError.NO_MATCH))
                     } else {
-                        val scores = results?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)?.toList().orEmpty()
-                        trySend(RecognitionEvent.Final(list, scores))
+                        trySend(kept)
                     }
                     close()
                 }
@@ -201,23 +278,58 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
 
                 override fun onEvent(eventType: Int, params: Bundle?) = Unit
             })
-            created.startListening(intentFor(options, preferOffline))
+            val intent = intentFor(options, preferOffline)
+            val pre = preRoll
+            usingAudioSource = pre != null && !audioSourceUnsupported && intent.withAudioSource(pre)
+            if (!usingAudioSource) releasePreRoll()
+            if (options.preRoll != null) {
+                Log.i(TAG, "recognizer start path=${if (usingAudioSource) "audio-source-preroll" else "mic"} onDevice=$onDevice")
+            }
+            startedAt = SystemClock.elapsedRealtime()
+            created.startListening(intent)
         }
 
         val abort: () -> Unit = { close() }
         active += abort
+        _listening.value = true
+        // 말하면 듣기(VAD) 녹음이 마이크를 쥐고 있으면 먼저 멈춘다(직전 소리를 넘겨받는 경우는 그 녹음을 쓴다).
+        if (options.preRoll == null && MicArbiter.preempt()) Log.i(TAG, "vad standby preempted by direct listen")
+        // 화면 낭독기가 켜져 있으면 직접 누른 마이크는 신호음 뒤 조금 늦게 연다: TalkBack이 "녹음 중"을 다 읽을 시간(C1, §4.5).
+        if (options.manual && talkBack.isEnabled()) {
+            Log.i(TAG, "manual listen with screen reader: earcon + ${GuidancePolicy.SCREEN_READER_MIC_DELAY_MS}ms delay")
+            earcon()
+            delay(GuidancePolicy.SCREEN_READER_MIC_DELAY_MS)
+        }
         start(
             onDevice = options.preferOnDevice && onDeviceAvailable() && !onDeviceLanguageMissing,
             preferOffline = options.preferOnDevice && !onDeviceLanguageMissing
         )
         awaitClose {
             active -= abort
+            _listening.value = active.isNotEmpty()
             recognizer?.cancel()
             recognizer?.destroy()
+            releasePreRoll()
         }
     }.buffer(Channel.UNLIMITED) // 소리 크기 이벤트가 잦아도 최종 결과(trySend)가 버려지지 않게
         .flowOn(Dispatchers.Main)
 }
+
+/** 마이크 시작 신호음(짧게 한 번, 우리 앱 소리). */
+private fun earcon() {
+    runCatching {
+        val tone = ToneGenerator(AudioManager.STREAM_MUSIC, EARCON_VOLUME)
+        tone.startTone(ToneGenerator.TONE_PROP_BEEP, EARCON_MS)
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ tone.release() }, EARCON_MS + EARCON_RELEASE_PAD_MS)
+    }
+}
+
+private const val EARCON_VOLUME = 60
+private const val EARCON_MS = 120
+private const val EARCON_RELEASE_PAD_MS = 200L
+
+/** 이보다 빨리 오류가 나면 인식기가 직전 소리 넘기기를 거절한 것으로 본다. */
+private const val AUDIO_SOURCE_REJECT_MS = 1_500L
 
 /**
  * 인식 실패 대응(COM-14): 2회 연속 실패하면 버튼·키보드 입력을 제안한다.

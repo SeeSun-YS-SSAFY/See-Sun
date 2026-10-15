@@ -8,6 +8,14 @@
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application>
+        <!-- 업데이트 푸시(FCM 데이터 메시지, 토픽 seesun-app-updates). 가운영 자체 업데이트 빌드에만 합친다. -->
+        <service
+            android:name="kr.seesun.feature.update.UpdatePushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
         <provider
             android:name="kr.seesun.feature.update.SelfUpdateFileProvider"
             android:authorities="${applicationId}.selfupdate.files"

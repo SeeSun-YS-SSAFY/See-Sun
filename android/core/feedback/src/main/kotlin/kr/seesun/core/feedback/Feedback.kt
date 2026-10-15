@@ -19,6 +19,9 @@ interface Haptics {
     fun vibrate(pattern: HapticPattern)
 
     fun cancel()
+
+    /** 버튼 누름 확인용 아주 짧은 진동 한 번(누름 알림, v6). 5가지 신호 패턴과 헷갈리지 않게 따로 둔다. */
+    fun tick() = Unit
 }
 
 /** VibrationEffect.createWaveform으로 5패턴을 낸다. */
@@ -44,8 +47,20 @@ class AndroidHaptics @Inject constructor(@ApplicationContext context: Context) :
         vibrator?.cancel()
     }
 
+    override fun tick() {
+        val v = vibrator ?: return
+        if (!v.hasVibrator()) return
+        val effect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+        } else {
+            VibrationEffect.createOneShot(TICK_MS, VibrationEffect.DEFAULT_AMPLITUDE)
+        }
+        v.vibrate(effect)
+    }
+
     private companion object {
         const val NO_REPEAT = -1
+        const val TICK_MS = 20L
     }
 }
 

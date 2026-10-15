@@ -44,6 +44,8 @@ import kr.seesun.core.designsystem.component.adaptiveMicSize
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.voice.recognition.AutoListenOutcome
+import kr.seesun.core.voice.recognition.ListenOptions
+import kr.seesun.core.voice.recognition.PreRollAudio
 import kr.seesun.core.voice.recognition.RecognitionError
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.RecognitionFailureTracker
@@ -78,7 +80,7 @@ class VoiceCommandController(
 
             MicState.PROCESSING -> Unit
 
-            MicState.IDLE -> listen()
+            MicState.IDLE, MicState.STANDBY -> listen()
         }
     }
 
@@ -88,7 +90,7 @@ class VoiceCommandController(
      * 음성 자동 인식으로 한 번 듣는다([AutoListenEffect]가 부른다). 수동 듣기와 달리 무음·못 알아들음·화면에 맞지 않는 말에
      * 오류 문구·실패 횟수를 남기지 않는다. 이미 듣는 중이면 아무것도 하지 않는다.
      */
-    suspend fun listenAuto(): AutoListenOutcome {
+    suspend fun listenAuto(preRoll: PreRollAudio? = null): AutoListenOutcome {
         if (_state.value.mic != MicState.IDLE) return AutoListenOutcome.USER_STOPPED
         onBeforeListen()
         _state.update { it.copy(error = null) }
@@ -104,7 +106,8 @@ class VoiceCommandController(
                         _state.update { it.copy(error = null, suggestButtons = false) }
                     }
                 }
-            }
+            },
+            preRoll = preRoll
         )
     }
 
@@ -114,7 +117,7 @@ class VoiceCommandController(
         onBeforeListen()
         _state.update { it.copy(mic = MicState.LISTENING, error = null) }
         job = scope.launch {
-            speech.listen().collect { event ->
+            speech.listen(ListenOptions(manual = true)).collect { event ->
                 when (event) {
                     is RecognitionEvent.SpeechEnded -> _state.update { it.copy(mic = MicState.PROCESSING) }
 
@@ -156,17 +159,19 @@ fun VoiceCommandMic(
 ) {
     val state by controller.state.collectAsStateWithLifecycle()
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
-    AutoListenEffect(controller, talkBackEnabled, speak, controller::listenAuto)
+    val press = rememberDirectStart(gate.request)
+    VoiceTriggers(controller, talkBackEnabled, speak, controller::listenAuto, press)
+    val mic = displayedMic(state.mic)
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)
     ) {
         MicButton(
-            state = state.mic,
-            onClick = gate.request,
+            state = mic,
+            onClick = press,
             size = adaptiveMicSize(SeeSunDimens.MicReserve + CHOICE_RESERVE),
-            showState = state.mic != MicState.IDLE
+            showState = mic != MicState.IDLE
         )
         ChoiceResult(label = resultLabel, value = result)
         MicPermissionRationale(gate)
@@ -217,15 +222,18 @@ fun VoiceCommandButton(
 ) {
     val state by controller.state.collectAsStateWithLifecycle()
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
-    AutoListenEffect(controller, talkBackEnabled, speak, controller::listenAuto)
+    val press = rememberDirectStart(gate.request)
+    VoiceTriggers(controller, talkBackEnabled, speak, controller::listenAuto, press)
+    val mic = displayedMic(state.mic)
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)) {
         SeeSunButton(
-            text = when (state.mic) {
+            text = when (mic) {
                 MicState.IDLE -> stringResource(R.string.ui_voice_command_idle)
+                MicState.STANDBY -> stringResource(R.string.ui_voice_command_standby)
                 MicState.LISTENING -> stringResource(R.string.ui_voice_command_listening)
                 MicState.PROCESSING -> stringResource(R.string.ui_voice_command_processing)
             },
-            kind = if (state.mic == MicState.LISTENING) ButtonKind.PRIMARY else ButtonKind.OUTLINE,
+            kind = if (mic == MicState.LISTENING || mic == MicState.STANDBY) ButtonKind.PRIMARY else ButtonKind.OUTLINE,
             iconRes = kr.seesun.core.designsystem.R.drawable.ic_mic,
             enabled = state.mic != MicState.PROCESSING,
             supportingText = when {
@@ -238,7 +246,7 @@ fun VoiceCommandButton(
 
                 else -> null
             },
-            onClick = gate.request,
+            onClick = press,
             textStyle = textStyle
         )
         if (gate.nudges > 0) MicPermissionRationale(gate)

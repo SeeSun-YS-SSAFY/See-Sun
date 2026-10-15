@@ -6,7 +6,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -58,6 +57,7 @@ import kr.seesun.core.a11y.politeLiveRegion
 import kr.seesun.core.a11y.screenPane
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.SeeSunButton
+import kr.seesun.core.designsystem.component.pressable
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import okhttp3.OkHttpClient
@@ -278,7 +278,7 @@ fun PictogramPlayer(
         .height(height)
         .background(SeeSunTheme.colors.surface, RoundedCornerShape(SeeSunDimens.CornerRadius))
         .testTag("pictogram-frame-$index")
-        .then(if (onOpen != null) Modifier.clickable(role = Role.Button) { onOpen(index) } else Modifier)
+        .then(if (onOpen != null) Modifier.pressable(label = "그림 크게 보기", onClick = { onOpen(index) }) else Modifier)
         .clearAndSetSemantics {
             if (onOpen != null) {
                 contentDescription = "그림 크게 보기 — ${frameName ?: description}"
@@ -323,7 +323,7 @@ fun PictogramThumb(
             .height(height.coerceAtLeast(SeeSunDimens.MinTouchTarget))
             .background(colors.surface, shape)
             .border(if (selected) THUMB_SELECTED_BORDER else 1.dp, if (selected) colors.primary else colors.border, shape)
-            .clickable(role = Role.Button, onClickLabel = "해당 구간으로 이동", onClick = onClick)
+            .pressable(label = label, onClick = onClick, onClickLabel = "해당 구간으로 이동")
             .clearAndSetSemantics {
                 contentDescription = "동작 그림 $number, $label. 해당 구간으로 이동"
                 role = Role.Button

@@ -26,5 +26,6 @@
     <string name="main_settings_desc">동의 · 로그아웃 · 탈퇴</string>
     <string name="main_components">공통 컴포넌트 보기</string>
     <string name="main_components_desc">개발용 점검</string>
-    <string name="main_guide">메인. %1$s 식단, 운동, 약, 마이페이지, 설정 중에서 골라 주세요.</string>
+    <string name="main_voice_hint">식단, 운동, 약, 마이페이지 중에서 말씀해 주세요. 설정이라고 하셔도 돼요.</string>
+    <string name="main_guide">메인. %1$s 식단, 운동, 약, 마이페이지 중에서 골라 주세요. 설정은 오른쪽 위 톱니바퀴예요.</string>
 </resources>

@@ -12,6 +12,7 @@ import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.BottomActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.LiveStatusText
+import kr.seesun.core.ui.AutoGuidance
 import kr.seesun.core.ui.VoiceCommandButton
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.feature.exercise.R
@@ -35,6 +36,9 @@ object ResumeVoiceMatcher {
     }
 }
 
+/** 설정에서 돌아왔을 때 읽어 주는 안내. */
+const val RESUME_PROMPT_SETTINGS = "설정을 여느라 운동 안내를 멈췄어요. 이어서 하려면 이어서 시작을 누르거나 「이어서」라고 말씀해 주세요."
+
 /** 다시 돌아왔을 때 읽어 주는 안내(TalkBack 꺼짐: 앱 음성, 켜짐: liveRegion). */
 const val RESUME_PROMPT = "다른 앱으로 나가서 운동 안내를 멈췄어요. 이어서 하려면 이어서 시작을 누르거나 「이어서」라고 말씀해 주세요."
 
@@ -48,9 +52,16 @@ fun ColumnScope.ResumePrompt(
     onEnd: () -> Unit,
     voiceCommand: VoiceCommandController?,
     talkBackEnabled: Boolean,
-    speak: (String) -> Unit
+    speak: (String) -> Unit,
+    fromSettings: Boolean = false
 ) {
-    LiveStatusText("다른 앱으로 나가서 안내를 멈췄어요.")
+    if (fromSettings) {
+        // 설정에서 돌아왔을 때는 앱 안 이동이라 앱 보임 알림이 없다 → 여기서 한 번 알린다.
+        LiveStatusText("설정을 여느라 안내를 멈췄어요.")
+        AutoGuidance("resume-settings", RESUME_PROMPT_SETTINGS, talkBackEnabled, speak)
+    } else {
+        LiveStatusText("다른 앱으로 나가서 안내를 멈췄어요.")
+    }
     BodyText("이어서 시작을 누르거나 「이어서」라고 말씀하시면 멈춘 곳부터 다시 들려 드려요.")
     BottomActions {
         ActionButton(text = "이어서 시작", iconRes = R.drawable.ic_exercise_play, onClick = onResume)

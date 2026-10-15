@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,12 +42,14 @@ import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.BottomActions
 import kr.seesun.core.designsystem.component.ButtonKind
 import kr.seesun.core.designsystem.component.LiveStatusText
+import kr.seesun.core.designsystem.component.LocalAppSettingsAction
 import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.theme.LayoutTier
 import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.ui.GuidanceVoice
+import kr.seesun.core.ui.LocalVoiceMediaButtons
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.core.voice.lifecycle.AppStop
 import kr.seesun.core.voice.lifecycle.AppVisibility
@@ -89,7 +92,9 @@ data class PlayerUi(
     /** 저장 후 화면을 닫아야 하는지(나가기 대화상자에서 고른 경우). */
     val closeRequested: Boolean = false,
     /** 다른 앱으로 나가 안내를 멈췄다 → 돌아오면 「이어서 시작」을 보여 준다(저절로 다시 틀지 않음). */
-    val pausedByLeaving: Boolean = false
+    val pausedByLeaving: Boolean = false,
+    /** 「이어서 시작」이 설정 톱니바퀴 때문인가(문구가 다르다). */
+    val pausedForSettings: Boolean = false
 )
 
 /**
@@ -190,10 +195,22 @@ class ExercisePlayerViewModel @Inject constructor(
         recorder.suspendKeepAlive()
     }
 
+    /**
+     * 운동 중 오른쪽 위 톱니바퀴(소유자 결정 v6): 설정을 열기 전에 재생을 먼저 멈추고, 돌아오면 「이어서 시작」을 보여 준다.
+     * 재생 중이 아니면 그대로 연다.
+     */
+    fun pauseForSettings() {
+        if (!recorder.isActive || _ui.value.result != null) return
+        if (player.state.value.isPlaying) {
+            player.pause()
+            _ui.update { it.copy(pausedByLeaving = true, pausedForSettings = true) }
+        }
+    }
+
     /** 「이어서 시작」: 멈춘 곳부터 다시 재생한다. */
     fun resume() {
         if (!_ui.value.pausedByLeaving) return
-        _ui.update { it.copy(pausedByLeaving = false) }
+        _ui.update { it.copy(pausedByLeaving = false, pausedForSettings = false) }
         recorder.resumeKeepAlive()
         player.play()
     }
@@ -233,7 +250,7 @@ class ExercisePlayerViewModel @Inject constructor(
         val detail = _ui.value.detail ?: return
         if (_ui.value.result != null) return
         beginSession(detail)
-        _ui.update { it.copy(pausedByLeaving = false) }
+        _ui.update { it.copy(pausedByLeaving = false, pausedForSettings = false) }
         recorder.resumeKeepAlive()
         player.seekTo(section, sentence)
     }
@@ -349,23 +366,30 @@ private fun ExercisePlayerContent(viewModel: ExercisePlayerViewModel, onClose: (
     LaunchedEffect(ui.closeRequested) { if (ui.closeRequested) onClose() }
     KeepScreenOn(ExerciseForegroundPolicy.keepScreenOnSingle(ui.sessionActive, ui.result != null, guide.status == GuideStatus.FINISHED))
     val talkBack = rememberTalkBackEnabled()
-    ExercisePlayerScreen(
-        ui = ui,
-        guide = guide,
-        onBack = back,
-        onPlayPause = viewModel::playPause,
-        onReplay = viewModel::replay,
-        onPrevious = viewModel::previous,
-        onNext = viewModel::next,
-        onSpeed = viewModel::cycleSpeed,
-        onFavorite = viewModel::toggleFavorite,
-        onFinish = { viewModel.finish() },
-        onRetry = viewModel::load,
-        onAgain = viewModel::again,
-        onDone = onClose,
-        onSeek = viewModel::seek,
-        resume = ResumeSlot(viewModel::resume, back, viewModel.resumeVoice, talkBack) { viewModel.voice.auto(it, talkBack) }
-    )
+    // 톱니바퀴는 재생을 먼저 멈춘 뒤 설정을 연다. 이 화면의 이어폰 버튼은 운동 재생/일시정지다(음성 「바로 듣기」로 쓰지 않는다).
+    val openSettings = LocalAppSettingsAction.current
+    CompositionLocalProvider(
+        LocalAppSettingsAction provides openSettings?.let { open -> { viewModel.pauseForSettings().also { open() } } },
+        LocalVoiceMediaButtons provides false
+    ) {
+        ExercisePlayerScreen(
+            ui = ui,
+            guide = guide,
+            onBack = back,
+            onPlayPause = viewModel::playPause,
+            onReplay = viewModel::replay,
+            onPrevious = viewModel::previous,
+            onNext = viewModel::next,
+            onSpeed = viewModel::cycleSpeed,
+            onFavorite = viewModel::toggleFavorite,
+            onFinish = { viewModel.finish() },
+            onRetry = viewModel::load,
+            onAgain = viewModel::again,
+            onDone = onClose,
+            onSeek = viewModel::seek,
+            resume = ResumeSlot(viewModel::resume, back, viewModel.resumeVoice, talkBack) { viewModel.voice.auto(it, talkBack) }
+        )
+    }
     if (ui.showExitDialog) {
         ExerciseDialog(
             title = "운동을 끝낼까요?",
@@ -416,7 +440,15 @@ fun ExercisePlayerScreen(
                 }
             }
 
-            ui.pausedByLeaving && resume != null -> ResumePrompt(resume.onResume, resume.onEnd, resume.voice, resume.talkBack, resume.speak)
+            ui.pausedByLeaving && resume != null ->
+                ResumePrompt(
+                    resume.onResume,
+                    resume.onEnd,
+                    resume.voice,
+                    resume.talkBack,
+                    resume.speak,
+                    fromSettings = ui.pausedForSettings
+                )
 
             else -> PlayerBody(
                 ui,

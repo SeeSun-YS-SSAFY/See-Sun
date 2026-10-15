@@ -10,4 +10,5 @@ object LayoutTags {
     const val ACTIONS = "ss_actions"
     const val PRIMARY = "ss_primary"
     const val SETTINGS = "ss_settings"
+    const val REPEAT = "ss_repeat"
 }
