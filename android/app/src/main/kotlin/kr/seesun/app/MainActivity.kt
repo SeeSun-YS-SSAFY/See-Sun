@@ -37,6 +37,7 @@ import kr.seesun.feature.mypage.SettingsRoute
 import kr.seesun.feature.mypage.myPageGraph
 import kr.seesun.feature.onboarding.OnboardingRoute
 import kr.seesun.feature.onboarding.onboardingScreen
+import kr.seesun.feature.update.SelfUpdateGate
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -47,7 +48,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
-            SeeSunTheme { SeeSunNavHost(session) }
+            SeeSunTheme {
+                SeeSunNavHost(session)
+                // 가운영 빌드만: 새 버전 안내 창(앱 화면 위). 상수 false면 R8이 이 호출을 지운다.
+                if (BuildConfig.SELF_UPDATE) SelfUpdateGate()
+            }
         }
     }
 }

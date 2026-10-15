@@ -36,3 +36,6 @@ include(":feature:main")
 include(":feature:exercise")
 include(":feature:diet")
 include(":feature:mypage")
+
+// 가운영 자체 업데이트(-Pseesun.selfUpdate=true 빌드에서만 앱이 켠다)
+include(":feature:update")
