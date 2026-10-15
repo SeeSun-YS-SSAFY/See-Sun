@@ -6,6 +6,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kr.seesun.core.voice.lifecycle.ActivityAppVisibility
+import kr.seesun.core.voice.lifecycle.AppVisibility
 import kr.seesun.core.voice.parse.FoodMatcher
 import kr.seesun.core.voice.parse.MealUtteranceParser
 import kr.seesun.core.voice.recognition.AndroidSpeechInput
@@ -23,6 +25,9 @@ internal abstract class VoiceBindings {
 
     @Binds
     abstract fun bindSpeaker(impl: AndroidGuidanceSpeaker): Speaker
+
+    @Binds
+    abstract fun bindAppVisibility(impl: ActivityAppVisibility): AppVisibility
 
     @Binds
     abstract fun bindVoicePreferences(impl: SharedVoicePreferences): VoicePreferences

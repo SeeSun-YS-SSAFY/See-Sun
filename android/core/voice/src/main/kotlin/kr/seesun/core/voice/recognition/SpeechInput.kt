@@ -7,7 +7,9 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.concurrent.CopyOnWriteArraySet
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
@@ -89,6 +91,9 @@ interface SpeechInput {
 
     /** 한 번 듣고 Final 또는 Failed를 보낸 뒤 끝난다. 수집을 취소하면 인식기를 정리한다. */
     fun listen(options: ListenOptions = ListenOptions()): Flow<RecognitionEvent>
+
+    /** 듣는 중인 것을 모두 멈춘다(결과 없이 끝남). 앱을 떠날 때 [kr.seesun.core.voice.lifecycle.AppAudioGuard]가 부른다. */
+    fun cancelAll() = Unit
 }
 
 /**
@@ -118,8 +123,18 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
     private fun onDeviceAvailable(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
 
+    /** 지금 듣고 있는 흐름들을 닫는 함수(앱을 떠날 때 한꺼번에 멈춘다). */
+    private val active = CopyOnWriteArraySet<() -> Unit>()
+
+    override fun cancelAll() {
+        if (active.isNotEmpty()) Log.i(TAG, "cancel all listening (${active.size})")
+        active.forEach { it() }
+    }
+
     override fun listen(options: ListenOptions): Flow<RecognitionEvent> = callbackFlow {
         if (!isAvailable()) {
+            // 삼성 등에서 음성 인식 서비스가 없거나 꺼져 있으면 여기로 온다. 조용히 넘어가지 않고 로그·마이크 상태로 알린다.
+            Log.w(TAG, "SpeechRecognizer.isRecognitionAvailable=false: voice input unavailable on this device")
             trySend(RecognitionEvent.Failed(RecognitionError.UNAVAILABLE))
             close()
             awaitClose { }
@@ -155,6 +170,7 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
                 }
 
                 override fun onError(error: Int) {
+                    Log.w(TAG, "recognizer error=$error (${RecognitionError.fromCode(error)}) onDevice=$onDevice")
                     // 기기 안 인식기는 있는데 한국어 언어 팩이 없으면(에뮬레이터·일부 폰, 오류 12·13) 기본 인식기로 한 번 다시 듣고,
                     // 이 앱이 살아 있는 동안은 기본 인식기를 쓴다. 기본 인식기는 Google 서버를 거칠 수 있다(Ready.onDevice=false).
                     if (onDevice && RecognitionError.fromCode(error) == RecognitionError.LANGUAGE_UNAVAILABLE) {
@@ -188,11 +204,14 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
             created.startListening(intentFor(options, preferOffline))
         }
 
+        val abort: () -> Unit = { close() }
+        active += abort
         start(
             onDevice = options.preferOnDevice && onDeviceAvailable() && !onDeviceLanguageMissing,
             preferOffline = options.preferOnDevice && !onDeviceLanguageMissing
         )
         awaitClose {
+            active -= abort
             recognizer?.cancel()
             recognizer?.destroy()
         }
@@ -220,3 +239,8 @@ class RecognitionFailureTracker(private val threshold: Int = 2) {
 
     val alternativeMessage: String = "음성 인식이 계속 어려워요. 버튼이나 키보드로 입력할 수 있어요."
 }
+
+/** 음성 입력·자동 듣기 진단 로그 태그(logcat: adb logcat -s SeesunAutoListen). 말 내용은 남기지 않는다. */
+const val VOICE_LOG_TAG = "SeesunAutoListen"
+
+private const val TAG = VOICE_LOG_TAG

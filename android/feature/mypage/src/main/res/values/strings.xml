@@ -89,7 +89,7 @@
     <string name="my_health_disclaimer">알레르기·질환 정보는 맞춤 경고와 추천에 쓰는 참고 정보예요. 정확한 진단은 전문가와 상담하세요.</string>
 
     <!-- SET-01 설정 -->
-    <string name="my_settings_guide">설정. 내 개인정보 권리, 개인정보·동의 관리, 데이터 초기화, 처리방침, 이용약관, 데이터 출처, 오픈소스 라이선스, 접근성 안내·문의, 음성 자동 인식, 알림 설정, 로그아웃, 회원 탈퇴가 있어요. 말로 고르기를 누르고 메뉴 이름을 말씀하셔도 돼요.</string>
+    <string name="my_settings_guide">설정. 내 개인정보 권리, 개인정보·동의 관리, 데이터 초기화, 처리방침, 이용약관, 데이터 출처, 오픈소스 라이선스, 접근성 안내·문의, 음성 자동 인식, 권한 상태, 알림 설정, 앱 버전, 로그아웃, 회원 탈퇴가 있어요. 말로 고르기를 누르고 메뉴 이름을 말씀하셔도 돼요.</string>
     <string name="my_set_rights">내 개인정보 권리</string>
     <string name="my_set_rights_desc">보기·고치기·지우기·처리 멈추기·문의</string>
     <string name="my_set_reset">데이터 초기화</string>
@@ -282,4 +282,30 @@
     <string name="my_delete_clause_device">이 기기·백업·인증 정보</string>
     <string name="my_delete_clause_web">앱을 쓸 수 없을 때</string>
     <string name="my_document_clause_info">문서 버전·전문 안내</string>
+
+    <!-- 로그인 전 설정(시작 화면 톱니바퀴, 소유자 msg 959)·권한 상태·앱 버전 -->
+    <string name="my_settings_before_sign_in">로그인 전이라 계정과 상관없는 설정만 보여요.</string>
+    <string name="my_settings_guide_before_sign_in">설정. 로그인 전이라 접근성 안내, 음성 자동 인식, 권한 상태, 앱 버전만 있어요. 고르거나 말로 고르기를 눌러 말씀해 주세요.</string>
+    <string name="my_set_permissions">권한 상태</string>
+    <string name="my_set_permissions_desc">마이크·알림 권한이 켜졌는지 보고 허용해요</string>
+    <string name="my_set_version">앱 버전</string>
+    <string name="my_set_version_desc">지금 버전을 보고 업데이트를 확인해요</string>
+    <string name="my_perm_title">권한 상태</string>
+    <string name="my_perm_body">꺼진 권한은 허용하기를 누르면 앱 설정이 열려요. 권한에서 켜 주세요.</string>
+    <string name="my_perm_mic">마이크</string>
+    <string name="my_perm_notifications">알림</string>
+    <string name="my_perm_on">켜짐</string>
+    <string name="my_perm_off">꺼짐</string>
+    <string name="my_perm_tap_to_allow">누르면 앱 설정이 열려요</string>
+    <string name="my_perm_allow">허용하기</string>
+    <string name="my_perm_settings_failed">설정을 열지 못했어요. 휴대폰 설정, 애플리케이션, 시선, 권한에서 바꿔 주세요.</string>
+    <string name="my_perm_optional">권한을 끄면 마이크 대신 키보드와 버튼으로 입력해요. 앱은 그대로 쓸 수 있어요.</string>
+    <string name="my_version_title">앱 버전</string>
+    <string name="my_version_current">지금 버전 %1$s (%2$d)</string>
+    <string name="my_version_check">업데이트 확인</string>
+    <string name="my_version_checking">확인하는 중이에요</string>
+    <string name="my_version_latest">최신 버전이에요.</string>
+    <string name="my_version_available">새 버전이 있어요. 업데이트 안내 창을 확인해 주세요.</string>
+    <string name="my_version_failed">확인하지 못했어요. 인터넷 연결을 확인하고 다시 눌러 주세요.</string>
+    <string name="my_version_store">업데이트는 Play 스토어에서 받아요.</string>
 </resources>

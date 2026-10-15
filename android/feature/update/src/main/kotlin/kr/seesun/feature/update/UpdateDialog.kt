@@ -13,6 +13,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,6 +41,7 @@ import kr.seesun.core.designsystem.theme.SeeSunTheme
  * 가운영 자체 업데이트 진입점. 앱 화면 위(MainActivity)에 한 번 둔다. 설정이 꺼져 있으면 아무것도 하지 않는다.
  *
  * - 앱을 열 때·6시간마다 다시 볼 때 매니페스트를 확인하고, 새 버전이면 안내 창을 띄운다. 서버에 닿지 않으면 조용히 넘어간다.
+ * - 업데이트 알림(백그라운드 확인, src/selfUpdateOn)을 눌러 열면 간격과 관계없이 바로 확인해 안내 창을 띄운다.
  * - 검증을 마친 APK는 시스템 설치 화면으로 넘긴다. 설치 허용이 꺼져 있으면 설정으로 안내하고, 돌아오면 이어서 설치한다.
  */
 @Composable
@@ -46,8 +50,19 @@ fun SelfUpdateGate(viewModel: UpdateViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     LifecycleResumeEffect(viewModel) {
+        UpdateRequests.appVisible = true
         viewModel.onResume()
-        onPauseOrDispose { }
+        onPauseOrDispose { UpdateRequests.appVisible = false }
+    }
+    // 업데이트 알림을 눌러 열었으면(MainActivity가 UpdateRequests.handleIntent) 바로 확인해 안내 창을 띄운다.
+    val openRequest by UpdateRequests.openRequests.collectAsStateWithLifecycle()
+    var handledOpenRequest by rememberSaveable { mutableIntStateOf(0) }
+    LaunchedEffect(openRequest) {
+        // 화면 회전 등으로 다시 그려질 때 같은 요청을 또 처리하지 않는다.
+        if (openRequest > handledOpenRequest) {
+            handledOpenRequest = openRequest
+            viewModel.onOpenRequested()
+        }
     }
     val apk = state.apk
     LaunchedEffect(state.step, state.installerOpened, apk) {

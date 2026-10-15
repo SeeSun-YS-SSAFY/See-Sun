@@ -48,6 +48,9 @@ import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.VoiceCommandController
+import kr.seesun.core.voice.lifecycle.AppStop
+import kr.seesun.core.voice.lifecycle.AppVisibility
+import kr.seesun.core.voice.lifecycle.AppVisibilityEvent
 import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.exercise.ExercisePlayRoute
@@ -62,9 +65,6 @@ import kr.seesun.feature.exercise.player.speedLabel
 import kr.seesun.feature.exercise.safety.SafetyGate
 import kr.seesun.feature.exercise.safety.SafetyStore
 import kr.seesun.feature.exercise.safety.SafetyViewModel
-import kr.seesun.feature.exercise.session.AppStop
-import kr.seesun.feature.exercise.session.AppVisibility
-import kr.seesun.feature.exercise.session.AppVisibilityEvent
 import kr.seesun.feature.exercise.session.ExerciseForegroundPolicy
 import kr.seesun.feature.exercise.session.SessionRecorder
 import kr.seesun.feature.exercise.session.SessionSignals

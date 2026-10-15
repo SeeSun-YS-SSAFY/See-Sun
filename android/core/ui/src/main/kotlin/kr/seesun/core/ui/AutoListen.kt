@@ -2,6 +2,7 @@ package kr.seesun.core.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.speech.SpeechRecognizer
 import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +40,7 @@ import kr.seesun.core.voice.recognition.AutoListenPolicy
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.SpeechEvidence
 import kr.seesun.core.voice.recognition.SpeechInput
+import kr.seesun.core.voice.recognition.VOICE_LOG_TAG
 
 /**
  * 음성 자동 인식에 필요한 앱 전체 값(MainActivity가 [LocalAutoListen]으로 내려 준다). 없으면(미리보기·화면 단위 시험) 자동 듣기를 하지 않는다.
@@ -265,11 +267,20 @@ internal fun AutoListenEffect(key: Any?, talkBackEnabled: Boolean, speak: (Strin
     val cueSpoken = remember { booleanArrayOf(false) }
     LaunchedEffect(key, talkBackEnabled, enabled) {
         // A9: TalkBack이 켜져 있으면 TalkBack 낭독을 스스로 인식하므로 자동으로 켜지 않는다. 안내 중 여부는 반복 안에서 본다.
-        if (!GuidancePolicy.mayAutoStartMic(talkBackEnabled, enabled, guidanceSpeaking = false)) return@LaunchedEffect
-        // 권한 요청 창을 저절로 띄우지 않는다: 권한이 없으면 자동 듣기를 하지 않고 마이크 버튼만 둔다.
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+        // 자동 듣기를 하지 않는 까닭은 모두 로그로 남긴다(v4 실기기 「마이크 인식이 안 된다」 진단, msg 943: adb logcat -s SeesunAutoListen).
+        // 권한 요청 창은 저절로 띄우지 않는다: 권한이 없으면 화면의 「마이크 권한이 꺼져 있어요 [허용하기]」 안내가 맡는다.
+        val blocked = AutoListenStart.blockReason(
+            talkBackEnabled = talkBackEnabled,
+            settingEnabled = enabled,
+            permissionGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED,
+            recognizerAvailable = SpeechRecognizer.isRecognitionAvailable(context)
+        )
+        if (blocked != null) {
+            Log.i(TAG, "auto-listen not started: $blocked")
             return@LaunchedEffect
         }
+        Log.i(TAG, "auto-listen starting")
         var finished = false
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
             while (!finished) {
@@ -297,4 +308,22 @@ internal fun AutoListenEffect(key: Any?, talkBackEnabled: Boolean, speak: (Strin
     }
 }
 
-private const val TAG = "SeeSunAutoListen"
+private const val TAG = VOICE_LOG_TAG
+
+/** 자동 듣기를 시작하지 않는 까닭(순수 함수, 시험용). null이면 시작한다. */
+object AutoListenStart {
+    enum class Block { TALKBACK_ON, SETTING_OFF, MIC_PERMISSION_OFF, RECOGNIZER_UNAVAILABLE }
+
+    fun blockReason(talkBackEnabled: Boolean, settingEnabled: Boolean, permissionGranted: Boolean, recognizerAvailable: Boolean): Block? =
+        when {
+            // A9: TalkBack이 켜져 있으면 TalkBack 낭독을 스스로 인식하므로 자동으로 켜지 않는다.
+            !GuidancePolicy.mayAutoStartMic(talkBackEnabled, settingEnabled, guidanceSpeaking = false) ->
+                if (talkBackEnabled) Block.TALKBACK_ON else Block.SETTING_OFF
+
+            !permissionGranted -> Block.MIC_PERMISSION_OFF
+
+            !recognizerAvailable -> Block.RECOGNIZER_UNAVAILABLE
+
+            else -> null
+        }
+}

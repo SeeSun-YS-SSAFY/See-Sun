@@ -58,6 +58,14 @@ data object AccessibilityRoute
 @Serializable
 data object VoiceAutoRoute
 
+/** 권한 상태(마이크·알림) — 꺼진 것은 [허용하기]로 앱 설정(로그인 전에도) */
+@Serializable
+data object PermissionSettingsRoute
+
+/** 앱 버전·업데이트 확인(로그인 전에도) */
+@Serializable
+data object AppVersionRoute
+
 /** SET-09 회원 탈퇴(2단계 확인) */
 @Serializable
 data object DeleteAccountRoute
@@ -65,8 +73,14 @@ data object DeleteAccountRoute
 /**
  * 마이페이지·설정 화면 묶음.
  * @param onSignedOut 로그아웃·탈퇴를 마치면(온보딩 시작 화면으로, 뒤로 가기 기록 지움)
+ * @param appInfo 앱 버전·업데이트 확인(설정 → 앱 버전)
  */
-fun NavGraphBuilder.myPageGraph(nav: NavController, onSignedOut: () -> Unit, onOpenExerciseReport: () -> Unit = {}) {
+fun NavGraphBuilder.myPageGraph(
+    nav: NavController,
+    onSignedOut: () -> Unit,
+    onOpenExerciseReport: () -> Unit = {},
+    appInfo: AppInfo = AppInfo()
+) {
     val back: () -> Unit = { nav.popBackStack() }
     composable<MyPageRoute> {
         MyPageRoute(
@@ -96,4 +110,6 @@ fun NavGraphBuilder.myPageGraph(nav: NavController, onSignedOut: () -> Unit, onO
     composable<DataResetRoute> { DataResetRoute(onBack = back) }
     composable<AccessibilityRoute> { AccessibilityScreen(onBack = back) }
     composable<VoiceAutoRoute> { VoiceAutoRoute(onBack = back) }
+    composable<PermissionSettingsRoute> { PermissionSettingsRoute(onBack = back) }
+    composable<AppVersionRoute> { AppVersionRoute(onBack = back, info = appInfo) }
 }

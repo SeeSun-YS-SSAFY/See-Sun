@@ -107,6 +107,7 @@ enum class Notice {
     BUSY,
     CODE_SENT,
     CODE_AUTO_FILLED,
+    CODE_AUTO_TIMEOUT,
     VERIFY_AGAIN,
     NEW_USER_DETECTED,
     WELCOME_BACK,
@@ -169,4 +170,20 @@ data class OnboardingUiState(
 
     val allChecked: Boolean
         get() = consentDocuments.isNotEmpty() && consentDocuments.all { isChecked(it.type) }
+}
+
+/** 시작 화면 음성 명령. */
+enum class IntroCommand { SETTINGS, SIGN_UP, LOGIN }
+
+/** 시작 화면에서 들은 말 → 명령. 띄어쓰기는 무시한다. 「이미 가입」은 가입보다 먼저 본다. */
+object IntroVoiceMatcher {
+    fun match(text: String): IntroCommand? {
+        val t = text.replace(" ", "")
+        return when {
+            "설정" in t || "환경" in t -> IntroCommand.SETTINGS
+            "로그인" in t || "이미" in t -> IntroCommand.LOGIN
+            listOf("시작", "가입", "처음").any { it in t } -> IntroCommand.SIGN_UP
+            else -> null
+        }
+    }
 }

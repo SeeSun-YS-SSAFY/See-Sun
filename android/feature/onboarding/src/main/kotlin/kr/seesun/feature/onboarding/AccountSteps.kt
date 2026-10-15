@@ -48,6 +48,7 @@ import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
+import kr.seesun.core.ui.VoiceCommandButton
 import kr.seesun.core.ui.VoiceFieldController
 import kr.seesun.core.ui.VoiceInputField
 
@@ -75,6 +76,8 @@ internal fun ColumnScope.IntroStep(ctx: StepContext) {
             onClick = ctx.vm::startLogin,
             kind = ButtonKind.OUTLINE
         )
+        // 말로 "시작", "이미 가입했어요", "설정"(오른쪽 위 톱니바퀴와 같음, 소유자 msg 959).
+        VoiceCommandButton(ctx.vm.introVoice, stringResource(R.string.onb_intro_voice_hint), ctx.talkBack, ctx.speak)
     }
 }
 

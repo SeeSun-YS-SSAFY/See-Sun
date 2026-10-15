@@ -124,7 +124,7 @@ class OnboardingE2ETest {
         rule.onNode(hasText("다음") and hasClickAction()).assertIsNotEnabled() // 미리 체크해 두지 않는다
         rule.shot("03_consent_one_screen")
         // [자세히]: 개인정보 고지 4요소가 첫 부분에 있다. 글은 쪽으로 나눠 스크롤 없이 읽는다(3차).
-        rule.onNode(hasContentDescription("개인정보 수집·이용 자세히 보기")).performScrollTo().performClick()
+        rule.onNode(hasContentDescription("개인정보 수집·이용 전문 보기")).performScrollTo().performClick()
         waitPane("개인정보 수집·이용 안내")
         waitText("목록으로 돌아가기")
         rule.shot("04_consent_detail_privacy")

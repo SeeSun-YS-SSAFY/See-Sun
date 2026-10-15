@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- 운동 진행 알림(포그라운드 서비스)·가운영 업데이트 알림. API 33+만 런타임 권한이며 앱 처음 실행 때 권한 안내에서 묻는다. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application
         android:name=".SeeSunApplication"
         android:allowBackup="false"

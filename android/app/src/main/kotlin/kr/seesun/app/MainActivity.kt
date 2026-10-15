@@ -1,5 +1,6 @@
 package kr.seesun.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,9 +22,11 @@ import kotlinx.serialization.Serializable
 import kr.seesun.app.gallery.ComponentGalleryScreen
 import kr.seesun.app.gallery.HighlightListGalleryScreen
 import kr.seesun.core.data.repository.SessionRepository
+import kr.seesun.core.designsystem.component.LocalAppSettingsAction
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.ui.AutoListenEnvironment
 import kr.seesun.core.ui.LocalAutoListen
+import kr.seesun.core.ui.PermissionPrimerGate
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.diet.DietRoute
@@ -35,14 +38,20 @@ import kr.seesun.feature.exercise.exerciseWeeklyScreen
 import kr.seesun.feature.main.MainDestination
 import kr.seesun.feature.main.MainRoute
 import kr.seesun.feature.main.mainScreen
+import kr.seesun.feature.mypage.AppInfo
 import kr.seesun.feature.mypage.ConsentManageRoute
 import kr.seesun.feature.mypage.DeleteAccountRoute
 import kr.seesun.feature.mypage.MyPageRoute
 import kr.seesun.feature.mypage.SettingsRoute
+import kr.seesun.feature.mypage.UpdateCheckOutcome
 import kr.seesun.feature.mypage.myPageGraph
 import kr.seesun.feature.onboarding.OnboardingRoute
 import kr.seesun.feature.onboarding.onboardingScreen
 import kr.seesun.feature.update.SelfUpdateGate
+import kr.seesun.feature.update.UpdateClient
+import kr.seesun.feature.update.UpdateNeed
+import kr.seesun.feature.update.UpdateRequests
+import kr.seesun.feature.update.UpdateRules
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -58,15 +67,40 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // 음성 자동 인식(기본 켜짐): 음성 입력·명령 칸이 있는 화면은 안내 음성이 끝나면 저절로 듣는다.
         val autoListen = AutoListenEnvironment(enabled = voicePreferences.autoListen, guidanceSpeaking = speaker.speaking)
+        // 업데이트 알림을 눌러 열었으면 안내 창을 바로 띄운다(가운영 빌드만).
+        if (BuildConfig.SELF_UPDATE && savedInstanceState == null) UpdateRequests.handleIntent(intent)
         setContent {
             SeeSunTheme {
-                CompositionLocalProvider(LocalAutoListen provides autoListen) {
-                    SeeSunNavHost(session)
+                // 처음 실행(또는 빠진 권한이 있는 기존 설치의 다음 실행) 때 온보딩보다 먼저 권한 안내 한 화면(msg 946).
+                PermissionPrimerGate(speaker = speaker, updateNotices = BuildConfig.SELF_UPDATE) {
+                    CompositionLocalProvider(LocalAutoListen provides autoListen) {
+                        SeeSunNavHost(session, appInfo())
+                    }
                 }
                 // 가운영 빌드만: 새 버전 안내 창(앱 화면 위). 상수 false면 R8이 이 호출을 지운다.
                 if (BuildConfig.SELF_UPDATE) SelfUpdateGate()
             }
         }
+    }
+
+    /** 설정 → 앱 버전. 가운영 빌드는 [업데이트 확인]이 서버 매니페스트를 바로 보고, 새 버전이면 안내 창을 띄운다. */
+    private fun appInfo() = AppInfo(
+        versionName = BuildConfig.VERSION_NAME,
+        versionCode = BuildConfig.VERSION_CODE.toLong(),
+        checkUpdate = if (BuildConfig.SELF_UPDATE) ::checkUpdateNow else null
+    )
+
+    private suspend fun checkUpdateNow(): UpdateCheckOutcome {
+        val manifest = UpdateClient().fetchManifest(BuildConfig.SELF_UPDATE_MANIFEST_URL) ?: return UpdateCheckOutcome.FAILED
+        if (UpdateRules.need(BuildConfig.VERSION_CODE.toLong(), manifest) == UpdateNeed.NONE) return UpdateCheckOutcome.LATEST
+        UpdateRequests.requestOpen()
+        return UpdateCheckOutcome.AVAILABLE
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (BuildConfig.SELF_UPDATE) UpdateRequests.handleIntent(intent)
     }
 }
 
@@ -81,15 +115,26 @@ data object HighlightGalleryRoute
  * 시작 화면: 로그인했고 가입 단계를 마쳤으면 메인, 아니면 온보딩.
  */
 @Composable
-fun SeeSunNavHost(session: SessionRepository) {
+fun SeeSunNavHost(session: SessionRepository, appInfo: AppInfo = AppInfo()) {
     val nav = rememberNavController()
-    val back: () -> Unit = { nav.popBackStack() }
     val start: Any = remember { if (session.state.value.needsOnboarding) OnboardingRoute else MainRoute }
     SignedOutWatcher(session, nav)
+    // 모든 화면 오른쪽 위 [설정](톱니바퀴, [화면 요약 듣기]와 같은 크기로 나란히, 소유자 msg 959·977). 로그인 전에는 계정 항목을 숨긴다.
+    val openSettings: () -> Unit = remember(nav) { { nav.navigate(SettingsRoute) { launchSingleTop = true } } }
+    CompositionLocalProvider(LocalAppSettingsAction provides openSettings) {
+        SeeSunNavGraph(nav, start, appInfo)
+    }
+}
+
+@Composable
+private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo) {
+    val back: () -> Unit = { nav.popBackStack() }
     NavHost(navController = nav, startDestination = start) {
-        onboardingScreen(onFinished = {
-            nav.navigate(MainRoute) { popUpTo(OnboardingRoute) { inclusive = true } }
-        })
+        onboardingScreen(
+            onFinished = { nav.navigate(MainRoute) { popUpTo(OnboardingRoute) { inclusive = true } } },
+            // 시작 화면 오른쪽 위 톱니바퀴·말로 "설정": 로그인 전 설정(계정 항목은 숨김, 소유자 msg 959).
+            onOpenSettings = { nav.navigate(SettingsRoute) }
+        )
         mainScreen(
             onNavigate = { destination ->
                 when (destination) {
@@ -106,7 +151,12 @@ fun SeeSunNavHost(session: SessionRepository) {
         dietScreen(onBack = back, showDeveloperTools = BuildConfig.DEBUG)
         exerciseScreen(onBack = back)
         // 마이페이지 「기록 레포트」 [운동] → 이번 주 운동 기록(Figma 845:2184).
-        myPageGraph(nav, onSignedOut = { nav.toOnboarding() }, onOpenExerciseReport = { nav.navigate(ExerciseWeeklyEntryRoute) })
+        myPageGraph(
+            nav,
+            onSignedOut = { nav.toOnboarding() },
+            onOpenExerciseReport = { nav.navigate(ExerciseWeeklyEntryRoute) },
+            appInfo = appInfo
+        )
         exerciseWeeklyScreen(onBack = back)
         composable<GalleryRoute> {
             ComponentGalleryScreen(onBack = back, onOpenHighlightList = { nav.navigate(HighlightGalleryRoute) })
