@@ -12,6 +12,9 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -37,12 +40,12 @@ internal class StepContext(val vm: OnboardingViewModel, val state: OnboardingUiS
 
 /** Hilt로 ViewModel을 받아 그린다. 가입을 마치면 [onFinished]. */
 @Composable
-fun OnboardingRoute(onFinished: () -> Unit, viewModel: OnboardingViewModel = hiltViewModel()) {
-    OnboardingScreen(viewModel = viewModel, onFinished = onFinished)
+fun OnboardingRoute(onFinished: () -> Unit, onOpenSettings: () -> Unit = {}, viewModel: OnboardingViewModel = hiltViewModel()) {
+    OnboardingScreen(viewModel = viewModel, onFinished = onFinished, onOpenSettings = onOpenSettings)
 }
 
 @Composable
-fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit) {
+fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit, onOpenSettings: () -> Unit = {}) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val talkBack = rememberTalkBackEnabled()
     SideEffect { viewModel.talkBackEnabled = talkBack }
@@ -52,6 +55,14 @@ fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit) {
         onDispose { viewModel.bindActivity(null) }
     }
     LaunchedEffect(state.finished) { if (state.finished) onFinished() }
+    val settingsRequest by viewModel.settingsRequests.collectAsStateWithLifecycle()
+    var handledSettingsRequest by rememberSaveable { mutableIntStateOf(settingsRequest) }
+    LaunchedEffect(settingsRequest) {
+        if (settingsRequest > handledSettingsRequest) {
+            handledSettingsRequest = settingsRequest
+            onOpenSettings()
+        }
+    }
     BackHandler(enabled = state.step != Step.INTRO) { viewModel.back() }
 
     val ctx = StepContext(viewModel, state, talkBack)
@@ -70,6 +81,7 @@ fun OnboardingScreen(viewModel: OnboardingViewModel, onFinished: () -> Unit) {
         stepCount = if (showProgress) Step.GROUP_COUNT else null,
         progressDescription = if (showProgress) stringResource(R.string.onb_progress, state.step.group, Step.GROUP_COUNT) else null,
         // 약관 동의(Figma에 없음)는 행이 많아, 오류 안내 + [다시 시도]가 함께 뜬 때도 묶음 사이 12dp(한 화면 유지).
+        // 오른쪽 위 [설정] 톱니바퀴는 앱이 모든 화면에 붙인다([화면 요약 듣기] 옆, 소유자 msg 959·977).
         dense = state.step == Step.CONSENT || (state.error != null && state.retryable)
     ) {
         StatusArea(ctx)
@@ -168,6 +180,7 @@ private fun noticeText(notice: Notice): String = stringResource(
         Notice.BUSY -> R.string.onb_notice_busy
         Notice.CODE_SENT -> R.string.onb_notice_code_sent
         Notice.CODE_AUTO_FILLED -> R.string.onb_notice_code_auto
+        Notice.CODE_AUTO_TIMEOUT -> R.string.onb_notice_code_auto_timeout
         Notice.VERIFY_AGAIN -> R.string.onb_notice_verify_again
         Notice.NEW_USER_DETECTED -> R.string.onb_notice_new_user
         Notice.WELCOME_BACK -> R.string.onb_notice_welcome_back

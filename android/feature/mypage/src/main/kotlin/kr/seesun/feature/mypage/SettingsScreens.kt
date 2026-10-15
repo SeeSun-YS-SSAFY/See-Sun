@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -66,6 +67,7 @@ class SettingsViewModel @Inject constructor(
     /** [말로 고르기]: "탈퇴", "동의 철회", "데이터 초기화" 같은 말로 메뉴를 연다(법적 검토 A-01·A-04). */
     val voiceCommand = VoiceCommandController(viewModelScope, speech, onBeforeListen = { voice.stop() }) { candidates ->
         val target = candidates.firstNotNullOfOrNull(SettingsVoiceMatcher::match)
+            ?.takeIf { SettingsItem.allowsVoiceTarget(it, session.state.value.signedIn) }
         if (target == SettingsItem.LOGOUT) {
             askLogout()
         } else if (target != null) {
@@ -73,6 +75,10 @@ class SettingsViewModel @Inject constructor(
         }
         target != null
     }
+
+    /** 로그인했는가(아니면 시작 화면 톱니바퀴로 온 로그인 전 설정: 계정 항목을 숨긴다). */
+    val signedIn: StateFlow<Boolean> = session.state.map { it.signedIn }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, session.state.value.signedIn)
 
     fun consumeVoiceTarget() {
         _voiceTarget.value = null
@@ -117,6 +123,7 @@ fun SettingsRoute(onBack: () -> Unit, onOpen: (Any) -> Unit, onSignedOut: () -> 
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
     val voiceTarget by viewModel.voiceTarget.collectAsStateWithLifecycle()
+    val signedIn by viewModel.signedIn.collectAsStateWithLifecycle()
     LaunchedEffect(voiceTarget) {
         voiceTarget?.let {
             viewModel.consumeVoiceTarget()
@@ -136,7 +143,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpen: (Any) -> Unit, onSignedOut: () -> 
         onCancelLogout = viewModel::cancelLogout,
         talkBackEnabled = talkBack,
         speak = { viewModel.voice.auto(it, talkBack) },
-        voiceCommand = viewModel.voiceCommand
+        voiceCommand = viewModel.voiceCommand,
+        signedIn = signedIn
     )
 }
 
@@ -152,7 +160,8 @@ fun SettingsScreen(
     onCancelLogout: () -> Unit,
     talkBackEnabled: Boolean = false,
     speak: (String) -> Unit = {},
-    voiceCommand: VoiceCommandController? = null
+    voiceCommand: VoiceCommandController? = null,
+    signedIn: Boolean = true
 ) {
     if (confirmingLogout) {
         val lines = listOfNotNull(
@@ -172,10 +181,12 @@ fun SettingsScreen(
         AutoGuidance("logout-confirm", lines.joinToString(" ") + " " + stringResource(R.string.my_logout_question), talkBackEnabled, speak)
         return
     }
-    ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack) {
+    // 설정 목록 자체에는 톱니바퀴를 두지 않는다(같은 화면으로 가는 버튼).
+    ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack, onOpenSettings = null) {
         if (voiceCommand != null) VoiceCommandButton(voiceCommand, stringResource(R.string.my_set_voice_hint), talkBackEnabled, speak)
         // 11개 메뉴를 두 칸 타일로(소유자 피드백 2026-10-13: 한 화면에). 설명은 낭독(버튼 설명)으로 남긴다.
-        val items = SettingsItem.entries.map { item ->
+        if (!signedIn) BodyText(stringResource(R.string.my_settings_before_sign_in))
+        val items = SettingsItem.visible(signedIn).map { item ->
             val label = stringResource(item.label)
             ListButtonItem(item.name, label, spoken = item.description?.let { "$label. ${stringResource(it)}" })
         }
@@ -185,11 +196,19 @@ fun SettingsScreen(
             titleStyle = SeeSunTheme.typography.listItem.copy(fontSize = 18.sp, lineHeight = 24.sp)
         )
     }
-    AutoGuidance("settings", stringResource(R.string.my_settings_guide), talkBackEnabled, speak)
+    AutoGuidance(
+        "settings:$signedIn",
+        stringResource(if (signedIn) R.string.my_settings_guide else R.string.my_settings_guide_before_sign_in),
+        talkBackEnabled,
+        speak
+    )
 }
 
-/** SET-01 목록(순서 = 화면 순서). route가 null이면 로그아웃. */
-enum class SettingsItem(val label: Int, val description: Int?, val route: Any?) {
+/**
+ * SET-01 목록(순서 = 화면 순서). route가 null이면 로그아웃.
+ * @property beforeSignIn 로그인 전(시작 화면 톱니바퀴)에도 보이는 항목(계정 없이 의미 있는 것만, 소유자 msg 959)
+ */
+enum class SettingsItem(val label: Int, val description: Int?, val route: Any?, val beforeSignIn: Boolean = false) {
     RIGHTS(R.string.my_set_rights, R.string.my_set_rights_desc, RightsRoute),
     CONSENTS(R.string.my_set_consents, R.string.my_set_consents_desc, ConsentManageRoute),
     DATA_RESET(R.string.my_set_reset, R.string.my_set_reset_desc, DataResetRoute),
@@ -197,11 +216,22 @@ enum class SettingsItem(val label: Int, val description: Int?, val route: Any?) 
     TERMS(R.string.my_set_terms, null, DocumentRoute("TOS")),
     DATA_SOURCES(R.string.my_set_sources, null, DataSourcesRoute),
     LICENSES(R.string.my_set_licenses, null, LicensesRoute),
-    ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute),
-    VOICE_AUTO(R.string.my_set_voice_auto, R.string.my_set_voice_auto_desc, VoiceAutoRoute),
+    ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute, beforeSignIn = true),
+    VOICE_AUTO(R.string.my_set_voice_auto, R.string.my_set_voice_auto_desc, VoiceAutoRoute, beforeSignIn = true),
+    PERMISSIONS(R.string.my_set_permissions, R.string.my_set_permissions_desc, PermissionSettingsRoute, beforeSignIn = true),
     NOTIFICATIONS(R.string.my_set_notifications, R.string.my_set_notifications_desc, NotificationSettingsRoute),
+    APP_VERSION(R.string.my_set_version, R.string.my_set_version_desc, AppVersionRoute, beforeSignIn = true),
     LOGOUT(R.string.my_logout, R.string.my_logout_desc, null),
-    DELETE(R.string.my_delete, R.string.my_delete_desc, DeleteAccountRoute)
+    DELETE(R.string.my_delete, R.string.my_delete_desc, DeleteAccountRoute);
+
+    companion object {
+        /** 보여 줄 항목: 로그인 전이면 계정 없이 쓸 수 있는 것만. */
+        fun visible(signedIn: Boolean): List<SettingsItem> = entries.filter { signedIn || it.beforeSignIn }
+
+        /** 말로 고른 곳이 지금 보이는 항목인가(로그인 전에 "탈퇴"·"동의" 등으로 계정 화면이 열리지 않게). */
+        fun allowsVoiceTarget(target: Any, signedIn: Boolean): Boolean =
+            signedIn || visible(false).any { it.route == target || it == target }
+    }
 }
 
 // ── 동의 문서 보기(이용약관·처리방침 등) ───────────────

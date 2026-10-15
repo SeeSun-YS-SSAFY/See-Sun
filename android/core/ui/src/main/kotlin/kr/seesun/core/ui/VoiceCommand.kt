@@ -228,11 +228,20 @@ fun VoiceCommandButton(
             kind = if (state.mic == MicState.LISTENING) ButtonKind.PRIMARY else ButtonKind.OUTLINE,
             iconRes = kr.seesun.core.designsystem.R.drawable.ic_mic,
             enabled = state.mic != MicState.PROCESSING,
-            supportingText = if (state.mic == MicState.PROCESSING) stringResource(R.string.ui_voice_command_wait) else null,
+            supportingText = when {
+                state.mic == MicState.PROCESSING -> stringResource(R.string.ui_voice_command_wait)
+
+                // 마이크를 쓸 수 없으면 버튼에 상태를 글자로(반 폭 버튼 옆에 긴 안내를 늘 두면 화면이 넘친다). 누르면 아래 안내.
+                gate.availability == MicAvailability.PERMISSION_OFF -> stringResource(R.string.ui_mic_off_short)
+
+                gate.availability == MicAvailability.RECOGNIZER_UNAVAILABLE -> stringResource(R.string.ui_mic_unavailable_short)
+
+                else -> null
+            },
             onClick = gate.request,
             textStyle = textStyle
         )
-        MicPermissionRationale(gate)
+        if (gate.nudges > 0) MicPermissionRationale(gate)
         CommandStatus(state, hint, talkBackEnabled, speak)
     }
 }

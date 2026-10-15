@@ -83,6 +83,8 @@ import kr.seesun.core.designsystem.theme.WidthClass
  *
  * @param onBack null이면 [뒤로 가기]를 그리지 않는다(메인 등).
  * @param onSpeakSummary 화면 요약 낭독(COM-08). null이면 숨긴다.
+ * @param onOpenSettings 헤더 오른쪽 위 [설정](톱니바퀴). [화면 요약 듣기]와 같은 크기·모양으로 나란히(소유자 msg 959·977),
+ *   TalkBack 「설정」. 기본값은 앱이 [LocalAppSettingsAction]으로 넘긴 동작(모든 화면), null이면 숨긴다(설정 목록 자체 등).
  * @param dense 요소가 많은 화면(Figma에 없는 약관 동의·운동 재생 등): 보통 폰에서도 묶음 사이 24 대신 12dp.
  */
 @Composable
@@ -97,6 +99,7 @@ fun ScreenScaffold(
     stepCount: Int? = null,
     progressDescription: String? = null,
     dense: Boolean = false,
+    onOpenSettings: (() -> Unit)? = LocalAppSettingsAction.current,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = SeeSunTheme.colors
@@ -110,7 +113,9 @@ fun ScreenScaffold(
     ) {
         val tier = LayoutTier.of(maxHeight.value)
         CompositionLocalProvider(LocalLayoutTier provides tier) {
-            ScaffoldColumn(title, showTitle, onBack, onSpeakSummary, scrollable, step, stepCount, progressDescription, dense, content)
+            CompositionLocalProvider(LocalHeaderSettings provides onOpenSettings) {
+                ScaffoldColumn(title, showTitle, onBack, onSpeakSummary, scrollable, step, stepCount, progressDescription, dense, content)
+            }
         }
     }
 }
@@ -172,7 +177,8 @@ private fun Header(
     rowHeight: Dp,
     modifier: Modifier = Modifier
 ) {
-    val hasRow = showTitle || onBack != null || onSpeakSummary != null
+    val onOpenSettings = LocalHeaderSettings.current
+    val hasRow = showTitle || onBack != null || onSpeakSummary != null || onOpenSettings != null
     if (!hasRow && progress == null) return
     Column(modifier = modifier.testTag(LayoutTags.HEADER).padding(top = topPadding)) {
         if (hasRow) {
@@ -191,8 +197,17 @@ private fun Header(
                         onClick = onSpeakSummary,
                         modifier = Modifier.width(SIDE_SLOT)
                     )
-                } else {
+                } else if (onOpenSettings == null) {
                     Spacer(Modifier.width(SIDE_SLOT))
+                }
+                // [설정]은 오른쪽 맨 끝(톱니바퀴). 포커스 순서: 뒤로 → 제목 → 요약 듣기 → 설정.
+                if (onOpenSettings != null) {
+                    SeeSunIconButton(
+                        iconRes = R.drawable.ic_ss_settings,
+                        label = "설정",
+                        onClick = onOpenSettings,
+                        modifier = Modifier.width(SIDE_SLOT).testTag(LayoutTags.SETTINGS)
+                    )
                 }
             }
         }
@@ -399,6 +414,15 @@ private val HEADER_ICON_INSET = 4.dp
 
 /** 헤더 양옆 칸(뒤로 가기·요약 듣기) 폭. 제목이 화면 가운데에 오도록 두 칸을 같게 둔다. */
 private val SIDE_SLOT = 56.dp
+
+/**
+ * 앱 전체 [설정] 열기 동작. app이 내비게이션 위에서 넘기면 모든 화면 헤더에 톱니바퀴가 [화면 요약 듣기] 옆에 붙는다.
+ * 넘기지 않으면(권한 안내 등 내비게이션 밖 화면) 톱니바퀴가 없다.
+ */
+val LocalAppSettingsAction = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+/** 헤더 [설정] 콜백(ScreenScaffold 인자를 헤더까지 넘긴다). */
+private val LocalHeaderSettings = staticCompositionLocalOf<(() -> Unit)?> { null }
 private val TRIANGLE_W = 24.dp
 private val TRIANGLE_H = 32.dp
 private val PROGRESS_HEIGHT = 10.dp

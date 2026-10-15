@@ -13,10 +13,6 @@
     <string name="ui_heard_not_choice">%1$s(이)라고 들었어요. %2$s</string>
     <string name="ui_suggest_buttons">음성 인식이 계속 어려워요. 아래 버튼으로 고를 수 있어요.</string>
     <string name="ui_mic_permission_denied_buttons">마이크 권한이 없어 음성으로 고를 수 없어요. 아래 버튼으로 골라 주세요.</string>
-    <string name="ui_mic_rationale">음성으로 입력하려고 마이크를 사용해요. 말소리는 휴대폰의 음성 인식으로 글자로 바꾸고, 시선 서버에는 소리를 저장하지 않아요. 기기에 따라 Google 음성 인식 서버를 거칠 수 있어요.</string>
-    <string name="ui_mic_rationale_alternative">마이크를 허용하지 않아도 키보드와 버튼으로 모든 입력을 할 수 있어요.</string>
-    <string name="ui_mic_allow">마이크 허용하기</string>
-    <string name="ui_mic_decline">키보드로 입력하기</string>
     <!-- 음성 자동 인식: 화면에서 처음 마이크가 저절로 켜지기 직전에 한 번(짧게). -->
     <string name="ui_auto_listen_cue">말씀하세요.</string>
     <string name="ui_voice_command_idle">말로 고르기</string>
@@ -39,4 +35,24 @@
     <string name="ui_disease_none">없음</string>
     <string name="ui_none">없음</string>
     <string name="ui_keyboard_input">키보드로 직접 입력</string>
+
+    <!-- 권한 안내(앱 처음 실행·빠진 권한이 있는 기존 사용자 한 번, 소유자 결정 msg 946). -->
+    <string name="ui_perm_title">앱 사용 권한</string>
+    <string name="ui_perm_guide">말로 입력하고 알림을 받으려면 권한을 허용해 주세요.</string>
+    <string name="ui_perm_mic_title">마이크</string>
+    <string name="ui_perm_mic_short">말로 입력</string>
+    <string name="ui_perm_notify_title">알림</string>
+    <string name="ui_perm_notify_short">운동 알림</string>
+    <string name="ui_perm_notify_short_update">운동·업데이트 알림</string>
+    <string name="ui_perm_allow">허용하기</string>
+    <string name="ui_perm_skip">나중에</string>
+
+    <!-- 마이크 권한이 꺼진 음성 입력 화면의 안내(시스템 권한 창은 다시 띄우지 않고 앱 설정을 연다). -->
+    <string name="ui_mic_off_hint">마이크 권한이 꺼져 있어 말로 입력할 수 없어요.</string>
+    <string name="ui_mic_off_hint_spoken">마이크 권한이 꺼져 있어 말로 입력할 수 없어요. 허용하기를 누르면 앱 설정이 열려요. 권한에서 마이크를 허용해 주세요. 키보드와 버튼으로도 입력할 수 있어요.</string>
+    <string name="ui_mic_off_allow">허용하기</string>
+    <string name="ui_mic_off_settings_failed">설정을 열지 못했어요. 휴대폰 설정, 애플리케이션, 시선, 권한에서 마이크를 허용해 주세요.</string>
+    <string name="ui_mic_unavailable_hint">이 휴대폰에서 음성 인식을 쓸 수 없어요. 키보드와 버튼으로 입력해 주세요.</string>
+    <string name="ui_mic_off_short">마이크 권한 꺼짐</string>
+    <string name="ui_mic_unavailable_short">음성 인식 없음</string>
 </resources>

@@ -11,12 +11,15 @@ import java.time.LocalDate
 import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kr.seesun.core.auth.AuthError
+import kr.seesun.core.auth.AuthErrors
 import kr.seesun.core.auth.AuthProvider
 import kr.seesun.core.auth.AuthResult
 import kr.seesun.core.auth.NoPhoneNumberHint
@@ -57,7 +60,7 @@ import kr.seesun.core.voice.tts.Speaker
  * - 실패하면 서버 낭독 문구를 보여 주고 [retry]로 같은 단계를 다시 시도한다(오프라인 포함).
  */
 @HiltViewModel
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "LargeClass") // 온보딩 한 흐름(단계 상태 하나)을 한 곳에서 관리한다
 class OnboardingViewModel @Inject constructor(
     private val savedState: SavedStateHandle,
     private val authProvider: AuthProvider,
@@ -139,6 +142,22 @@ class OnboardingViewModel @Inject constructor(
         } != null
     }
     val goalVoice = command { c -> c.firstNotNullOfOrNull(HealthVoiceParser::goal)?.let(::selectGoal) != null }
+
+    /** 시작 화면 [말로 고르기]: "설정"(톱니바퀴와 같음), "시작·가입", "로그인·이미 가입" (소유자 msg 959). */
+    val introVoice = command { c ->
+        when (c.firstNotNullOfOrNull(IntroVoiceMatcher::match)) {
+            IntroCommand.SETTINGS -> _settingsRequests.update { it + 1 }
+            IntroCommand.SIGN_UP -> startSignUp()
+            IntroCommand.LOGIN -> startLogin()
+            null -> return@command false
+        }
+        true
+    }
+
+    private val _settingsRequests = MutableStateFlow(0)
+
+    /** 말로 "설정"이라고 했다(바뀔 때마다 화면이 설정을 연다). */
+    val settingsRequests: StateFlow<Int> = _settingsRequests.asStateFlow()
 
     init {
         syncFields()
@@ -355,43 +374,68 @@ class OnboardingViewModel @Inject constructor(
         notify(Notice.PHONE_HINT_FILLED)
     }
 
-    /** [인증번호 받기]·[인증번호 다시 받기]. */
+    /**
+     * [인증번호 받기]·[인증번호 다시 받기]. 인증번호 화면에서 다시 받으면 Firebase 재전송 토큰을 쓴다.
+     * 첫 응답(보냄·자동 인증·오류)이 [FIRST_RESPONSE_TIMEOUT_MS] 안에 오지 않으면(reCAPTCHA 화면에서 멈춤·네트워크) 멈추고
+     * 다시 시도를 안내한다 — 「처리 중」에 갇히지 않게.
+     */
     fun requestCode() {
         val phone = form.phone ?: return
         if (state.value.busy) return notify(Notice.BUSY)
-        val e164 = PhoneNumbers.toE164(phone) ?: return showError(kr.seesun.core.auth.AuthError.INVALID_PHONE.message, retryable = false)
+        val e164 = PhoneNumbers.toE164(phone) ?: return showError(AuthError.INVALID_PHONE.message, retryable = false)
+        val resend = form.step == Step.CODE && form.verificationId != null
         setBusy(true)
         verification?.cancel()
         verification = viewModelScope.launch {
-            authProvider.startPhoneVerification(e164, activity?.get()).collect { event ->
-                when (event) {
-                    is PhoneVerificationEvent.CodeSent -> {
-                        updateForm { copy(verificationId = event.verificationId) }
-                        setBusy(false)
-                        if (form.step != Step.CODE) goTo(Step.CODE)
-                        codeField.setValue(null)
-                        notify(Notice.CODE_SENT)
-                    }
-
-                    is PhoneVerificationEvent.CodeAutoRetrieved -> {
-                        updateForm { copy(verificationId = event.verificationId) }
-                        if (form.step != Step.CODE) goTo(Step.CODE)
-                        codeField.setValue(event.smsCode)
-                        notify(Notice.CODE_AUTO_FILLED)
-                        setBusy(false)
-                        verifyCode(event.smsCode)
-                    }
-
-                    is PhoneVerificationEvent.Verified -> {
-                        idToken = event.result.idToken
-                        finishAuth()
-                    }
-
-                    is PhoneVerificationEvent.Failed -> {
-                        setBusy(false)
-                        showError(event.error.message, retryable = false)
-                    }
+            var answered = false
+            val watchdog = launch {
+                delay(FIRST_RESPONSE_TIMEOUT_MS)
+                if (!answered) {
+                    setBusy(false)
+                    showError(AuthErrors.describe(AuthError.TIMEOUT, "TIMEOUT"), retryable = true)
+                    verification?.cancel()
                 }
+            }
+            authProvider.startPhoneVerification(e164, activity?.get(), resend).collect { event ->
+                answered = true
+                watchdog.cancel()
+                onVerificationEvent(event)
+            }
+        }
+    }
+
+    private fun onVerificationEvent(event: PhoneVerificationEvent) {
+        when (event) {
+            is PhoneVerificationEvent.CodeSent -> {
+                updateForm { copy(verificationId = event.verificationId) }
+                setBusy(false)
+                if (form.step != Step.CODE) goTo(Step.CODE)
+                codeField.setValue(null)
+                notify(Notice.CODE_SENT)
+            }
+
+            is PhoneVerificationEvent.CodeAutoRetrieved -> {
+                updateForm { copy(verificationId = event.verificationId) }
+                if (form.step != Step.CODE) goTo(Step.CODE)
+                codeField.setValue(event.smsCode)
+                notify(Notice.CODE_AUTO_FILLED)
+                setBusy(false)
+                verifyCode(event.smsCode)
+            }
+
+            is PhoneVerificationEvent.AutoRetrievalTimedOut -> {
+                // 자동 입력만 끝났다. 보낸 인증번호는 그대로 쓸 수 있다(이미 입력 중이면 방해하지 않음).
+                if (form.step == Step.CODE && idToken == null && !state.value.busy) notify(Notice.CODE_AUTO_TIMEOUT)
+            }
+
+            is PhoneVerificationEvent.Verified -> {
+                idToken = event.result.idToken
+                finishAuth()
+            }
+
+            is PhoneVerificationEvent.Failed -> {
+                setBusy(false)
+                showError(AuthErrors.describe(event.error, event.code), retryable = event.error in RETRYABLE_AUTH_ERRORS)
             }
         }
     }
@@ -410,7 +454,7 @@ class OnboardingViewModel @Inject constructor(
                 is AuthResult.Failure -> {
                     setBusy(false)
                     codeField.setValue(null)
-                    showError(result.error.message, retryable = false)
+                    showError(AuthErrors.describe(result.error, result.code), retryable = result.error in RETRYABLE_AUTH_ERRORS)
                 }
             }
         }
@@ -816,5 +860,11 @@ class OnboardingViewModel @Inject constructor(
         private const val AGE_RESTRICTED = "AGE_RESTRICTED"
         private const val BIRTHDATE_REQUIRED = "BIRTHDATE_REQUIRED"
         private const val VERSION_MISMATCH = "VERSION_MISMATCH"
+
+        /** 인증번호 요청 뒤 첫 응답을 기다리는 시간. reCAPTCHA(브라우저) 확인까지 넉넉히. */
+        const val FIRST_RESPONSE_TIMEOUT_MS = 90_000L
+
+        /** 같은 단계에서 [다시 시도]를 보일 인증 오류(일시적인 것). 한도·지역·형식 오류는 다시 눌러도 같다. */
+        private val RETRYABLE_AUTH_ERRORS = setOf(AuthError.NETWORK, AuthError.TIMEOUT, AuthError.RECAPTCHA_CANCELLED, AuthError.UNKNOWN)
     }
 }

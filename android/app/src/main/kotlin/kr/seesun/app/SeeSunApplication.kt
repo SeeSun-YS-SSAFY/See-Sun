@@ -13,6 +13,8 @@ import javax.inject.Singleton
 import kr.seesun.core.data.di.DataConfig
 import kr.seesun.core.data.sync.SyncScheduler
 import kr.seesun.core.network.NetworkConfig
+import kr.seesun.core.voice.lifecycle.AppAudioGuard
+import kr.seesun.feature.update.UpdateCheckScheduler
 import kr.seesun.feature.update.UpdateConfig
 
 @HiltAndroidApp
@@ -24,6 +26,10 @@ class SeeSunApplication :
 
     @Inject lateinit var syncScheduler: SyncScheduler
 
+    @Inject lateinit var audioGuard: AppAudioGuard
+
+    @Inject lateinit var updateCheckScheduler: UpdateCheckScheduler
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
@@ -31,6 +37,10 @@ class SeeSunApplication :
         super.onCreate()
         // 지난번에 보내지 못한 식사 기록이 있으면 네트워크가 연결될 때 보낸다.
         syncScheduler.scheduleMealSync()
+        // 홈·다른 앱으로 나가면 어느 화면이든 안내 음성·듣기를 바로 멈춘다(v4 실기기 버그 msg 943). 첫 화면보다 먼저 시작해야 센다.
+        audioGuard.start()
+        // 가운영 빌드만: 6시간마다·앱 시작 때 새 버전 확인 → 알림. 끈 빌드는 아무것도 하지 않는 구현이 묶인다.
+        if (BuildConfig.SELF_UPDATE) updateCheckScheduler.schedule()
     }
 }
 

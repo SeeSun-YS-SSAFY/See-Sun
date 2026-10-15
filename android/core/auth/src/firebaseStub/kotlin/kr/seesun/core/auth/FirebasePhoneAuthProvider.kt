@@ -16,7 +16,7 @@ class FirebasePhoneAuthProvider @Inject constructor() : AuthProvider {
     override val kind = AuthProvider.Kind.FIREBASE
     override val isConfigured = false
 
-    override fun startPhoneVerification(phoneE164: String, activity: Activity?): Flow<PhoneVerificationEvent> =
+    override fun startPhoneVerification(phoneE164: String, activity: Activity?, resend: Boolean): Flow<PhoneVerificationEvent> =
         flowOf(PhoneVerificationEvent.Failed(AuthError.NOT_CONFIGURED))
 
     override suspend fun confirmCode(verificationId: String, smsCode: String): AuthResult = AuthResult.Failure(AuthError.NOT_CONFIGURED)

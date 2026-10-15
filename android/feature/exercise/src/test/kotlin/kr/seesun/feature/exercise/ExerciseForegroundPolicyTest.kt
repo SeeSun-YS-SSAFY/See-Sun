@@ -1,8 +1,9 @@
 package kr.seesun.feature.exercise
 
+import kr.seesun.core.voice.lifecycle.AppStop
+import kr.seesun.core.voice.lifecycle.AppStopPolicy
 import kr.seesun.feature.exercise.play.ResumeCommand
 import kr.seesun.feature.exercise.play.ResumeVoiceMatcher
-import kr.seesun.feature.exercise.session.AppStop
 import kr.seesun.feature.exercise.session.ExerciseForegroundPolicy
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -24,13 +25,17 @@ class ExerciseForegroundPolicyTest {
         "false, true,  700,   SCREEN_OFF",
         // 화면 꺼짐 처리 순서가 늦은 기기: 아직 켜짐으로 보이지만 방금 화면 꺼짐 방송을 받았다 → 계속
         "true,  false, 700,   SCREEN_OFF",
-        // 잠금 화면이 떠 있다(화면은 켜짐) → 계속
-        "true,  true,  ,      SCREEN_OFF",
+        // v5(msg 943): 화면 꺼짐 방송 없이 잠금으로만 보이는 경우(홈만 눌렀는데 잠금으로 알리는 기기) → 멈춤
+        "true,  true,  ,      LEFT_APP",
+        // 앱이 보이는 동안 화면이 꺼졌고 잠금 화면이 떠 있다 → 계속
+        "true,  true,  60000, SCREEN_OFF",
+        // 시계가 거꾸로(방송 시각이 미래) → 받지 않은 것으로 본다
+        "true,  false, -5,    LEFT_APP",
         // 화면 꺼짐이 오래전 일(그 뒤 다시 켜서 쓰다가 홈) → 멈춤
         "true,  false, 60000, LEFT_APP"
     )
     fun `ON_STOP 때 화면 상태로 나감과 화면 꺼짐을 가른다`(interactive: Boolean, locked: Boolean, sinceOff: Long?, expected: AppStop) {
-        assertEquals(expected, ExerciseForegroundPolicy.classifyStop(interactive, locked, sinceOff))
+        assertEquals(expected, AppStopPolicy.classifyStop(interactive, locked, sinceOff))
     }
 
     @Test

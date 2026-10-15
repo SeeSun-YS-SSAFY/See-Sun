@@ -67,7 +67,12 @@ class UpdateViewModel @Inject constructor(
     private var downloading: Job? = null
 
     /** 화면이 다시 보일 때마다. 처음 열 때는 바로, 그 뒤로는 6시간에 한 번 확인한다. 설정에서 돌아오면 설치를 이어 간다. */
-    fun onResume() {
+    fun onResume() = check(force = false)
+
+    /** 업데이트 알림을 눌러 앱을 열었다: 간격과 관계없이 바로 확인해 안내 창을 띄운다([나중에]로 닫았어도). */
+    fun onOpenRequested() = check(force = true)
+
+    private fun check(force: Boolean) {
         if (!config.enabled) return
         val current = _state.value
         if (current.manifest != null) {
@@ -78,7 +83,8 @@ class UpdateViewModel @Inject constructor(
         }
         val now = System.currentTimeMillis()
         val last = prefs.getLong(KEY_LAST_CHECK, 0L).takeIf { it > 0L }
-        if (checking?.isActive == true || !UpdateRules.shouldCheck(now, last, coldStart = !checkedInProcess)) return
+        if (checking?.isActive == true) return
+        if (!force && !UpdateRules.shouldCheck(now, last, coldStart = !checkedInProcess)) return
         checking = viewModelScope.launch {
             val manifest = client.fetchManifest(config.manifestUrl) ?: return@launch
             checkedInProcess = true
@@ -86,6 +92,11 @@ class UpdateViewModel @Inject constructor(
             val need = UpdateRules.need(config.installedVersionCode, manifest)
             if (need == UpdateNeed.NONE) return@launch
             _state.value = UpdateUiState(manifest = manifest, required = need == UpdateNeed.REQUIRED)
+            // 앱 안에서 안내했으면 같은 버전 알림은 하루 동안 내지 않는다(UpdateNotifyPolicy).
+            prefs.edit {
+                putLong(UpdateNotifyPolicy.KEY_NOTIFIED_CODE, manifest.versionCode)
+                putLong(UpdateNotifyPolicy.KEY_NOTIFIED_AT, System.currentTimeMillis())
+            }
             speaker.speak(context.getString(R.string.update_available_voice, manifest.versionName))
         }
     }
@@ -132,7 +143,7 @@ class UpdateViewModel @Inject constructor(
     }
 
     private companion object {
-        const val PREFS = "seesun_selfupdate"
+        const val PREFS = UpdateNotifyPolicy.PREFS
         const val KEY_LAST_CHECK = "last_check_millis"
         const val PERCENT = 100
 

@@ -12,6 +12,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kr.seesun.core.auth.AuthError
+import kr.seesun.core.auth.AuthFailure
 import kr.seesun.core.auth.FakeAuthProvider
 import kr.seesun.core.data.fake.FakeAccountBackend
 import kr.seesun.core.data.fake.FakeAuthRepository
@@ -493,5 +495,54 @@ class OnboardingViewModelTest {
         assertEquals(listOf("안내"), speaker.spoken)
         // 사용자가 누른 [자세히]도 TalkBack이 켜져 있으면 앱 음성 대신 글자로 펼친다.
         assertFalse(vm.voice.onDemand("전문", talkBackEnabled = true))
+    }
+
+    // ── v5: 실제 번호 로그인 오류 안내·재전송·응답 없음(소유자 msg 923/940) ──
+
+    @Test
+    fun `Firebase 오류는 종류별 안내와 문의 코드로 보인다`() = runTest(dispatcher) {
+        val vm = vm()
+        provider.nextFailure = AuthFailure(AuthError.QUOTA_EXCEEDED, "QUOTA_EXCEEDED")
+        signUpThroughPhone(vm)
+        assertEquals(Step.PHONE, vm.step)
+        val error = vm.state.value.error.orEmpty()
+        assertTrue(error.startsWith(AuthError.QUOTA_EXCEEDED.message), error)
+        assertTrue(error.endsWith("(오류 코드 QUOTA_EXCEEDED)"), error)
+        // 하루 한도는 다시 눌러도 같다 → [다시 시도]를 보이지 않는다.
+        assertFalse(vm.state.value.retryable)
+        assertFalse(vm.state.value.busy)
+    }
+
+    @Test
+    fun `지역 미허용 오류는 일반 실패 문구가 아니다`() = runTest(dispatcher) {
+        val vm = vm()
+        provider.nextFailure = AuthFailure(AuthError.REGION_NOT_ENABLED, "17006")
+        signUpThroughPhone(vm)
+        val error = vm.state.value.error.orEmpty()
+        assertTrue(error.contains("지역") && error.contains("17006"), error)
+        assertFalse(error.startsWith(AuthError.UNKNOWN.message))
+    }
+
+    @Test
+    fun `인증번호 화면의 다시 받기는 재전송 토큰 경로를 쓴다`() = runTest(dispatcher) {
+        provider.autoRetrieve = false
+        val vm = vm()
+        signUpThroughPhone(vm)
+        assertEquals(Step.CODE, vm.step)
+        assertFalse(provider.lastRequestWasResend)
+        vm.requestCode()
+        advanceUntilIdle()
+        assertTrue(provider.lastRequestWasResend)
+        assertEquals(Notice.CODE_SENT, vm.state.value.notice)
+    }
+
+    @Test
+    fun `응답이 오지 않으면 처리 중에 갇히지 않고 다시 시도를 안내한다`() = runTest(dispatcher) {
+        provider.simulatedDelayMs = OnboardingViewModel.FIRST_RESPONSE_TIMEOUT_MS * 2
+        val vm = vm()
+        signUpThroughPhone(vm)
+        assertFalse(vm.state.value.busy)
+        assertTrue(vm.state.value.error.orEmpty().startsWith(AuthError.TIMEOUT.message))
+        assertTrue(vm.state.value.retryable)
     }
 }

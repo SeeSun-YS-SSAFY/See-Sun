@@ -20,15 +20,29 @@ class FakeAuthProvider @Inject constructor() : AuthProvider {
     var autoRetrieve: Boolean = true
     var simulatedDelayMs: Long = 300
 
+    /** 다음 인증번호 요청을 이 오류로 실패시킨다(한 번만). 오류 안내 화면 개발·시험용. */
+    var nextFailure: AuthFailure? = null
+
+    /** 마지막 요청이 [인증번호 다시 받기]였는가(시험 확인용). */
+    var lastRequestWasResend: Boolean = false
+        private set
+
     private var signedIn: AuthResult.Success? = null
 
     override val kind = AuthProvider.Kind.FAKE
     override val isConfigured = true
     override val supportsAutoRetrieval: Boolean get() = autoRetrieve
 
-    override fun startPhoneVerification(phoneE164: String, activity: Activity?): Flow<PhoneVerificationEvent> = flow {
+    override fun startPhoneVerification(phoneE164: String, activity: Activity?, resend: Boolean): Flow<PhoneVerificationEvent> = flow {
         if (!phoneE164.matches(Regex("""^\+821[016789]\d{7,8}$"""))) {
             emit(PhoneVerificationEvent.Failed(AuthError.INVALID_PHONE))
+            return@flow
+        }
+        lastRequestWasResend = resend
+        nextFailure?.let { failure ->
+            nextFailure = null
+            delay(simulatedDelayMs)
+            emit(PhoneVerificationEvent.Failed(failure.error, failure.code))
             return@flow
         }
         val verificationId = "$VERIFICATION_PREFIX$phoneE164"

@@ -28,4 +28,10 @@
     <string name="update_available_voice">새 버전 %1$s이 있어요. 업데이트할까요?</string>
     <string name="update_permission_voice">설치 허용이 필요해요. 설정 열기를 눌러 주세요.</string>
     <string name="update_failed_voice">업데이트를 내려받지 못했어요. 다시 시도를 눌러 주세요.</string>
+
+    <!-- 업데이트 알림(가운영 자체 업데이트 빌드만). 누르면 앱이 열리고 안내 창이 바로 뜬다. -->
+    <string name="update_notification_channel">앱 업데이트</string>
+    <string name="update_notification_channel_desc">새 버전이 나오면 알려 드려요.</string>
+    <string name="update_notification_title">새 버전이 있어요</string>
+    <string name="update_notification_text">시선 %1$s. 눌러서 업데이트해 주세요.</string>
 </resources>
