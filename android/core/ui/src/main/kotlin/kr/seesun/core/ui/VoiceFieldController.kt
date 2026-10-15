@@ -11,6 +11,7 @@ import kr.seesun.core.designsystem.component.InputState
 import kr.seesun.core.designsystem.component.MicState
 import kr.seesun.core.voice.parse.Answer
 import kr.seesun.core.voice.parse.AnswerParser
+import kr.seesun.core.voice.recognition.AutoListenOutcome
 import kr.seesun.core.voice.recognition.RecognitionError
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.RecognitionFailureTracker
@@ -38,6 +39,7 @@ sealed interface FieldError {
  * @property pending 음성으로 알아들어 "맞으세요?"를 묻는 중인 값(COM-05). null이면 확인 대기 아님
  * @property repeatCount "다시 들려줘"를 받을 때마다 늘어난다(화면이 확인 문구를 다시 낭독)
  * @property suggestKeyboard 인식 실패가 이어져 버튼·키보드 입력을 권할 때(COM-14)
+ * @property autoListening 음성 자동 인식으로 듣는 중(사용자가 누르지 않음). 이때도 [다음]은 누를 수 있고, 누르면 듣기를 끊는다
  */
 data class VoiceFieldState(
     val text: String = "",
@@ -46,10 +48,15 @@ data class VoiceFieldState(
     val pending: String? = null,
     val error: FieldError? = null,
     val repeatCount: Int = 0,
-    val suggestKeyboard: Boolean = false
+    val suggestKeyboard: Boolean = false,
+    val autoListening: Boolean = false
 ) {
-    /** 확정된 값이 있어 [다음]을 누를 수 있는가(편집 중이면 [다음]이 검사 후 확정한다). */
-    val canProceed: Boolean get() = pending == null && mic == MicState.IDLE && (inputState == InputState.EDITING || text.isNotBlank())
+    /**
+     * 확정된 값이 있어 [다음]을 누를 수 있는가(편집 중이면 [다음]이 검사 후 확정한다).
+     * 자동으로 듣는 중이면 [다음]을 막지 않는다 — 누르면 듣기를 끊고 지금 값으로 넘어간다(값이 이미 있는 화면에서 30초씩 막히지 않게).
+     */
+    val canProceed: Boolean
+        get() = pending == null && (mic == MicState.IDLE || autoListening) && (inputState == InputState.EDITING || text.isNotBlank())
 }
 
 /**
@@ -89,7 +96,7 @@ class VoiceFieldController(
         when (_state.value.mic) {
             MicState.LISTENING -> {
                 cancelListening()
-                _state.update { it.copy(mic = MicState.IDLE, inputState = restingState(it.text)) }
+                _state.update { it.copy(mic = MicState.IDLE, inputState = restingState(it.text), autoListening = false) }
             }
 
             MicState.PROCESSING -> Unit
@@ -111,7 +118,14 @@ class VoiceFieldController(
         cancelListening()
         _state.update {
             val fresh = it.inputState == InputState.RECOGNIZED && it.pending == null
-            it.copy(text = if (fresh) "" else it.text, inputState = InputState.EDITING, mic = MicState.IDLE, pending = null, error = null)
+            it.copy(
+                text = if (fresh) "" else it.text,
+                inputState = InputState.EDITING,
+                mic = MicState.IDLE,
+                pending = null,
+                error = null,
+                autoListening = false
+            )
         }
     }
 
@@ -124,6 +138,10 @@ class VoiceFieldController(
      * @return 확정했으면 true
      */
     fun commitTyped(): Boolean {
+        if (_state.value.autoListening) {
+            cancelListening()
+            _state.update { it.copy(mic = MicState.IDLE, autoListening = false, inputState = restingState(it.text)) }
+        }
         val current = _state.value
         if (current.pending != null || current.mic != MicState.IDLE) return false
         val value = parser(current.text.trim())
@@ -146,6 +164,46 @@ class VoiceFieldController(
     /** 확인 화면의 [수정]: 값을 비우고 다시 말하거나 키보드로 쓰게 한다. */
     fun reject() {
         _state.update { it.copy(pending = null, text = "", inputState = InputState.WAITING) }
+    }
+
+    /**
+     * 음성 자동 인식으로 한 번 듣는다([AutoListenEffect]가 부른다). 되읽기 확인 중이면 "네/아니요/다시"와 새 값을, 아니면 이 칸에
+     * 맞는 값만 받는다. 무음·못 알아들음·맞지 않는 말에는 오류 문구·실패 횟수를 남기지 않는다. 편집 중·듣는 중이면 듣지 않는다.
+     */
+    suspend fun listenAuto(): AutoListenOutcome {
+        val now = _state.value
+        if (now.mic != MicState.IDLE || now.inputState == InputState.EDITING) return AutoListenOutcome.USER_STOPPED
+        onBeforeListen()
+        return autoListenOnce(
+            scope = scope,
+            speech = speech,
+            register = { listening = it },
+            setMic = { mic ->
+                _state.update {
+                    when (mic) {
+                        AutoMic.LISTENING ->
+                            it.copy(mic = MicState.LISTENING, inputState = InputState.RECORDING, error = null, autoListening = true)
+
+                        AutoMic.PROCESSING -> it.copy(mic = MicState.PROCESSING)
+
+                        AutoMic.IDLE -> if (it.mic == MicState.IDLE && !it.autoListening) {
+                            it
+                        } else {
+                            it.copy(mic = MicState.IDLE, inputState = restingState(it.text), autoListening = false)
+                        }
+                    }
+                }
+            },
+            accept = ::acceptAuto
+        )
+    }
+
+    /** 자동 듣기 결과: 화면에 쓸 수 있는 말이면 수동 듣기와 같이 처리하고 true. */
+    private fun acceptAuto(candidates: List<String>): Boolean {
+        val answer = if (_state.value.pending != null) candidates.firstNotNullOfOrNull { AnswerParser.parse(it) } else null
+        val usable = answer != null || candidates.any { parser(it.trim()) != null }
+        if (usable) onFinal(candidates)
+        return usable
     }
 
     private fun startListening() {

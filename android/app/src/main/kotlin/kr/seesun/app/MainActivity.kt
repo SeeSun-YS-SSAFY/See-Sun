@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
@@ -21,6 +22,10 @@ import kr.seesun.app.gallery.ComponentGalleryScreen
 import kr.seesun.app.gallery.HighlightListGalleryScreen
 import kr.seesun.core.data.repository.SessionRepository
 import kr.seesun.core.designsystem.theme.SeeSunTheme
+import kr.seesun.core.ui.AutoListenEnvironment
+import kr.seesun.core.ui.LocalAutoListen
+import kr.seesun.core.voice.settings.VoicePreferences
+import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.diet.DietRoute
 import kr.seesun.feature.diet.dietScreen
 import kr.seesun.feature.exercise.ExerciseRoute
@@ -44,12 +49,20 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var session: SessionRepository
 
+    @Inject lateinit var voicePreferences: VoicePreferences
+
+    @Inject lateinit var speaker: Speaker
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // 음성 자동 인식(기본 켜짐): 음성 입력·명령 칸이 있는 화면은 안내 음성이 끝나면 저절로 듣는다.
+        val autoListen = AutoListenEnvironment(enabled = voicePreferences.autoListen, guidanceSpeaking = speaker.speaking)
         setContent {
             SeeSunTheme {
-                SeeSunNavHost(session)
+                CompositionLocalProvider(LocalAutoListen provides autoListen) {
+                    SeeSunNavHost(session)
+                }
                 // 가운영 빌드만: 새 버전 안내 창(앱 화면 위). 상수 false면 R8이 이 호출을 지운다.
                 if (BuildConfig.SELF_UPDATE) SelfUpdateGate()
             }

@@ -15,6 +15,8 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:feedback"))
     implementation(project(":core:voice"))
+    // 운동 중 「이어서 시작」의 말로 하기(음성 명령 버튼·자동 인식)
+    implementation(project(":core:ui"))
     implementation(project(":core:auth"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
@@ -23,6 +25,8 @@ dependencies {
     implementation(libs.androidx.media3.database)
     // 이어폰 버튼으로 일시정지·재생(안전 안내의 "즉시 멈춤" 방법)
     implementation(libs.androidx.media3.session)
+    // 다른 앱으로 나감(일시정지) / 화면 꺼짐(계속 재생) 구분
+    implementation(libs.androidx.lifecycle.process)
 
     testImplementation(libs.turbine)
 

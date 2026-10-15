@@ -46,6 +46,12 @@ class SessionRecorder @Inject constructor(
 
     val isActive: Boolean get() = clientUuid != null
 
+    private var title: String = ""
+
+    /** 다른 앱으로 나가 안내를 멈춰 포그라운드 서비스를 잠시 내렸는가. */
+    var keepAliveSuspended: Boolean = false
+        private set
+
     fun now(): OffsetDateTime = OffsetDateTime.now(clock)
 
     /** 이미 시작했으면 아무것도 하지 않는다. */
@@ -54,6 +60,8 @@ class SessionRecorder @Inject constructor(
         val at = now()
         startedAt = at
         clientUuid = logs.begin(title, playlistId, mode, at)
+        this.title = title
+        keepAliveSuspended = false
         keeper.start(title)
         heartbeat = scope.launch {
             while (isActive) {
@@ -68,9 +76,27 @@ class SessionRecorder @Inject constructor(
         val uuid = clientUuid ?: return@withLock false
         clientUuid = null
         heartbeat?.cancel()
+        keepAliveSuspended = false
         keeper.stop()
         val end = now()
         logs.finish(uuid, status, end, items(end))
+    }
+
+    /**
+     * 다른 앱으로 나가 안내를 멈췄을 때: 소리를 내지 않으니 포그라운드 서비스(알림·wake lock)를 내린다. 기록은 그대로 이어진다.
+     * 세션 중이 아니거나 이미 내렸으면 아무것도 하지 않는다.
+     */
+    fun suspendKeepAlive() {
+        if (clientUuid == null || keepAliveSuspended) return
+        keepAliveSuspended = true
+        keeper.stop()
+    }
+
+    /** 「이어서 시작」·[재생]으로 다시 시작할 때(앱이 화면에 있을 때 부른다 — 백그라운드에서는 서비스를 띄울 수 없다). */
+    fun resumeKeepAlive() {
+        if (clientUuid == null || !keepAliveSuspended) return
+        keepAliveSuspended = false
+        keeper.start(title)
     }
 
     /** 화면이 닫히는데 끝내기를 못 한 경우: 그만둔 것으로 기록한다(앱 범위에서 저장). */

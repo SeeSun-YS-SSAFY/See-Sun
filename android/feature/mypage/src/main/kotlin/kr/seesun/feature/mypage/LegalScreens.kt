@@ -368,6 +368,7 @@ private fun licenseLabel(lib: OssLibrary, sqlcipherName: String): String {
 object SettingsVoiceMatcher {
     private val RULES: List<Pair<List<String>, Any>> = listOf(
         listOf("탈퇴", "계정삭제", "계정지워", "회원삭제") to DeleteAccountRoute,
+        listOf("자동인식", "자동듣기", "음성자동", "자동마이크", "마이크자동") to VoiceAutoRoute,
         listOf("초기화", "식사기록지워", "식사기록삭제", "건강정보지워", "건강정보삭제", "일부삭제", "일부지워") to DataResetRoute,
         listOf("동의", "철회", "처리정지", "처리멈") to ConsentManageRoute,
         listOf("권리", "열람") to RightsRoute,

@@ -54,6 +54,10 @@ data object DataResetRoute
 @Serializable
 data object AccessibilityRoute
 
+/** 음성 자동 인식 켜기·끄기(기기 설정, 기본 켜짐) */
+@Serializable
+data object VoiceAutoRoute
+
 /** SET-09 회원 탈퇴(2단계 확인) */
 @Serializable
 data object DeleteAccountRoute
@@ -91,4 +95,5 @@ fun NavGraphBuilder.myPageGraph(nav: NavController, onSignedOut: () -> Unit, onO
     composable<RightsRoute> { RightsScreen(onBack = back, onOpen = { nav.navigate(it) }) }
     composable<DataResetRoute> { DataResetRoute(onBack = back) }
     composable<AccessibilityRoute> { AccessibilityScreen(onBack = back) }
+    composable<VoiceAutoRoute> { VoiceAutoRoute(onBack = back) }
 }

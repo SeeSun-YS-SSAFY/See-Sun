@@ -64,6 +64,8 @@ fun VoiceInputField(
     val inspection = LocalInspectionMode.current
     // 권한이 없으면 목적 안내(T-13) → [마이크 허용하기] → 시스템 창. [키보드로 입력하기]면 바로 편집칸으로.
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onEditRequest)
+    // 음성 자동 인식: 안내(진입·되읽기 질문)가 끝나면 저절로 듣는다. 새 질문(되읽기 값·다시 듣기)마다 한도를 새로 받는다.
+    AutoListenEffect(Triple(controller, state.pending, state.repeatCount), talkBackEnabled, speak, controller::listenAuto)
     val focus = remember { FocusRequester() }
     LaunchedEffect(state.inputState) {
         if (state.inputState == InputState.EDITING && !inspection) runCatching { focus.requestFocus() }

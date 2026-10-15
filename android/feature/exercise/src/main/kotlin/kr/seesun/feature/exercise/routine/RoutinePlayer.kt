@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.seesun.core.a11y.LiveAnnouncement
+import kr.seesun.core.a11y.rememberTalkBackEnabled
 import kr.seesun.core.data.model.ExerciseDetail
 import kr.seesun.core.data.model.GuideSections
 import kr.seesun.core.data.model.Routine
@@ -47,12 +48,21 @@ import kr.seesun.core.designsystem.component.ScreenScaffold
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.GuidanceVoice
+import kr.seesun.core.ui.VoiceCommandController
+import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.exercise.R
 import kr.seesun.feature.exercise.RoutinePlayRoute
 import kr.seesun.feature.exercise.play.ButtonPair
 import kr.seesun.feature.exercise.play.GuideActions
 import kr.seesun.feature.exercise.play.GuideBlock
+import kr.seesun.feature.exercise.play.KeepScreenOn
+import kr.seesun.feature.exercise.play.RESUME_PROMPT
+import kr.seesun.feature.exercise.play.ResumeCommand
+import kr.seesun.feature.exercise.play.ResumePrompt
+import kr.seesun.feature.exercise.play.ResumeSlot
+import kr.seesun.feature.exercise.play.ResumeVoiceMatcher
 import kr.seesun.feature.exercise.player.ExerciseAudioCache
 import kr.seesun.feature.exercise.player.GuidePlayer
 import kr.seesun.feature.exercise.player.GuidePlayerFactory
@@ -62,6 +72,10 @@ import kr.seesun.feature.exercise.player.PictogramTrack
 import kr.seesun.feature.exercise.player.speedLabel
 import kr.seesun.feature.exercise.safety.SafetyGate
 import kr.seesun.feature.exercise.safety.SafetyViewModel
+import kr.seesun.feature.exercise.session.AppStop
+import kr.seesun.feature.exercise.session.AppVisibility
+import kr.seesun.feature.exercise.session.AppVisibilityEvent
+import kr.seesun.feature.exercise.session.ExerciseForegroundPolicy
 import kr.seesun.feature.exercise.session.SessionRecorder
 import kr.seesun.feature.exercise.session.SessionSignals
 import kr.seesun.feature.exercise.session.TalkBackState
@@ -86,7 +100,9 @@ data class RoutineUi(
     val showExitDialog: Boolean = false,
     val notice: String = "",
     val closeRequested: Boolean = false,
-    val fromDevice: Boolean = false
+    val fromDevice: Boolean = false,
+    /** 다른 앱으로 나가 안내·휴식 타이머를 멈췄다 → 돌아오면 「이어서 시작」. */
+    val pausedByLeaving: Boolean = false
 )
 
 /** 항목별 실제 수행 기록(기록 items[]). */
@@ -99,8 +115,11 @@ private data class ItemProgress(var startedAt: OffsetDateTime? = null, var ended
  * - 운동이 바뀔 때·휴식 때 진동(core:feedback ExerciseCue)과 안내(TalkBack 켜짐: liveRegion, 꺼짐: 기기 음성)를 낸다.
  *   안내와 운동 음성이 겹치지 않게 안내 뒤 잠깐 쉬고 재생한다.
  * - 기록은 루틴 하나를 세션 하나로: 기본 루틴은 이름만, 나만의 루틴은 실제 playlist_id(1차 B6), mode=CURRICULUM.
+ * - 다른 앱으로 나가면 안내 음성·휴식 타이머를 멈추고 포그라운드 서비스를 내린다. 돌아오면 「이어서 시작」(버튼·말).
+ *   앱을 띄운 채 전원 버튼으로 화면을 끄면 계속한다([AppVisibility], 소유자 결정 2026-10-15).
  */
 @HiltViewModel
+@Suppress("LongParameterList")
 class RoutinePlayerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val content: ExerciseContentRepository,
@@ -109,6 +128,8 @@ class RoutinePlayerViewModel @Inject constructor(
     private val haptics: SessionSignals,
     private val speaker: Speaker,
     private val talkBack: TalkBackState,
+    appVisibility: AppVisibility,
+    speech: SpeechInput,
     playerFactory: GuidePlayerFactory
 ) : ViewModel() {
 
@@ -123,7 +144,27 @@ class RoutinePlayerViewModel @Inject constructor(
     private var progress: List<ItemProgress> = emptyList()
     private var stepJob: Job? = null
 
+    /** 앱 안내 음성(말로 고르기의 오류 안내 등, TalkBack 켜짐이면 말하지 않음). */
+    val voice = GuidanceVoice(speaker)
+
+    /** 「이어서 시작」 화면의 말로 고르기: "이어서" → 이어서, "끝내기" → 나가기 확인. */
+    val resumeVoice = VoiceCommandController(viewModelScope, speech, onBeforeListen = { speaker.stop() }) { candidates ->
+        when (candidates.firstNotNullOfOrNull(ResumeVoiceMatcher::match)) {
+            ResumeCommand.RESUME -> resume().let { true }
+            ResumeCommand.END -> requestExit().let { true }
+            null -> false
+        }
+    }
+
     init {
+        viewModelScope.launch {
+            appVisibility.events.collect { event ->
+                when (event) {
+                    is AppVisibilityEvent.Stopped -> if (event.why == AppStop.LEFT_APP) onLeftApp()
+                    AppVisibilityEvent.Started -> if (_ui.value.pausedByLeaving) announce(RESUME_PROMPT)
+                }
+            }
+        }
         load()
         viewModelScope.launch {
             player.state.distinctUntilChangedBy { it.status }.collect { s ->
@@ -215,9 +256,10 @@ class RoutinePlayerViewModel @Inject constructor(
         if (index > 0) haptics.cue(ExerciseCue.NEXT)
         val reps = item.repsCount?.let { " ${it}회" }.orEmpty()
         announce("${RoutinePlan.progressLabel(step.itemIndex, routine.items.size, step.set, step.totalSets)}. ${item.exerciseName}$reps.")
-        delay(ANNOUNCE_GAP_MS)
-        player.play()
         routine.items.getOrNull(step.itemIndex + 1)?.let { prefetch(it.exerciseId) }
+        delay(ANNOUNCE_GAP_MS)
+        // 그사이 다른 앱으로 나갔으면 틀지 않는다(「이어서 시작」이 튼다).
+        if (!_ui.value.pausedByLeaving) player.play()
     }
 
     private suspend fun runRest(index: Int, step: RoutineStep.Rest, routine: Routine) {
@@ -253,8 +295,45 @@ class RoutinePlayerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 다른 앱으로 나갔을 때: 운동 안내(재생 중이거나 막 틀 참)·휴식 타이머(세는 중)를 멈추고 「이어서 시작」을 기다린다.
+     * 사용자가 이미 멈춰 둔 것은 그대로 둔다. 세션 중이면 포그라운드 서비스를 내린다.
+     */
+    private fun onLeftApp() {
+        val ui = _ui.value
+        if (!recorder.isActive || !ui.sessionActive) return
+        val guide = player.state.value
+        val running = when (ui.phase) {
+            RoutinePhase.EXERCISE -> guide.isPlaying || guide.status == GuideStatus.IDLE
+            RoutinePhase.REST -> !ui.restPaused
+            else -> false
+        }
+        speaker.stop()
+        if (running) {
+            if (ui.phase == RoutinePhase.EXERCISE) player.pause()
+            _ui.update { it.copy(pausedByLeaving = true, restPaused = it.restPaused || it.phase == RoutinePhase.REST) }
+        }
+        recorder.suspendKeepAlive()
+    }
+
+    /** 「이어서 시작」: 운동 안내는 멈춘 곳부터, 휴식은 남은 시간부터 다시. */
+    fun resume() {
+        val ui = _ui.value
+        if (!ui.pausedByLeaving) return
+        _ui.update { it.copy(pausedByLeaving = false, restPaused = if (it.phase == RoutinePhase.REST) false else it.restPaused) }
+        recorder.resumeKeepAlive()
+        if (ui.phase == RoutinePhase.EXERCISE) player.play()
+    }
+
+    /** 멈춘 채로 다른 조작(건너뛰기 등)을 골랐을 때: 「이어서 시작」 화면을 닫고 서비스를 다시 올린다(재생은 그 조작이 한다). */
+    private fun leaveResolved() {
+        if (_ui.value.pausedByLeaving) _ui.update { it.copy(pausedByLeaving = false) }
+        recorder.resumeKeepAlive()
+    }
+
     /** 지금 운동의 남은 세트를 건너뛰고 다음 운동으로(휴식 없이). */
     fun skipExercise() {
+        leaveResolved()
         val current = plan.getOrNull(_ui.value.stepIndex) as? RoutineStep.Exercise ?: return
         progress[current.itemIndex].let { if (it.endedAt == null && it.skipReason == null) it.skipReason = SKIP_USER }
         player.stop()
@@ -270,16 +349,33 @@ class RoutinePlayerViewModel @Inject constructor(
 
     fun skipRest() {
         if (_ui.value.phase != RoutinePhase.REST) return
+        leaveResolved()
         goTo(_ui.value.stepIndex + 1)
     }
 
     fun toggleRestPause() {
+        if (_ui.value.pausedByLeaving) {
+            resume()
+            return
+        }
+        recorder.resumeKeepAlive()
         val paused = !_ui.value.restPaused
         _ui.update { it.copy(restPaused = paused) }
         announce(if (paused) "휴식 시간을 멈췄어요." else "휴식 시간을 이어서 세요.")
     }
 
-    fun playPause() = if (player.state.value.isPlaying) player.pause() else player.play()
+    fun playPause() {
+        when {
+            _ui.value.pausedByLeaving -> resume()
+
+            player.state.value.isPlaying -> player.pause()
+
+            else -> {
+                recorder.resumeKeepAlive()
+                player.play()
+            }
+        }
+    }
 
     fun replay() = player.replaySection()
 
@@ -366,7 +462,8 @@ class RoutinePlayerViewModel @Inject constructor(
 
     /** TalkBack 켜짐: 화면 알림(liveRegion), 꺼짐: 기기 음성. */
     private fun announce(message: String) {
-        if (!talkBack.isOn()) speaker.speak(message)
+        // 다른 앱으로 나가 멈춘 동안에는 소리를 내지 않는다(돌아왔을 때의 「이어서 시작」 안내만).
+        if (!talkBack.isOn() && (!_ui.value.pausedByLeaving || message == RESUME_PROMPT)) speaker.speak(message)
         _ui.update { it.copy(notice = if (it.notice == message) "$message​" else message) }
     }
 
@@ -398,10 +495,15 @@ private fun RoutinePlayerContent(viewModel: RoutinePlayerViewModel, title: Strin
     val back = { if (!viewModel.requestExit()) onClose() }
     BackHandler(enabled = ui.sessionActive) { back() }
     LaunchedEffect(ui.closeRequested) { if (ui.closeRequested) onClose() }
+    KeepScreenOn(
+        ExerciseForegroundPolicy.keepScreenOnRoutine(ui.sessionActive, ui.phase == RoutinePhase.EXERCISE || ui.phase == RoutinePhase.REST)
+    )
+    val talkBack = rememberTalkBackEnabled()
     RoutinePlayerScreen(
         title = title,
         ui = ui,
         guide = guide,
+        resume = ResumeSlot(viewModel::resume, back, viewModel.resumeVoice, talkBack) { viewModel.voice.auto(it, talkBack) },
         actions = RoutineActions(
             onBack = back,
             onStart = viewModel::start,
@@ -451,7 +553,7 @@ data class RoutineActions(
 )
 
 @Composable
-fun RoutinePlayerScreen(title: String, ui: RoutineUi, guide: GuideState, actions: RoutineActions) {
+fun RoutinePlayerScreen(title: String, ui: RoutineUi, guide: GuideState, actions: RoutineActions, resume: ResumeSlot? = null) {
     ScreenScaffold(title = title, onBack = actions.onBack, dense = true) {
         val routine = ui.routine
         when {
@@ -463,6 +565,8 @@ fun RoutinePlayerScreen(title: String, ui: RoutineUi, guide: GuideState, actions
             }
 
             ui.phase == RoutinePhase.READY -> ReadyBody(routine, ui.fromDevice, actions.onStart)
+
+            ui.pausedByLeaving && resume != null -> ResumePrompt(resume.onResume, resume.onEnd, resume.voice, resume.talkBack, resume.speak)
 
             ui.phase == RoutinePhase.EXERCISE -> ExerciseBody(ui, routine, guide, actions)
 
