@@ -26,7 +26,8 @@ test -s "$OUT/seesun.dump"
 $C exec -T postgres pg_restore --list < "$OUT/seesun.dump" | grep -c "TABLE DATA" | sed 's/^/[handover] 덤프 속 표 데이터 항목: /'
 
 echo "[handover] 미디어 묶기"
-$C exec -T django tar -czf - -C /app/media . > "$OUT/media.tar.gz"
+# app/ 는 가운영 자체 업데이트 APK·매니페스트(publish_apk.sh) — 이관 대상이 아니다
+$C exec -T django tar -czf - --exclude=./app -C /app/media . > "$OUT/media.tar.gz"
 test -s "$OUT/media.tar.gz"
 
 grep -E '^(FIELD_ENCRYPTION_KEYS|PHONE_HASH_KEY)=' .env > "$OUT/data_keys.env"
