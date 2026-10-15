@@ -103,9 +103,11 @@ docker compose -f docker-compose.prod.yml --env-file .env exec -e SEESUN_OPERATO
 
 ```bash
 cd <저장소 루트>
-SEESUN_PROV_ENV=<저장소 밖>/deploy_prov/prov.env bash deploy/provisional/build_android_release.sh --firebase
-# 또는 인자로: bash deploy/provisional/build_android_release.sh "$API_DOMAIN" <signing.properties 경로> --firebase
+SEESUN_PROV_ENV=<저장소 밖>/deploy_prov/prov.env bash deploy/provisional/build_android_release.sh --firebase --self-update
+# 또는 인자로: bash deploy/provisional/build_android_release.sh "$API_DOMAIN" <signing.properties 경로> --firebase --self-update
 ```
+
+`--self-update`를 붙이면 앱이 열릴 때 서버의 새 버전을 확인합니다(6-1절). versionCode는 `deploy_prov/version_counter.txt`(저장소 밖)의 값에 1을 더해 정하고, `--version-code 3 --version-name 0.3.0`으로 직접 줄 수도 있습니다. 같은 서명 키에 versionCode가 커야 이미 설치한 앱 위에 깔립니다.
 
 Firebase 없이 서버 주소만 넣은 빌드는 2026-10-15에 컴파일·서명까지 확인했습니다(`deploy_prov/android/`). 다만 이 빌드는 전화 인증 단계에서 「인증 준비 안 됨」으로 멈추므로 시험자에게는 `--firebase` 빌드를 나눠 줍니다. 배포 방법(APK 직접 설치, Firebase App Distribution, Play 내부 테스트)은 소유자가 정합니다.
 
@@ -145,6 +147,28 @@ df -h / && free -h
   다시 적용하려면 `FORCE_SEED=1 ./deploy.sh`를 실행합니다.
 - **가운영 전체를 접을 때.** `teardown_checklist.md` 순서대로 백업 → 검증 → 인스턴스·고정 IP 삭제까지 합니다. 인스턴스를 「중지」만 하면 요금이 계속 나갑니다.
 
+## 6-1. 앱 업데이트 게시와 되돌리기
+
+`--self-update`로 빌드한 앱(2026-10-15 v2부터)은 열 때와 6시간마다 `https://<sub>.duckdns.org/media/app/latest.json`을 읽습니다. 설치된 것보다 높은 versionCode가 있으면 「새 버전이 있어요」 창을 띄우고, [업데이트]를 누르면 APK를 받아 크기와 SHA-256을 확인한 뒤 시스템 설치 화면을 엽니다. 서버에 닿지 않으면 아무 창도 띄우지 않습니다. 파일은 media 볼륨의 `app/` 폴더에 있고, Caddy가 기존 `/media/` 경로로 내보냅니다. 폴더 목록은 보이지 않습니다(404).
+
+**게시(작업 PC).** 빌드한 APK와 버전, 바뀐 점을 넣습니다. 스크립트가 APK 안의 버전을 확인하고, 임시 이름으로 올린 뒤 서버에서 해시를 다시 확인합니다. 그다음 이름을 바꾸고 `latest.json`을 원자적으로 교체합니다. 최신 APK와 이전 3개만 남기고, 끝나면 공개 주소에서 매니페스트·Content-Type·해시를 확인해 출력합니다.
+
+```bash
+bash deploy/provisional/publish_apk.sh <APK 경로> 4 0.4.0 "식단 기록 오류를 고쳤어요."
+bash deploy/provisional/publish_apk.sh <APK 경로> 4 0.4.0 "보안 수정이에요." --min 4   # 4 미만은 닫을 수 없는 「업데이트가 필요해요」 창
+bash deploy/provisional/publish_apk.sh --show                                               # 지금 매니페스트와 서버 파일
+```
+
+서버 주소·ssh 키·도메인은 저장소에 없습니다. 위 명령 앞에 `SEESUN_PROV_ENV=<저장소 밖>/deploy_prov/prov.env`를 붙이거나 `SEESUN_PROV_HOST`, `SEESUN_PROV_SSH_KEY`, `API_DOMAIN`(필요하면 `SEESUN_PROV_SSH_USER`, `SEESUN_PROV_DIR`)을 환경변수로 줍니다. 빠지면 스크립트가 어떤 값이 없는지 말하고 멈춥니다.
+
+**되돌리기.** 매니페스트를 서버에 남아 있는 이전 버전으로 돌립니다. `--show`로 남은 버전을 먼저 확인합니다.
+
+```bash
+bash deploy/provisional/publish_apk.sh --rollback 3
+```
+
+되돌리면 아직 새 버전을 받지 않은 기기에 더 이상 새 버전을 권하지 않습니다. 이미 새 버전을 설치한 기기는 낮은 버전으로 내려가지 않습니다(Android가 막음). 그런 기기를 고치려면 이전 코드를 더 높은 versionCode로 다시 빌드해 게시합니다. 처음 업데이트할 때는 「이 출처 허용」을 한 번 켜야 합니다. 앱이 설정 화면으로 안내하고, 돌아오면 설치를 이어 갑니다.
+
 ## 7. 의뢰인 계정으로 옮기기
 
 `./export_for_handover.sh`는 서비스를 멈추지 않고 `handover_<시각>/`을 만듭니다. 안에는 DB 덤프, 미디어 묶음, 데이터 키 두 줄(`data_keys.env`), 복원 순서(`RESTORE.txt`), 체크섬이 들어 있습니다. 데이터 키는 덤프와 다른 경로로 전달합니다. 받는 쪽 gpg 키가 있으면 `HANDOVER_GPG_RECIPIENT=<키>`를 붙여 덤프와 키를 암호화합니다. 새 서버에서는 같은 번들로 `bootstrap.sh`를 실행하고, `SKIP_SEED=1 ./deploy.sh` 뒤 `RESTORE.txt` 순서로 복원합니다.
@@ -157,6 +181,7 @@ df -h / && free -h
 - **DuckDNS는 무료 공용 서비스입니다.** 장애가 나면 주소가 풀리지 않습니다. 정식 운영 전에는 자체 도메인으로 바꿉니다. 그때 앱도 새 주소로 다시 빌드해야 합니다.
 - **가운영 서명 키는 정식 출시 키가 아닙니다.** Play 등록 때는 별도 업로드 키와 Play 앱 서명을 쓰고, Firebase에 그 지문을 추가합니다.
 - **관리자 2단계 인증은 아직 없습니다.** 관리자 화면은 SSH 터널로만 엽니다.
+- **앱 자체 업데이트는 가운영 전용입니다.** `--self-update` 빌드에는 설치 권한(REQUEST_INSTALL_PACKAGES)이 들어가 Play 정책에 맞지 않습니다. Play 빌드는 이 옵션 없이 만들고, 권한 검사(`checkReleaseManifestPermissions`)가 이를 막습니다. 업데이트 APK의 진위는 HTTPS로 받은 매니페스트의 SHA-256과 같은 서명 키 여부(Android가 확인)로 지킵니다. 서버 계정이 털리면 같은 키로 서명된 APK가 아닌 한 설치되지 않지만, 서명 키는 서버에 두지 않습니다. 이관 내보내기(`export_for_handover.sh`)는 `app/` 폴더를 뺍니다.
 
 ## 9. 작업 PC 리허설 결과(2026-10-15)
 
