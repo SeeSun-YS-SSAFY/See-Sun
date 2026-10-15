@@ -1,0 +1,32 @@
+{% load static %}<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}운영{% endblock %} · 시선 ops</title>
+  <link rel="stylesheet" href="{% static 'ops/ops.css' %}">
+  <script src="{% static 'ops/ops.js' %}" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">본문으로 건너뛰기</a>
+<div class="shell">
+  <nav class="side" aria-label="운영 메뉴">
+    <div class="brand">시선 ops<small>See:Sun 운영 콘솔</small></div>
+    <a class="nav" href="{% url 'ops:dashboard' %}" {% if nav == 'dashboard' %}aria-current="page"{% endif %}>대시보드</a>
+    <a class="nav" href="{% url 'ops:users' %}" {% if nav == 'users' %}aria-current="page"{% endif %}>사용자</a>
+    <a class="nav" href="{% url 'ops:exercises' %}" {% if nav == 'exercises' %}aria-current="page"{% endif %}>운동 콘텐츠</a>
+    <a class="nav" href="{% url 'ops:app_release' %}" {% if nav == 'app' %}aria-current="page"{% endif %}>앱 버전</a>
+    <a class="nav" href="{% url 'ops:records' %}" {% if nav == 'records' %}aria-current="page"{% endif %}>약관·기록</a>
+    <div class="who">
+      {{ request.user.get_username }} · {% if request.user.is_superuser %}최고 관리자{% else %}직원(조회 전용){% endif %}
+      <form method="post" action="{% url 'ops:logout' %}">{% csrf_token %}<button class="btn link" type="submit">로그아웃</button></form>
+    </div>
+  </nav>
+  <main id="main">
+    {% for m in messages %}<div class="msg {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+</body>
+</html>

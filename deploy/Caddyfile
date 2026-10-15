@@ -8,8 +8,14 @@
 	encode zstd gzip
 
 	# 업로드 상한(앱은 사진·음성을 서버로 보내지 않는다. JSON만)
-	request_body {
+	# 운영 콘솔의 파일 올리기(/ops/upload/ — APK·픽토그램·음성)만 크게. 그 경로도 아래 IP 제한을 받는다
+	@small_body not path /ops/upload/*
+	request_body @small_body {
 		max_size 2MB
+	}
+	@ops_upload path /ops/upload/*
+	request_body @ops_upload {
+		max_size 160MB
 	}
 
 	header {
@@ -19,9 +25,11 @@
 		-Server
 	}
 
-	# 관리자 화면(/admin/)은 허용한 IP에서만(법적 검토 S-01). 기본 private_ranges = VM 안·SSH 터널
+	# 장고 기본 관리자 화면(/admin/, 로그인 포함)은 허용한 IP에서만(법적 검토 S-01). 기본 private_ranges = VM 안·SSH 터널
 	#   ssh -L 8443:127.0.0.1:443 <VM> 후 https://<API_DOMAIN>:8443/admin/ (hosts 파일에 127.0.0.1 <API_DOMAIN>)
-	#   사무실 고정 IP를 더하려면 .env의 ADMIN_ALLOWED_IPS="private_ranges 203.0.113.10/32"
+	#   사무실 고정 IP를 더하려면 .env의 ADMIN_ALLOWED_IPS="private_ranges 203.0.113.10/32". 장고도 같은 목록으로 한 번 더 확인
+	# 운영 콘솔(/ops/, 자체 로그인 /ops/login/)은 여기서 막지 않는다 — 비밀번호 + 2단계 인증(TOTP)·실패 잠금·접속기록으로
+	#   보호(2026-10-15 소유자 결정 msg 993, 안전성 확보조치 기준 제6조 제2항의 안전한 인증수단). 장고 OPS_ALLOWED_IPS로 다시 제한 가능
 	@admin_blocked {
 		path /admin /admin/*
 		not remote_ip {$ADMIN_ALLOWED_IPS}

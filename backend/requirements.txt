@@ -21,6 +21,8 @@ redis==7.1.0  # 선택: REDIS_URL을 주면 요청 제한·로그인 잠금 캐�
 # 보안·인증
 cryptography==46.0.3  # 필드 암호화(Fernet)
 PyJWT==2.10.1
+pyotp==2.9.0  # 관리자 화면 2단계 인증(TOTP, 외부 서비스 없음 — 처리방침 11절)
+qrcode==8.0  # 2단계 인증 등록 QR(서버에서 SVG로 그림, Pillow 불필요)
 firebase-admin==6.9.0  # Firebase ID 토큰 검증
 requests==2.32.5
 

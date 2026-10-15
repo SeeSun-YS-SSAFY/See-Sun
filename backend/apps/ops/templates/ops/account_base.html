@@ -1,0 +1,19 @@
+{% load static %}<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}로그인{% endblock %} · 시선 ops</title>
+  <link rel="stylesheet" href="{% static 'ops/ops.css' %}">
+  <script src="{% static 'ops/ops.js' %}" defer></script>
+</head>
+<body class="account">
+<main class="account-main">
+  <div class="brand">시선 ops<small>See:Sun 운영 콘솔{% if request.user.is_authenticated %} · {{ request.user.get_username }}{% endif %}</small></div>
+  <ol class="steps" aria-label="로그인 단계">{% block steps %}{% endblock %}</ol>
+  <section class="card">{% block content %}{% endblock %}</section>
+  {% if request.user.is_authenticated %}<form method="post" action="{% url 'ops:logout' %}">{% csrf_token %}<button class="btn link" type="submit">다른 계정으로 로그인(로그아웃)</button></form>{% endif %}
+</main>
+</body>
+</html>

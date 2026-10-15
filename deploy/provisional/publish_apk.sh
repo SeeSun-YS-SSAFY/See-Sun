@@ -16,6 +16,7 @@
 #   API_DOMAIN           공개 도메인 — 필수(SEESUN_PROV_DOMAIN도 받음)
 # 하는 일: sha256·크기 계산 → APK의 패키지·versionCode 확인(aapt2) → 임시 이름으로 올려 서버에서 해시 재확인 → 이름 바꾸기 →
 #   manifest-<code>.json 저장 → latest.json을 임시 파일에서 mv로 바꾸기(원자적) → 최신 + 이전 3개만 남기고 정리 → 공개 주소로 확인
+#   → 업데이트 알림(FCM 토픽, manage.py ops_push_app_update, SEESUN_PROV_PUSH=0이면 건너뜀)
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 if [ -n "${SEESUN_PROV_ENV:-}" ]; then
@@ -159,3 +160,10 @@ $PRUNE"
 
 log "4. 공개 주소 확인"
 verify_public "$CODE" "$SHA" "$SIZE"
+
+# 5. 업데이트 알림(FCM 토픽 seesun-app-updates, 서버 이미지 ops3 이상). 실패해도 게시는 끝난 것 — 경고만.
+#    건너뛰려면 SEESUN_PROV_PUSH=0. 다시 보내기: 운영 콘솔 「업데이트 알림 다시 보내기」 또는 같은 명령.
+if [ "${SEESUN_PROV_PUSH:-1}" = 1 ]; then
+  log "5. 업데이트 알림 보내기"
+  remote "cd $(printf %q "$REMOTE_DIR") && docker compose -f docker-compose.prod.yml --env-file .env exec -T -e SEESUN_OPERATOR=publish_apk.sh django python manage.py ops_push_app_update"     || log "경고: 업데이트 알림을 보내지 못했습니다(게시는 완료). 앱은 다음 실행 때(또는 6시간 안에) 스스로 확인합니다."
+fi

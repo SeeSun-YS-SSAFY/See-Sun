@@ -1,0 +1,18 @@
+{% extends 'ops/account_base.html' %}
+{% block title %}로그인{% endblock %}
+{% block steps %}<li aria-current="step">비밀번호</li><li>2단계 인증</li>{% endblock %}
+{% block content %}
+<h1>로그인</h1>
+<p class="lead">직원 계정으로 로그인합니다. 비밀번호 다음에 휴대폰 Google OTP 앱의 6자리 코드를 넣습니다.</p>
+{% if form.non_field_errors %}<div class="msg error" role="alert">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+<form method="post" class="stack" action="{% url 'ops:login' %}">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <label class="field">계정 이름
+    <input type="text" name="username" autocomplete="username" autocapitalize="none" maxlength="150" required autofocus value="{{ form.username.value|default:'' }}"></label>
+  <label class="field">비밀번호
+    <input type="password" name="password" autocomplete="current-password" required></label>
+  <button class="btn primary" type="submit">다음</button>
+</form>
+<p class="hint">5번 틀리면 15분 동안 잠깁니다(2단계 코드 실패도 함께 셉니다). 모든 로그인은 접속기록에 남습니다.</p>
+{% endblock %}

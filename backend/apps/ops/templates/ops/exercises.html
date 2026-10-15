@@ -1,0 +1,35 @@
+{% extends 'ops/base.html' %}
+{% block title %}운동 콘텐츠{% endblock %}
+{% block content %}
+<h1>운동 콘텐츠</h1>
+<p class="lead">운동마다 픽토그램과 안내 음성을 보고 듣고, 파일을 바꿀 수 있습니다. 바꾼 파일은 되돌릴 수 있습니다.</p>
+
+<form class="filters" method="get">
+  <label>분류
+    <select name="category" onchange="this.form.submit()">
+      <option value="">전체</option>
+      {% for c in categories %}<option value="{{ c.category_id }}" {% if category == c.category_id %}selected{% endif %}>{{ c.display_name }}</option>{% endfor %}
+    </select>
+  </label>
+  <noscript><button class="btn" type="submit">보기</button></noscript>
+</form>
+
+<div class="ex-grid">
+{% for r in rows %}
+  <a class="ex-card" href="{% url 'ops:exercise_detail' r.e.pk %}">
+    <div class="thumb">{% if r.thumb %}<img src="{{ r.thumb }}" alt="" loading="lazy">{% else %}<span class="muted">그림 없음</span>{% endif %}</div>
+    <div class="body">
+      <span class="title">{{ r.e.exercise_name }}</span>
+      <span class="meta">{{ r.e.category.display_name }} · 그림 {{ r.e.n_pic }} · 음성 {{ r.e.n_audio }}</span>
+      <span>
+        {% if not r.e.is_active %}<span class="badge withdrawn">숨김</span>{% endif %}
+        {% if r.e.script_revised %}<span class="badge flag">대본 수정</span>{% endif %}
+        {% if r.e.audio_stale %}<span class="badge flag">녹음 다시 필요</span>{% endif %}
+      </span>
+    </div>
+  </a>
+{% empty %}
+  <p class="muted">운동이 없습니다.</p>
+{% endfor %}
+</div>
+{% endblock %}
