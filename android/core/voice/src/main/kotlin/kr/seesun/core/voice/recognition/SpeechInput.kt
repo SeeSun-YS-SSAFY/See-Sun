@@ -11,8 +11,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 
@@ -67,7 +69,14 @@ sealed interface RecognitionEvent {
 
     data class Partial(val text: String) : RecognitionEvent
 
-    data class Final(val candidates: List<String>) : RecognitionEvent {
+    /** 마이크 소리 크기(dB, 인식기 [RecognitionListener.onRmsChanged]). 자동 듣기가 사람 말소리인지 가늠하는 데 쓴다. */
+    data class Level(val rmsDb: Float) : RecognitionEvent
+
+    /**
+     * 최종 결과. [confidences]는 후보별 신뢰도(0~1, [SpeechRecognizer.CONFIDENCE_SCORES])이고, 인식기가 주지 않으면 비어 있거나
+     * 0 이하(모름)다. 자동 듣기는 첫 후보의 신뢰도가 낮으면 버린다([AutoListenPolicy]).
+     */
+    data class Final(val candidates: List<String>, val confidences: List<Float> = emptyList()) : RecognitionEvent {
         val best: String get() = candidates.firstOrNull().orEmpty()
     }
 
@@ -86,6 +95,7 @@ interface SpeechInput {
  * Android SpeechRecognizer 래퍼.
  * - API 31+에서 기기 안 인식이 가능하면 [SpeechRecognizer.createOnDeviceSpeechRecognizer]를 쓴다.
  * - 아니면 기본 인식기 + EXTRA_PREFER_OFFLINE(가능하면 오프라인).
+ * - 기기 안 인식기에 한국어 언어 팩이 없으면(오류 12·13) 기본 인식기(온라인 허용)로 한 번 다시 듣고, 이후로는 기본 인식기를 쓴다.
  * - SpeechRecognizer는 메인 스레드에서만 다룰 수 있어 Main에서 돈다.
  * - 마이크 권한(RECORD_AUDIO) 요청은 화면 쪽(첫 사용 시 안내 후, 05 §4)에서 한다.
  */
@@ -93,6 +103,17 @@ interface SpeechInput {
 class AndroidSpeechInput @Inject constructor(@ApplicationContext private val context: Context) : SpeechInput {
 
     override fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)
+
+    /** 기기 안 인식기에 한국어 언어 팩이 없다고 확인했다(앱이 살아 있는 동안 기억). */
+    @Volatile private var onDeviceLanguageMissing = false
+
+    private fun intentFor(options: ListenOptions, preferOffline: Boolean) = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, options.language)
+        putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, options.partialResults)
+        putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, options.maxResults)
+        putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, preferOffline)
+    }
 
     private fun onDeviceAvailable(): Boolean =
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
@@ -104,65 +125,79 @@ class AndroidSpeechInput @Inject constructor(@ApplicationContext private val con
             awaitClose { }
             return@callbackFlow
         }
-        val onDevice = options.preferOnDevice && onDeviceAvailable()
-        val recognizer = if (onDevice) {
-            SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
-        } else {
-            SpeechRecognizer.createSpeechRecognizer(context)
-        }
-        recognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-                trySend(RecognitionEvent.Ready(onDevice))
+        var recognizer: SpeechRecognizer? = null
+
+        fun start(onDevice: Boolean, preferOffline: Boolean) {
+            recognizer?.destroy()
+            val created = if (onDevice && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+            } else {
+                SpeechRecognizer.createSpeechRecognizer(context)
             }
-
-            override fun onBeginningOfSpeech() {
-                trySend(RecognitionEvent.SpeechStarted)
-            }
-
-            override fun onRmsChanged(rmsdB: Float) = Unit
-
-            override fun onBufferReceived(buffer: ByteArray?) = Unit
-
-            override fun onEndOfSpeech() {
-                trySend(RecognitionEvent.SpeechEnded)
-            }
-
-            override fun onError(error: Int) {
-                trySend(RecognitionEvent.Failed(RecognitionError.fromCode(error)))
-                close()
-            }
-
-            override fun onResults(results: Bundle?) {
-                val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
-                if (list.isEmpty()) {
-                    trySend(RecognitionEvent.Failed(RecognitionError.NO_MATCH))
-                } else {
-                    trySend(RecognitionEvent.Final(list))
+            recognizer = created
+            created.setRecognitionListener(object : RecognitionListener {
+                override fun onReadyForSpeech(params: Bundle?) {
+                    trySend(RecognitionEvent.Ready(onDevice))
                 }
-                close()
-            }
 
-            override fun onPartialResults(partialResults: Bundle?) {
-                partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
-                    trySend(RecognitionEvent.Partial(it))
+                override fun onBeginningOfSpeech() {
+                    trySend(RecognitionEvent.SpeechStarted)
                 }
-            }
 
-            override fun onEvent(eventType: Int, params: Bundle?) = Unit
-        })
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_LANGUAGE, options.language)
-            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, options.partialResults)
-            putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, options.maxResults)
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, options.preferOnDevice)
+                override fun onRmsChanged(rmsdB: Float) {
+                    trySend(RecognitionEvent.Level(rmsdB))
+                }
+
+                override fun onBufferReceived(buffer: ByteArray?) = Unit
+
+                override fun onEndOfSpeech() {
+                    trySend(RecognitionEvent.SpeechEnded)
+                }
+
+                override fun onError(error: Int) {
+                    // 기기 안 인식기는 있는데 한국어 언어 팩이 없으면(에뮬레이터·일부 폰, 오류 12·13) 기본 인식기로 한 번 다시 듣고,
+                    // 이 앱이 살아 있는 동안은 기본 인식기를 쓴다. 기본 인식기는 Google 서버를 거칠 수 있다(Ready.onDevice=false).
+                    if (onDevice && RecognitionError.fromCode(error) == RecognitionError.LANGUAGE_UNAVAILABLE) {
+                        onDeviceLanguageMissing = true
+                        start(onDevice = false, preferOffline = false)
+                        return
+                    }
+                    trySend(RecognitionEvent.Failed(RecognitionError.fromCode(error)))
+                    close()
+                }
+
+                override fun onResults(results: Bundle?) {
+                    val list = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION).orEmpty()
+                    if (list.isEmpty()) {
+                        trySend(RecognitionEvent.Failed(RecognitionError.NO_MATCH))
+                    } else {
+                        val scores = results?.getFloatArray(SpeechRecognizer.CONFIDENCE_SCORES)?.toList().orEmpty()
+                        trySend(RecognitionEvent.Final(list, scores))
+                    }
+                    close()
+                }
+
+                override fun onPartialResults(partialResults: Bundle?) {
+                    partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let {
+                        trySend(RecognitionEvent.Partial(it))
+                    }
+                }
+
+                override fun onEvent(eventType: Int, params: Bundle?) = Unit
+            })
+            created.startListening(intentFor(options, preferOffline))
         }
-        recognizer.startListening(intent)
+
+        start(
+            onDevice = options.preferOnDevice && onDeviceAvailable() && !onDeviceLanguageMissing,
+            preferOffline = options.preferOnDevice && !onDeviceLanguageMissing
+        )
         awaitClose {
-            recognizer.cancel()
-            recognizer.destroy()
+            recognizer?.cancel()
+            recognizer?.destroy()
         }
-    }.flowOn(Dispatchers.Main)
+    }.buffer(Channel.UNLIMITED) // 소리 크기 이벤트가 잦아도 최종 결과(trySend)가 버려지지 않게
+        .flowOn(Dispatchers.Main)
 }
 
 /**

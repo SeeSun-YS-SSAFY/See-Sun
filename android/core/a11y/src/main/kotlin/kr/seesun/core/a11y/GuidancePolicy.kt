@@ -6,8 +6,8 @@ package kr.seesun.core.a11y
  * - TalkBack이 켜져 있으면 앱 TTS로 안내를 자동 재생하지 않는다. 화면 제목은 paneTitle,
  *   상태 변화는 liveRegion으로 TalkBack에 넘긴다.
  * - TalkBack이 켜져 있으면 마이크를 자동으로 켜지 않는다(TalkBack 발화를 스스로 인식하는 충돌 방지).
- * - TalkBack이 꺼져 있어도 안내 음성과 마이크 자동 시작을 동시에 하지 않는다.
- *   마이크는 사용자가 설정에서 자동 시작을 고른 경우에만, 안내가 끝난 뒤 켠다.
+ * - TalkBack이 꺼져 있어도 안내 음성과 마이크 자동 시작을 동시에 하지 않는다(반이중).
+ *   마이크는 설정 「음성 자동 인식」(기본 켜짐, 소유자 결정 2026-10-15)이 켜져 있을 때 안내가 끝난 뒤 켠다.
  */
 object GuidancePolicy {
 
@@ -36,7 +36,7 @@ object GuidancePolicy {
     /**
      * 마이크를 사용자 조작 없이 켜도 되는가.
      *
-     * @param autoStartMicSetting 설정의 "마이크 자동 시작"(기본 꺼짐)
+     * @param autoStartMicSetting 설정의 「음성 자동 인식」(기본 켜짐)
      * @param guidanceSpeaking 진입 안내 TTS가 아직 말하는 중인지
      */
     fun mayAutoStartMic(talkBackEnabled: Boolean, autoStartMicSetting: Boolean, guidanceSpeaking: Boolean): Boolean =

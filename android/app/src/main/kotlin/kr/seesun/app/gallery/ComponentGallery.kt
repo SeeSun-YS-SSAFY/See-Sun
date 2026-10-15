@@ -89,7 +89,7 @@ class GalleryViewModel @Inject constructor(
 
                     RecognitionEvent.SpeechEnded -> s.copy(mic = MicState.PROCESSING)
 
-                    RecognitionEvent.SpeechStarted -> s
+                    RecognitionEvent.SpeechStarted, is RecognitionEvent.Level -> s
 
                     is RecognitionEvent.Final -> {
                         failures.onSuccess()

@@ -17,6 +17,8 @@
     <string name="ui_mic_rationale_alternative">마이크를 허용하지 않아도 키보드와 버튼으로 모든 입력을 할 수 있어요.</string>
     <string name="ui_mic_allow">마이크 허용하기</string>
     <string name="ui_mic_decline">키보드로 입력하기</string>
+    <!-- 음성 자동 인식: 화면에서 처음 마이크가 저절로 켜지기 직전에 한 번(짧게). -->
+    <string name="ui_auto_listen_cue">말씀하세요.</string>
     <string name="ui_voice_command_idle">말로 고르기</string>
     <string name="ui_voice_command_listening">듣는 중, 누르면 멈춰요</string>
     <string name="ui_voice_command_processing">인식 중</string>

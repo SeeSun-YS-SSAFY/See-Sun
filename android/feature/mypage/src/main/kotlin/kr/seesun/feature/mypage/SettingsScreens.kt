@@ -198,6 +198,7 @@ enum class SettingsItem(val label: Int, val description: Int?, val route: Any?) 
     DATA_SOURCES(R.string.my_set_sources, null, DataSourcesRoute),
     LICENSES(R.string.my_set_licenses, null, LicensesRoute),
     ACCESSIBILITY(R.string.my_set_accessibility, null, AccessibilityRoute),
+    VOICE_AUTO(R.string.my_set_voice_auto, R.string.my_set_voice_auto_desc, VoiceAutoRoute),
     NOTIFICATIONS(R.string.my_set_notifications, R.string.my_set_notifications_desc, NotificationSettingsRoute),
     LOGOUT(R.string.my_logout, R.string.my_logout_desc, null),
     DELETE(R.string.my_delete, R.string.my_delete_desc, DeleteAccountRoute)

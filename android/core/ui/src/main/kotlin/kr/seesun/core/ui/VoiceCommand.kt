@@ -43,6 +43,7 @@ import kr.seesun.core.designsystem.component.SeeSunButton
 import kr.seesun.core.designsystem.component.adaptiveMicSize
 import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunTheme
+import kr.seesun.core.voice.recognition.AutoListenOutcome
 import kr.seesun.core.voice.recognition.RecognitionError
 import kr.seesun.core.voice.recognition.RecognitionEvent
 import kr.seesun.core.voice.recognition.RecognitionFailureTracker
@@ -82,6 +83,30 @@ class VoiceCommandController(
     }
 
     fun onPermissionDenied() = _state.update { it.copy(error = FieldError.PermissionDenied, suggestButtons = true) }
+
+    /**
+     * 음성 자동 인식으로 한 번 듣는다([AutoListenEffect]가 부른다). 수동 듣기와 달리 무음·못 알아들음·화면에 맞지 않는 말에
+     * 오류 문구·실패 횟수를 남기지 않는다. 이미 듣는 중이면 아무것도 하지 않는다.
+     */
+    suspend fun listenAuto(): AutoListenOutcome {
+        if (_state.value.mic != MicState.IDLE) return AutoListenOutcome.USER_STOPPED
+        onBeforeListen()
+        _state.update { it.copy(error = null) }
+        return autoListenOnce(
+            scope = scope,
+            speech = speech,
+            register = { job = it },
+            setMic = { mic -> _state.update { it.copy(mic = mic.toMicState()) } },
+            accept = { candidates ->
+                handler(candidates).also { ok ->
+                    if (ok) {
+                        tracker.onSuccess()
+                        _state.update { it.copy(error = null, suggestButtons = false) }
+                    }
+                }
+            }
+        )
+    }
 
     fun clearError() = _state.update { it.copy(error = null) }
 
@@ -131,6 +156,7 @@ fun VoiceCommandMic(
 ) {
     val state by controller.state.collectAsStateWithLifecycle()
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
+    AutoListenEffect(controller, talkBackEnabled, speak, controller::listenAuto)
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -191,6 +217,7 @@ fun VoiceCommandButton(
 ) {
     val state by controller.state.collectAsStateWithLifecycle()
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
+    AutoListenEffect(controller, talkBackEnabled, speak, controller::listenAuto)
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)) {
         SeeSunButton(
             text = when (state.mic) {
