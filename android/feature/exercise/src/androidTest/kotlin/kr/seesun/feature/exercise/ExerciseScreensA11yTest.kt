@@ -1,16 +1,24 @@
 package kr.seesun.feature.exercise
 
+import android.util.Log
+import android.view.View
+import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasTestTag
@@ -18,9 +26,14 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDialog
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.printToLog
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import kr.seesun.core.data.model.ExerciseCategory
@@ -38,10 +51,22 @@ import kr.seesun.feature.exercise.home.HomeDestination
 import kr.seesun.feature.exercise.home.HomeUi
 import kr.seesun.feature.exercise.list.ExerciseListScreen
 import kr.seesun.feature.exercise.list.ListUi
+import kr.seesun.feature.exercise.play.ASSISTANT_SPOKEN
 import kr.seesun.feature.exercise.play.ExercisePlayerScreen
+import kr.seesun.feature.exercise.play.PLAY_TAG
+import kr.seesun.feature.exercise.play.PlayerCommand
+import kr.seesun.feature.exercise.play.PlayerHandlers
+import kr.seesun.feature.exercise.play.PlayerMenu
+import kr.seesun.feature.exercise.play.PlayerMode
 import kr.seesun.feature.exercise.play.PlayerUi
+import kr.seesun.feature.exercise.play.SCRIPT_TAG
+import kr.seesun.feature.exercise.play.SLIDER_TAG
+import kr.seesun.feature.exercise.play.SPEED_TAG
+import kr.seesun.feature.exercise.play.STAGE_TAG
 import kr.seesun.feature.exercise.player.GuideState
 import kr.seesun.feature.exercise.player.GuideStatus
+import kr.seesun.feature.exercise.routine.REST_PAUSE_TAG
+import kr.seesun.feature.exercise.routine.REST_SKIP_TAG
 import kr.seesun.feature.exercise.routine.RoutineActions
 import kr.seesun.feature.exercise.routine.RoutinePhase
 import kr.seesun.feature.exercise.routine.RoutinePlayerScreen
@@ -79,10 +104,30 @@ class ExerciseScreensA11yTest {
         GuideSection("main_form", "동작 시작", "천천히 앉습니다.", null)
     )
     private val detail = ExerciseDetail("e1", "맨몸 스쿼트", "근력 운동", sections, emptyList(), needsAssistant = false)
-    private val noActions = RoutineActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+
+    private fun handlers(
+        onSeek: (Int, Int) -> Unit = { _, _ -> },
+        onCommand: (PlayerCommand) -> Unit = {},
+        onPlayPause: () -> Unit = {},
+        onToggleScript: () -> Unit = {}
+    ) = PlayerHandlers(
+        onBack = {},
+        onPlayPause = onPlayPause,
+        onSpeed = {},
+        onToggleScript = onToggleScript,
+        onSeek = onSeek,
+        onCommand = onCommand,
+        onOpenMenu = {},
+        onCloseMenu = {},
+        onCloseHelp = {},
+        onPick = onCommand,
+        hasSettings = true
+    )
+
+    private val noActions = RoutineActions({}, {}, {}, {}, {}, {}, "루틴 운동으로", handlers())
 
     @Test
-    fun 운동_첫_화면은_방식_버튼과_로그인_안내를_글자로_보인다() {
+    fun 운동_첫_화면은_방식_버튼과_로그인_안내를_글자로_보이고_나머지는_더_보기에_있다() {
         var opened: HomeDestination? = null
         rule.setThemed {
             ExerciseHomeScreen(
@@ -97,11 +142,15 @@ class ExerciseScreensA11yTest {
                 { opened = it }
             )
         }
-        rule.onNode(pane("운동")).assertExists()
+        rule.onNode(pane("운동 방식")).assertExists()
         // 화면에는 한 줄로 줄이고, TalkBack에는 전체 문장을 읽힌다.
         rule.onNodeWithText("보내지 못한 운동 기록 2건", substring = true).assertExists()
         rule.onNode(hasContentDescription("아직 서버에 보내지 못한 운동 기록이 2건", substring = true)).assertExists()
-        rule.onNodeWithText("루틴 운동").performScrollTo().performClick()
+        rule.onNodeWithText("유산소").assertExists()
+        rule.onNodeWithText("추천 루틴").assertExists()
+        rule.onNodeWithText("루틴 운동").assertDoesNotExist()
+        rule.onNode(hasContentDescription("더 보기", substring = true)).performClick()
+        rule.onNodeWithText("루틴 운동").performClick()
         assertEquals(HomeDestination.Routine, opened)
         rule.assertNoLigatureNames()
     }
@@ -128,26 +177,124 @@ class ExerciseScreensA11yTest {
     }
 
     @Test
-    fun 재생_화면은_명시_버튼과_글자_상태와_지금_문장_표시를_가진다() {
+    fun 재생_화면은_속도_재생_대본_세_버튼과_진행_슬라이더만_보이고_나머지는_TalkBack_작업으로_된다() {
+        val commands = mutableListOf<PlayerCommand>()
         rule.setThemed {
             ExercisePlayerScreen(
                 ui = PlayerUi(loading = false, detail = detail, sessionActive = true),
                 guide = GuideState(sections = sections, sectionIndex = 0, sentenceIndex = 1, status = GuideStatus.PLAYING),
-                onBack = {}, onPlayPause = {}, onReplay = {}, onPrevious = {}, onNext = {}, onSpeed = {},
-                onFavorite = {}, onFinish = {}, onRetry = {}, onAgain = {}, onDone = {}
+                handlers = handlers(onCommand = { commands += it }),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
             )
         }
         rule.onNode(pane("맨몸 스쿼트")).assertExists()
-        rule.onNodeWithText("상태: 재생 중").assertExists()
-        rule.onNodeWithText("구간 1/2: 준비 자세").assertExists()
-        listOf("일시정지", "이 구간 다시 듣기", "이전 구간", "다음 구간", "재생 속도 1배", "즐겨찾기 넣기").forEach {
-            rule.onNodeWithText(it).performScrollTo().assertIsEnabled().performClick()
-        }
-        rule.onNodeWithText("운동 마치기").performScrollTo().assertIsEnabled()
-        // 그림이 없으면 그림 자리에 대본(가사)을 보인다. 지금 읽는 문장은 색만이 아니라 글자·상태로도 알린다(A3)
-        rule.onNode(hasContentDescription("2번째 문장으로 이동: 팔을 앞으로 뻗습니다.") and hasStateDescription("지금 읽는 문장"))
-            .assertExists()
+        rule.onNode(hasContentDescription("구간 1/2, 준비 자세")).assertExists()
+        // 글자 버튼 7개는 화면에서 빠졌다(기능은 [⋯]·TalkBack 작업·음성으로 남음).
+        listOf("이전 구간", "다음 구간", "이 구간 다시 듣기", "운동 마치기", "즐겨찾기 넣기").forEach { rule.onNodeWithText(it).assertDoesNotExist() }
+        val play = rule.onNodeWithTag(PLAY_TAG)
+        play.assert(hasContentDescription("일시정지") and hasStateDescription("재생 중"))
+        val actions = play.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertEquals(PlayerMenu.playActions(PlayerMode.SINGLE, false, true, false).map { it.label }, actions.map { it.label })
+        actions.first { it.label == "다음 구간" }.action()
+        actions.first { it.label == "운동 끝내기" }.action()
+        assertEquals(listOf(PlayerCommand.NEXT, PlayerCommand.END), commands)
+        rule.onNodeWithTag(SPEED_TAG).assert(hasContentDescription("재생 속도, 1배", substring = true))
+        // 그림이 없는 운동은 대본이 그림 자리를 대신하므로 [대본] 전환 버튼이 없다(그림이 있는 운동은 아래 대본 보기 시험).
+        rule.onNodeWithTag(SCRIPT_TAG).assertDoesNotExist()
+        rule.onNode(hasContentDescription("더 보기. 다시 듣기", substring = true)).assertExists()
+        rule.onRoot(useUnmergedTree = true).printToLog("SEESUN_A11Y_PLAYER")
         rule.assertNoLigatureNames()
+    }
+
+    @Test
+    fun 진행_슬라이더는_조절형이고_한_단계가_한_구간이며_누르면_그_자리로_간다() {
+        val seeks = mutableListOf<Pair<Int, Int>>()
+        val commands = mutableListOf<PlayerCommand>()
+        val three = sections + GuideSection("exercise_guide_text", "따라 하기", "하나. 둘. 셋.", null)
+        rule.setThemed {
+            ExercisePlayerScreen(
+                ui = PlayerUi(loading = false, detail = detail.copy(sections = three), sessionActive = true),
+                guide = GuideState(sections = three, sectionIndex = 1, sentenceIndex = 0, status = GuideStatus.PAUSED),
+                handlers = handlers(onSeek = { s, i -> seeks += s to i }, onCommand = { commands += it }),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
+            )
+        }
+        val slider = rule.onNodeWithTag(SLIDER_TAG)
+        slider.assert(hasContentDescription("운동 안내 진행") and hasStateDescription("구간 2/3 동작 시작, 30퍼센트"))
+        val config = slider.fetchSemanticsNode().config
+        val range = config[SemanticsProperties.ProgressBarRangeInfo]
+        assertEquals(1f, range.current, 0.001f)
+        assertEquals(0f..2f, range.range)
+        assertEquals(1, range.steps) // 구간 3개 → 한 단계 = 한 구간
+        // TalkBack 위아래 쓸기 = setProgress(다음 값) → 그 구간 처음부터
+        slider.performSemanticsAction(SemanticsActions.SetProgress) { it(2f) }
+        assertEquals(2 to 0, seeks.last())
+        assertEquals(listOf("이전 구간", "다음 구간", "이 구간 다시 듣기"), config[SemanticsActions.CustomActions].map { it.label })
+        // 막대 한 곳을 한 번 누르면 그 자리로(끌기 대안, WCAG 2.5.7)
+        slider.performTouchInput { click(centerLeft) }
+        assertEquals(0 to 0, seeks.last())
+        rule.onRoot(useUnmergedTree = true).printToLog("SEESUN_A11Y_SLIDER")
+    }
+
+    /**
+     * TalkBack이 실제로 받는 노드 정보(AccessibilityNodeInfo, UiAutomation으로 읽음): 재생 버튼의 사용자 지정 작업 이름과
+     * 진행 슬라이더의 조절형 정보(SeekBar · 범위 · 앞뒤로 넘기기 · 값 정하기). 로그 태그 SEESUN_A11Y_NODE로 남긴다(v1.9 증빙).
+     */
+    @Test
+    fun TalkBack이_받는_노드에_재생_버튼_작업과_조절형_슬라이더가_있다() {
+        val three = sections + GuideSection("exercise_guide_text", "따라 하기", "하나. 둘. 셋.", null)
+        rule.setThemed {
+            ExercisePlayerScreen(
+                ui = PlayerUi(loading = false, detail = detail.copy(sections = three), sessionActive = true),
+                guide = GuideState(sections = three, sectionIndex = 1, sentenceIndex = 0, status = GuideStatus.PLAYING),
+                handlers = handlers(),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
+            )
+        }
+        rule.waitForIdle()
+        // Compose가 TalkBack에 넘기는 것과 같은 경로(AccessibilityNodeProvider)로 노드 정보를 만든다.
+        fun info(tag: String): AccessibilityNodeInfo {
+            val id = rule.onNodeWithTag(tag).fetchSemanticsNode().id
+            var result: AccessibilityNodeInfo? = null
+            rule.runOnUiThread {
+                val provider = generateSequence(listOf<View>(rule.activity.window.decorView)) { level ->
+                    level.flatMap { v -> if (v is ViewGroup) (0 until v.childCount).map(v::getChildAt) else emptyList() }.ifEmpty { null }
+                }.flatten().firstNotNullOf { it.accessibilityNodeProvider }
+                result = provider.createAccessibilityNodeInfo(id)
+            }
+            return result!!
+        }
+        val play = info(PLAY_TAG)
+        val labels = play.actionList.mapNotNull { it.label?.toString() }
+        Log.i(NODE_TAG, "play: desc=${play.contentDescription} class=${play.className} actions=$labels")
+        val expected = PlayerMenu.playActions(PlayerMode.SINGLE, false, true, false).map { it.label }
+        assertTrue("재생 버튼 작업 $labels", labels.containsAll(expected))
+        val slider = info(SLIDER_TAG)
+        val sliderRange = slider.rangeInfo
+        val sliderActions = slider.actionList.map { it.id }
+        Log.i(
+            NODE_TAG,
+            "slider: desc=${slider.contentDescription} class=${slider.className} " +
+                "range=${sliderRange?.min}..${sliderRange?.max} current=${sliderRange?.current} actions=${slider.actionList.map {
+                    it.label ?: it.id
+                }}"
+        )
+        assertEquals("android.widget.SeekBar", slider.className?.toString())
+        assertEquals(1f, sliderRange!!.current, 0.001f)
+        assertTrue(sliderActions.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD.id))
+        assertTrue(sliderActions.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD.id))
+        assertTrue(sliderActions.contains(AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS.id))
+        val speed = info(SPEED_TAG)
+        Log.i(NODE_TAG, "speed: desc=${speed.contentDescription} actions=${speed.actionList.mapNotNull { it.label?.toString() }}")
     }
 
     // 맨몸 스쿼트 연결표 모양(육안 검토): 준비 자세 0번 → 준비 자세 1번 → 동작 시작 0번, 따라 하기는 없음
@@ -161,27 +308,33 @@ class ExerciseScreensA11yTest {
     )
 
     private fun setPlayer(guide: GuideState, onSeek: (Int, Int) -> Unit, fontScale: Float = 1f) = rule.setThemed(fontScale) {
+        var script by remember { mutableStateOf(false) }
         CompositionLocalProvider(LocalPictogramLoader provides { ImageBitmap(8, 6) }) {
             ExercisePlayerScreen(
-                ui = PlayerUi(loading = false, detail = mapped, sessionActive = true),
+                ui = PlayerUi(loading = false, detail = mapped, sessionActive = true, showScript = script),
                 guide = guide,
-                onBack = {}, onPlayPause = {}, onReplay = {}, onPrevious = {}, onNext = {}, onSpeed = {},
-                onFavorite = {}, onFinish = {}, onRetry = {}, onAgain = {}, onDone = {}, onSeek = onSeek
+                handlers = handlers(onSeek = onSeek, onToggleScript = { script = !script }),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
             )
         }
     }
 
     @Test
-    fun 그림은_대본_위치를_따라가고_그림_띠를_누르면_그_부분으로_간다() {
-        val seeks = mutableListOf<Pair<Int, Int>>()
+    fun 그림은_대본_위치를_따라가고_최소_240dp를_지킨다() {
         var guide by mutableStateOf(GuideState(sections = sections, sectionIndex = 0, sentenceIndex = 0, status = GuideStatus.PLAYING))
         rule.setThemed {
             CompositionLocalProvider(LocalPictogramLoader provides { ImageBitmap(8, 6) }) {
                 ExercisePlayerScreen(
-                    ui = PlayerUi(loading = false, detail = mapped, sessionActive = true),
+                    ui = PlayerUi(loading = false, detail = mapped.copy(needsAssistant = true), sessionActive = true),
                     guide = guide,
-                    onBack = {}, onPlayPause = {}, onReplay = {}, onPrevious = {}, onNext = {}, onSpeed = {},
-                    onFavorite = {}, onFinish = {}, onRetry = {}, onAgain = {}, onDone = {}, onSeek = { s, i -> seeks += s to i }
+                    handlers = handlers(),
+                    onFinish = {},
+                    onRetry = {},
+                    onAgain = {},
+                    onDone = {}
                 )
             }
         }
@@ -191,10 +344,9 @@ class ExerciseScreensA11yTest {
         rule.waitUntil(2_000) { frameShown(1) }
         guide = guide.copy(sectionIndex = 1, sentenceIndex = 0)
         rule.waitUntil(2_000) { frameShown(2) }
-        // 그림 띠: 버튼마다 그림 이름 + 이동 안내, 지금 그림은 상태로 알림
-        rule.onNode(hasContentDescription("동작 그림 3, 앉기. 해당 구간으로 이동") and hasStateDescription("지금 보이는 그림")).assertExists()
-        rule.onNode(hasContentDescription("동작 그림 2, 팔을 앞으로. 해당 구간으로 이동")).performClick()
-        assertEquals(listOf(0 to 1), seeks)
+        // 「보조자 필요」 노랑 표가 있어도 그림은 240dp 아래로 줄지 않는다(R-03).
+        rule.onNode(hasContentDescription(ASSISTANT_SPOKEN)).assertExists()
+        rule.onNodeWithTag(STAGE_TAG).assertHeightIsAtLeast(240.dp)
         rule.assertNoLigatureNames()
     }
 
@@ -218,7 +370,8 @@ class ExerciseScreensA11yTest {
             seeks +=
                 s to i
         })
-        rule.onNodeWithText("대본 보기").performClick()
+        rule.onNodeWithTag(SCRIPT_TAG).performClick()
+        rule.onNodeWithTag(SCRIPT_TAG).assert(hasStateDescription("켜짐"))
         rule.onNode(hasContentDescription("2번째 문장으로 이동: 팔을 앞으로 뻗습니다.") and hasStateDescription("지금 읽는 문장"))
             .assertExists()
         rule.shot("07c_운동재생_대본보기")
@@ -237,48 +390,75 @@ class ExerciseScreensA11yTest {
         }
         rule.onNode(hasContentDescription("1번째 문장으로 이동: 발을 어깨 너비로 벌립니다.")).performClick()
         assertEquals(listOf(1 to 0, 0 to 0), seeks)
-        rule.onNodeWithText("그림 보기").performClick()
+        rule.onNodeWithTag(SCRIPT_TAG).performClick()
         rule.onNode(hasContentDescription("그림 크게 보기 — 팔을 앞으로")).assertExists()
     }
 
     @Test
-    fun TalkBack_켜짐_진입_상태는_재생_대기이고_운동_마치기는_사유와_함께_비활성() {
+    fun TalkBack_켜짐_진입_상태는_재생_대기이고_200퍼센트에서도_잘리지_않는다() {
+        var played = 0
         rule.setThemed(fontScale = 2f) {
             ExercisePlayerScreen(
                 ui = PlayerUi(loading = false, detail = detail.copy(needsAssistant = true)),
                 guide = GuideState(sections = sections, status = GuideStatus.IDLE),
-                onBack = {}, onPlayPause = {}, onReplay = {}, onPrevious = {}, onNext = {}, onSpeed = {},
-                onFavorite = {}, onFinish = {}, onRetry = {}, onAgain = {}, onDone = {}
+                handlers = handlers(onPlayPause = { played++ }),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
             )
         }
-        rule.onNodeWithText("상태: 준비됨").assertExists()
-        rule.onNodeWithText("재생을 누르면 안내 음성을 시작해요", substring = true).assertExists()
-        rule.onNodeWithText("보조자 필요: 보조자와 함께 하세요", substring = true).assertExists()
-        rule.onNodeWithText("재생").performScrollTo().performClick()
-        rule.onNode(hasText("운동 마치기")).performScrollTo().assertIsNotEnabled()
-        rule.onNodeWithText("재생을 시작하면 누를 수 있어요").assertExists()
+        rule.onNodeWithTag(PLAY_TAG).assert(hasContentDescription("재생") and hasStateDescription("준비됨")).performScrollTo().performClick()
+        assertEquals(1, played)
+        rule.onNode(hasContentDescription(ASSISTANT_SPOKEN, substring = true)).assertExists()
         rule.assertNoTextOverflow()
     }
 
     @Test
-    fun 루틴_휴식_화면은_남은_시간과_다음_운동과_건너뛰기를_글자로_보인다() {
+    fun 더_보기는_대화상자이고_숨긴_기능을_모두_버튼으로_가진다() {
+        val picked = mutableListOf<PlayerCommand>()
+        rule.setThemed {
+            ExercisePlayerScreen(
+                ui = PlayerUi(loading = false, detail = detail, sessionActive = true, menuOpen = true),
+                guide = GuideState(sections = sections, status = GuideStatus.PAUSED),
+                handlers = handlers(onCommand = { picked += it }),
+                onFinish = {},
+                onRetry = {},
+                onAgain = {},
+                onDone = {}
+            )
+        }
+        rule.onNode(isDialog()).assertExists()
+        rule.onNode(pane("더 보기")).assertExists()
+        listOf("이 구간 다시 듣기", "이전 구간", "다음 구간", "즐겨찾기 넣기", "운동 끝내기", "설정", "도움말", "닫기").forEach {
+            rule.onNodeWithText(it).performScrollTo().assertExists()
+        }
+        rule.onNodeWithText("다음 구간").performScrollTo().performClick()
+        assertEquals(listOf(PlayerCommand.NEXT), picked)
+    }
+
+    @Test
+    fun 루틴_휴식_화면은_남은_시간과_다음_운동과_둥근_버튼_둘을_글자로_보인다() {
         val routine = Routine(
             null,
             "근력 운동 루틴",
             listOf(RoutineItem(null, "a", "맨몸 스쿼트", 1, null, 10), RoutineItem(null, "b", "플랭크", 1, null, 10))
         )
+        var skipped = 0
+        var toggled = 0
         rule.setThemed(fontScale = 2f) {
             RoutinePlayerScreen(
                 "근력 운동 루틴",
                 RoutineUi(phase = RoutinePhase.REST, routine = routine, stepIndex = 1, restRemaining = 7, sessionActive = true),
                 GuideState(),
-                noActions
+                noActions.copy(onSkipRest = { skipped++ }, onToggleRest = { toggled++ })
             )
         }
-        rule.onNodeWithText("남은 휴식 7초").assertExists()
+        rule.onNode(hasContentDescription("남은 휴식 7초")).assertExists()
         rule.onNodeWithText("다음 운동: 플랭크").assertExists()
-        rule.onNodeWithText("휴식 건너뛰기").performScrollTo().performClick()
-        rule.onNodeWithText("휴식 멈추기").performScrollTo().performClick()
+        rule.onNodeWithTag(REST_SKIP_TAG).performScrollTo().performClick()
+        rule.onNodeWithTag(REST_PAUSE_TAG).performScrollTo().performClick()
+        assertEquals(1 to 1, skipped to toggled)
         rule.assertNoTextOverflow()
     }
 
@@ -308,6 +488,7 @@ class ExerciseScreensA11yTest {
 
     private companion object {
         const val PAGE_BACK = 10
+        const val NODE_TAG = "SEESUN_A11Y_NODE"
     }
     private val frameSlackMs = 100L
 

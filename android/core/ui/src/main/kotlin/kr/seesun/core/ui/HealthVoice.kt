@@ -8,6 +8,13 @@ enum class GoalOption(val code: String, @StringRes val label: Int, @StringRes va
     GAIN_MUSCLE("GAIN_MUSCLE", R.string.ui_goal_gain, R.string.ui_goal_gain_desc),
     MAINTAIN("MAINTAIN", R.string.ui_goal_maintain, R.string.ui_goal_maintain_desc);
 
+    /**
+     * 목표 선택지 아래 설명. 만 14~18세(미성년)는 감량·근육 증진도 열량을 바꾸지 않으므로(2025 섭취기준 그대로, 소유자 msg 1120)
+     * 「하루 500킬로칼로리 줄여요 / 300킬로칼로리 늘려요」 대신 「열량은 그대로, 운동과 식사 균형으로」.
+     */
+    @StringRes
+    fun descriptionFor(minor: Boolean): Int = if (minor && this != MAINTAIN) R.string.ui_goal_minor_desc else description
+
     companion object {
         fun of(code: String?): GoalOption? = entries.firstOrNull { it.code == code }
     }

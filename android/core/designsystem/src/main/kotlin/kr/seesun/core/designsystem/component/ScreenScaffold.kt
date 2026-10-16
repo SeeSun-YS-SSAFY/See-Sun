@@ -48,7 +48,9 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -93,6 +95,8 @@ import kr.seesun.core.designsystem.theme.WidthClass
  *   (소유자 msg 959·977, v6). TalkBack 「설정」. 기본값은 앱이 [LocalAppSettingsAction]으로 넘긴 동작(모든 화면), null이면 숨긴다
  *   (설정 목록 자체·탈퇴·초기화 같은 되돌릴 수 없는 확인 화면).
  * @param dense 요소가 많은 화면(Figma에 없는 약관 동의·운동 재생 등): 보통 폰에서도 묶음 사이 24 대신 12dp.
+ * @param onOpenMore 헤더 오른쪽 끝 [⋯ 더 보기](화면 간소화 설계 v1 §6.1·§7.1). 주면 톱니 자리에 오고, [설정]은 화면이 그 목록 안에 넣는다.
+ * @param moreLabel [⋯ 더 보기]의 TalkBack 이름(안에 있는 기능 이름을 함께 읽는다 — 숨긴 기능 알리기 §6.4 ⓑ).
  */
 @Composable
 fun ScreenScaffold(
@@ -107,6 +111,8 @@ fun ScreenScaffold(
     progressDescription: String? = null,
     dense: Boolean = false,
     onOpenSettings: (() -> Unit)? = LocalAppSettingsAction.current,
+    onOpenMore: (() -> Unit)? = null,
+    moreLabel: String = HeaderLayout.MORE_LABEL,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = SeeSunTheme.colors
@@ -129,7 +135,10 @@ fun ScreenScaffold(
     ) {
         val tier = LayoutTier.of(maxHeight.value)
         CompositionLocalProvider(LocalLayoutTier provides tier) {
-            CompositionLocalProvider(LocalHeaderSettings provides onOpenSettings) {
+            CompositionLocalProvider(
+                LocalHeaderSettings provides onOpenSettings,
+                LocalHeaderMore provides onOpenMore?.let { HeaderMore(it, moreLabel) }
+            ) {
                 ScaffoldColumn(title, showTitle, onBack, repeat, scrollable, step, stepCount, progressDescription, dense, content)
             }
         }
@@ -194,7 +203,8 @@ private fun Header(
     modifier: Modifier = Modifier
 ) {
     val onOpenSettings = LocalHeaderSettings.current
-    val hasRow = showTitle || onBack != null || onSpeakSummary != null || onOpenSettings != null
+    val more = LocalHeaderMore.current
+    val hasRow = showTitle || onBack != null || onSpeakSummary != null || onOpenSettings != null || more != null
     if (!hasRow && progress == null) return
     Column(modifier = modifier.testTag(LayoutTags.HEADER).padding(top = topPadding)) {
         if (hasRow) {
@@ -205,7 +215,13 @@ private fun Header(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // 포커스 순서: 뒤로 → 제목 → 화면 다시 듣기 → 설정(톱니는 오른쪽 맨 끝).
-                HeaderLayout.slots(onBack != null, showTitle, onSpeakSummary != null, onOpenSettings != null).forEach { slot ->
+                HeaderLayout.slots(
+                    onBack != null,
+                    showTitle,
+                    onSpeakSummary != null,
+                    onOpenSettings != null,
+                    more != null
+                ).forEach { slot ->
                     when (slot) {
                         HeaderSlot.BACK -> BackTriangleButton(onClick = onBack ?: {}, height = rowHeight)
 
@@ -229,6 +245,12 @@ private fun Header(
                             label = HeaderLayout.SETTINGS_LABEL,
                             onClick = onOpenSettings ?: {},
                             modifier = Modifier.size(SIDE_SLOT).testTag(LayoutTags.SETTINGS)
+                        )
+
+                        HeaderSlot.MORE -> MoreButton(
+                            label = more?.label ?: HeaderLayout.MORE_LABEL,
+                            onClick = more?.onClick ?: {},
+                            modifier = Modifier.size(SIDE_SLOT).testTag(LayoutTags.MORE)
                         )
                     }
                 }
@@ -501,6 +523,47 @@ val LocalAppSettingsAction = staticCompositionLocalOf<(() -> Unit)?> { null }
 
 /** 헤더 [설정] 콜백(ScreenScaffold 인자를 헤더까지 넘긴다). */
 private val LocalHeaderSettings = staticCompositionLocalOf<(() -> Unit)?> { null }
+
+private class HeaderMore(val onClick: () -> Unit, val label: String)
+
+/** 헤더 [⋯ 더 보기](ScreenScaffold 인자를 헤더까지 넘긴다). */
+private val LocalHeaderMore = staticCompositionLocalOf<HeaderMore?> { null }
+
+/**
+ * [⋯ 더 보기]: 지름 48dp 노랑 원 + 검정 2dp 테두리 + 점 세 개(설계 v1 §6.1 3번). 누르는 곳은 56dp 칸 전체.
+ * TalkBack은 [label]("더 보기. 다시 듣기, 이전·다음 구간, …")을 읽는다.
+ */
+@Composable
+fun MoreButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = SeeSunTheme.colors
+    Box(
+        modifier = modifier
+            .pressable(label = HeaderLayout.MORE_LABEL, onClick = onClick, onClickLabel = HeaderLayout.MORE_LABEL)
+            .clearAndSetSemantics {
+                contentDescription = label
+                role = Role.Button
+                onClick(label = HeaderLayout.MORE_LABEL) {
+                    onClick()
+                    true
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(Modifier.size(MORE_CIRCLE)) {
+            val r = size.minDimension / 2
+            drawCircle(colors.primary, r)
+            drawCircle(colors.border, r - MORE_BORDER.toPx() / 2, style = Stroke(width = MORE_BORDER.toPx()))
+            val dot = MORE_DOT.toPx()
+            val step = dot * DOT_STEP
+            for (i in -1..1) drawCircle(colors.onPrimary, dot / 2, Offset(center.x + i * step, center.y))
+        }
+    }
+}
+
+private val MORE_CIRCLE = 48.dp
+private val MORE_BORDER = 2.dp
+private val MORE_DOT = 6.dp
+private const val DOT_STEP = 2.2f
 private val TRIANGLE_W = 24.dp
 private val TRIANGLE_H = 32.dp
 private val PROGRESS_HEIGHT = 10.dp

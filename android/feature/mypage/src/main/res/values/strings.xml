@@ -112,6 +112,14 @@
     <string name="my_set_press">누름 알림</string>
     <string name="my_set_press_desc">결과 읽기·진동만·끄기</string>
     <string name="my_set_howto">사용법 다시 듣기</string>
+    <!-- v1.9 설정 여섯 갈래(의뢰서 p4 다섯 갈래 + 앱 정보) -->
+    <string name="my_group_voice">음성 안내</string>
+    <string name="my_group_voice_desc">사용법 다시 듣기, 말 속도, 음성 자동 인식, 앱 음성 안내, 누름 알림</string>
+    <string name="my_group_account">계정</string>
+    <string name="my_group_account_desc">내 개인정보 권리, 동의 관리, 데이터 초기화, 로그아웃, 회원 탈퇴</string>
+    <string name="my_group_app_info">앱 정보</string>
+    <string name="my_group_app_info_desc">앱 버전, 권한, 알림, 접근성, 이용약관, 처리방침, 데이터 출처, 오픈소스 라이선스</string>
+    <string name="my_settings_group_guide">%1$s. %2$s이 있어요.</string>
     <string name="my_set_howto_desc">처음 안내를 다시 들어요</string>
     <string name="my_choice_guide">%1$s. 지금은 %2$s이에요. %3$s 중에서 골라 주세요.</string>
     <string name="my_speed_body">앱 안내 음성의 빠르기예요. 고르면 그 빠르기로 바로 들려 드려요. TalkBack 속도는 TalkBack 설정에서 바꿔요.</string>
@@ -225,7 +233,7 @@
     <string name="my_source_allergen_title">알레르기 항목</string>
     <string name="my_source_allergen">「식품 등의 표시·광고에 관한 법률」의 알레르기 유발물질 표시 대상 19종을 정해진 순서로 보여 드려요. 음식에 들어 있을 가능성을 알려 드리는 참고 정보예요.</string>
     <string name="my_source_kcal_title">하루 목표 열량</string>
-    <string name="my_source_kcal">목표 칼로리는 일반 공식으로 계산한 추정값이에요. Mifflin-St Jeor 기초대사량 식에 활동 계수 1.3을 곱하고 목표에 따라 조정해요(감량 500킬로칼로리 줄임, 근육 증진 300킬로칼로리 늘림). 감량 목표는 1,200킬로칼로리 아래로는 권하지 않아요. 만 19세 미만은 2020 한국인 영양소 섭취기준(보건복지부)의 연령별 에너지필요추정량을 그대로 써요(만 12~14세 남 2,500·여 2,000, 만 15~18세 남 2,700·여 2,000킬로칼로리, 감량·증진 조정 없음).</string>
+    <string name="my_source_kcal">목표 칼로리는 일반 공식으로 계산한 추정값이에요. Mifflin-St Jeor 기초대사량 식에 활동 계수 1.3을 곱하고 목표에 따라 조정해요(감량 500킬로칼로리 줄임, 근육 증진 300킬로칼로리 늘림). 감량 목표는 1,200킬로칼로리 아래로는 권하지 않아요. 만 19세 미만은 2025 한국인 영양소 섭취기준(보건복지부·한국영양학회)의 연령별 에너지필요추정량을 그대로 써요(만 12~14세 남 2,500·여 2,000, 만 15~18세 남 2,700·여 2,000킬로칼로리, 감량·증진 조정 없음).</string>
     <string name="my_source_exercise_title">운동 안내</string>
     <string name="my_source_exercise">운동 동작 그림과 음성 안내는 시선 1차 서비스에서 만든 콘텐츠예요.</string>
     <string name="my_source_voice_title">음성 인식</string>
@@ -257,8 +265,9 @@
     <string name="my_consent_ack_button">확인했어요</string>
     <string name="my_consent_acked_result">%1$s를 확인했어요.</string>
     <string name="my_kcal_estimate">목표 칼로리는 일반 공식으로 계산한 추정값이에요.</string>
-    <string name="my_kcal_minor">만 19세 미만이라 목표 칼로리는 연령별 섭취기준(2020 한국인 영양소 섭취기준 에너지필요추정량)을 써요.</string>
+    <string name="my_kcal_minor">만 19세 미만이라 목표 칼로리는 연령별 섭취기준(2025 한국인 영양소 섭취기준 에너지필요추정량)을 써요.</string>
     <string name="my_short_kcal_minor">청소년 연령별 섭취기준</string>
+    <string name="my_goal_minor_note">만 19세 미만은 연령별 섭취기준을 써서 목표에 따라 열량을 늘리거나 줄이지 않아요.</string>
 
     <!-- A-04 내 개인정보 권리 -->
     <string name="my_rights_intro">개인정보에 대한 권리는 앱 안에서 버튼이나 음성으로, 또는 전화·문자·이메일로 언제든 행사할 수 있어요. 가입할 때보다 어렵지 않게 만들었어요.</string>

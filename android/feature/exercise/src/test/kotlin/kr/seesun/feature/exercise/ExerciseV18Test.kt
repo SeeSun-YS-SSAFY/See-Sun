@@ -62,20 +62,15 @@ class ExerciseV18Test {
     }
 
     @Test
-    fun `첫 화면 - 카테고리 4개(목표 순서) 뒤에 추천 루틴, 루틴, 기록, 안전, 전체 보기`() {
+    fun `첫 화면 - 카테고리 4개(목표 순서) 뒤에 추천 루틴(v1·9 - 루틴·기록·안전·전체는 더 보기로)`() {
         val cats = ExerciseOrder.sort(server, ExerciseOrder.localOrder("GAIN_MUSCLE"))
         val tiles = homeTiles(cats, cats.first())
-        assertEquals(
-            listOf("근력 운동", "유산소 운동", "유연성 운동", "균형 운동", "추천 루틴", "루틴 운동", "이번 주 기록", "안전 안내", "전체 운동"),
-            tiles.map { it.text }
-        )
+        assertEquals(listOf("근력", "유산소", "유연성 운동", "균형", "추천 루틴"), tiles.map { it.text })
         assertEquals("목표에 맞춰 먼저", tiles.first().description)
         assertEquals("근력 운동 차례로", tiles[4].description)
         val ui = HomeUi(loading = false, categories = cats, goal = "GAIN_MUSCLE")
         assertEquals(HomeDestination.Category("2", "유산소 운동"), destinationOf(tiles[1].key, ui))
         assertEquals(HomeDestination.RecommendedRoutine("1", "추천 루틴"), destinationOf(tiles[4].key, ui))
-        assertEquals(HomeDestination.Routine, destinationOf(tiles[5].key, ui))
-        assertEquals(HomeDestination.Single, destinationOf(tiles[8].key, ui))
     }
 
     @Test

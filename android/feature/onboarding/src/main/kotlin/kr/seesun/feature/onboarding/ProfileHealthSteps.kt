@@ -35,6 +35,7 @@ import kr.seesun.core.network.model.ConsentTypes
 import kr.seesun.core.network.model.Genders
 import kr.seesun.core.ui.DiseaseOption
 import kr.seesun.core.ui.GoalOption
+import kr.seesun.core.ui.MinorGoalNoteText
 import kr.seesun.core.ui.VoiceCommandButton
 import kr.seesun.core.ui.VoiceCommandMic
 
@@ -283,17 +284,31 @@ internal fun ColumnScope.OtherAllergyStep(ctx: StepContext) {
 @Composable
 internal fun ColumnScope.GoalStep(ctx: StepContext) {
     val goal = ctx.state.form.goal
-    // 「목표에 따라 목표 열량이 정해져요」는 낭독으로, 하한 안내(안전)는 화면에 남긴다.
-    BodyText(
-        stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note),
-        spoken = stringResource(R.string.onb_goal_body) + " " + stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note)
-    )
-    if (ctx.vm.isMinor()) BodyText(stringResource(R.string.onb_goal_minor_note))
+    // 미성년: 성인용 감량 하한 안내 대신 「연령별 섭취기준이라 열량을 늘리거나 줄이지 않아요」,
+    // 감량·근육 증진을 고르면 「성장기에는 …」(보이고 말함, 소유자 msg 1120). 한 화면에 들어가게 한 칸만 쓴다.
+    if (!ctx.vm.isMinor()) {
+        // 「목표에 따라 목표 열량이 정해져요」는 낭독으로, 하한 안내(안전)는 화면에 남긴다.
+        BodyText(
+            stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note),
+            spoken = stringResource(R.string.onb_goal_body) + " " + stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note)
+        )
+    } else {
+        MinorGoalNoteText(
+            goal = goal,
+            minor = true,
+            seq = ctx.state.minorGoalNoteSeq,
+            talkBackEnabled = ctx.talkBack,
+            speak = ctx.speak,
+            otherwise = stringResource(R.string.onb_goal_minor_note)
+        )
+    }
     VoiceCommandButton(ctx.vm.goalVoice, stringResource(R.string.onb_goal_hint), ctx.talkBack, ctx.speak)
+    val minor = ctx.vm.isMinor()
     GoalOption.entries.forEach { option ->
         ListButton(
             text = stringResource(option.label),
-            description = stringResource(option.description),
+            // 만 14~18세: 감량·근육 증진도 「열량은 그대로, 운동과 식사 균형으로」(열량 보정 없음).
+            description = stringResource(option.descriptionFor(minor)),
             // 목표별 열량 변화는 정보라 아주 작은 폰에서도 보인다(2차 결정 「설명 한 줄 유지」).
             descriptionVisible = true,
             selected = goal == option.code,

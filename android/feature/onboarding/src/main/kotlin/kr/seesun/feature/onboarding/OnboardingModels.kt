@@ -152,6 +152,8 @@ data class OnboardingUiState(
     val targetFloored: Boolean = false,
     /** 서버가 미성년 연령별 섭취기준(산식 kdri…)으로 목표 열량을 계산했는가(2차 의뢰서 p14). */
     val targetMinorStandard: Boolean = false,
+    /** 미성년이 감량·근육 증진을 고른 횟수(늘 때마다 목표 화면 안내를 다시 말한다, 소유자 msg 1120). */
+    val minorGoalNoteSeq: Int = 0,
     /** 완료 화면에서 부를 이름(기존 회원은 서버 값). */
     val doneName: String? = null,
     val doneLoaded: Boolean = false,

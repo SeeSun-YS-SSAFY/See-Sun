@@ -35,6 +35,7 @@ import kr.seesun.core.network.model.FrequentExercisesDto
 import kr.seesun.core.network.model.PlaylistCreateRequest
 import kr.seesun.core.network.model.PlaylistDto
 import kr.seesun.core.network.model.PlaylistItemAddRequest
+import kr.seesun.core.network.model.PlaylistItemUpdateRequest
 import kr.seesun.core.network.model.PlaylistTitleRequest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -269,6 +270,8 @@ private class FakeExerciseApi : ExerciseApi {
     override suspend fun addPlaylistItem(playlistId: String, body: PlaylistItemAddRequest): PlaylistDto = unused()
 
     override suspend fun deletePlaylistItem(playlistId: String, itemId: String): PlaylistDto = unused()
+
+    override suspend fun updatePlaylistItem(playlistId: String, itemId: String, body: PlaylistItemUpdateRequest): PlaylistDto = unused()
 
     override suspend fun weekly(from: String?): ExerciseWeekDto = unused()
 

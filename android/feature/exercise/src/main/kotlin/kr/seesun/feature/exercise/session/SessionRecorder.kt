@@ -1,11 +1,13 @@
 package kr.seesun.feature.exercise.session
 
 import android.content.Context
+import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.Duration
 import java.time.OffsetDateTime
 import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -141,3 +143,21 @@ fun spokenDuration(d: Duration): String {
 }
 
 private const val SECONDS_PER_MINUTE = 60
+
+/** 재생 화면 첫 안내(「멈추려면 가운데 버튼…」, 간소화 설계 §6.4 ⓐ)를 이미 했는지(기기에만). */
+@Singleton
+class PlayerTipStore @Inject constructor(@ApplicationContext context: Context) {
+    private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+
+    /** 아직 안 했으면 true를 돌려주고 했다고 적는다(한 번만). */
+    fun takeFirstTip(): Boolean {
+        if (prefs.getBoolean(KEY, false)) return false
+        prefs.edit { putBoolean(KEY, true) }
+        return true
+    }
+
+    private companion object {
+        const val PREFS = "seesun_player_tip"
+        const val KEY = "first_tip_v19"
+    }
+}

@@ -74,6 +74,8 @@ class ContactAndHardwareButtonTest {
     fun `미성년 연령별 기준 표시는 서버가 그 산식으로 계산했을 때만`() {
         fun me(minor: Boolean, formula: String?) =
             MeDto(id = "u", targetKcal = 2000, targetKcalDetail = TargetKcalDetailDto(targetKcal = 2000, formula = formula, minor = minor))
+        assertTrue(usesMinorStandard(me(minor = true, formula = "kdri2025_eer_v1")))
+        // v1.8 서버(2020 기준)도 그대로 인정한다(재배포 전후 모두 「청소년 연령별 섭취기준」)
         assertTrue(usesMinorStandard(me(minor = true, formula = "kdri2020_eer_v1")))
         // 서버 배포 전: minor=true여도 값은 성인 공식 → 「연령별 기준」이라고 하지 않는다
         assertFalse(usesMinorStandard(me(minor = true, formula = "mifflin_st_jeor_v1")))

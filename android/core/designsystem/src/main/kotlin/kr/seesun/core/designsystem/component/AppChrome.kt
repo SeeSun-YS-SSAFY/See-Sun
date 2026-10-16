@@ -103,23 +103,33 @@ fun Modifier.togglePressable(label: String, value: Boolean, onToggle: () -> Unit
 }
 
 /** 헤더 한 줄의 칸 순서(순수 함수, 시험용). */
-enum class HeaderSlot { BACK, SIDE_SPACER, TITLE, FILL, REPEAT, GAP, SETTINGS, END_SPACER }
+enum class HeaderSlot { BACK, SIDE_SPACER, TITLE, FILL, REPEAT, GAP, SETTINGS, MORE, END_SPACER }
 
 object HeaderLayout {
     /**
      * 왼쪽부터 [뒤로](없으면 같은 폭 빈 칸) · 제목(숨기면 빈 칸) · [화면 다시 듣기] · 8dp · [설정].
      * 톱니는 늘 오른쪽 맨 끝이다(화면 낭독기가 켜져 [화면 다시 듣기]가 숨어도 자리가 바뀌지 않게, UI/UX v2 §5.2).
      * 오른쪽에 버튼이 하나도 없으면 왼쪽과 같은 폭을 비워 제목이 가운데 오게 한다.
+     *
+     * [hasMore]면 톱니 자리(오른쪽 맨 끝)에 [⋯ 더 보기]가 오고 [설정]은 그 목록 안으로 들어간다
+     * (화면 간소화 설계 v1 §6.1·§7.1: 「나머지는 늘 같은 자리의 [⋯ 더 보기] 하나로 — 지금 ⚙ 자리」). [화면 다시 듣기]는 그대로 남는다.
      */
-    fun slots(hasBack: Boolean, showTitle: Boolean, hasRepeat: Boolean, hasSettings: Boolean): List<HeaderSlot> = buildList {
-        add(if (hasBack) HeaderSlot.BACK else HeaderSlot.SIDE_SPACER)
-        add(if (showTitle) HeaderSlot.TITLE else HeaderSlot.FILL)
-        if (hasRepeat) add(HeaderSlot.REPEAT)
-        if (hasRepeat && hasSettings) add(HeaderSlot.GAP)
-        if (hasSettings) add(HeaderSlot.SETTINGS)
-        if (!hasRepeat && !hasSettings) add(HeaderSlot.END_SPACER)
-    }
+    fun slots(hasBack: Boolean, showTitle: Boolean, hasRepeat: Boolean, hasSettings: Boolean, hasMore: Boolean = false): List<HeaderSlot> =
+        buildList {
+            val end = when {
+                hasMore -> HeaderSlot.MORE
+                hasSettings -> HeaderSlot.SETTINGS
+                else -> null
+            }
+            add(if (hasBack) HeaderSlot.BACK else HeaderSlot.SIDE_SPACER)
+            add(if (showTitle) HeaderSlot.TITLE else HeaderSlot.FILL)
+            if (hasRepeat) add(HeaderSlot.REPEAT)
+            if (hasRepeat && end != null) add(HeaderSlot.GAP)
+            if (end != null) add(end)
+            if (!hasRepeat && end == null) add(HeaderSlot.END_SPACER)
+        }
 
     const val REPEAT_LABEL = "화면 다시 듣기"
     const val SETTINGS_LABEL = "설정"
+    const val MORE_LABEL = "더 보기"
 }

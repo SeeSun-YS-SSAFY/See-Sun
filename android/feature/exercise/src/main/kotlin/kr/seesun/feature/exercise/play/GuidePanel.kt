@@ -1,53 +1,71 @@
 package kr.seesun.feature.exercise.play
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import kr.seesun.core.a11y.politeLiveRegion
-import kr.seesun.core.designsystem.component.ActionLabel
-import kr.seesun.core.designsystem.component.AdaptiveActions
-import kr.seesun.core.designsystem.component.ButtonKind
+import kr.seesun.core.designsystem.component.MoreMenuItem
 import kr.seesun.core.designsystem.component.PagedColumn
-import kr.seesun.core.designsystem.component.PlaybackProgressBar
-import kr.seesun.core.designsystem.component.SeeSunButton
 import kr.seesun.core.designsystem.component.pressable
 import kr.seesun.core.designsystem.component.progressPercent
 import kr.seesun.core.designsystem.theme.LayoutTier
@@ -61,21 +79,12 @@ import kr.seesun.feature.exercise.player.GuideStatus
 import kr.seesun.feature.exercise.player.PictogramTrack
 import kr.seesun.feature.exercise.player.ScriptTimeline
 import kr.seesun.feature.exercise.player.speedLabel
-import kr.seesun.feature.exercise.ui.ActionButton
 import kr.seesun.feature.exercise.ui.PictogramPlayer
-import kr.seesun.feature.exercise.ui.PictogramThumb
 import kr.seesun.feature.exercise.ui.PictogramViewer
 import kr.seesun.feature.exercise.ui.ScriptLine
 
-/** 지금 위치: "구간 2/5: 준비 자세 · 기기 음성". 자동으로 구간이 넘어갈 때는 낭독하지 않는다(안내 음성과 겹침 방지). */
-fun positionLine(state: GuideState): String {
-    val section = state.section ?: return ""
-    val voice = if (state.usingDeviceVoice) " · 기기 음성으로 읽는 중" else ""
-    return "구간 ${state.sectionIndex + 1}/${state.sections.size}: ${section.title}$voice"
-}
-
 /**
- * 안내 진행률(0~1, 진행 바): (앞 구간 문장 수 + 지금 구간에서 지난 문장 수) ÷ 전체 문장 수.
+ * 안내 진행률(0~1, 진행 슬라이더 채움): (앞 구간 문장 수 + 지금 구간에서 지난 문장 수) ÷ 전체 문장 수.
  * 다 들으면 1, 안내가 없으면 0. 문장 위치는 재생기가 알려 주는 값([GuideState.sentenceIndex])이다.
  */
 fun guideProgress(state: GuideState): Float {
@@ -87,45 +96,165 @@ fun guideProgress(state: GuideState): Float {
     return (done.toFloat() / counts.sum()).coerceIn(0f, 1f)
 }
 
-/** 진행 바의 TalkBack 상태 설명: "40퍼센트, 구간 2/5". */
+/** 진행의 TalkBack 상태 설명: "40퍼센트, 구간 2/5". */
 fun guideProgressState(state: GuideState): String =
     "${progressPercent(guideProgress(state))}퍼센트, 구간 ${state.sectionIndex + 1}/${state.sections.size}"
 
-/** 운동 안내 진행 바(「구간 n/m」 글자와 함께). 값이 바뀌어도 낭독하지 않는다(초점이 있을 때만 읽음). */
+/** 재생 화면에 넘기는 보이는 층 값(한 가지 운동·루틴 공용). */
+data class PlayerSpec(
+    val mode: PlayerMode,
+    val progress: ProgressText,
+    /** 진행 줄 아래 작은 안내(기기 음성·오류 등): 화면 글자 to 낭독(없으면 화면 글자). */
+    val info: List<Pair<String, String?>> = emptyList(),
+    val assistant: Boolean = false,
+    val showScript: Boolean = false,
+    /** 재생 버튼의 TalkBack 작업([PlayerMenu.playActions]). */
+    val playActions: List<MoreMenuItem> = emptyList()
+)
+
+/**
+ * 재생 화면 몸통(화면 간소화 설계 v1 §6.1, 그림 1 가운데): 진행 한 줄 → 동작 그림(흰 카드, **최소 240dp**·최대 330dp, R-03) →
+ * 둥근 버튼 3개([속도] 72dp · [재생/일시정지] 88dp · [대본] 72dp, 아래 글자) → 진행 슬라이더. 그림 띠와 글자 버튼 7개는 없앴다
+ * (기능은 [⋯ 더 보기]·TalkBack 작업·음성으로 남음). 화면이 낮거나 글꼴이 크면 그림은 240dp를 지키고 본문이 스크롤된다.
+ *
+ * @param top 진행 줄 아래에 더 둘 것(멈춘 동안의 음성 명령 듣기 상태 등)
+ */
 @Composable
-fun GuideProgressBar(state: GuideState) {
-    if (state.sections.isEmpty()) return
-    PlaybackProgressBar(fraction = guideProgress(state), label = "운동 안내 진행", state = guideProgressState(state))
+fun GuidePlayerBody(
+    guide: GuideState,
+    track: PictogramTrack,
+    exerciseName: String,
+    spec: PlayerSpec,
+    onPlayPause: () -> Unit,
+    onSpeed: () -> Unit,
+    onToggleScript: () -> Unit,
+    onSeek: (Int, Int) -> Unit,
+    onCommand: (PlayerCommand) -> Unit,
+    top: @Composable ColumnScope.() -> Unit = {}
+) {
+    val pick: (MoreMenuItem) -> Unit = { item -> PlayerMenu.commandOf(item)?.let(onCommand) }
+    val pictureMode = !(spec.showScript || track.urls.isEmpty())
+    PlayerFrame(
+        // 그림은 최대 330dp(Figma 큰 픽토그램), 대본은 남는 높이를 모두 쓴다(한 쪽에 문장을 더 많이).
+        stageMax = if (pictureMode) STAGE_MAX else null,
+        top = {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunSpace.XS)) {
+                ProgressLine(spec.progress, assistantInScript = spec.assistant && (spec.showScript || track.urls.isEmpty()))
+                spec.info.forEach { (shown, spoken) ->
+                    Text(
+                        shown,
+                        style = SeeSunTheme.typography.caption,
+                        color = SeeSunTheme.colors.onBackground,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier)
+                    )
+                }
+                top()
+            }
+        },
+        stage = { GuideStage(guide, track, exerciseName, spec.showScript, onSeek, assistant = spec.assistant) },
+        bottom = {
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunSpace.M)) {
+                RoundControls(
+                    guide = guide,
+                    showScript = spec.showScript,
+                    scriptAvailable = track.urls.isNotEmpty(),
+                    onPlayPause = onPlayPause,
+                    onSpeed = onSpeed,
+                    onToggleScript = onToggleScript,
+                    playActions = spec.playActions,
+                    onPick = pick
+                )
+                GuideSlider(guide, onSeek = onSeek, actions = PlayerMenu.sliderActions(), onPick = pick)
+            }
+        }
+    )
+}
+
+/** 진행 한 줄(18sp 굵게 노랑, 가운데). TalkBack은 「운동 3개 중 1번째, 1세트째, 구간 2/5」처럼 읽는다. */
+@Composable
+private fun ProgressLine(progress: ProgressText, assistantInScript: Boolean) {
+    if (progress.shown.isEmpty() && !assistantInScript) return
+    val shown = listOfNotNull(progress.shown.takeIf { it.isNotEmpty() }, if (assistantInScript) "보조자 필요" else null).joinToString(" · ")
+    val spoken = listOfNotNull(progress.spoken.takeIf { it.isNotEmpty() }, if (assistantInScript) ASSISTANT_SPOKEN else null)
+        .joinToString(". ")
+    Text(
+        text = shown,
+        style = SeeSunTheme.typography.caption.copy(fontWeight = FontWeight.Bold),
+        color = SeeSunTheme.colors.emphasis,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().testTag(PROGRESS_LINE_TAG).semantics { contentDescription = spoken }
+    )
 }
 
 /**
- * 재생 화면의 그림·대본 자리(2026-10-14 소유자·의뢰인 「실제 뮤직 플레이리스트처럼 이미지 혹은 대사 선택 시 해당 부분으로」).
- * 화면 틀 본문에서 남는 높이를 모두 차지한다(스크롤 0). 글꼴을 키우면 고정 높이로 두고 본문이 스크롤된다(WCAG 1.4.10).
- *
- * - 그림 보기: 큰 픽토그램(대본 위치에 맞는 그림, 반복 구간은 1초마다) + 그림 띠(누르면 그 그림의 대본 위치로).
- * - 대본 보기([showScript] 또는 그림이 없을 때): 모든 구간의 문장을 쪽으로 나눠 보이고, 문장을 누르면 그 문장부터 재생한다.
- *   지금 읽는 문장은 노랑 + 굵게 + 밑줄 + "▶"(색만으로 구분하지 않음), 그 문장이 있는 쪽을 따라간다. 문장이 바뀌어도 낭독하지 않는다.
+ * 위 · 그림 · 아래를 쌓되 그림이 남는 높이를 차지한다(최소 [STAGE_MIN], 최대 [stageMax] — 대본은 제한 없음). 남는 높이가 최소보다 작으면
+ * 그림은 최소 높이를 지키고 전체가 스크롤된다(작은 폰·글꼴 확대, WCAG 1.4.10). 그림이 최대에 닿으면 남는 공간은 위아래로 나눈다.
  */
 @Composable
-fun ColumnScope.GuideStage(
+private fun PlayerFrame(stageMax: Dp?, top: @Composable () -> Unit, stage: @Composable () -> Unit, bottom: @Composable () -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val available = maxHeight
+        val tiny = LocalLayoutTier.current == LayoutTier.TINY
+        val gap = if (tiny) SeeSunSpace.S else SeeSunSpace.M
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
+            Layout(contents = listOf(top, stage, bottom), modifier = Modifier.fillMaxWidth()) { (t, s, b), constraints ->
+                val width = constraints.maxWidth
+                val loose = Constraints(minWidth = width, maxWidth = width)
+                val topPlaced = t.map { it.measure(loose) }
+                val bottomPlaced = b.map { it.measure(loose) }
+                val gapPx = gap.roundToPx()
+                val fixed = topPlaced.sumOf { it.height } + bottomPlaced.sumOf { it.height } + gapPx * 2
+                val availablePx = available.roundToPx()
+                val stageHeight = (availablePx - fixed).coerceIn(STAGE_MIN.roundToPx(), stageMax?.roundToPx() ?: Int.MAX_VALUE)
+                val stagePlaced = s.map { it.measure(Constraints.fixed(width, stageHeight)) }
+                val content = fixed + stageHeight
+                val total = maxOf(availablePx, content)
+                val extra = (total - content) / 2
+                layout(width, total) {
+                    var y = extra
+                    topPlaced.forEach {
+                        it.place(0, y)
+                        y += it.height
+                    }
+                    y += gapPx
+                    stagePlaced.forEach { it.place(0, y) }
+                    y += stageHeight + gapPx
+                    bottomPlaced.forEach {
+                        it.place(0, y)
+                        y += it.height
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 그림·대본 자리(흰 카드). 그림 보기는 큰 픽토그램(대본 위치에 맞는 그림, 반복 구간은 1초마다, 누르면 크게 보기),
+ * 대본 보기([showScript] 또는 그림이 없을 때)는 모든 구간의 문장을 쪽으로 나눠 보이고 문장을 누르면 그 문장부터 재생한다
+ * (2026-10-14 소유자·의뢰인 「실제 뮤직 플레이리스트처럼」). 「보조자 필요」는 카드 왼쪽 위 노랑 표로 겹쳐 줄 하나를 아낀다(§6.1 5번).
+ */
+@Composable
+fun GuideStage(
     state: GuideState,
     track: PictogramTrack,
     exerciseName: String,
     showScript: Boolean,
     onSeek: (Int, Int) -> Unit,
+    modifier: Modifier = Modifier,
+    assistant: Boolean = false,
     animate: Boolean? = null
 ) {
-    val fontScale = LocalDensity.current.fontScale
-    val big = fontScale > 1f
-    // 글꼴을 키우면 글꼴 배율만큼 높은 고정 자리(대본 한 문장이 쪽 넘김 줄과 겹치지 않게) + 본문 스크롤.
-    val stage = if (big) Modifier.fillMaxWidth().height(STAGE_BIG * fontScale) else Modifier.fillMaxWidth().weight(1f)
-    BoxWithConstraints(stage) {
+    BoxWithConstraints(modifier.fillMaxSize().testTag(STAGE_TAG)) {
         val lineHeight = with(LocalDensity.current) { SeeSunTheme.typography.body.lineHeight.toDp() }
         when {
-            !(showScript || track.urls.isEmpty()) -> PictureView(state, track, exerciseName, onSeek, animate)
+            !(showScript || track.urls.isEmpty()) -> PictureView(state, track, exerciseName, maxHeight, assistant, animate)
 
-            // 대본 자리가 아주 낮으면(아주 작은 폰·그림 없음) 쪽 넘김 대신 지금 문장만, 들어가는 줄 수까지(낭독은 문장 전체).
-            !big && maxHeight < SCRIPT_PAGES_MIN -> NowLine(
+            // 대본 자리가 아주 낮으면 쪽 넘김 대신 지금 문장만, 들어가는 줄 수까지(낭독은 문장 전체).
+            maxHeight < SCRIPT_PAGES_MIN -> NowLine(
                 state,
                 maxLines = ((maxHeight - NOW_LINE_PADDING) / lineHeight).toInt().coerceAtLeast(1)
             )
@@ -136,48 +265,42 @@ fun ColumnScope.GuideStage(
 }
 
 @Composable
-private fun PictureView(state: GuideState, track: PictogramTrack, exerciseName: String, onSeek: (Int, Int) -> Unit, animate: Boolean?) {
+private fun PictureView(state: GuideState, track: PictogramTrack, exerciseName: String, height: Dp, assistant: Boolean, animate: Boolean?) {
     val cycle = track.framesAt(state.section?.key, state.sentenceIndex)
     var viewer by rememberSaveable { mutableStateOf<Int?>(null) }
     val labels = track.urls.indices.map { track.label(it) }
     viewer?.let { start -> PictogramViewer(track.urls, labels, start) { viewer = null } }
-    val seekable = if (track.mapped) {
-        track.urls.indices.mapNotNull { i -> track.seekTarget(i, state.sections)?.let { i to it } }
-    } else {
-        emptyList()
+    val shape = RoundedCornerShape(SeeSunDimens.CornerRadius)
+    Box(Modifier.fillMaxSize().border(SeeSunDimens.BorderWidth, SeeSunTheme.colors.border, shape)) {
+        PictogramPlayer(
+            urls = track.urls,
+            playing = state.status == GuideStatus.PLAYING,
+            description = "$exerciseName 동작 그림",
+            height = height,
+            animate = animate,
+            cycle = cycle,
+            labels = track.urls.indices.map { if (track.mapped) track.label(it) else null },
+            onOpen = { viewer = it }
+        )
+        if (assistant) AssistantTag(Modifier.align(Alignment.TopStart).padding(SeeSunSpace.S))
     }
-    val gap = SeeSunSpace.S
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val strip = if (seekable.size > 1) thumbHeight() else 0.dp
-        val picture = (maxHeight - if (strip > 0.dp) strip + gap else 0.dp).coerceIn(0.dp, PICTO_MAX)
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(gap, Alignment.CenterVertically)) {
-            PictogramPlayer(
-                urls = track.urls,
-                playing = state.status == GuideStatus.PLAYING,
-                description = "$exerciseName 동작 그림",
-                height = picture,
-                animate = animate,
-                cycle = cycle,
-                labels = track.urls.indices.map { if (track.mapped) track.label(it) else null },
-                onOpen = { viewer = it }
-            )
-            if (strip > 0.dp) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                    seekable.forEach { (i, target) ->
-                        PictogramThumb(
-                            url = track.urls[i],
-                            number = i + 1,
-                            label = track.label(i),
-                            selected = i in cycle,
-                            onClick = { onSeek(target.first, target.second) },
-                            height = strip,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-            }
-        }
-    }
+}
+
+/** 「보조자 필요」 노랑 표(글자 — 색만으로 알리지 않음, T-08·EX-12). */
+@Composable
+private fun AssistantTag(modifier: Modifier = Modifier) {
+    val colors = SeeSunTheme.colors
+    val shape = RoundedCornerShape(SeeSunDimens.CornerRadius / 2)
+    Text(
+        "보조자 필요",
+        style = SeeSunTheme.typography.caption.copy(fontWeight = FontWeight.ExtraBold),
+        color = colors.onPrimary,
+        modifier = modifier
+            .background(colors.primary, shape)
+            .border(SeeSunDimens.BorderWidth, colors.border, shape)
+            .padding(horizontal = SeeSunSpace.S, vertical = 2.dp)
+            .clearAndSetSemantics { contentDescription = ASSISTANT_SPOKEN }
+    )
 }
 
 /** 대본 한 줄(쪽 목록 항목): 구간 제목 또는 문장. */
@@ -272,15 +395,12 @@ private fun ScriptLineButton(text: String, number: Int, current: Boolean, onClic
     )
 }
 
-/**
- * 그림 보기일 때 그림 아래의 지금 문장(굵게·밑줄·"▶"). 기본 글꼴에서는 두 줄까지만 보이고 TalkBack은 문장 전체를 읽는다.
- * 글꼴을 키우면 줄 수 제한 없이 모두 보인다(잘림 없음).
- */
+/** 대본 자리가 아주 낮을 때의 지금 문장(굵게·밑줄·"▶"). TalkBack은 문장 전체를 읽는다. */
 @Composable
 fun NowLine(state: GuideState, maxLines: Int? = null) {
     val sentence = state.sentence ?: state.sentences.firstOrNull() ?: return
     val big = LocalDensity.current.fontScale > 1f
-    val lines = maxLines ?: if (LocalLayoutTier.current == LayoutTier.REGULAR) SENTENCE_LINES else SENTENCE_LINES_LOW
+    val lines = maxLines ?: SENTENCE_LINES
     ScriptLine(
         sentence,
         highlight = state.status != GuideStatus.IDLE,
@@ -290,199 +410,295 @@ fun NowLine(state: GuideState, maxLines: Int? = null) {
 }
 
 /**
- * 상태 줄: 왼쪽은 "상태: 재생 중"(바뀌면 TalkBack이 읽음) · 구간 위치 · 오류 · 안내([hint]), 오른쪽은 [대본 보기]/[그림 보기].
+ * 둥근 버튼 3개(§6.2, Figma 318:741 소리·일시정지·T 자리): [속도](원 안 「1배」, 스피커 그림은 쓰지 않음 — A7 「스피커 = 화면 요약」과
+ * 겹치지 않게) · [재생/일시정지](가운데·가장 크게, 안전 안내가 약속한 멈춤 버튼) · [대본](원 안 「T」). 원 아래 20sp 글자(저시력·Voice Access).
+ * 재생 버튼에는 TalkBack 「작업」으로 [⋯] 목록과 같은 기능을, 속도 버튼에는 「느리게·보통·빠르게」를 단다.
  */
 @Composable
-fun GuideStatusRow(state: GuideState, hint: String?, hintEmphasis: Boolean, scriptToggle: Pair<String, () -> Unit>?) {
-    Row(
-        Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(SeeSunSpace.S)
-    ) {
-        Column(Modifier.weight(STATUS_WEIGHT), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            Text(
-                text = "상태: ${state.status.label}",
-                style = SeeSunTheme.typography.body,
-                color = SeeSunTheme.colors.emphasis,
-                modifier = Modifier.fillMaxWidth().politeLiveRegion()
+private fun RoundControls(
+    guide: GuideState,
+    showScript: Boolean,
+    scriptAvailable: Boolean,
+    onPlayPause: () -> Unit,
+    onSpeed: () -> Unit,
+    onToggleScript: () -> Unit,
+    playActions: List<MoreMenuItem>,
+    onPick: (MoreMenuItem) -> Unit
+) {
+    val tiny = LocalLayoutTier.current == LayoutTier.TINY
+    val side = if (tiny) SIDE_TINY else SIDE
+    val center = if (tiny) CENTER_TINY else CENTER
+    val speed = speedLabel(guide.speed)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.Top) {
+        RoundButton(
+            caption = "속도",
+            size = side,
+            label = "재생 속도, $speed",
+            hint = "누를 때마다 1배, 1.25배, 1.5배, 0.75배로 바뀌어요",
+            onClick = onSpeed,
+            actions = PlayerMenu.speedActions(),
+            onPick = onPick,
+            tag = SPEED_TAG
+        ) { Text(speed, style = faceText, color = SeeSunTheme.colors.onPrimaryIcon, maxLines = 1) }
+        RoundButton(
+            caption = playCaption(guide),
+            size = center,
+            label = playLabel(guide),
+            state = guide.status.label,
+            onClick = onPlayPause,
+            actions = playActions,
+            onPick = onPick,
+            tag = PLAY_TAG
+        ) {
+            Icon(
+                painterResource(if (guide.isPlaying) R.drawable.ic_exercise_pause else R.drawable.ic_exercise_play),
+                contentDescription = null,
+                tint = SeeSunTheme.colors.onPrimaryIcon,
+                modifier = Modifier.size(center * ICON_RATIO)
             )
-            val caption = SeeSunTheme.typography.caption
-            // 안내([hint])가 있으면 구간 위치 대신 안내를 보인다(한 줄 아끼기, 위치는 [화면 요약]·대본에 있음).
-            positionLine(state).takeIf { it.isNotEmpty() && hint == null }?.let {
-                Text(it, style = caption, color = SeeSunTheme.colors.onBackground, modifier = Modifier.fillMaxWidth())
-            }
-            state.error?.let { Text(it, style = caption, color = SeeSunTheme.colors.onBackground, modifier = Modifier.fillMaxWidth()) }
-            hint?.let {
+        }
+        if (scriptAvailable) {
+            RoundButton(
+                caption = if (showScript) "대본 켬" else "대본",
+                size = side,
+                label = "대본 보기",
+                toggled = showScript,
+                onClick = onToggleScript,
+                tag = SCRIPT_TAG,
+                inverted = showScript
+            ) {
                 Text(
-                    it,
-                    style = caption.copy(fontWeight = FontWeight.Bold),
-                    color = if (hintEmphasis) SeeSunTheme.colors.emphasis else SeeSunTheme.colors.onBackground,
-                    modifier = Modifier.fillMaxWidth()
+                    "T",
+                    style = faceText.copy(fontSize = 40.sp, lineHeight = 44.sp),
+                    color = if (showScript) SeeSunTheme.colors.primary else SeeSunTheme.colors.onPrimaryIcon
                 )
             }
-        }
-        scriptToggle?.let { (label, onClick) ->
-            SeeSunButton(
-                text = label,
-                onClick = onClick,
-                kind = ButtonKind.OUTLINE,
-                textStyle = SeeSunTheme.typography.caption.copy(fontWeight = FontWeight.Bold),
-                minHeight = SeeSunDimens.MinTouchTarget,
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }
 
 /**
- * 재생 조작(명시 버튼만, 제스처 전용 조작 없음 — 1차 A5). 한 화면에 들어가도록 [이전 구간][재생][다음 구간]을 한 줄에 둔다
- * (가운데 재생이 넓다). 글자가 들어가지 않으면(글꼴 확대·좁은 화면) [재생] 한 줄 + [이전][다음] 한 줄로 쌓는다.
- * 그 아래 [이 구간 다시 듣기][재생 속도]. [재생]/[일시정지]는 지금 할 수 있는 동작을 레이블로 보이고 상태는 상태 설명으로 읽는다.
+ * 노랑 원 + 검정 2dp 테두리 버튼과 그 아래 글자. 원과 글자를 묶어 하나로 읽는다(글자는 이름에 들어 있음, WCAG 2.5.3).
+ * @param toggled null이 아니면 전환 버튼(「대본 보기, 전환 버튼, 켜짐」)
  */
 @Composable
-fun GuideControls(
-    state: GuideState,
-    onPlayPause: () -> Unit,
-    onReplay: () -> Unit,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
-    onSpeed: () -> Unit,
-    modifier: Modifier = Modifier
+internal fun RoundButton(
+    caption: String,
+    size: Dp,
+    label: String,
+    onClick: () -> Unit,
+    tag: String,
+    state: String? = null,
+    hint: String? = null,
+    toggled: Boolean? = null,
+    actions: List<MoreMenuItem> = emptyList(),
+    onPick: (MoreMenuItem) -> Unit = {},
+    inverted: Boolean = false,
+    face: @Composable () -> Unit
 ) {
-    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunSpace.S)) {
-        TransportRow(state, onPlayPause, onPrevious, onNext)
-        ButtonPair(
-            "이 구간 다시 듣기" to onReplay,
-            "재생 속도 ${speedLabel(state.speed)}" to onSpeed,
-            secondState = "누를 때마다 바뀌어요"
+    val colors = SeeSunTheme.colors
+    val latestPick by rememberUpdatedState(onPick)
+    Column(
+        modifier = Modifier
+            .width(maxOf(size, SeeSunDimens.MinTouchTarget) + CAPTION_EXTRA)
+            .testTag(tag)
+            .pressable(label = label, onClick = onClick)
+            .clearAndSetSemantics {
+                contentDescription = if (hint != null) "$label. $hint" else label
+                if (toggled != null) {
+                    role = Role.Switch
+                    toggleableState = ToggleableState(toggled)
+                    stateDescription = if (toggled) "켜짐" else "꺼짐"
+                } else {
+                    role = Role.Button
+                    state?.let { stateDescription = it }
+                }
+                onClick(label = label) {
+                    onClick()
+                    true
+                }
+                if (actions.isNotEmpty()) {
+                    customActions = actions.map { item ->
+                        CustomAccessibilityAction(item.label) {
+                            latestPick(item)
+                            true
+                        }
+                    }
+                }
+            },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(SeeSunSpace.XS)
+    ) {
+        Box(
+            Modifier
+                .size(size)
+                .background(if (inverted) colors.background else colors.primary, CircleShape)
+                .border(
+                    if (inverted) INVERTED_BORDER else SeeSunDimens.BorderWidth,
+                    if (inverted) colors.primary else colors.border,
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) { face() }
+        Text(
+            caption,
+            style = captionText,
+            color = colors.onBackground,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-private fun playLabel(state: GuideState): String = when {
-    state.isPlaying -> "일시정지"
-    state.status == GuideStatus.FINISHED -> "처음부터 다시 듣기"
-    state.status == GuideStatus.PAUSED || state.status == GuideStatus.INTERRUPTED -> "이어서 듣기"
-    else -> "재생"
-}
-
-@Composable
-private fun TransportRow(state: GuideState, onPlayPause: () -> Unit, onPrevious: () -> Unit, onNext: () -> Unit) {
-    val play = playLabel(state)
-    val style = if (LocalLayoutTier.current == LayoutTier.TINY) {
-        SeeSunTheme.typography.buttonCompact.copy(fontSize = 20.sp, lineHeight = 24.sp)
-    } else {
-        SeeSunTheme.typography.buttonCompact
-    }
-    val measurer = rememberTextMeasurer()
-    val density = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val gap = SeeSunSpace.S
-        val unit = (maxWidth - gap * 2) / (2 + PLAY_WEIGHT)
-        val pad = SeeSunDimens.ButtonPaddingHorizontal * 2 + SeeSunDimens.BorderWidth * 2
-        fun fits(text: String, slot: Dp): Boolean = with(density) {
-            val room = (slot - pad).toPx().toInt().coerceAtLeast(1)
-            val word = text.split(' ').maxOf { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width }
-            word <= room && measurer.measure(text, style, constraints = Constraints(maxWidth = room)).lineCount <= 2
-        }
-        val inRow = density.fontScale <= 1f && fits("이전 구간", unit) && fits("다음 구간", unit) && fits(play, unit * PLAY_WEIGHT)
-        val playButton: @Composable (Modifier) -> Unit = { m ->
-            ActionButton(
-                text = play,
-                iconRes = when {
-                    inRow -> null
-                    state.isPlaying -> R.drawable.ic_exercise_pause
-                    else -> R.drawable.ic_exercise_play
-                },
-                onClick = onPlayPause,
-                state = state.status.label,
-                textStyle = if (inRow) style else SeeSunTheme.typography.button,
-                modifier = m
-            )
-        }
-        if (inRow) {
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                ActionButton("이전 구간", onPrevious, Modifier.weight(1f).fillMaxHeight(), kind = ButtonKind.OUTLINE, textStyle = style)
-                playButton(Modifier.weight(PLAY_WEIGHT).fillMaxHeight())
-                ActionButton("다음 구간", onNext, Modifier.weight(1f).fillMaxHeight(), kind = ButtonKind.OUTLINE, textStyle = style)
-            }
-        } else {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(gap)) {
-                playButton(Modifier.fillMaxWidth())
-                ButtonPair("이전 구간" to onPrevious, "다음 구간" to onNext)
-            }
-        }
-    }
-}
-
 /**
- * 두 버튼 묶음. 반 폭에 어절 단위 2줄 안으로 들어가면 나란히(22sp), 아니면 세로로 쌓는다(28sp) — 11_레이아웃_기준.md §3.
- * 어절 중간에서 끊지 않는다(글자 스타일의 WordBreak.Phrase).
+ * 진행 슬라이더(§6.3, Figma 노랑 막대 + 흰 손잡이). 표시 전용 막대 2개(루틴 전체·안내)를 이 하나로 합쳤다(루틴 전체 진행은 진행 줄 글자로).
+ * - TalkBack: 조절 가능한 슬라이더, 위아래로 쓸 때마다 **한 구간**(값 = 구간 번호, steps = 구간 수 − 2). 바꾸면 그 구간 처음부터 재생.
+ *   상태 설명 「구간 2/5 준비 자세, 40퍼센트」. 재생 중 값이 저절로 바뀌어도 liveRegion이 없어 초점이 있을 때만 읽는다.
+ * - 손가락 하나: 막대 아무 곳이나 한 번 누르면 그 자리로(WCAG 2.5.7 끌기 대안). 손잡이를 끌면 **놓을 때만** 이동(소리가 튀지 않게).
+ * - 버튼 대안(의뢰서 A8): [⋯]의 [이전 구간][다음 구간]과 이 슬라이더·재생 버튼의 TalkBack 작업. 제스처만으로 되는 기능은 없다.
+ * - 터치 높이 48dp(막대 22dp + 위아래 여백), 손잡이 36dp. 아래 「구간 1 … 5」 눈금 글자(14sp, 장식 — 같은 내용을 상태 설명이 읽음).
  */
 @Composable
-fun ButtonPair(
-    first: Pair<String, () -> Unit>,
-    second: Pair<String, () -> Unit>,
-    firstKind: ButtonKind = ButtonKind.OUTLINE,
-    secondKind: ButtonKind = ButtonKind.OUTLINE,
-    secondState: String? = null,
-    firstEnabled: Boolean = true,
-    firstState: String? = null,
-    firstSupporting: String? = null
+fun GuideSlider(
+    state: GuideState,
+    onSeek: (Int, Int) -> Unit,
+    actions: List<MoreMenuItem>,
+    onPick: (MoreMenuItem) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    AdaptiveActions(
-        labels = listOf(ActionLabel(first.first, supportingText = firstSupporting), ActionLabel(second.first)),
-        maxLines = 2
-    ) { stacked, style ->
-        val a: @Composable (Modifier) -> Unit = { m ->
-            ActionButton(
-                text = first.first,
-                onClick = first.second,
-                kind = firstKind,
-                enabled = firstEnabled,
-                state = firstState,
-                supportingText = firstSupporting,
-                textStyle = style,
-                modifier = m
-            )
-        }
-        val b: @Composable (Modifier) -> Unit = { m ->
-            ActionButton(
-                text = second.first,
-                onClick = second.second,
-                kind = secondKind,
-                state = secondState,
-                textStyle = style,
-                modifier = m
-            )
-        }
-        if (stacked) {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunSpace.S)) {
-                a(Modifier.fillMaxWidth())
-                b(Modifier.fillMaxWidth())
+    val colors = SeeSunTheme.colors
+    val spec = sliderSpec(state)
+    var drag by remember { mutableStateOf<Float?>(null) }
+    val latestState by rememberUpdatedState(state)
+    val latestSeek by rememberUpdatedState(onSeek)
+    val latestPick by rememberUpdatedState(onPick)
+    val seekFraction: (Float) -> Unit = { f ->
+        val (section, sentence) = positionAt(latestState, f)
+        latestSeek(section, sentence)
+    }
+    val shown = drag ?: spec.fraction
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        BoxWithConstraints(
+            Modifier
+                .fillMaxWidth()
+                .height(SLIDER_TOUCH)
+                .testTag(SLIDER_TAG)
+                .pointerInput(Unit) { detectTapGestures { o -> seekFraction((o.x / size.width).coerceIn(0f, 1f)) } }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = { o -> drag = (o.x / size.width).coerceIn(0f, 1f) },
+                        onDragEnd = {
+                            drag?.let(seekFraction)
+                            drag = null
+                        },
+                        onDragCancel = { drag = null }
+                    ) { change, _ ->
+                        change.consume()
+                        drag = (change.position.x / size.width).coerceIn(0f, 1f)
+                    }
+                }
+                .clearAndSetSemantics {
+                    contentDescription = spec.label
+                    stateDescription = spec.state
+                    progressBarRangeInfo = ProgressBarRangeInfo(spec.sectionIndex.toFloat(), 0f..spec.rangeEnd, spec.steps)
+                    setProgress(label = "구간 옮기기") { value ->
+                        latestSeek(sliderTargetSection(value, spec.sectionCount), 0)
+                        true
+                    }
+                    customActions = actions.map { item ->
+                        CustomAccessibilityAction(item.label) {
+                            latestPick(item)
+                            true
+                        }
+                    }
+                }
+        ) {
+            val thumb = SLIDER_THUMB
+            Box(
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .fillMaxWidth()
+                    .height(SLIDER_BAR)
+                    .background(colors.chip, CircleShape)
+                    .border(1.dp, colors.border, CircleShape)
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(shown.coerceIn(0f, 1f))
+                        .fillMaxHeight()
+                        .background(colors.primary, CircleShape)
+                        .border(1.dp, colors.border, CircleShape)
+                )
             }
-        } else {
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(SeeSunSpace.S)) {
-                a(Modifier.weight(1f).fillMaxHeight())
-                b(Modifier.weight(1f).fillMaxHeight())
+            Canvas(
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .offset(x = (maxWidth - thumb) * shown.coerceIn(0f, 1f))
+                    .size(thumb)
+            ) {
+                drawCircle(colors.shadow.copy(alpha = THUMB_SHADOW), radius = size.minDimension / 2)
+                drawCircle(colors.surface, radius = size.minDimension / 2 - 2.dp.toPx())
+                drawCircle(
+                    colors.border,
+                    radius = size.minDimension / 2 - 2.dp.toPx(),
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx())
+                )
             }
         }
+        SectionTicks(spec.sectionCount)
     }
 }
 
-/** 그림 띠 높이: 보통 폰 64dp, 작은 폰 56dp, 아주 작은 폰 48dp(누르는 곳 48dp 이상). */
+/** 슬라이더 아래 「구간 1 … 5」(장식, 낭독은 슬라이더 상태 설명). 구간이 많으면 처음과 끝만. */
 @Composable
-private fun thumbHeight(): Dp = when (LocalLayoutTier.current) {
-    LayoutTier.REGULAR -> 64.dp
-    LayoutTier.COMPACT -> 52.dp
-    LayoutTier.TINY -> SeeSunDimens.MinTouchTarget
+private fun SectionTicks(count: Int) {
+    if (count < 2) return
+    val labels = if (count <= MAX_TICKS) (1..count).map { if (it == 1) "구간 1" else "$it" } else listOf("구간 1", "$count")
+    Row(
+        Modifier.fillMaxWidth().clearAndSetSemantics { },
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        labels.forEach { Text(it, style = tickText, color = SeeSunTheme.colors.onBackground) }
+    }
 }
 
-private val PICTO_MAX = 300.dp
+const val PLAY_TAG = "player_play"
+const val SPEED_TAG = "player_speed"
+const val SCRIPT_TAG = "player_script"
+const val SLIDER_TAG = "player_slider"
+const val STAGE_TAG = "player_stage"
+const val PROGRESS_LINE_TAG = "player_progress"
+const val ASSISTANT_SPOKEN = "보조자 필요: 이 운동은 보조자와 함께 하세요. 혼자 하면 넘어질 수 있어요."
+
+/** 그림 최소 높이(R-03: 글자가 많으면 그림이 띠로 줄던 결함). */
+val STAGE_MIN = 240.dp
+private val STAGE_MAX = 330.dp
 private val SCRIPT_PAGES_MIN = 200.dp
 private val NOW_LINE_PADDING = 20.dp
-private val STAGE_BIG = 240.dp
-private const val PLAY_WEIGHT = 1.6f
-private const val STATUS_WEIGHT = 1.6f
+private val SIDE = 72.dp
+private val CENTER = 88.dp
+private val SIDE_TINY = 60.dp
+private val CENTER_TINY = 72.dp
+private val CAPTION_EXTRA = 48.dp
+private val INVERTED_BORDER = 3.dp
+private const val ICON_RATIO = 0.5f
+private val SLIDER_TOUCH = 48.dp
+private val SLIDER_BAR = 22.dp
+private val SLIDER_THUMB = 36.dp
+private const val THUMB_SHADOW = 0.35f
+private const val MAX_TICKS = 7
 private const val SENTENCE_LINES = 3
-private const val SENTENCE_LINES_LOW = 2
+
+/** 원 안 글자(「1배」·「T」, 24sp). */
+private val faceText @Composable get() = SeeSunTheme.typography.button.copy(
+    fontSize = 24.sp,
+    lineHeight = 28.sp,
+    fontWeight = FontWeight.ExtraBold
+)
+
+/** 원 아래 글자(20sp, §6.1 6번). */
+private val captionText @Composable get() = SeeSunTheme.typography.buttonCompact.copy(fontSize = 20.sp, lineHeight = 24.sp)
+
+/** 슬라이더 눈금 글자(14sp). */
+private val tickText @Composable get() = SeeSunTheme.typography.caption.copy(fontSize = 14.sp, lineHeight = 18.sp)

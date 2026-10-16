@@ -28,6 +28,8 @@
     <string name="ui_standby_mic_indicator">말씀을 기다리는 동안 화면 위에 초록 마이크 표시가 켜져요. 소리는 저장하지 않아요.</string>
     <string name="ui_voice_command_listening">듣는 중, 누르면 멈춰요</string>
     <string name="ui_voice_command_processing">인식 중</string>
+    <!-- 운동 재생 화면처럼 마이크 버튼 없이 듣는 화면(멈춘 동안만): %1$s = 할 수 있는 말 -->
+    <string name="ui_screen_command_listening">듣고 있어요. %1$s</string>
     <string name="ui_voice_command_wait">잠시만 기다려 주세요</string>
     <string name="ui_voice_unavailable_buttons">이 기기에서는 음성 인식을 쓸 수 없어요. 아래 버튼으로 골라 주세요.</string>
 
@@ -40,6 +42,11 @@
     <string name="ui_goal_gain_desc">하루 300킬로칼로리 늘려요</string>
     <string name="ui_goal_maintain">건강 유지</string>
     <string name="ui_goal_maintain_desc">지금 몸무게를 유지해요</string>
+    <!-- 만 14~18세의 감량·근육 증진 설명(열량 보정 없음, 소유자 msg 1149 「그렇게 진행해줘」) -->
+    <string name="ui_goal_minor_desc">열량은 그대로, 운동과 식사 균형으로</string>
+    <!-- 만 19세 미만이 감량·근육 증진을 고르면 보이고 말한다(소유자 msg 1120 가안: 2025 섭취기준 그대로, 보정 없음) -->
+    <string name="ui_goal_minor_lose_note">성장기에는 열량을 줄이기보다 운동과 식사 균형으로 관리해요. 보호자나 의사와 상의해 주세요.</string>
+    <string name="ui_goal_minor_gain_note">성장기에는 열량을 늘리기보다 운동과 식사 균형으로 관리해요. 보호자나 의사와 상의해 주세요.</string>
     <string name="ui_disease_diabetes">당뇨</string>
     <string name="ui_disease_hypertension">고혈압</string>
     <string name="ui_disease_none">없음</string>

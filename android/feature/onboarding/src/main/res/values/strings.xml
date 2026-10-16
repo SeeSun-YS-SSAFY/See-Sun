@@ -187,7 +187,7 @@
     <string name="onb_done_declined">동의하지 않은 항목: %1$s</string>
     <string name="onb_done_noticed">확인한 고지: %1$s</string>
     <string name="onb_kcal_estimate">목표 칼로리는 일반 공식으로 계산한 추정값이에요.</string>
-    <string name="onb_kcal_minor">만 19세 미만이라 목표 칼로리는 연령별 섭취기준(2020 한국인 영양소 섭취기준)을 써요.</string>
+    <string name="onb_kcal_minor">만 19세 미만이라 목표 칼로리는 연령별 섭취기준(2025 한국인 영양소 섭취기준)을 써요.</string>
     <string name="onb_goal_minor_note">만 19세 미만은 연령별 섭취기준을 써서 목표에 따라 열량을 늘리거나 줄이지 않아요.</string>
     <string name="onb_kcal_floor">감량 목표는 하루 1,200킬로칼로리 아래로는 권하지 않아서 1,200킬로칼로리로 정했어요.</string>
     <string name="onb_done_change">동의 내용은 설정의 개인정보·동의 관리에서 언제든 바꿀 수 있어요.</string>

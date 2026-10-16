@@ -19,6 +19,7 @@ import kr.seesun.feature.exercise.play.ExercisePlayerRoute
 import kr.seesun.feature.exercise.routine.CustomRoutineListRoute
 import kr.seesun.feature.exercise.routine.RoutineDetailScreenRoute
 import kr.seesun.feature.exercise.routine.RoutineEditorRoute
+import kr.seesun.feature.exercise.routine.RoutineOrigin
 import kr.seesun.feature.exercise.routine.RoutinePlayerRoute
 import kr.seesun.feature.exercise.safety.SafetyReviewRoute
 import kr.seesun.feature.exercise.weekly.WeeklyRoute
@@ -58,8 +59,9 @@ data class ExerciseListRoute(val source: String, val title: String)
 @Serializable
 data class ExercisePlayRoute(val exerciseId: String)
 
+/** @param origin 들어온 곳([kr.seesun.feature.exercise.routine.RoutineOrigin] 이름) — 끝난 뒤 버튼 이름·가는 곳(R-14). */
 @Serializable
-data class RoutinePlayRoute(val title: String, val categoryId: String? = null, val playlistId: String? = null)
+data class RoutinePlayRoute(val title: String, val categoryId: String? = null, val playlistId: String? = null, val origin: String = "MENU")
 
 @Serializable
 data object CustomRoutineListRoute
@@ -102,7 +104,9 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
                             is HomeDestination.Category -> nav.navigate(ExerciseListRoute(dest.id, dest.name))
 
                             is HomeDestination.RecommendedRoutine ->
-                                nav.navigate(RoutinePlayRoute(title = dest.title, categoryId = dest.categoryId))
+                                nav.navigate(
+                                    RoutinePlayRoute(title = dest.title, categoryId = dest.categoryId, origin = RoutineOrigin.HOME.name)
+                                )
 
                             HomeDestination.Single -> nav.navigate(SingleMenuRoute)
 
@@ -138,7 +142,7 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
                 viewModel = hiltViewModel(),
                 onBack = { nav.up(entry, onExit) },
                 onStartCategoryRoutine = { id, title ->
-                    entry.whenResumed { nav.navigate(RoutinePlayRoute(title = title, categoryId = id)) }
+                    entry.whenResumed { nav.navigate(RoutinePlayRoute(title = title, categoryId = id, origin = RoutineOrigin.MENU.name)) }
                 },
                 onOpenCustom = { entry.whenResumed { nav.navigate(CustomRoutineListRoute) } }
             )
@@ -155,7 +159,11 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             RoutineDetailScreenRoute(
                 viewModel = hiltViewModel(),
                 onBack = { nav.up(entry, onExit) },
-                onStart = { r -> entry.whenResumed { nav.navigate(RoutinePlayRoute(title = r.title, playlistId = r.playlistId)) } },
+                onStart = { r ->
+                    entry.whenResumed {
+                        nav.navigate(RoutinePlayRoute(title = r.title, playlistId = r.playlistId, origin = RoutineOrigin.CUSTOM.name))
+                    }
+                },
                 onEdit = { id -> entry.whenResumed { nav.navigate(RoutineEditRoute(id)) } }
             )
         }
@@ -163,11 +171,21 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             RoutineEditorRoute(viewModel = hiltViewModel(), onClose = { nav.up(entry, onExit) })
         }
         composable<RoutinePlayRoute> { entry ->
+            val route = entry.toRoute<RoutinePlayRoute>()
+            val origin = RoutineOrigin.of(route.origin)
             RoutinePlayerRoute(
                 viewModel = hiltViewModel(),
                 safety = hiltViewModel(),
-                title = entry.toRoute<RoutinePlayRoute>().title,
-                onClose = { nav.up(entry, onExit) }
+                title = route.title,
+                origin = origin,
+                onClose = { nav.up(entry, onExit) },
+                // R-14: 버튼 이름과 가는 곳을 맞춘다. 나만의 루틴은 루틴 상세를 지나 목록으로.
+                onDone = {
+                    entry.whenResumed {
+                        val popped = origin == RoutineOrigin.CUSTOM && nav.popBackStack(CustomRoutineListRoute, inclusive = false)
+                        if (!popped && !nav.popBackStack()) onExit()
+                    }
+                }
             )
         }
         composable<ExerciseSafetyRoute> { entry ->

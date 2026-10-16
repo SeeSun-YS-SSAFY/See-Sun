@@ -161,9 +161,18 @@ fun NumberStepper(label: String, value: Int, onChange: (Int) -> Unit, range: Int
     }
 }
 
-/** 확인 대화상자. Dialog라 TalkBack 포커스가 안에 갇히고, 뜨면 [title]부터 읽는다(paneTitle). */
+/**
+ * 확인 대화상자. Dialog라 TalkBack 포커스가 안에 갇히고, 뜨면 [title]부터 읽는다(paneTitle).
+ * @param voice 버튼 아래에 붙일 말로 답하기(끝내기 확인은 말로도 답함, 의뢰서 A5)
+ */
 @Composable
-fun ExerciseDialog(title: String, message: String, actions: List<Pair<String, () -> Unit>>, onDismiss: () -> Unit) {
+fun ExerciseDialog(
+    title: String,
+    message: String,
+    actions: List<Pair<String, () -> Unit>>,
+    onDismiss: () -> Unit,
+    voice: (@Composable () -> Unit)? = null
+) {
     val colors = SeeSunTheme.colors
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Column(
@@ -187,6 +196,7 @@ fun ExerciseDialog(title: String, message: String, actions: List<Pair<String, ()
             actions.forEachIndexed { index, (text, action) ->
                 SeeSunButton(text = text, onClick = action, kind = if (index == 0) ButtonKind.PRIMARY else ButtonKind.OUTLINE)
             }
+            voice?.invoke()
         }
     }
 }
