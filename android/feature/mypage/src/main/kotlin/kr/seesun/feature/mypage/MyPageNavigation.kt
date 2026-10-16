@@ -22,6 +22,10 @@ data object HealthEditRoute
 @Serializable
 data object SettingsRoute
 
+/** 설정 갈래 안 목록(v1.9: 음성 안내·계정·앱 정보). [group] = [SettingsGroup] 이름. */
+@Serializable
+data class SettingsGroupRoute(val group: String)
+
 /** SET-05 개인정보·동의 관리(철회·재동의) */
 @Serializable
 data object ConsentManageRoute
@@ -122,6 +126,14 @@ fun NavGraphBuilder.myPageGraph(
             onBack = back,
             onOpen = { destination -> nav.navigate(destination) },
             onSignedOut = onSignedOut
+        )
+    }
+    composable<SettingsGroupRoute> { entry ->
+        SettingsRoute(
+            onBack = back,
+            onOpen = { destination -> nav.navigate(destination) },
+            onSignedOut = onSignedOut,
+            group = SettingsGroup.entries.firstOrNull { it.name == entry.toRoute<SettingsGroupRoute>().group }
         )
     }
     composable<ConsentManageRoute> { ConsentManageRoute(onBack = back, onOpenDocument = { nav.navigate(DocumentRoute(it)) }) }

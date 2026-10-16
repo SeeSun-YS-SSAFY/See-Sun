@@ -142,6 +142,17 @@ data class PlaylistItemAddRequest(
 @Serializable
 data class PlaylistTitleRequest(val title: String)
 
+/**
+ * PATCH /exercises/playlist/{id}/items/{itemId}/ (서버 PlaylistItemUpdateSerializer: 순서·세트·횟수, 부분 수정).
+ * 빈 값(null)은 보내지 않는다(explicitNulls = false). 순서(sequence_no)는 루틴 안에서 겹치면 안 된다(unique_together).
+ */
+@Serializable
+data class PlaylistItemUpdateRequest(
+    @SerialName("sequence_no") val sequenceNo: Int? = null,
+    @SerialName("set_count") val setCount: Int? = null,
+    @SerialName("reps_count") val repsCount: Int? = null
+)
+
 /** 운동 기록 항목(§10). skip_reason: LOAD_FAIL|USER_SKIP|UNKNOWN */
 @Serializable
 data class ExerciseLogItemDto(

@@ -190,6 +190,32 @@ class MyPageViewModelTest {
     }
 
     @Test
+    fun `미성년이 건강 정보 수정에서 감량이나 근육 증진을 고르면 성장기 안내를 낸다`() = runTest(dispatcher) {
+        backend.update(MePatchRequest(birthdate = "2010-03-01")) // 2026-10-12 기준 만 16세
+        val vm = HealthEditViewModel(backend, backend, backend, speech, speaker)
+        vm.load()
+        assertTrue(vm.state.value.minor)
+        vm.openGoal()
+        vm.selectGoal("MAINTAIN")
+        assertEquals(0, vm.state.value.minorGoalNoteSeq)
+        vm.selectGoal("LOSE_WEIGHT")
+        assertEquals(1, vm.state.value.minorGoalNoteSeq)
+        speech.enqueue("근육 늘리고 싶어요")
+        vm.goalVoice.onMicClick()
+        assertEquals("GAIN_MUSCLE", vm.state.value.goal)
+        assertEquals(2, vm.state.value.minorGoalNoteSeq)
+    }
+
+    @Test
+    fun `성인은 건강 정보 수정에서 감량을 골라도 성장기 안내가 없다`() = runTest(dispatcher) {
+        val vm = HealthEditViewModel(backend, backend, backend, speech, speaker)
+        vm.load()
+        assertFalse(vm.state.value.minor)
+        vm.selectGoal("LOSE_WEIGHT")
+        assertEquals(0, vm.state.value.minorGoalNoteSeq)
+    }
+
+    @Test
     fun `로그아웃하면 세션과 기기 데이터를 지운다`() = runTest(dispatcher) {
         val vm = SettingsViewModel(session, { FakeMealRepository().observePendingCount() }, speech, speaker)
         var done = false

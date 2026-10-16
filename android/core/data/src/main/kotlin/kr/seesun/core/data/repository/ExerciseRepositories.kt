@@ -47,6 +47,7 @@ import kr.seesun.core.network.model.PlaylistCreateRequest
 import kr.seesun.core.network.model.PlaylistDto
 import kr.seesun.core.network.model.PlaylistItemAddRequest
 import kr.seesun.core.network.model.PlaylistItemInputDto
+import kr.seesun.core.network.model.PlaylistItemUpdateRequest
 import kr.seesun.core.network.model.PlaylistTitleRequest
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
@@ -77,6 +78,15 @@ interface ExerciseContentRepository {
     suspend fun addPlaylistItem(playlistId: String, exerciseId: String, setCount: Int, repsCount: Int?): ApiResult<Routine>
 
     suspend fun deletePlaylistItem(playlistId: String, itemId: String): ApiResult<Routine>
+
+    /** 루틴 항목의 순서·세트·횟수 바꾸기(R-11 운동 수정·순서 바꾸기). null은 그대로 둔다. */
+    suspend fun updatePlaylistItem(
+        playlistId: String,
+        itemId: String,
+        sequenceNo: Int?,
+        setCount: Int?,
+        repsCount: Int?
+    ): ApiResult<Routine>
 
     suspend fun weekly(from: String?): ApiResult<ExerciseWeekDto>
 }
@@ -242,6 +252,16 @@ class DefaultExerciseContentRepository @Inject constructor(
 
     override suspend fun deletePlaylistItem(playlistId: String, itemId: String): ApiResult<Routine> =
         apiCall(json) { api.deletePlaylistItem(playlistId, itemId) }.map { it.toRoutine() }
+
+    override suspend fun updatePlaylistItem(
+        playlistId: String,
+        itemId: String,
+        sequenceNo: Int?,
+        setCount: Int?,
+        repsCount: Int?
+    ): ApiResult<Routine> = apiCall(json) {
+        api.updatePlaylistItem(playlistId, itemId, PlaylistItemUpdateRequest(sequenceNo, setCount, repsCount))
+    }.map { it.toRoutine() }
 
     override suspend fun weekly(from: String?): ApiResult<ExerciseWeekDto> = apiCall(json) { api.weekly(from) }
 

@@ -17,6 +17,7 @@ import kr.seesun.core.network.model.FrequentExercisesDto
 import kr.seesun.core.network.model.PlaylistCreateRequest
 import kr.seesun.core.network.model.PlaylistDto
 import kr.seesun.core.network.model.PlaylistItemAddRequest
+import kr.seesun.core.network.model.PlaylistItemUpdateRequest
 import kr.seesun.core.network.model.PlaylistTitleRequest
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -64,6 +65,13 @@ interface ExerciseApi {
 
     @DELETE("exercises/playlist/{id}/items/{itemId}/")
     suspend fun deletePlaylistItem(@Path("id") playlistId: String, @Path("itemId") itemId: String): PlaylistDto
+
+    @PATCH("exercises/playlist/{id}/items/{itemId}/")
+    suspend fun updatePlaylistItem(
+        @Path("id") playlistId: String,
+        @Path("itemId") itemId: String,
+        @Body body: PlaylistItemUpdateRequest
+    ): PlaylistDto
 
     @POST("exercise-sessions/bulk/")
     suspend fun uploadSessions(@Body body: ExerciseLogBulkRequest): ExerciseLogBulkResponse

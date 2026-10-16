@@ -118,9 +118,18 @@ class SettingsViewModel @Inject constructor(
     }
 }
 
-/** 설정에서 여는 화면. */
+/**
+ * 설정에서 여는 화면. [group]이 null이면 첫 목록(여섯 갈래, v1.9 — 화면 간소화 설계 v1 §7.2 S37: 의뢰서 p4 다섯 갈래 + 앱 정보),
+ * 값이 있으면 그 갈래 안의 항목 목록.
+ */
 @Composable
-fun SettingsRoute(onBack: () -> Unit, onOpen: (Any) -> Unit, onSignedOut: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsRoute(
+    onBack: () -> Unit,
+    onOpen: (Any) -> Unit,
+    onSignedOut: () -> Unit,
+    group: SettingsGroup? = null,
+    viewModel: SettingsViewModel = hiltViewModel()
+) {
     val confirming by viewModel.confirmingLogout.collectAsStateWithLifecycle()
     val pending by viewModel.pending.collectAsStateWithLifecycle()
     val busy by viewModel.busy.collectAsStateWithLifecycle()
@@ -146,7 +155,8 @@ fun SettingsRoute(onBack: () -> Unit, onOpen: (Any) -> Unit, onSignedOut: () -> 
         talkBackEnabled = talkBack,
         speak = { viewModel.voice.auto(it, talkBack) },
         voiceCommand = viewModel.voiceCommand,
-        signedIn = signedIn
+        signedIn = signedIn,
+        group = group
     )
 }
 
@@ -163,7 +173,8 @@ fun SettingsScreen(
     talkBackEnabled: Boolean = false,
     speak: (String) -> Unit = {},
     voiceCommand: VoiceCommandController? = null,
-    signedIn: Boolean = true
+    signedIn: Boolean = true,
+    group: SettingsGroup? = null
 ) {
     if (confirmingLogout) {
         val lines = listOfNotNull(
@@ -184,16 +195,64 @@ fun SettingsScreen(
         AutoGuidance("logout-confirm", lines.joinToString(" ") + " " + stringResource(R.string.my_logout_question), talkBackEnabled, speak)
         return
     }
+    if (group != null) {
+        SettingsGroupScreen(group, signedIn, onBack, onOpen, onAskLogout, talkBackEnabled, speak, voiceCommand)
+        return
+    }
     // 설정 목록 자체에는 톱니바퀴를 두지 않는다(같은 화면으로 가는 버튼). 가운영 빌드(v7 관리자 모드)만 연달아 누르기를
     // 셀 수 있게 같은 자리에 둔다(LocalSettingsExtras.gearOnSettingsList).
     val extras = LocalSettingsExtras.current
     val listGear = if (extras.gearOnSettingsList) LocalAppSettingsAction.current else null
+    val groups = SettingsGroup.visible(signedIn)
     ScreenScaffold(title = stringResource(R.string.my_settings), onBack = onBack, onOpenSettings = listGear) {
         val hint = stringResource(if (signedIn) R.string.my_set_voice_hint else R.string.my_set_voice_hint_before_sign_in)
         if (voiceCommand != null) VoiceCommandButton(voiceCommand, hint, talkBackEnabled, speak)
-        // 11개 메뉴를 두 칸 타일로(소유자 피드백 2026-10-13: 한 화면에). 설명은 낭독(버튼 설명)으로 남긴다.
         if (!signedIn) BodyText(stringResource(R.string.my_settings_before_sign_in))
-        val items = SettingsItem.visible(signedIn).map { item ->
+        // v1.9: 타일 여러 칸 → 여섯 갈래(의뢰서 p4 [음성 안내][물리 버튼][건강 정보][문의하기][계정] + [앱 정보]).
+        // 항목이 하나뿐인 갈래는 바로 그 화면으로 연다. 말로 고르기는 지금처럼 안쪽 화면까지 바로 간다.
+        val items = groups.map { g ->
+            val label = stringResource(g.label)
+            ListButtonItem(g.name, label, spoken = "$label. ${stringResource(g.description)}")
+        }
+        ListButtonGrid(
+            items = items,
+            onClick = { picked ->
+                val g = SettingsGroup.valueOf(picked.key)
+                g.direct?.route?.let(onOpen) ?: onOpen(SettingsGroupRoute(g.name))
+            }
+        )
+        extras.settingsFooter?.invoke(this, onOpen)
+    }
+    // 목록은 화면에 보이는 항목에서 만든다(항목이 바뀌어도 안내가 어긋나지 않게).
+    val names = groups.map { stringResource(it.label) }.joinToString(", ")
+    AutoGuidance(
+        "settings:$signedIn",
+        stringResource(if (signedIn) R.string.my_settings_guide else R.string.my_settings_guide_before_sign_in, names),
+        talkBackEnabled,
+        speak
+    )
+}
+
+/** 설정 갈래 안의 항목(예: [음성 안내] → 사용법 다시 듣기 · 말 속도 · 음성 자동 인식 · 앱 음성 안내 · 누름 알림). */
+@Composable
+@Suppress("LongParameterList")
+private fun SettingsGroupScreen(
+    group: SettingsGroup,
+    signedIn: Boolean,
+    onBack: () -> Unit,
+    onOpen: (Any) -> Unit,
+    onAskLogout: () -> Unit,
+    talkBackEnabled: Boolean,
+    speak: (String) -> Unit,
+    voiceCommand: VoiceCommandController?
+) {
+    val title = stringResource(group.label)
+    val entries = group.itemsFor(signedIn)
+    // 설정 안의 화면이라 톱니를 두지 않는다(같은 설정 목록으로 가는 버튼).
+    ScreenScaffold(title = title, onBack = onBack, onOpenSettings = null) {
+        val hint = stringResource(if (signedIn) R.string.my_set_voice_hint else R.string.my_set_voice_hint_before_sign_in)
+        if (voiceCommand != null) VoiceCommandButton(voiceCommand, hint, talkBackEnabled, speak)
+        val items = entries.map { item ->
             val label = stringResource(item.label)
             ListButtonItem(item.name, label, spoken = item.description?.let { "$label. ${stringResource(it)}" })
         }
@@ -202,16 +261,56 @@ fun SettingsScreen(
             onClick = { picked -> SettingsItem.valueOf(picked.key).let { it.route?.let(onOpen) ?: onAskLogout() } },
             titleStyle = SeeSunTheme.typography.listItem.copy(fontSize = 18.sp, lineHeight = 24.sp)
         )
-        extras.settingsFooter?.invoke(this, onOpen)
     }
-    // 목록은 화면에 보이는 항목에서 만든다(항목이 바뀌어도 안내가 어긋나지 않게).
-    val names = SettingsItem.visible(signedIn).map { stringResource(it.label) }.joinToString(", ")
+    val names = entries.map { stringResource(it.label) }.joinToString(", ")
     AutoGuidance(
-        "settings:$signedIn",
-        stringResource(if (signedIn) R.string.my_settings_guide else R.string.my_settings_guide_before_sign_in, names),
+        "settings-group:${group.name}:$signedIn",
+        stringResource(R.string.my_settings_group_guide, title, names),
         talkBackEnabled,
         speak
     )
+}
+
+/**
+ * 설정 첫 목록의 여섯 갈래(v1.9, 화면 간소화 설계 v1 §7.2 S37·§7.3 IA). 모든 [SettingsItem]은 꼭 한 갈래에 들어 있다(시험).
+ * @property direct 항목이 하나뿐인 갈래: 누르면 그 화면으로 바로(물리 버튼·건강 정보·문의하기)
+ */
+enum class SettingsGroup(val label: Int, val description: Int, val items: List<SettingsItem>, val direct: SettingsItem? = null) {
+    VOICE(
+        R.string.my_group_voice,
+        R.string.my_group_voice_desc,
+        listOf(SettingsItem.HOW_TO, SettingsItem.VOICE_SPEED, SettingsItem.VOICE_AUTO, SettingsItem.APP_VOICE, SettingsItem.PRESS_FEEDBACK)
+    ),
+    HW_BUTTON(R.string.my_set_hw_button, R.string.my_set_hw_button_desc, listOf(SettingsItem.HW_BUTTON), SettingsItem.HW_BUTTON),
+    HEALTH(R.string.my_set_health, R.string.my_set_health_desc, listOf(SettingsItem.HEALTH), SettingsItem.HEALTH),
+    CONTACT(R.string.my_set_contact, R.string.my_set_contact_desc, listOf(SettingsItem.CONTACT), SettingsItem.CONTACT),
+    ACCOUNT(
+        R.string.my_group_account,
+        R.string.my_group_account_desc,
+        listOf(SettingsItem.RIGHTS, SettingsItem.CONSENTS, SettingsItem.DATA_RESET, SettingsItem.LOGOUT, SettingsItem.DELETE)
+    ),
+    APP_INFO(
+        R.string.my_group_app_info,
+        R.string.my_group_app_info_desc,
+        listOf(
+            SettingsItem.APP_VERSION,
+            SettingsItem.PERMISSIONS,
+            SettingsItem.NOTIFICATIONS,
+            SettingsItem.ACCESSIBILITY,
+            SettingsItem.TERMS,
+            SettingsItem.PRIVACY,
+            SettingsItem.DATA_SOURCES,
+            SettingsItem.LICENSES
+        )
+    );
+
+    /** 이 갈래에서 지금 보일 항목(로그인 전이면 계정 없이 쓸 수 있는 것만). */
+    fun itemsFor(signedIn: Boolean): List<SettingsItem> = items.filter { signedIn || it.beforeSignIn }
+
+    companion object {
+        /** 보일 갈래: 보일 항목이 하나라도 있는 것(로그인 전이면 계정·건강 정보는 숨김). */
+        fun visible(signedIn: Boolean): List<SettingsGroup> = entries.filter { it.itemsFor(signedIn).isNotEmpty() }
+    }
 }
 
 /**

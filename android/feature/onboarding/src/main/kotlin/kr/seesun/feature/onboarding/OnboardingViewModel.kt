@@ -43,6 +43,7 @@ import kr.seesun.core.network.model.MePatchRequest
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.HealthAnswer
 import kr.seesun.core.ui.HealthVoiceParser
+import kr.seesun.core.ui.MinorGoalNote
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.core.ui.VoiceFieldController
 import kr.seesun.core.voice.parse.Answer
@@ -698,7 +699,11 @@ class OnboardingViewModel @Inject constructor(
         goTo(Step.GOAL)
     }
 
-    fun selectGoal(code: String) = updateForm { copy(goal = code) }
+    fun selectGoal(code: String) {
+        updateForm { copy(goal = code) }
+        // 미성년이 감량·근육 증진을 고르면 「성장기에는 …」 안내를 보이고 말한다(목표 열량은 그대로, 소유자 msg 1120).
+        if (MinorGoalNote.of(code, isMinor()) != null) _state.update { it.copy(minorGoalNoteSeq = it.minorGoalNoteSeq + 1) }
+    }
 
     /** 입력한 생년월일로 만 19세 미만인가(목표 화면 안내: 연령별 섭취기준이라 목표에 따른 열량 조정이 없음). */
     fun isMinor(): Boolean {
@@ -921,7 +926,7 @@ class OnboardingViewModel @Inject constructor(
             Step.HEALTH_CONFIRM to Step.GOAL
         )
         const val MIN_AGE = 14
-        private const val ADULT_AGE = 19
+        private const val ADULT_AGE = MinorGoalNote.ADULT_AGE
         private const val MINOR_FORMULA_PREFIX = "kdri"
         private const val MIN_BIRTH_YEAR = 1900
         private const val CODE_LENGTH = 6

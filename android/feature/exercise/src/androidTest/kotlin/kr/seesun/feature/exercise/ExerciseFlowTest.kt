@@ -2,9 +2,12 @@ package kr.seesun.feature.exercise
 
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -72,6 +75,17 @@ class ExerciseFlowTest {
 
     private fun pressBack() = rule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
 
+    /** v1.9: 재생 상태는 가운데 재생 버튼의 상태 설명으로 읽는다(「상태: 재생 중」 줄은 없앰). */
+    private fun waitForPlayState(state: String, timeoutMs: Long = 10_000) = rule.waitUntil(timeoutMs) {
+        rule.onAllNodes(hasStateDescription(state)).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    /** 머리줄 [⋯ 더 보기]를 열고 [label]을 누른다. */
+    private fun openMore(label: String) {
+        rule.onNode(hasContentDescription("더 보기", substring = true)).performClick()
+        rule.onNodeWithText(label).performScrollTo().performClick()
+    }
+
     private companion object {
         const val LIMIT = 1_000
     }
@@ -80,7 +94,7 @@ class ExerciseFlowTest {
     fun 목록에서_운동을_시작해_마치면_기록이_오프라인_큐에_쌓인다() {
         safety.clear() // 처음 운동하는 사용자
         rule.shot("01_운동_첫화면")
-        rule.onNode(button("한 가지 운동")).performScrollTo().performClick()
+        openMore("전체 운동·즐겨찾기")
         waitForText("전체 운동")
         rule.shot("02_한가지운동_메뉴")
         rule.onNode(button("전체 운동")).performScrollTo().performClick()
@@ -106,15 +120,14 @@ class ExerciseFlowTest {
         assertEquals(listOf(true) + List(6) { false }, record.answers)
 
         // TalkBack 꺼진 기기: 안전 안내를 마치면 안내를 바로 재생하고 세션을 시작한다
-        waitForText("상태: 재생 중")
+        waitForPlayState("재생 중")
         rule.shot("07_운동재생_재생중")
         rule.waitUntil(5_000) { runBlocking { dao.drafts().any { it.clientUuid !in before } } }
         FakeGuidePlayer.created.last().finishNow()
-        waitForText("상태: 안내 끝")
-        rule.onNodeWithText("운동 마치기를 눌러 주세요", substring = true).assertExists()
+        waitForText("기록하고 끝내기를 눌러 주세요")
         rule.shot("08_운동재생_안내끝")
 
-        rule.onNode(button("운동 마치기")).performScrollTo().performClick()
+        rule.onNode(button("기록하고 끝내기")).performScrollTo().performClick()
         waitForText("운동을 기록했어요")
         rule.shot("09_운동기록_저장완료")
         val log = onlyLog()
@@ -134,14 +147,14 @@ class ExerciseFlowTest {
     @Test
     fun 루틴_중_뒤로_가기는_확인을_묻고_끝내면_하지_않은_운동은_건너뜀으로_기록된다() {
         safety.save(List(SafetyContent.QUESTIONS.size) { false }) // 안전 안내는 이미 마친 사용자
-        rule.onNode(button("루틴 운동")).performScrollTo().performClick()
+        openMore("루틴 운동")
         waitForText("근력 운동 루틴")
         rule.shot("10_루틴_메뉴")
         rule.onNode(button("근력 운동 루틴")).performScrollTo().performClick()
         waitForText("루틴 시작")
         rule.shot("11_루틴_시작전_순서")
         rule.onNode(button("루틴 시작")).performScrollTo().performClick()
-        waitForText("상태: 재생 중")
+        waitForPlayState("재생 중")
 
         // 실수로 뒤로 가기 → 확인 대화상자 → 계속하기 → 그대로 운동 중
         rule.shot("12_루틴_첫운동_재생중")
@@ -149,18 +162,20 @@ class ExerciseFlowTest {
         waitForText("루틴을 끝낼까요?")
         rule.shot("13_루틴_뒤로가기_확인", dialog = true)
         rule.onNodeWithText("계속하기").performClick()
-        rule.onNodeWithText("상태: 재생 중").assertExists()
+        waitForPlayState("재생 중")
 
         // 첫 운동 안내가 끝나면 휴식과 다음 운동 안내
         FakeGuidePlayer.created.last().finishNow()
-        waitForText("남은 휴식")
-        rule.onNodeWithText("다음 운동: 플랭크").assertExists()
+        waitForText("다음 운동: 플랭크")
+        rule.onNode(hasContentDescription("남은 휴식", substring = true)).assertExists()
         rule.shot("14_루틴_휴식_다음운동안내")
-        rule.onNode(button("휴식 건너뛰기")).performScrollTo().performClick()
-        waitForText("운동 8개 중 2번째")
+        rule.onNodeWithTag(kr.seesun.feature.exercise.routine.REST_SKIP_TAG).performScrollTo().performClick()
+        rule.waitUntil(10_000) {
+            rule.onAllNodes(hasContentDescription("운동 8개 중 2번째", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        }
         rule.shot("15_루틴_두번째운동")
 
-        rule.onNode(button("루틴 끝내기")).performScrollTo().performClick()
+        openMore("루틴 끝내기")
         waitForText("루틴을 끝낼까요?")
         rule.shot("16_루틴_끝내기_확인", dialog = true)
         rule.onNodeWithText("기록하고 끝내기").performClick()

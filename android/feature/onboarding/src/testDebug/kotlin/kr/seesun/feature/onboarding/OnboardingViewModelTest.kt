@@ -336,6 +336,29 @@ class OnboardingViewModelTest {
     }
 
     @Test
+    fun `미성년이 감량이나 근육 증진을 고르면 성장기 안내를 다시 말하고 성인은 없다`() = runTest(dispatcher) {
+        val vm = vm()
+        vm.startSignUp()
+        vm.ageField.onEditRequest()
+        vm.ageField.onTextChange("20100301") // 2026-10-12 기준 만 16세
+        assertTrue(vm.ageField.commitTyped())
+        vm.selectGoal("MAINTAIN")
+        assertEquals(0, vm.state.value.minorGoalNoteSeq)
+        vm.selectGoal("LOSE_WEIGHT")
+        assertEquals(1, vm.state.value.minorGoalNoteSeq)
+        vm.selectGoal("GAIN_MUSCLE")
+        assertEquals(2, vm.state.value.minorGoalNoteSeq)
+        assertEquals("GAIN_MUSCLE", vm.state.value.form.goal)
+        val adult = vm()
+        adult.startSignUp()
+        adult.ageField.onEditRequest()
+        adult.ageField.onTextChange("19900501")
+        assertTrue(adult.ageField.commitTyped())
+        adult.selectGoal("LOSE_WEIGHT")
+        assertEquals(0, adult.state.value.minorGoalNoteSeq)
+    }
+
+    @Test
     fun `한 번에 말하기에서 알아들을 수 없으면 넘어가지 않고 버튼으로 설정을 쓸 수 있다`() = runTest(dispatcher) {
         val vm = vm()
         signUpThroughPhone(vm)

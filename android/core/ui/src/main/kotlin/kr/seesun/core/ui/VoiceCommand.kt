@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -249,6 +253,65 @@ fun VoiceCommandButton(
             onClick = press,
             textStyle = textStyle
         )
+        if (gate.nudges > 0) MicPermissionRationale(gate)
+        CommandStatus(state, hint, talkBackEnabled, speak)
+    }
+}
+
+/**
+ * 화면 명령을 처리할 음성 명령 컨트롤러(보이는 버튼 없이 쓰는 화면용, 운동 재생 화면). app이 음성 모듈을 내려 주지 않으면 null.
+ * [handler]는 마지막에 넘긴 것을 쓴다(화면 상태가 바뀌어도 컨트롤러를 새로 만들지 않음).
+ */
+@Composable
+fun rememberScreenCommands(handler: (List<String>) -> Boolean): VoiceCommandController? {
+    val speech = LocalSpeechInput.current ?: return null
+    val speaker = LocalGuidanceSpeaker.current
+    val scope = rememberCoroutineScope()
+    val latest by rememberUpdatedState(handler)
+    return remember(speech, scope, speaker) {
+        VoiceCommandController(scope, speech, onBeforeListen = { speaker?.stop() }) { latest(it) }
+    }
+}
+
+/**
+ * 보이는 마이크 버튼 없이 붙이는 화면 명령 듣기(운동 재생 화면, 화면 간소화 설계 v1 §6.4 「언제 듣나」).
+ * 이 조각이 화면에 있는 동안만 듣는다 — 재생 화면은 **멈춘 동안에만** 둔다(안내 음성이 나오는 동안에는 듣지 않음, 반이중).
+ * 설정의 음성 자동 인식(질문 뒤·말하면 듣기)을 그대로 따르고(TalkBack 켜짐이면 자동으로 듣지 않음, A9),
+ * [startNow]가 true가 되면 바로 듣기를 시작하고 [onStarted]를 부른다([⋯ 더 보기]의 [말로 하기], 한 번만).
+ * 듣는 중이면 「듣고 있어요」 한 줄을, 알아듣지 못하면 오류 안내를 보인다(liveRegion + 앱 음성).
+ *
+ * @param key 바뀌면 자동 듣기 한도를 새로 받는다(새로 멈출 때마다)
+ */
+@Composable
+fun ScreenCommandListener(
+    controller: VoiceCommandController,
+    key: Any?,
+    hint: String,
+    talkBackEnabled: Boolean,
+    speak: (String) -> Unit,
+    startNow: Boolean = false,
+    onStarted: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val state by controller.state.collectAsStateWithLifecycle()
+    val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
+    val press = rememberDirectStart(gate.request)
+    VoiceTriggers(controller to key, talkBackEnabled, speak, controller::listenAuto, press)
+    val latestPress by rememberUpdatedState(press)
+    val latestStarted by rememberUpdatedState(onStarted)
+    LaunchedEffect(startNow) {
+        if (!startNow) return@LaunchedEffect
+        if (controller.state.value.mic != MicState.LISTENING) latestPress()
+        latestStarted()
+    }
+    val mic = displayedMic(state.mic)
+    Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)) {
+        val listening = when (mic) {
+            MicState.LISTENING -> stringResource(R.string.ui_screen_command_listening, hint)
+            MicState.PROCESSING -> stringResource(R.string.ui_voice_command_processing)
+            else -> ""
+        }
+        LiveStatusText(listening)
         if (gate.nudges > 0) MicPermissionRationale(gate)
         CommandStatus(state, hint, talkBackEnabled, speak)
     }

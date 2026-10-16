@@ -54,6 +54,7 @@ enum class InputState(val label: String) {
  *
  * @param label 무엇을 입력하는 칸인지("키" 등). TalkBack이 "키 입력칸"으로 읽는다.
  * @param textFieldModifier 편집칸에만 붙는 수정자(포커스 요청·자동 채움 종류 등).
+ * @param showEditButton false면 연필을 그리지 않는다(값만 보이는 줄 — 바꾸기는 화면의 다른 버튼).
  */
 @Composable
 fun ResultField(
@@ -67,7 +68,8 @@ fun ResultField(
     keyboardType: KeyboardType = KeyboardType.Text,
     onEditDone: () -> Unit = {},
     textFieldModifier: Modifier = Modifier,
-    editButtonText: String = "키보드로 직접 입력"
+    editButtonText: String = "키보드로 직접 입력",
+    showEditButton: Boolean = true
 ) {
     val colors = SeeSunTheme.colors
     Row(
@@ -120,7 +122,7 @@ fun ResultField(
                     .background(if (state == InputState.EDITING) colors.emphasis else colors.onBackground, RoundedCornerShape(2.dp))
             )
         }
-        if (state != InputState.EDITING) PencilButton(label = editButtonText, onClick = onEditRequest)
+        if (state != InputState.EDITING && showEditButton) PencilButton(label = editButtonText, onClick = onEditRequest)
     }
 }
 

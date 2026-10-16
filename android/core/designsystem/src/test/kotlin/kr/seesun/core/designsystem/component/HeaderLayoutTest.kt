@@ -4,6 +4,7 @@ import kr.seesun.core.designsystem.component.HeaderSlot.BACK
 import kr.seesun.core.designsystem.component.HeaderSlot.END_SPACER
 import kr.seesun.core.designsystem.component.HeaderSlot.FILL
 import kr.seesun.core.designsystem.component.HeaderSlot.GAP
+import kr.seesun.core.designsystem.component.HeaderSlot.MORE
 import kr.seesun.core.designsystem.component.HeaderSlot.REPEAT
 import kr.seesun.core.designsystem.component.HeaderSlot.SETTINGS
 import kr.seesun.core.designsystem.component.HeaderSlot.SIDE_SPACER
@@ -38,6 +39,18 @@ class HeaderLayoutTest {
         assertEquals(listOf(SIDE_SPACER, TITLE, END_SPACER), HeaderLayout.slots(false, true, hasRepeat = false, hasSettings = false))
         // 제목을 숨긴 화면(시작·메인)은 빈 칸이 제목 자리를 채운다.
         assertEquals(listOf(SIDE_SPACER, FILL, REPEAT, GAP, SETTINGS), HeaderLayout.slots(false, false, true, true))
+    }
+
+    @Test
+    fun `더 보기가 있는 화면(운동 재생·운동 방식) - 톱니 자리에 더 보기, 다시 듣기는 그대로`() {
+        assertEquals(
+            listOf(BACK, TITLE, REPEAT, GAP, MORE),
+            HeaderLayout.slots(true, true, hasRepeat = true, hasSettings = true, hasMore = true)
+        )
+        assertEquals(listOf(BACK, TITLE, MORE), HeaderLayout.slots(true, true, hasRepeat = false, hasSettings = true, hasMore = true))
+        // 톱니가 없는 화면이라도 더 보기는 오른쪽 끝
+        assertEquals(listOf(BACK, TITLE, MORE), HeaderLayout.slots(true, true, hasRepeat = false, hasSettings = false, hasMore = true))
+        assertEquals("더 보기", HeaderLayout.MORE_LABEL)
     }
 
     @Test

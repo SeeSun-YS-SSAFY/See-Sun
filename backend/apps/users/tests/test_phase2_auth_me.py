@@ -193,13 +193,13 @@ class TestMe:
         assert data['profile_completed'] is True
 
     def test_미성년은_연령별_섭취기준(self):
-        # 2차 의뢰서 p14: 만 15~18세 남 → 2020 KDRI 에너지필요추정량 2,700kcal, 감량 보정 없음
+        # 2차 의뢰서 p14: 만 15~18세 남 → 2025 KDRI 에너지필요추정량 2,700kcal, 감량 보정 없음
         today = date.today()
         user = make_user(goal='LOSE_WEIGHT', gender='M', birthdate=date(today.year - 16, 1, 1))
         data = client_for(user).get('/api/v1/me/').data
         assert data['target_kcal'] == 2700
         assert data['target_kcal_detail']['minor'] is True
-        assert data['target_kcal_detail']['formula'] == 'kdri2020_eer_v1'
+        assert data['target_kcal_detail']['formula'] == 'kdri2025_eer_v1'
         assert data['target_kcal_detail']['adjustment'] == 0
 
     def test_수정하면_목표칼로리_재계산(self):

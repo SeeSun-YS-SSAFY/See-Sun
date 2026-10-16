@@ -1,7 +1,14 @@
 package kr.seesun.feature.exercise.home
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -23,10 +30,16 @@ import kr.seesun.core.data.repository.ProfileRepository
 import kr.seesun.core.data.sync.ExerciseSyncScheduler
 import kr.seesun.core.designsystem.component.BodyText
 import kr.seesun.core.designsystem.component.BottomActions
+import kr.seesun.core.designsystem.component.ButtonKind
+import kr.seesun.core.designsystem.component.ListButton
 import kr.seesun.core.designsystem.component.ListButtonGrid
 import kr.seesun.core.designsystem.component.ListButtonItem
 import kr.seesun.core.designsystem.component.LiveStatusText
+import kr.seesun.core.designsystem.component.LocalAppSettingsAction
+import kr.seesun.core.designsystem.component.MoreMenuDialog
+import kr.seesun.core.designsystem.component.MoreMenuItem
 import kr.seesun.core.designsystem.component.ScreenScaffold
+import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.ui.EntryGuidance
 import kr.seesun.core.ui.VoiceMenuButton
@@ -129,13 +142,21 @@ fun ExerciseHomeRoute(viewModel: ExerciseHomeViewModel, onBack: () -> Unit, onOp
 }
 
 /**
- * 운동 방식(Figma 231:708): [근력][유산소][유연성 운동][균형]을 목표 순서로 + [추천 루틴], 그 아래 루틴·기록·안전·전체 보기.
+ * 운동 방식(Figma 231:708, v1.9 R-01·R-02): 1열 노랑 버튼 [근력][유산소][유연성 운동][균형]을 목표 순서로 + 의뢰서 p15 [추천 루틴].
  * 첫 칸이 목표에 맞는 카테고리이고, 그 사실을 화면 한 줄과 낭독으로 알린다(색만으로 구분하지 않음).
+ * 루틴 운동·이번 주 기록·안전 안내·전체 운동(즐겨찾기)은 머리줄 [⋯ 더 보기]로(설정도 그 안, 화면 간소화 설계 v1 §7.2 S22).
  */
 @Composable
 fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination) -> Unit, onRetry: () -> Unit = {}) {
     val reason = ExerciseOrder.reason(ui.goal, ui.recommended)
-    ScreenScaffold(title = "운동", onBack = onBack) {
+    var menuOpen by rememberSaveable { mutableStateOf(false) }
+    val openSettings = LocalAppSettingsAction.current
+    ScreenScaffold(
+        title = "운동 방식",
+        onBack = onBack,
+        onOpenMore = { menuOpen = true },
+        moreLabel = HOME_MORE_LABEL
+    ) {
         BodyText(
             reason ?: "운동 종류를 골라 주세요.",
             spoken = "운동 종류를 골라 주세요. ${reason.orEmpty()} 추천 루틴은 여러 동작을 쉬면서 이어서 해요."
@@ -150,44 +171,77 @@ fun ExerciseHomeScreen(ui: HomeUi, onBack: () -> Unit, onOpen: (HomeDestination)
         if (!ui.signedIn) BodyText("로그인하지 않아 기기에 저장된 운동 정보로 안내해요. 운동 기록은 로그인한 뒤 서버에 보내요.")
         MenuState(MenuUi(loading = ui.loading, categories = ui.categories, fromDevice = ui.fromDevice, error = ui.error), onRetry)
         val recommended = ui.recommended
-        // 말로 고르기(흐름 문서 P0-4): "유산소", "추천 루틴", "루틴", "기록", "안전", "전체" 등.
+        // 말로 고르기(흐름 문서 P0-4): "유산소", "추천 루틴", "루틴", "기록", "안전", "전체" 등([⋯] 안의 것도 말로 바로 연다).
         VoiceMenuButton(
             options = homeVoiceOptions(ui.categories, recommended, onOpen),
             hint = "${ui.categories.joinToString(", ") { ExerciseOrder.shortName(it.name) }}, 추천 루틴 중에서 말씀해 주세요."
         )
         if (!ui.loading) {
             BottomActions {
-                ListButtonGrid(items = homeTiles(ui.categories, recommended), onClick = { onOpen(destinationOf(it.key, ui)) })
+                // Figma 231:708: 320×74 노랑 버튼 1열. 설명은 화면에 두지 않고 낭독으로 남긴다.
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)) {
+                    homeTiles(ui.categories, recommended).forEach { item ->
+                        ListButton(
+                            text = item.text,
+                            description = item.spoken?.removePrefix("${item.text}. "),
+                            descriptionVisible = false,
+                            onClick = { onOpen(destinationOf(item.key, ui)) }
+                        )
+                    }
+                }
             }
         }
     }
+    if (menuOpen) {
+        MoreMenuDialog(
+            items = homeMoreItems(settings = openSettings != null),
+            onPick = { item ->
+                menuOpen = false
+                if (item.key == SETTINGS_KEY) openSettings?.invoke() else onOpen(destinationOf(item.key, ui))
+            },
+            onDismiss = { menuOpen = false },
+            hint = "말로도 돼요: 「루틴」 「기록」 「안전」 「전체」"
+        )
+    }
     if (!ui.loading) {
-        val names = ui.categories.joinToString(", ") { it.name }
+        val names = ui.categories.joinToString(", ") { homeLabel(it.name) }
         EntryGuidance(
             "exercise-home:${ui.categories.joinToString { it.id }}",
-            "운동 방식. ${reason.orEmpty()} ${if (names.isEmpty()) "" else "$names, "}추천 루틴, 루틴 운동, 이번 주 기록, 안전 안내, " +
-                "전체 운동 중에서 골라 주세요."
+            "운동 방식. ${reason.orEmpty()} ${if (names.isEmpty()) "" else "$names, "}추천 루틴 중에서 골라 주세요. " +
+                "루틴 운동, 이번 주 기록, 안전 안내, 전체 운동은 오른쪽 위 더 보기에 있어요."
         )
     }
 }
 
-/** 첫 화면 타일: 카테고리 4개(목표 순서) → [추천 루틴][루틴 운동] → [이번 주 기록][안전 안내] → [전체 운동 보기]. */
+/** Figma 231:708 버튼 이름: 「근력」「유산소」「유연성 운동」「균형」(서버 이름 「근력 운동」… 에서). */
+internal fun homeLabel(name: String): String = ExerciseOrder.shortName(name).let { if (it == "유연성") "유연성 운동" else it }
+
+/** 첫 화면 버튼(보이는 층): 카테고리 4개(목표 순서) → [추천 루틴]. TalkBack은 [ListButtonItem.spoken]으로 자세히 읽는다. */
 internal fun homeTiles(categories: List<ExerciseCategory>, recommended: ExerciseCategory?): List<ListButtonItem> =
     categories.mapIndexed { i, c ->
+        val label = homeLabel(c.name)
         if (i == 0) {
-            tile(CATEGORY_PREFIX + c.id, c.name, "목표에 맞춰 먼저", "${c.name}. 목표에 맞춰 먼저 권하는 운동이에요")
+            tile(CATEGORY_PREFIX + c.id, label, "목표에 맞춰 먼저", "$label. 목표에 맞춰 먼저 권하는 운동이에요")
         } else {
-            tile(CATEGORY_PREFIX + c.id, c.name, "골라서 안내 듣기", "${c.name}. 운동을 골라 안내를 들어요")
+            tile(CATEGORY_PREFIX + c.id, label, "골라서 안내 듣기", "$label. 운동을 골라 안내를 들어요")
         }
     } + listOfNotNull(
         recommended?.let {
             tile(RECOMMENDED_KEY, "추천 루틴", "${it.name} 차례로", "추천 루틴. 목표에 맞춰 ${it.name}을 휴식과 함께 차례로 해요")
-        },
-        tile(ROUTINE_KEY, "루틴 운동", "기본·나만의 루틴", "루틴 운동. 운동별 루틴과 내가 만든 루틴을 해요"),
-        tile(WEEKLY_KEY, "이번 주 기록", "횟수와 시간", "이번 주 운동 기록. 횟수와 시간을 알려 드려요"),
-        tile(SAFETY_KEY, "안전 안내", "다시 듣기·건강 확인", "운동 안전 안내. 안전 안내를 다시 듣고 건강 확인을 다시 해요"),
-        tile(SINGLE_KEY, "전체 운동", "자주·즐겨찾기", "전체 운동. 모든 운동, 자주 하는 운동, 즐겨찾기를 봐요")
+        }
     )
+
+/** [⋯ 더 보기] 안(숨긴 층): 루틴 운동 · 이번 주 기록 · 안전 안내 · 전체 운동(즐겨찾기) · 설정. */
+internal fun homeMoreItems(settings: Boolean): List<MoreMenuItem> = listOfNotNull(
+    MoreMenuItem(ROUTINE_KEY, "루틴 운동"),
+    MoreMenuItem(WEEKLY_KEY, "이번 주 기록"),
+    MoreMenuItem(SAFETY_KEY, "안전 안내"),
+    MoreMenuItem(SINGLE_KEY, "전체 운동·즐겨찾기"),
+    if (settings) MoreMenuItem(SETTINGS_KEY, "설정", ButtonKind.OUTLINE) else null
+)
+
+/** [⋯]의 TalkBack 이름(안의 기능 이름을 함께 읽는다). */
+const val HOME_MORE_LABEL = "더 보기. 루틴 운동, 이번 주 기록, 안전 안내, 전체 운동, 즐겨찾기, 설정"
 
 internal fun destinationOf(key: String, ui: HomeUi): HomeDestination = when {
     key.startsWith(CATEGORY_PREFIX) -> {
@@ -230,6 +284,7 @@ private const val ROUTINE_KEY = "routine"
 private const val WEEKLY_KEY = "weekly"
 private const val SAFETY_KEY = "safety"
 private const val SINGLE_KEY = "single"
+private const val SETTINGS_KEY = "settings"
 
 // ── 메뉴: 단일 운동 고르기 / 루틴 고르기 ─────────────────────────────────
 

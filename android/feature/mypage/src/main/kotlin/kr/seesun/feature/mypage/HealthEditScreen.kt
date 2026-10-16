@@ -58,6 +58,8 @@ import kr.seesun.core.ui.DiseaseOption
 import kr.seesun.core.ui.GoalOption
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.HealthVoiceParser
+import kr.seesun.core.ui.MinorGoalNote
+import kr.seesun.core.ui.MinorGoalNoteText
 import kr.seesun.core.ui.VoiceCommandButton
 import kr.seesun.core.ui.VoiceCommandController
 import kr.seesun.core.ui.VoiceFieldController
@@ -82,6 +84,10 @@ data class HealthEditState(
     val choosingDiseases: Boolean = false,
     /** 목표 고르기 화면을 펼쳤는가. */
     val choosingGoal: Boolean = false,
+    /** 만 19세 미만인가(서버 /me/ 나이). 감량·근육 증진을 고르면 「성장기에는 …」 안내(소유자 msg 1120). */
+    val minor: Boolean = false,
+    /** 미성년이 감량·근육 증진을 고른 횟수(늘 때마다 안내를 다시 말한다). */
+    val minorGoalNoteSeq: Int = 0,
     val busy: Boolean = false,
     val message: String? = null,
     val saved: Boolean = false,
@@ -130,15 +136,14 @@ class HealthEditViewModel @Inject constructor(
         onBeforeListen = { voice.stop() }
     ) { v -> _state.update { it.copy(other = v, editingOther = false) } }
 
-    val goalVoice = command { c ->
-        c.firstNotNullOfOrNull(HealthVoiceParser::goal)?.also { g -> _state.update { it.copy(goal = g) } } !=
-            null
-    }
+    val goalVoice = command { c -> c.firstNotNullOfOrNull(HealthVoiceParser::goal)?.also(::selectGoal) != null }
 
     fun load() {
         viewModelScope.launch {
             val sensitive = (consents.status() as? ApiResult.Success)?.data?.items
                 ?.any { it.type == ConsentTypes.SENSITIVE && it.agreed } == true
+            val me = (profile.me() as? ApiResult.Success)?.data
+            val minor = MinorGoalNote.isMinor(me?.age, fallback = me?.targetKcalDetail?.minor == true)
             if (sensitive) {
                 val h = health.get()
                 val list = (health.allergens() as? ApiResult.Success)?.data.orEmpty()
@@ -152,12 +157,12 @@ class HealthEditViewModel @Inject constructor(
                         other = data?.otherAllergies.orEmpty().joinToString(", "),
                         goal = data?.goal,
                         allergenList = list,
+                        minor = minor,
                         message = (h as? ApiResult.Failure)?.failure?.ttsMessage
                     )
                 }
             } else {
-                val me = (profile.me() as? ApiResult.Success)?.data
-                _state.update { it.copy(loading = false, sensitiveAgreed = false, goal = me?.goal) }
+                _state.update { it.copy(loading = false, sensitiveAgreed = false, goal = me?.goal, minor = minor) }
             }
         }
     }
@@ -233,7 +238,10 @@ class HealthEditViewModel @Inject constructor(
         return true
     }
 
-    fun selectGoal(code: String) = _state.update { it.copy(goal = code) }
+    fun selectGoal(code: String) = _state.update {
+        val note = MinorGoalNote.of(code, it.minor) != null
+        it.copy(goal = code, minorGoalNoteSeq = if (note) it.minorGoalNoteSeq + 1 else it.minorGoalNoteSeq)
+    }
 
     fun save() {
         val s = state.value
@@ -407,13 +415,27 @@ private fun ColumnScope.DiseaseChooser(state: HealthEditState, vm: HealthEditVie
 /** 목표 고르기(하나). */
 @Composable
 private fun ColumnScope.GoalChooser(state: HealthEditState, vm: HealthEditViewModel, talkBack: Boolean, speak: (String) -> Unit) {
-    BodyText(stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note))
+    // 미성년은 성인용 감량 하한 안내 대신, 감량·근육 증진을 고르면 「성장기에는 …」을 보이고 말한다
+    // (목표 열량은 2025 섭취기준 그대로, 소유자 msg 1120).
+    if (!state.minor) {
+        BodyText(stringResource(kr.seesun.core.ui.R.string.ui_goal_floor_note))
+    } else {
+        MinorGoalNoteText(
+            goal = state.goal,
+            minor = true,
+            seq = state.minorGoalNoteSeq,
+            talkBackEnabled = talkBack,
+            speak = speak,
+            otherwise = stringResource(R.string.my_goal_minor_note)
+        )
+    }
     VoiceCommandButton(vm.goalVoice, stringResource(R.string.my_hint_goal), talkBack, speak)
     GoalOption.entries.forEach { option ->
         ListButton(
             stringResource(option.label),
             onClick = { vm.selectGoal(option.code) },
-            description = stringResource(option.description),
+            // 만 14~18세: 감량·근육 증진도 「열량은 그대로, 운동과 식사 균형으로」(열량 보정 없음).
+            description = stringResource(option.descriptionFor(state.minor)),
             // 목표별 열량 변화는 정보라 아주 작은 폰에서도 보인다(2차 결정 「설명 한 줄 유지」).
             descriptionVisible = true,
             selected = state.goal == option.code
