@@ -66,7 +66,7 @@ object AssistantReplies {
     const val AUTO_SAME = "이미 그렇게 되어 있어요."
     const val KEEP = "그대로 둘게요."
     const val MEDICINE_SOON = "약 기능은 준비 중이에요."
-    const val DIET_SOON = "식단 기록과 점수, 추천은 다음 판에서 열려요. 지금은 준비 중이에요."
+    const val DIET_SOON = "식단 점수와 통계, 추천은 다음 판에서 열려요. 지금은 준비 중이에요."
     const val RESUME_NONE = "이어서 할 운동이 없어요. 운동 화면으로 갈까요?"
     const val WEEKLY_THIS = "이번 주에는 운동을 %d번, 모두 %d분 했어요. 기록 화면을 열까요?"
     const val WEEKLY_LAST = "지난주에는 운동을 %d번, 모두 %d분 했어요. 기록 화면을 열까요?"

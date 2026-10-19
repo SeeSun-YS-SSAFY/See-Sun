@@ -75,7 +75,8 @@ class MealUtteranceParser(private val matcher: FoodMatcher = FoodMatcher()) {
         val best = matcher.best(raw) ?: matcher.best(stripped)
         val spoken = if (best != null && matcher.best(raw) != null) raw else stripped
         val quantityText = segment.filter { QuantityParser.isQuantityWord(it) }.joinToString(" ") { it.raw }
-        val quantity = QuantityParser.parseTokens(segment, quantityText)
+        // 「요구르트 하나 마셨어」: 맨 끝 동사(마셨어·먹었어)는 빼고 봐야 「하나」가 끝의 수(=1개)로 읽힌다.
+        val quantity = QuantityParser.parseTokens(segment.filterNot { it is Token.Word && isFiller(it.text) }, quantityText)
         return FoodMention(spoken = spoken, name = best?.name ?: spoken, matched = best != null, quantity = quantity)
     }
 

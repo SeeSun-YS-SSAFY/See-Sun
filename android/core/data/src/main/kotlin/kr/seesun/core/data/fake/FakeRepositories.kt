@@ -8,6 +8,8 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kr.seesun.core.data.model.MealDraft
 import kr.seesun.core.data.model.MealItem
 import kr.seesun.core.data.model.MealRecord
@@ -22,6 +24,8 @@ import kr.seesun.core.network.model.EvaluatedItemDto
 import kr.seesun.core.network.model.FoodAllergenDto
 import kr.seesun.core.network.model.FoodSummaryDto
 import kr.seesun.core.network.model.NutritionDto
+import kr.seesun.core.network.model.RecommendationCardDto
+import kr.seesun.core.network.model.RecommendationResponseDto
 import kr.seesun.core.network.model.ServingDto
 import kr.seesun.core.network.model.SugarIndexDto
 
@@ -31,6 +35,9 @@ class FakeMealRepository @Inject constructor() : MealRepository {
     private val meals = MutableStateFlow<List<MealRecord>>(emptyList())
 
     override fun observeMeals(date: LocalDate): Flow<List<MealRecord>> = meals.map { all -> all.filter { it.date == date } }
+
+    /** 시험에서 저장된 기록을 바로 본다. */
+    val recorded: List<MealRecord> get() = meals.value
 
     override fun observePendingCount(): Flow<Int> = meals.map { all -> all.count { it.syncState == SyncState.PENDING } }
 
@@ -49,6 +56,12 @@ class FakeMealRepository @Inject constructor() : MealRepository {
     }
 
     override suspend fun syncNow(): SyncOutcome = SyncOutcome.DONE
+
+    override suspend fun delete(clientUuid: String): Boolean {
+        val before = meals.value
+        meals.value = before.filterNot { it.clientUuid == clientUuid }
+        return meals.value.size != before.size
+    }
 }
 
 /**
@@ -107,6 +120,19 @@ class FakeFoodRepository @Inject constructor() : FoodRepository {
         }
         return ApiResult.Success(DietEvaluateResponse(evaluated, warnings))
     }
+
+    override suspend fun recommendations(type: String, key: String?): ApiResult<RecommendationResponseDto> = ApiResult.Success(
+        RecommendationResponseDto(
+            type = type,
+            key = key,
+            items = foods.filter { it.name in setOf("김치찌개", "밥", "사과") }.map { RecommendationCardDto(food = it, reason = "견본 추천이에요.") },
+            alternativeDiet = if (type == "allergy") {
+                JsonObject(mapOf("tts_message" to JsonPrimitive("견본 대체 식단은 쌀국수, 감자전입니다. 개인의 알레르기 진단 결과를 우선 확인하세요.")))
+            } else {
+                null
+            }
+        )
+    )
 
     private fun sample(id: Long, name: String, grams: Double, kcal: Double, carb: Double, sugar: Double, beverage: Boolean = false) =
         FoodSummaryDto(

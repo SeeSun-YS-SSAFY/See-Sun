@@ -11,6 +11,7 @@
 국가표준식품성분표(농진청, 공공누리 2유형)는 상업 이용 금지라 쓰지 않는다(05 문서 L-08).
 """
 import csv
+import gzip
 import io
 import json
 import re
@@ -161,15 +162,30 @@ def row_to_food_fields(row, header_map):
     return fields
 
 
+def _json_rows(data):
+    if isinstance(data, dict):
+        data = data.get('data') or data.get('items') or data.get('records') or []
+    headers = list(data[0].keys()) if data else []
+    return headers, iter(data)
+
+
+def stored_count(source='MFDS') -> int:
+    """지금 음식 테이블에 있는 이 출처의 음식 수(배포 기대 개수 검증용)."""
+    from .models import Food
+
+    return Food.objects.filter(source=source).count()
+
+
 def read_rows(path: Path, encoding: str | None = None, sheet: str | None = None):
     """파일 형식별로 dict 행을 돌려준다(헤더, 행 반복자)"""
     suffix = path.suffix.lower()
+    if suffix == '.gz' and path.name.lower().endswith('.json.gz'):
+        # 배포 번들은 22MB JSON을 gzip으로 묶어 보낸다(seed/mfds_food_*.json.gz).
+        data = json.loads(gzip.decompress(path.read_bytes()).decode(encoding or 'utf-8'))
+        return _json_rows(data)
     if suffix == '.json':
         data = json.loads(path.read_text(encoding=encoding or 'utf-8'))
-        if isinstance(data, dict):
-            data = data.get('data') or data.get('items') or data.get('records') or []
-        headers = list(data[0].keys()) if data else []
-        return headers, iter(data)
+        return _json_rows(data)
     if suffix in ('.xlsx', '.xlsm'):
         from openpyxl import load_workbook
         wb = load_workbook(path, read_only=True, data_only=True)

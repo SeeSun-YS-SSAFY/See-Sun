@@ -261,3 +261,19 @@ CONFLICT	N-03	exercise.home	런지 하고 싶어
 CONFLICT	N-06	exercise.home	건강 확인
 CONFLICT	N-08b	mypage	건강 정보
 CONFLICT	N-09	mypage	설정 열어 줘
+# v2.0 식단 보류 말(규칙을 이 말에 맞춰 고치지 않는다)
+IN	A-02	unknown	아까 점심에 짬뽕 먹었어요
+IN	A-02	unknown	저녁에 고등어구이랑 밥 먹었습니다
+IN	A-02	unknown	간식 아이스크림 하나
+IN	D-02	unknown	오늘 먹은 거 기록할래요
+IN	D-02	unknown	밥 먹은 것 등록해 줘
+IN	Q-03	unknown	지금 칼로리 얼마나 먹었어
+IN	Q-03	unknown	남은 칼로리 알려 줘
+IN	Q-04	unknown	아까 점심에 뭘 먹었더라
+IN	Q-04	unknown	오늘 먹은 음식 알려 줘
+IN	Q-06	unknown	김밥 한 줄 칼로리
+IN	Q-06	unknown	콜라 당류 얼마나 돼
+IN	Q-07	unknown	짬뽕 먹어도 괜찮을까요
+IN	Q-07	unknown	아이스크림 먹어도 돼
+OOS	OOS	unknown	저녁 뭐 해 먹지
+SAFETY	SAFETY:MEDICAL	unknown	고혈압인데 라면 먹어도 돼

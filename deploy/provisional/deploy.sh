@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # 시선(See:Sun) 가운영 배포 — 여러 번 실행해도 결과가 같다(멱등).
-#   이미지 적재 → .env 준비(비밀값 생성) → 기동(migrate 자동) → 미디어·운동 콘텐츠 시드 → 개수·파일 검증 → 점검
+#   이미지 적재 → .env 준비(비밀값 생성) → 기동(migrate 자동) → 미디어·운동 콘텐츠 시드 → 식약처 음식 DB 적재 → 개수·파일 검증 → 점검
 # 사용: 번들 폴더(이 파일이 있는 곳)에서  ./deploy.sh
 # 환경변수(선택):
 #   FORCE_SEED=1         이미 시드한 콘텐츠도 다시 넣는다(관리자 화면에서 고친 운동 내용은 덮어씀)
 #   SKIP_SEED=1          미디어·콘텐츠 시드를 건너뛴다(이관받은 DB를 복원할 때)
+#   FORCE_FOOD_IMPORT=1  음식 수가 이미 기대값과 같아도 음식 DB를 다시 적재한다(식품코드 기준 갱신, 멱등)
+#   SKIP_FOOD_IMPORT=1   음식 DB 적재·검증을 건너뛴다
 #   COMPOSE_PROJECT_NAME 기본 seesun(로컬 리허설에서만 바꾼다)
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -32,6 +34,7 @@ docker info >/dev/null 2>&1 || die "docker에 접근할 수 없습니다. bootst
 IMAGE_TAR=$(ls seesun-backend_*.tar.gz 2>/dev/null | head -n 1 || true)
 SEED=$(ls seed/exercises_content_seed_*.json 2>/dev/null | head -n 1 || true)
 MEDIA_TAR=$(ls media_content_*.tar.gz 2>/dev/null | head -n 1 || true)
+FOOD_JSON=$(ls seed/mfds_food_*.json.gz 2>/dev/null | head -n 1 || true)
 
 # ---- 0. 번들 무결성 ---------------------------------------------------------------
 if [ -f SHA256SUMS ]; then
@@ -107,6 +110,26 @@ if [ "${SKIP_SEED:-0}" != 1 ]; then
   else
     log "운동 콘텐츠가 이미 있음(운동 ${N_EX}개) — 건너뜀(다시 넣으려면 FORCE_SEED=1, 관리자 화면에서 고친 내용은 덮어씀)"
   fi
+fi
+
+# ---- 4b. 식약처 음식 DB(계획 v8 ①): 기대 개수와 다를 때만 적재, 적재 뒤 개수 검증 ---------------------
+if [ "${SKIP_FOOD_IMPORT:-0}" != 1 ] && [ -n "$FOOD_JSON" ]; then
+  FOOD_EXPECT=$(tr -dc '0-9' < seed/EXPECTED_FOOD_COUNT.txt 2>/dev/null || true)
+  [ -n "$FOOD_EXPECT" ] || die "seed/EXPECTED_FOOD_COUNT.txt 가 없습니다(음식 DB 기대 개수)"
+  N_FOOD=$($C exec -T django python manage.py shell -c "from apps.nutrition.importers import stored_count;print(stored_count())" | tail -n 1 | tr -d '\r')
+  if [ "${FORCE_FOOD_IMPORT:-0}" = 1 ] || [ "$N_FOOD" != "$FOOD_EXPECT" ]; then
+    log "음식 DB 적재: $FOOD_JSON (현재 ${N_FOOD}건, 기대 ${FOOD_EXPECT}건 — 2만 건이라 1~2분 걸림)"
+    $C cp "$FOOD_JSON" django:/tmp/mfds_food.json.gz
+    $C exec -T django python manage.py import_mfds_foods /tmp/mfds_food.json.gz --expect-count "$FOOD_EXPECT" \
+      || { $C exec -T -u root django rm -f /tmp/mfds_food.json.gz; die "음식 DB 개수가 기대값(${FOOD_EXPECT})과 다릅니다(위 출력 확인)"; }
+    $C exec -T -u root django rm -f /tmp/mfds_food.json.gz
+  else
+    log "음식 DB가 이미 기대값과 같음(${N_FOOD}건) — 건너뜀(다시 넣으려면 FORCE_FOOD_IMPORT=1)"
+  fi
+  $C exec -T django python manage.py import_mfds_foods --verify-only --expect-count "$FOOD_EXPECT" \
+    || die "음식 DB 개수가 기대값(${FOOD_EXPECT})과 다릅니다"
+elif [ "${SKIP_FOOD_IMPORT:-0}" != 1 ]; then
+  log "주의: seed/mfds_food_*.json.gz 가 없어 음식 DB 적재를 건너뜁니다(식사 기록 음식 검색이 비어 있음)"
 fi
 
 # ---- 5. 검증: 개수·파일 -------------------------------------------------------------

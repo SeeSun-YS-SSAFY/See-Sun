@@ -25,9 +25,11 @@ import kr.seesun.core.network.model.MealBulkResponse
 import kr.seesun.core.network.model.MealDto
 import kr.seesun.core.network.model.MessageDto
 import kr.seesun.core.network.model.PartialDeleteResponseDto
+import kr.seesun.core.network.model.RecommendationResponseDto
 import kr.seesun.core.network.model.TokenRefreshRequest
 import kr.seesun.core.network.model.TokenRefreshResponse
 import kr.seesun.core.network.model.WeeklyExerciseDto
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -114,6 +116,14 @@ interface SeeSunApi {
 
     @GET("meals/")
     suspend fun meals(@Query("date") date: String): List<MealDto>
+
+    /** 식사 기록 하나 삭제(오늘 기록 목록, v2.0) → 204. 다른 사람 기록·이미 지운 기록은 404. */
+    @DELETE("meals/{id}/")
+    suspend fun deleteMeal(@Path("id") id: String): Response<Unit>
+
+    /** 추천(§8). v2.0은 경고 팝업의 [대체 식단 보기](type=allergy)·[추천 음식 보기](type=disease&key=DIABETES)만 쓴다. */
+    @GET("recommendations/")
+    suspend fun recommendations(@Query("type") type: String, @Query("key") key: String? = null): RecommendationResponseDto
 
     @GET("diet/score/")
     suspend fun dietScore(@Query("date") date: String): DietScoreDto

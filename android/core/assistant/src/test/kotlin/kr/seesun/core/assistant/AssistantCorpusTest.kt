@@ -60,6 +60,36 @@ class AssistantCorpusTest {
     private fun asks(d: Decision): Boolean =
         (d is Decision.Intent && !d.confident && AssistantRoutes.of(d.match) != null) || d is Decision.Ambiguous
 
+    private data class Audit(val saves: Int, val calls: Int, val healthValues: Int, val dietRecords: Int)
+
+    /** 건강 기록·전화: 모든 말을 새 대화에서 한 번씩 들려 앱에 시키는 일을 본다. */
+    private suspend fun audit(rows: List<Row>): Audit {
+        var unconfirmedSaves = 0
+        var unconfirmedCalls = 0
+        var healthValueReplies = 0
+        var dietRecordReplies = 0
+        rows.forEach { r ->
+            val session = AssistantSession(engine, AssistantFixtures.FakeFacts())
+            val reply = session.hear(listOf(r.text), AssistantFixtures.screen(r.screen)) ?: return@forEach
+            reply.actions.forEach { a ->
+                if (a is AssistantAction.Dial) unconfirmedCalls++
+                val dest = (a as? AssistantAction.Navigate)?.destination as? Destination.ProfileEdit
+                if (dest?.value != null) {
+                    healthValueReplies++
+                    if (!dest.confirmScreen) unconfirmedSaves++
+                }
+                // v2.0 식사 기록(A-02·D-02): 비서는 저장하지 않고 늘 확인 화면이 있는 기록 흐름만 연다.
+                val record = (a as? AssistantAction.Navigate)?.destination as? Destination.DietRecord
+                if (record != null) {
+                    dietRecordReplies++
+                    if (!record.confirmScreen) unconfirmedSaves++
+                }
+            }
+            if (reply.intent == IntentId.HEALTH_VALUE && reply.actions.none { it is AssistantAction.Navigate }) unconfirmedSaves++
+        }
+        return Audit(unconfirmedSaves, unconfirmedCalls, healthValueReplies, dietRecordReplies)
+    }
+
     private suspend fun evaluate(name: String): Metrics {
         val rows = load(name)
         val misses = mutableListOf<String>()
@@ -87,23 +117,9 @@ class AssistantCorpusTest {
             if (!ok) misses += "${r.bucket}\t기대=${r.expected}\t판정=$got${if (asks(d)) "(묻기)" else ""}\t화면=${r.screen}\t${r.text}"
         }
 
-        // 건강 기록·전화: 모든 말을 새 대화에서 한 번씩 들려 앱에 시키는 일을 본다.
-        var unconfirmedSaves = 0
-        var unconfirmedCalls = 0
-        var healthValueReplies = 0
-        rows.forEach { r ->
-            val session = AssistantSession(engine, AssistantFixtures.FakeFacts())
-            val reply = session.hear(listOf(r.text), AssistantFixtures.screen(r.screen)) ?: return@forEach
-            reply.actions.forEach { a ->
-                if (a is AssistantAction.Dial) unconfirmedCalls++
-                val dest = (a as? AssistantAction.Navigate)?.destination as? Destination.ProfileEdit
-                if (dest?.value != null) {
-                    healthValueReplies++
-                    if (!dest.confirmScreen) unconfirmedSaves++
-                }
-            }
-            if (reply.intent == IntentId.HEALTH_VALUE && reply.actions.none { it is AssistantAction.Navigate }) unconfirmedSaves++
-        }
+        val audit = audit(rows)
+        val (unconfirmedSaves, unconfirmedCalls) = audit.saves to audit.calls
+        val (healthValueReplies, dietRecordReplies) = audit.healthValues to audit.dietRecords
 
         val pct = score.mapValues { (_, v) -> if (v.first == 0) 0.0 else v.second * 100.0 / v.first }
         val oosTotal = byBucket["OOS"].orEmpty().size
@@ -118,11 +134,14 @@ class AssistantCorpusTest {
             appendLine(fmt("in_scope_top1_accuracy", pct["IN"], "(기준 >= 92%)"))
             appendLine(fmt("oos_misrouted_as_navigation", oosMisroute, "(기준 <= 3%) direct=$oosDirect asked=$oosAsk of $oosTotal"))
             appendLine(fmt("safety_recall", safetyRecall, "(기준 100%) kind_match=$safetyKindHit/$safetyTotal"))
-            appendLine("health_saves_without_confirm=$unconfirmedSaves (기준 0) health_value_replies=$healthValueReplies")
+            appendLine(
+                "health_saves_without_confirm=$unconfirmedSaves (기준 0) health_value_replies=$healthValueReplies " +
+                    "diet_record_replies=$dietRecordReplies"
+            )
             appendLine("calls_without_confirm=$unconfirmedCalls (기준 0)")
             appendLine(fmt("value_capture_accuracy", pct["VALUE"], "(n=${byBucket["VALUE"].orEmpty().size})"))
             appendLine(fmt("screen_conflict_accuracy", pct["CONFLICT"], "(n=${byBucket["CONFLICT"].orEmpty().size})"))
-            if (byBucket.containsKey("PHASE2")) appendLine(fmt("phase2_diet_intent_accuracy", pct["PHASE2"], "(참고, 답은 「준비 중」)"))
+            if (byBucket.containsKey("PHASE2")) appendLine(fmt("phase2_diet_intent_accuracy", pct["PHASE2"], "(참고, v2.1 의도 — 답은 「준비 중」)"))
             appendLine("misses=${misses.size}")
             misses.forEach { appendLine("  $it") }
         }

@@ -233,6 +233,31 @@ data class DietScoreDto(
     @SerialName("tts_message") val ttsMessage: String? = null
 )
 
+/** §8 스키마 RecommendationCard — 음식 카드 한 장(이유는 성분만, 효능 표현 없음 T-06). */
+@Serializable
+data class RecommendationCardDto(
+    val food: FoodSummaryDto,
+    val reason: String = "",
+    @SerialName("tts_message") val ttsMessage: String = "",
+    @SerialName("sugar_index") val sugarIndex: SugarIndexDto? = null,
+    val tags: List<String> = emptyList()
+)
+
+/**
+ * §8 GET /recommendations/ — 스키마 RecommendationResponse. [alternativeDiet]는 type=allergy일 때만
+ * (`allergen_name`·`caution_foods`·`substitutes`·`menus`·`tts_message`).
+ */
+@Serializable
+data class RecommendationResponseDto(
+    val type: String,
+    val key: String? = null,
+    val items: List<RecommendationCardDto> = emptyList(),
+    @SerialName("caution_items") val cautionItems: List<RecommendationCardDto> = emptyList(),
+    @SerialName("alternative_diet") val alternativeDiet: JsonObject? = null,
+    val notice: String? = null,
+    @SerialName("generated_at") val generatedAt: String? = null
+)
+
 /** §10 운동 세션 항목 */
 @Serializable
 data class ExerciseSessionItemDto(
