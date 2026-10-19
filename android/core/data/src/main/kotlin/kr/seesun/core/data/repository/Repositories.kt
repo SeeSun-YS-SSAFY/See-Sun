@@ -10,6 +10,7 @@ import kr.seesun.core.data.sync.SyncOutcome
 import kr.seesun.core.network.ApiResult
 import kr.seesun.core.network.model.DietEvaluateResponse
 import kr.seesun.core.network.model.FoodSummaryDto
+import kr.seesun.core.network.model.RecommendationResponseDto
 
 // 기능 모듈이 쓰는 저장소 인터페이스. 서버 연결 전에도 기능을 만들 수 있도록 가짜 구현(`fake` 패키지)이 있다.
 // DataConfig.useFakeRepositories로 바꾼다.
@@ -26,6 +27,12 @@ interface MealRepository {
 
     /** 지금 바로 전송을 시도한다(당겨서 새로고침·테스트용). */
     suspend fun syncNow(): SyncOutcome
+
+    /**
+     * 기록 하나 지우기(오늘 기록 목록, v2.0). 목록에서 바로 빠지고, 서버에 있던 기록이면 연결될 때 서버에서도 지운다(오프라인 삭제 가능).
+     * @return 지울 기록이 있었으면 true
+     */
+    suspend fun delete(clientUuid: String): Boolean
 }
 
 /** 음식 검색·확인 화면 평가. */
@@ -34,6 +41,11 @@ interface FoodRepository {
 
     /** 확인 화면용 평가(저장 안 함): 영양값·알레르기·당류 경고(API 계약 §6.1). */
     suspend fun evaluate(items: List<MealItem>): ApiResult<DietEvaluateResponse>
+
+    /**
+     * 추천(§8). 경고 팝업의 [대체 식단 보기](type=allergy, key=알레르기 코드)·[추천 음식 보기](type=disease, key=DIABETES).
+     */
+    suspend fun recommendations(type: String, key: String?): ApiResult<RecommendationResponseDto>
 }
 
 /** 로그인 결과(온보딩 분기용). */

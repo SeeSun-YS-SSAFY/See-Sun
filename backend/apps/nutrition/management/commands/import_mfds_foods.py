@@ -6,8 +6,12 @@
     python manage.py import_mfds_foods data.xlsx --sheet Sheet1
     python manage.py import_mfds_foods --download --save-json /tmp/mfds_food.json   # 포털에서 직접 받기
     python manage.py import_mfds_foods apps/nutrition/fixtures/mfds_food_sample.csv  # 저장소 샘플(23건)
+    python manage.py import_mfds_foods seed/mfds_food_20261017.json.gz --expect-count 19641  # 배포(deploy.sh)
+    python manage.py import_mfds_foods seed/mfds_food_20261017.json.gz --print-count         # 기대 개수만 출력(번들 만들기)
+    python manage.py import_mfds_foods --verify-only --expect-count 19641                    # 적재 없이 개수만 검사
 
 같은 파일을 여러 번 실행해도 결과가 같다(식품코드 기준 갱신).
+--expect-count: 적재 뒤 음식 테이블의 식약처 음식 수가 이 값과 다르면 실패(종료 코드 1, 계획 v8 ① 「서버 음식 수가 기대값과 같음」).
 """
 import json
 from pathlib import Path
@@ -32,8 +36,21 @@ class Command(BaseCommand):
                             help=f'출처명에 이 글자가 있는 행 제외(여러 번 가능, 기본 {importers.DEFAULT_EXCLUDED_SOURCES})')
         parser.add_argument('--include-all-sources', action='store_true',
                             help='출처 제외 없이 모두 적재(이용 조건을 확인한 경우만)')
+        parser.add_argument('--expect-count', type=int,
+                            help='적재 뒤 식약처 음식 수가 이 값과 같아야 한다(다르면 실패)')
+        parser.add_argument('--print-count', action='store_true',
+                            help='저장하지 않고, 이 파일을 적재하면 생길 음식 수(출처 제외·중복 코드 반영)만 숫자로 출력')
+        parser.add_argument('--verify-only', action='store_true',
+                            help='적재하지 않고 지금 음식 수만 --expect-count와 비교')
 
     def handle(self, *args, **opts):
+        if opts['verify_only']:
+            if opts['expect_count'] is None:
+                raise CommandError('--verify-only 에는 --expect-count 가 필요합니다.')
+            self._verify(opts['expect_count'])
+            return
+        if opts['print_count']:
+            opts['dry_run'] = True
         if opts['download']:
             rows = importers.download_portal_rows()
             if opts['save_json']:
@@ -53,8 +70,19 @@ class Command(BaseCommand):
             result = runner(limit=opts['limit'], dry_run=opts['dry_run'], exclude_sources=excluded)
         except importers.ImportFormatError as exc:
             raise CommandError(str(exc)) from exc
+        if opts['print_count']:
+            self.stdout.write(str(result.created))
+            return
         prefix = '[dry-run] ' if opts['dry_run'] else ''
         self.stdout.write(self.style.SUCCESS(
             f'{prefix}신규 {result.created}건, 갱신 {result.updated}건, 건너뜀 {result.skipped}건, '
             f'출처 제외 {result.excluded}건, '
             f'알레르기 키워드 태그 {result.allergen_tags}건'))
+        if opts['expect_count'] is not None and not opts['dry_run']:
+            self._verify(opts['expect_count'])
+
+    def _verify(self, expected):
+        actual = importers.stored_count()
+        if actual != expected:
+            raise CommandError(f'식약처 음식 수가 기대값과 다릅니다: 기대 {expected}건, 실제 {actual}건')
+        self.stdout.write(self.style.SUCCESS(f'식약처 음식 {actual}건 = 기대값'))

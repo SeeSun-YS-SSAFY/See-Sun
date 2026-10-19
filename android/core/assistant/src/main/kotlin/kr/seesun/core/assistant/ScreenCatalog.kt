@@ -23,6 +23,9 @@ object ScreenCatalog {
     const val HEALTH_EDIT = "mypage.health"
     const val SETTINGS = "settings"
     const val DIET = "diet"
+    const val DIET_RECORD_MENU = "diet.record.menu"
+    const val DIET_RECORD = "diet.record"
+    const val DIET_TODAY = "diet.today"
 
     /** 어디서나 할 수 있는 말(도움말 끝에 붙는 세 가지와 별도로, 표에 없는 화면의 예시). */
     val EVERYWHERE = listOf("처음으로", "다시 들려줘", "도움말", "여기 어디야", "뒤로", "아까 화면으로")
@@ -65,7 +68,26 @@ object ScreenCatalog {
             "음성 안내, 말 속도, 자동 듣기, 문의하기, 계정을 고를 수 있어요.",
             listOf("말 빠르게 해 줘", "자동으로 듣지 마", "문의하고 싶어", "앱 버전", "사용법 알려 줘")
         ),
-        DIET to ScreenInfo("식단", "식단 기록과 점수, 추천은 준비 중이에요.", listOf("처음으로", "운동하러 가자", "뒤로"))
+        DIET to ScreenInfo(
+            "식단",
+            "식사 기록을 할 수 있어요. 식사 추천과 레포트는 준비 중이에요.",
+            listOf("점심에 김치찌개 먹었어", "오늘 뭐 먹었지", "오늘 몇 칼로리 먹었어", "떡볶이 칼로리 얼마야", "처음으로")
+        ),
+        DIET_RECORD_MENU to ScreenInfo(
+            "식사 기록",
+            "음성 기록, 촬영 기록, 오늘 식사 기록 중에서 고를 수 있어요. 촬영 기록은 준비 중이에요.",
+            listOf("음성 기록", "오늘 기록", "점심에 김치찌개 먹었어")
+        ),
+        DIET_RECORD to ScreenInfo(
+            "음성 식사 기록",
+            "날짜, 끼니, 음식, 양을 차례로 말하면 확인 화면에서 되읽어 드려요. 확인해야 저장해요.",
+            listOf("오늘", "점심", "김치찌개 한 그릇", "뒤로", "취소")
+        ),
+        DIET_TODAY to ScreenInfo(
+            "오늘 식사 기록",
+            "오늘 기록한 식사를 끼니별로 보여 주고 지울 수 있어요.",
+            listOf("식사 기록할래", "오늘 몇 칼로리 먹었어", "뒤로")
+        )
     )
 
     /** [id]의 정보. 표에 없으면 [title](없으면 「지금」)과 어디서나 예시. */
@@ -103,4 +125,13 @@ object Josa {
 
     /** 「식사 기록과」, 「식단 점수와」. */
     fun wa(word: String): String = word + if ((finalOf(word) ?: 0) == 0) "와" else "과"
+
+    /** 「떡볶이는」, 「메밀국수는」, 「김밥은」. */
+    fun eun(word: String): String = word + if ((finalOf(word) ?: 0) == 0) "는" else "은"
+
+    /** 「메밀이」, 「우유가」. */
+    fun iga(word: String): String = word + if ((finalOf(word) ?: 0) == 0) "가" else "이"
+
+    /** 「…킬로칼로리예요」, 「…그램이에요」. */
+    fun ieyo(word: String): String = word + if ((finalOf(word) ?: 0) == 0) "예요" else "이에요"
 }

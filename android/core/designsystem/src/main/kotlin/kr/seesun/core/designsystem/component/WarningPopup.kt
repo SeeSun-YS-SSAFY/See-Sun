@@ -49,6 +49,7 @@ data class WarningAction(val text: String, val onClick: () -> Unit)
  * - paneTitle = "알레르기 주의" 등 접두어 → 팝업이 뜨면 TalkBack이 종류부터 읽는다.
  * - 진동·음성은 [onShown]에서 호출한 쪽이 core:feedback으로 낸다(디자인 시스템은 기기 기능에 의존하지 않음).
  * - 면책 꼬리말을 함께 보여 준다(04 §5).
+ * - [extra]: 메시지와 버튼 사이에 화면이 덧붙일 것(예: 대체 식단 안내 줄, 말로 답하기 버튼).
  */
 @Composable
 fun WarningPopup(
@@ -58,7 +59,8 @@ fun WarningPopup(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     disclaimer: String? = "영양 정보에 오차가 있을 수 있어요. 정확한 정보는 전문가와 상담하세요.",
-    onShown: (WarningKind) -> Unit = {}
+    onShown: (WarningKind) -> Unit = {},
+    extra: (@Composable () -> Unit)? = null
 ) {
     val colors = SeeSunTheme.colors
     val shownCallback = rememberUpdatedState(onShown)
@@ -94,6 +96,8 @@ fun WarningPopup(
             if (disclaimer != null) {
                 Text(text = disclaimer, style = SeeSunTheme.typography.caption, color = content, modifier = Modifier.fillMaxWidth())
             }
+            // 화면이 덧붙이는 것(대체 식단 낭독 줄·[말로 답하기] 등, v2.0 식사 기록).
+            extra?.invoke()
             actions.forEach { action ->
                 // 팝업 배경이 빨강/노랑이므로 버튼은 흰 바탕 + 검정 테두리로 구분한다.
                 ListButton(text = action.text, onClick = action.onClick)

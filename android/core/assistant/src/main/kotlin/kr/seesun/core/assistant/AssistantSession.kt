@@ -20,9 +20,61 @@ interface AssistantFacts {
 
     /** 비서가 이동시키기 전 화면이 아직 뒤에 있는가(U-08). */
     fun hasOrigin(): Boolean
+
+    /** Q-03: 오늘 기기에 기록한 식사의 열량 합계(오프라인 가능). 읽지 못하면 null. */
+    suspend fun todayKcal(): KcalFact? = null
+
+    /** Q-04: 그날 끼니별 기록. [meal]이 있으면 그 끼니만(BREAKFAST…), [yesterday]면 어제. 읽지 못하면 null. */
+    suspend fun meals(meal: String?, yesterday: Boolean): List<MealFact>? = null
+
+    /** Q-06: 영양 DB에서 찾은 음식 하나(1인분 기준). */
+    suspend fun food(name: String): FoodFact = FoodFact.Unavailable(name)
+
+    /** Q-07: 등록 알레르기 대조·당류 지표(당뇨 선택자만). 판단은 하지 않는다. */
+    suspend fun foodCheck(name: String): FoodCheckFact = FoodCheckFact(name, found = false, offline = true)
 }
 
 data class WeeklyFact(val sessions: Int, val minutes: Int)
+
+/** Q-03. [missing]은 영양 정보가 없어 합계에서 뺀 음식 수. [targetKcal]이 없으면 목표 대비를 말하지 않는다. */
+data class KcalFact(val kcal: Int, val targetKcal: Int?, val meals: Int, val missing: Int = 0)
+
+/** Q-04 한 끼. [meal]은 낭독 이름(「점심」), [foods]는 「김치찌개 한 그릇」처럼 양까지 붙은 이름. */
+data class MealFact(val meal: String, val foods: List<String>)
+
+/** Q-06 음식 정보(식약처 DB, 1인분 기준). 값은 반올림한 정수, 모르면 null. */
+sealed interface FoodFact {
+    val name: String
+
+    data class Found(
+        override val name: String,
+        val serving: String?,
+        val kcal: Int?,
+        val carbG: Int? = null,
+        val sugarG: Int? = null,
+        val proteinG: Int? = null,
+        val fatG: Int? = null,
+        val sodiumMg: Int? = null
+    ) : FoodFact
+
+    data class NotFound(override val name: String) : FoodFact
+
+    /** 인터넷이 연결되지 않았다(기기에 남은 음식 정보도 없음). */
+    data class Unavailable(override val name: String) : FoodFact
+}
+
+/**
+ * Q-07 사실값. [allergyHits]는 등록한 알레르기 중 들어 있거나 들어 있을 수 있는 것(이름), [allergyUnknown]은 확인할 수 없는 것.
+ * [sugarLabel]은 당뇨를 선택한 사용자에게만(낮음·보통·높음·매우 높음). [found]가 false면 영양 DB에 없는 음식.
+ */
+data class FoodCheckFact(
+    val name: String,
+    val found: Boolean,
+    val allergyHits: List<String> = emptyList(),
+    val allergyUnknown: List<String> = emptyList(),
+    val sugarLabel: String? = null,
+    val offline: Boolean = false
+)
 
 /** @param goal 낭독용 목표 이름(「체중 감량」). null이면 목표 없음. */
 data class GoalFact(val goal: String?, val targetKcal: Int?)
@@ -347,9 +399,17 @@ class AssistantSession(
 
     // ── 4단계: 전역 의도 ──────────────────────────────────────
     private suspend fun intent(heard: String, m: IntentMatch, confident: Boolean): AssistantReply {
-        if (m.id.phase >= 2) return AssistantReply(heard, AssistantReplies.DIET_SOON, intent = m.id)
+        if (!m.id.ready) return AssistantReply(heard, AssistantReplies.DIET_SOON, intent = m.id)
         return when (m.id) {
             IntentId.MEDICINE_SOON -> AssistantReply(heard, AssistantReplies.MEDICINE_SOON, intent = m.id)
+
+            IntentId.DIET_QUESTION -> DietAnswers.kcal(heard, m, facts.todayKcal(), ::askRecord)
+
+            IntentId.DIET_TODAY -> today(heard, m)
+
+            IntentId.FOOD_INFO -> DietAnswers.food(heard, m, facts.food(m.slots[Slot.FOOD].orEmpty()))
+
+            IntentId.FOOD_CHECK -> DietAnswers.check(heard, m, facts.foodCheck(m.slots[Slot.FOOD].orEmpty()))
 
             IntentId.WEEKLY_QUESTION -> weekly(heard, m)
 
@@ -412,6 +472,18 @@ class AssistantSession(
         )
         return choose(heard, listOfNotNull(main, alt)) ?: go(heard, main, m.id)
     }
+
+    /** Q-04: 그 자리에서 끼니별로 읽고 「기록 목록을 열까요?」(없으면 「식사를 기록할까요?」). */
+    private suspend fun today(heard: String, m: IntentMatch): AssistantReply {
+        val yesterday = m.slots[Slot.PERIOD] == "YESTERDAY"
+        val meals = facts.meals(m.slots[Slot.MEAL], yesterday)
+        val say = DietAnswers.mealsLine(meals, m.slots[Slot.MEAL], yesterday)
+        if (!meals.isNullOrEmpty()) ask(Pending.Go(Destination.DietToday)) else ask(Pending.Go(Destination.DietRecord()))
+        return AssistantReply(heard, say, buttons = yesNo(), intent = m.id)
+    }
+
+    /** 기록이 없을 때 「식사를 기록할까요?」(Q-03·Q-04). */
+    private fun askRecord() = ask(Pending.Go(Destination.DietRecord()))
 
     private suspend fun weekly(heard: String, m: IntentMatch): AssistantReply {
         val last = m.slots[Slot.PERIOD] == "LAST"

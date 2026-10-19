@@ -16,6 +16,7 @@
 | `env.template` | `.env` 원본. 사람이 채울 자리표시 4개, 나머지는 고정값 |
 | `seed/exercises_content_seed_20261014.json` | 운동 카테고리 4, 운동 29, 운동 미디어 273행(픽토그램 112·안내 음성 161) |
 | `seed/EXPECTED_COUNTS.txt` | `deploy.sh`가 서버 DB와 맞춰 보는 기대 개수 |
+| `seed/mfds_food_20261017.json.gz` · `seed/EXPECTED_FOOD_COUNT.txt` | (v2.0~) 식약처 「전국통합식품영양성분정보(음식)」 원본(농진청 행은 적재 때 제외)과 기대 음식 수 19,641. `make_bundle.sh`에 `FOOD_JSON=<원본 JSON>`을 주면 만든다 |
 | `media_content_20261014.tar.gz` | 픽토그램(원본·다시 그린 그림·보기용 사본), 운동 음성, 병합본, 화면 안내 음성 524개 파일 |
 | `bootstrap.sh` | 서버 첫 준비: Docker 공식 저장소 설치, 스왑 2GB, 자동 보안 업데이트, ufw(22·80·443) |
 | `deploy.sh` | 배포: 이미지 적재, 비밀값 생성, 기동, 시드, 개수·파일 검증, HTTPS 확인, 백업 cron |
@@ -80,7 +81,7 @@ exit   # 다시 ssh 접속
 ./deploy.sh
 ```
 
-`deploy.sh`는 번들 무결성을 확인하고 이미지를 적재한 뒤 컨테이너를 띄웁니다(django 시작 전에 마이그레이션이 자동으로 돕니다). 이어서 media 볼륨에 미디어를 풀고 운동 콘텐츠를 넣은 다음, 개수와 파일을 검증합니다. 마지막으로 `https://<sub>.duckdns.org/healthz/`가 응답하는지 확인하고 매일 03:15 백업을 cron에 등록합니다. 다시 실행해도 결과가 같습니다. 이미 넣은 콘텐츠는 다시 넣지 않고, 강제로 다시 넣으려면 `FORCE_SEED=1 ./deploy.sh`를 씁니다. 정상이면 끝에 다음 줄이 보입니다.
+`deploy.sh`는 번들 무결성을 확인하고 이미지를 적재한 뒤 컨테이너를 띄웁니다(django 시작 전에 마이그레이션이 자동으로 돕니다). 이어서 media 볼륨에 미디어를 풀고 운동 콘텐츠를 넣은 다음, 개수와 파일을 검증합니다. 마지막으로 `https://<sub>.duckdns.org/healthz/`가 응답하는지 확인하고 매일 03:15 백업을 cron에 등록합니다. 다시 실행해도 결과가 같습니다. 이미 넣은 콘텐츠는 다시 넣지 않고, 강제로 다시 넣으려면 `FORCE_SEED=1 ./deploy.sh`를 씁니다. (v2.0~) 콘텐츠 시드 다음에 식약처 음식 DB를 적재합니다(4b단계): 서버의 식약처 음식 수가 `seed/EXPECTED_FOOD_COUNT.txt`와 다를 때만 `import_mfds_foods … --expect-count`로 넣고(2만 건, 1~2분), 끝나면 `--verify-only`로 다시 세어 다르면 멈춥니다. 다시 넣으려면 `FORCE_FOOD_IMPORT=1`, 건너뛰려면 `SKIP_FOOD_IMPORT=1`. 정상이면 끝에 다음 줄이 보입니다.
 
 ```
 category=4 exercise=29 pictogram=112 guide_audio=161 redrawn=19 script_revised=9 butterfly_guide_text=1 missing_files=0

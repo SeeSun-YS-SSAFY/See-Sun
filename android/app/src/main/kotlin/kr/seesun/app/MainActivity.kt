@@ -55,8 +55,9 @@ import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.feature.admin.AdminHooks
 import kr.seesun.feature.admin.adminGraph
+import kr.seesun.feature.diet.DietAssistantFacts
 import kr.seesun.feature.diet.DietRoute
-import kr.seesun.feature.diet.dietScreen
+import kr.seesun.feature.diet.dietGraph
 import kr.seesun.feature.exercise.ExerciseRoute
 import kr.seesun.feature.exercise.ExerciseWeeklyEntryRoute
 import kr.seesun.feature.exercise.exerciseScreen
@@ -103,6 +104,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject lateinit var clock: Clock
 
+    /** 시선 비서 식단 답(v2.0 Q-03·Q-04·Q-06·Q-07)의 사실값. */
+    @Inject lateinit var dietFacts: DietAssistantFacts
+
     /** 시선 비서(설계 voice_assistant_design_v1). 기기 시험이 받아쓴 말을 넣는 통로([AppAssistant.hearText])이기도 하다. */
     lateinit var assistant: AppAssistant
         private set
@@ -124,7 +128,7 @@ class MainActivity : ComponentActivity() {
             micIndicatorExplained = { voicePreferences.micIndicatorExplained },
             markMicIndicatorExplained = voicePreferences::markMicIndicatorExplained
         )
-        assistant = AppAssistant(this, speaker, voicePreferences, profile, exerciseContent, haptics, autoListen, session, clock)
+        assistant = AppAssistant(this, speaker, voicePreferences, profile, exerciseContent, haptics, autoListen, session, clock, dietFacts)
         // 이어폰 버튼·TalkBack 두 손가락 두 번 탭으로 바로 듣기: 음성 화면이 앞에 있을 때만 미디어 세션을 켠다.
         val mediaButtons = VoiceMediaButtons(this, autoListen)
         lifecycleScope.launch {
@@ -270,7 +274,7 @@ private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo,
             },
             showDeveloperMenu = BuildConfig.DEBUG
         )
-        dietScreen(onBack = back, showDeveloperTools = BuildConfig.DEBUG)
+        dietGraph(nav, showDeveloperTools = BuildConfig.DEBUG)
         exerciseScreen(onBack = back)
         // 마이페이지 「기록 레포트」 [운동] → 이번 주 운동 기록(Figma 845:2184).
         myPageGraph(

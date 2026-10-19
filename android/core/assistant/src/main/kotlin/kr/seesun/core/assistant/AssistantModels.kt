@@ -2,7 +2,8 @@ package kr.seesun.core.assistant
 
 /**
  * 시선 비서가 알아듣는 일(설계 voice_assistant_design_v1 §3). [code]는 설계 문서의 ID.
- * [phase] 1 = 지금 판(운동·바탕), 2 = 식단 화면이 생기는 v2.x(지금은 「준비 중」으로 답만), 3 = 복약 v3.x(지금은 「준비 중」).
+ * [phase] 1 = v1.x(운동·바탕), 20 = v2.0(식사 기록·오늘 식사 답, 지금 판), 21 = v2.1(점수·통계·추천 — 아직 「준비 중」으로 답만).
+ * [READY_PHASE]보다 큰 판의 의도는 알아듣기만 하고 「준비 중」이라고 답한다.
  */
 enum class IntentId(val code: String, val phase: Int = 1) {
     // ── 어디서나 명령(U, §3.2) ─────────────────────────────
@@ -45,13 +46,25 @@ enum class IntentId(val code: String, val phase: Int = 1) {
     HOW_TO("H-01"),
     MEDICINE_SOON("N-10"),
 
-    // ── 식단(§3.4, v2.x) — 지금은 식단 화면만 열거나 「준비 중」 ─────
+    // ── 식단(§3.4) — v2.0: 식사 기록(A-02·D-02)·오늘 칼로리(Q-03)·오늘 먹은 것(Q-04)·음식 정보(Q-06)·「먹어도 돼?」(Q-07) ─────
     DIET_HOME("D-01"),
-    DIET_RECORD("A-02", phase = 2),
-    DIET_QUESTION("Q-03", phase = 2),
-    DIET_SCORE("Q-05", phase = 2),
-    DIET_STATS("N-11", phase = 2),
-    DIET_RECOMMEND("N-12", phase = 2),
+
+    /** 한 문장 식사 기록 — 저장하지 않고 값이 채워진 음성 기록 흐름(확인 화면)을 연다(§3.1 원칙). */
+    DIET_RECORD("A-02", phase = 20),
+
+    /** 식사 기록 시작(빈 흐름, 날짜부터). */
+    DIET_RECORD_START("D-02", phase = 20),
+    DIET_QUESTION("Q-03", phase = 20),
+    DIET_TODAY("Q-04", phase = 20),
+    FOOD_INFO("Q-06", phase = 20),
+
+    /** 「이거 먹어도 돼?」 — 판단하지 않고 알레르기 대조·당류 지표 사실만 읽는다. */
+    FOOD_CHECK("Q-07", phase = 20),
+
+    // v2.1(레포트·추천)에서 열린다. 지금은 「준비 중」.
+    DIET_SCORE("Q-05", phase = 21),
+    DIET_STATS("N-11", phase = 21),
+    DIET_RECOMMEND("N-12", phase = 21),
 
     // ── 안전·범위 밖(§3.6, 늘 켜짐) ─────────────────────────
     SAFETY_MEDICAL("X-01"),
@@ -60,6 +73,14 @@ enum class IntentId(val code: String, val phase: Int = 1) {
     OUT_OF_SCOPE("X-04");
 
     val isGlobalCommand: Boolean get() = code.startsWith("U-")
+
+    /** 이 판에서 실제로 하는 일인가(아니면 「준비 중」). */
+    val ready: Boolean get() = phase <= READY_PHASE
+
+    companion object {
+        /** 지금 판(v2.0). */
+        const val READY_PHASE = 20
+    }
 }
 
 /** 슬롯 이름(§3 표의 「슬롯」). */
@@ -82,8 +103,23 @@ object Slot {
     /** 운동 이름이 정확히 맞지 않고 자모 유사도로만 맞았다(받아쓰기 오류) — 묻고 간다. */
     const val FUZZY = "fuzzy"
 
+    /** 들은 말 그대로(A-02: 식사 기록 흐름이 날짜·끼니·음식·양을 다시 해석해 빈 단계만 묻는다). 로그에 남기지 않는다. */
+    const val UTTERANCE = "utterance"
+
+    /** 음식 이름(Q-06·Q-07, A-02). */
+    const val FOOD = "food"
+
+    /** 끼니 BREAKFAST·LUNCH·DINNER·SNACK(Q-04, A-02). */
+    const val MEAL = "meal"
+
+    /** 영양소(Q-06): KCAL·SUGAR·CARB·PROTEIN·FAT·SODIUM·ALL. */
+    const val NUTRIENT = "nutrient"
+
+    /** 「남은」 칼로리를 물었다(Q-03). */
+    const val REMAIN = "remain"
+
     /** 말에서 직접 채운 슬롯(구체성 비교에 센다, §4.6). 기본값으로 채운 것(기간 「이번 주」 등)은 세지 않는다. */
-    val EXPLICIT = setOf(CATEGORY, EXERCISE_ID, FIELD, VALUE, SPEED, MODE, PERIOD)
+    val EXPLICIT = setOf(CATEGORY, EXERCISE_ID, FIELD, VALUE, SPEED, MODE, PERIOD, FOOD, MEAL)
 }
 
 /**

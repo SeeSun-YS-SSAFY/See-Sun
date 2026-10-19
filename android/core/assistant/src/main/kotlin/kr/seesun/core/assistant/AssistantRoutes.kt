@@ -88,6 +88,20 @@ sealed interface Destination {
     data object Diet : Destination {
         override val label = "식단"
     }
+
+    /**
+     * 음성 식사 기록 흐름(v2.0, DREC-01~04). [prefill]이 있으면(A-02 「점심에 김치찌개 먹었어」) 흐름이 그 말을 다시 해석해 빈 단계만 묻고
+     * 확인 화면으로 간다. 저장은 늘 확인 화면의 되읽기와 [이대로 등록]·「네」 뒤에만 한다.
+     */
+    data class DietRecord(val prefill: String? = null) : Destination {
+        override val label = "식사 기록"
+        override val confirmScreen: Boolean get() = true
+    }
+
+    /** 오늘 식사 기록 목록(삭제할 수 있다). */
+    data object DietToday : Destination {
+        override val label = "오늘 식사 기록"
+    }
 }
 
 /** 의도 → 데려갈 곳(§5.1). 답만 하는 의도(Q-01·Q-02 등)·안전·준비 중은 null. */
@@ -141,6 +155,12 @@ object AssistantRoutes {
             IntentId.HOW_TO -> Destination.HowTo
 
             IntentId.DIET_HOME -> Destination.Diet
+
+            IntentId.DIET_RECORD -> Destination.DietRecord(s[Slot.UTTERANCE])
+
+            IntentId.DIET_RECORD_START -> Destination.DietRecord()
+
+            IntentId.DIET_TODAY -> Destination.DietToday
 
             else -> null
         }

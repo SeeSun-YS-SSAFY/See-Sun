@@ -67,8 +67,25 @@ object AssistantFixtures {
         var speedNow: String = "NORMAL",
         var auto: Boolean = true,
         var spoken: String? = "운동 방식 화면이에요.",
-        var origin: Boolean = true
+        var origin: Boolean = true,
+        var kcal: KcalFact? = KcalFact(1240, 2000, meals = 2),
+        var mealFacts: List<MealFact>? = listOf(MealFact("점심", listOf("김치찌개 한 그릇", "밥 반 공기"))),
+        var foodFact: (String) -> FoodFact = { FoodFact.Found(it, "180그램", 259, carbG = 50, sugarG = 9) },
+        var checkFact: (String) -> FoodCheckFact = { FoodCheckFact(it, found = true) }
     ) : AssistantFacts {
+        val mealQueries = mutableListOf<Pair<String?, Boolean>>()
+
+        override suspend fun todayKcal(): KcalFact? = kcal
+
+        override suspend fun meals(meal: String?, yesterday: Boolean): List<MealFact>? {
+            mealQueries += meal to yesterday
+            return mealFacts
+        }
+
+        override suspend fun food(name: String): FoodFact = foodFact(name)
+
+        override suspend fun foodCheck(name: String): FoodCheckFact = checkFact(name)
+
         override suspend fun weekly(lastWeek: Boolean): WeeklyFact? = weeklyFact
 
         override suspend fun goal(): GoalFact? = goalFact

@@ -44,6 +44,8 @@ import kr.seesun.core.network.model.MealItemInputDto
 import kr.seesun.core.network.model.NutritionDto
 import kr.seesun.core.network.model.OnboardingStatusDto
 import kr.seesun.core.network.model.PartialDeleteResponseDto
+import kr.seesun.core.network.model.RecommendationCardDto
+import kr.seesun.core.network.model.RecommendationResponseDto
 import kr.seesun.core.network.model.ServingDto
 import kr.seesun.core.network.model.SugarIndexDto
 import kr.seesun.core.network.model.TargetKcalDetailDto
@@ -289,6 +291,8 @@ class OpenApiContractTest {
             MealDto.serializer() to listOf("Meal"),
             MealBulkResponse.serializer() to listOf("MealBulkResponse"),
             DietScoreDto.serializer() to listOf("DailyReport"),
+            RecommendationResponseDto.serializer() to listOf("RecommendationResponse"),
+            RecommendationCardDto.serializer() to listOf("RecommendationCard"),
             ExerciseSessionBulkResultDto.serializer() to listOf("SessionBulkResult"),
             ExerciseSessionBulkResponse.serializer() to listOf("SessionBulkResponse"),
             WeeklyExerciseDto.serializer() to listOf("WeeklyExercise"),

@@ -44,7 +44,11 @@ object Tokenizer {
         "킬로" to Unit.KG, "키로" to Unit.KG, "그램" to Unit.G, "그람" to Unit.G, "미리" to Unit.ML, "미터" to Unit.M,
         "인분" to Unit.SERVING, "그릇" to Unit.BOWL, "공기" to Unit.BOWL, "접시" to Unit.PLATE, "조각" to Unit.PIECE,
         "kcal" to Unit.KCAL, "cm" to Unit.CM, "kg" to Unit.KG, "ml" to Unit.ML, "g" to Unit.G,
-        "개" to Unit.PIECE, "잔" to Unit.CUP, "컵" to Unit.CUP, "살" to Unit.AGE, "세" to Unit.AGE
+        "개" to Unit.PIECE, "잔" to Unit.CUP, "컵" to Unit.CUP, "살" to Unit.AGE, "세" to Unit.AGE,
+        // 음식 세는 말(v2.0 식사 문장): 김밥 한 줄, 과자 한 봉지, 콜라 한 캔·병, 계란 두 알, 치킨 한 마리, 식빵 두 장, 두유 한 팩.
+        // 숟가락·스푼처럼 1인분과 거리가 먼 말은 넣지 않는다(「1인분으로 기록할까요?」로 묻는다).
+        "봉지" to Unit.PIECE, "마리" to Unit.PIECE, "줄" to Unit.PIECE, "캔" to Unit.CUP, "병" to Unit.CUP, "팩" to Unit.CUP,
+        "알" to Unit.PIECE, "장" to Unit.PIECE
     ).sortedByDescending { it.first.length }
 
     /** 어디에나 붙을 수 있는 두 글자 이상 조사·어미. */

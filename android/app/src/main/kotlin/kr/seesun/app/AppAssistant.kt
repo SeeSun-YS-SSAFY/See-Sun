@@ -28,8 +28,12 @@ import kr.seesun.core.assistant.Decision
 import kr.seesun.core.assistant.Destination
 import kr.seesun.core.assistant.ExerciseCatalog
 import kr.seesun.core.assistant.ExerciseEntry
+import kr.seesun.core.assistant.FoodCheckFact
+import kr.seesun.core.assistant.FoodFact
 import kr.seesun.core.assistant.GoalFact
+import kr.seesun.core.assistant.KcalFact
 import kr.seesun.core.assistant.LocalCommand
+import kr.seesun.core.assistant.MealFact
 import kr.seesun.core.assistant.ScreenMode
 import kr.seesun.core.assistant.ScreenVoiceContext
 import kr.seesun.core.assistant.StripButton
@@ -49,7 +53,10 @@ import kr.seesun.core.voice.settings.AutoListenMode
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
 import kr.seesun.core.voice.tts.VoiceSpeed
+import kr.seesun.feature.diet.DietAssistantFacts
+import kr.seesun.feature.diet.DietRecordRoute
 import kr.seesun.feature.diet.DietRoute
+import kr.seesun.feature.diet.DietTodayRoute
 import kr.seesun.feature.exercise.ExerciseRoute
 import kr.seesun.feature.exercise.home.ExerciseOrder
 import kr.seesun.feature.main.MainRoute
@@ -86,7 +93,8 @@ class AppAssistant(
     private val haptics: Haptics,
     private val env: AutoListenEnvironment,
     private val session: SessionRepository,
-    private val clock: Clock
+    private val clock: Clock,
+    private val diet: DietAssistantFacts
 ) : AssistantHost {
     private val scope = activity.lifecycleScope
     private val talkBack = TalkBackMonitor(activity)
@@ -311,7 +319,16 @@ class AppAssistant(
             Destination.DataReset -> go(DataResetRoute)
             Destination.AppVersion -> go(AppVersionRoute)
             Destination.HowTo -> go(HowToRoute)
-            Destination.Diet -> go(DietRoute)
+            Destination.Diet, is Destination.DietRecord, Destination.DietToday -> navigateDiet(d)
+        }
+    }
+
+    /** 식단 화면들. A-02: 저장하지 않고 값이 채워진 음성 기록 흐름(확인 화면)을 연다 — 저장은 그 화면의 되읽기·[이대로 등록] 뒤에만. */
+    private fun navigateDiet(d: Destination) {
+        when (d) {
+            is Destination.DietRecord -> go(DietRecordRoute(d.prefill))
+            Destination.DietToday -> go(DietTodayRoute)
+            else -> go(DietRoute)
         }
     }
 
@@ -364,6 +381,14 @@ class AppAssistant(
         override fun lastSpoken(): String? = ScreenSpeechLog.lastSpoken()
 
         override fun hasOrigin(): Boolean = originAlive()
+
+        override suspend fun todayKcal(): KcalFact? = diet.todayKcal()
+
+        override suspend fun meals(meal: String?, yesterday: Boolean): List<MealFact>? = diet.meals(meal, yesterday)
+
+        override suspend fun food(name: String): FoodFact = diet.food(name)
+
+        override suspend fun foodCheck(name: String): FoodCheckFact = diet.foodCheck(name)
     }
 
     private companion object {

@@ -81,8 +81,9 @@ interface MealDao {
         insertItems(items)
     }
 
+    /** 그날 기록(지운 기록 = DELETE_PENDING은 빼고). */
     @Transaction
-    @Query("SELECT * FROM meal_record WHERE date = :date ORDER BY recorded_at")
+    @Query("SELECT * FROM meal_record WHERE date = :date AND sync_state != 'DELETE_PENDING' ORDER BY recorded_at")
     fun observeByDate(date: String): Flow<List<MealWithItems>>
 
     @Transaction
@@ -100,8 +101,24 @@ interface MealDao {
     @Query("SELECT COUNT(*) FROM meal_record WHERE sync_state = 'PENDING'")
     fun observePendingCount(): Flow<Int>
 
-    @Query("UPDATE meal_record SET sync_state = 'SYNCED', server_id = :serverId, last_error = NULL WHERE client_uuid = :clientUuid")
+    /** 서버에 저장됨. 전송 중에 사용자가 지웠으면(DELETE_PENDING) 그 상태를 지키고 서버 ID만 받는다(다음 삭제 단계가 서버에서 지운다). */
+    @Query(
+        "UPDATE meal_record SET sync_state = CASE WHEN sync_state = 'DELETE_PENDING' THEN 'DELETE_PENDING' ELSE 'SYNCED' END, " +
+            "server_id = :serverId, last_error = NULL WHERE client_uuid = :clientUuid"
+    )
     suspend fun markSynced(clientUuid: String, serverId: String?)
+
+    /** 지움 표시(목록에서 바로 빠진다). */
+    @Query("UPDATE meal_record SET sync_state = 'DELETE_PENDING' WHERE client_uuid = :clientUuid")
+    suspend fun markDeleting(clientUuid: String): Int
+
+    @Transaction
+    @Query("SELECT * FROM meal_record WHERE sync_state = 'DELETE_PENDING' ORDER BY created_at LIMIT :limit")
+    suspend fun deleting(limit: Int): List<MealWithItems>
+
+    /** 기록 하나를 기기에서 없앤다(항목은 CASCADE). */
+    @Query("DELETE FROM meal_record WHERE client_uuid = :clientUuid")
+    suspend fun delete(clientUuid: String)
 
     @Query("UPDATE meal_record SET sync_state = 'INVALID', last_error = :error WHERE client_uuid = :clientUuid")
     suspend fun markInvalid(clientUuid: String, error: String?)

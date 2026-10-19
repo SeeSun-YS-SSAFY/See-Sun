@@ -360,17 +360,74 @@ IN	D-01	unknown	식단 볼래
 IN	D-01	unknown	식단으로 가자
 IN	D-01	unknown	음식 화면
 IN	D-01	unknown	식단 화면 열어 주세요
-PHASE2	A-02	unknown	점심에 김치찌개 먹었어
-PHASE2	A-02	unknown	아침에 떡볶이 한 그릇이랑 김밥 반 줄
-PHASE2	A-02	unknown	어제 저녁 삼겹살 많이 먹었어
-PHASE2	A-02	unknown	식사 기록할래
-PHASE2	A-02	unknown	밥 먹은 거 적을래
-PHASE2	A-02	unknown	저녁 기록해 줘
-PHASE2	Q-03	unknown	오늘 몇 칼로리 먹었어
-PHASE2	Q-03	unknown	칼로리 얼마나 남았어
-PHASE2	Q-03	unknown	오늘 먹은 칼로리 알려 줘
-PHASE2	Q-03	unknown	남은 열량 얼마야
-PHASE2	Q-03	unknown	오늘 열량 몇이야
+# v2.0 식단(A-02 한 문장 기록, D-02 기록 시작, Q-03 오늘 칼로리, Q-04 오늘 먹은 것, Q-06 음식 정보, Q-07 먹어도 돼 — 판단 없이 사실만)
+IN	A-02	unknown	점심에 김치찌개 먹었어
+IN	A-02	unknown	아침에 떡볶이 한 그릇이랑 김밥 반 줄
+IN	A-02	unknown	어제 저녁 삼겹살 많이 먹었어
+IN	A-02	unknown	저녁 기록해 줘
+IN	A-02	unknown	오늘 점심에 비빔밥 먹었어요
+IN	A-02	unknown	간식으로 바나나 하나 먹었어
+IN	A-02	unknown	아침에 우유 한 잔 마셨어
+IN	A-02	unknown	라면 먹었어
+IN	A-02	unknown	저녁에 된장찌개랑 밥 먹었어
+IN	A-02	unknown	점심 김밥 한 줄
+IN	A-02	unknown	야식으로 치킨 먹었어
+IN	A-02	unknown	아침 기록할래
+IN	A-02	unknown	어제 점심 냉면 먹었어
+IN	D-02	unknown	식사 기록할래
+IN	D-02	unknown	밥 먹은 거 적을래
+IN	D-02	unknown	식사 기록
+IN	D-02	unknown	음성 기록
+IN	D-02	unknown	식사 기록하고 싶어
+IN	D-02	unknown	밥 기록할래
+IN	D-02	unknown	먹은 거 기록해 줘
+IN	D-02	unknown	식사 기록 시작
+IN	D-02	unknown	음식 기록할게
+IN	D-02	unknown	끼니 기록해 줘
+IN	D-02	unknown	먹은 음식 적어 줘
+IN	Q-03	unknown	오늘 몇 칼로리 먹었어
+IN	Q-03	unknown	칼로리 얼마나 남았어
+IN	Q-03	unknown	오늘 먹은 칼로리 알려 줘
+IN	Q-03	unknown	남은 열량 얼마야
+IN	Q-03	unknown	오늘 열량 몇이야
+IN	Q-03	unknown	오늘 칼로리 얼마야
+IN	Q-03	unknown	지금까지 몇 칼로리 먹었지
+IN	Q-03	unknown	오늘 먹은 열량
+IN	Q-03	unknown	칼로리 몇 남았어
+IN	Q-03	unknown	오늘 칼로리 알려 줘
+IN	Q-04	unknown	오늘 뭐 먹었지
+IN	Q-04	unknown	점심에 뭐 먹었어
+IN	Q-04	unknown	아침에 뭐 먹었더라
+IN	Q-04	unknown	어제 저녁에 뭐 먹었어
+IN	Q-04	unknown	오늘 먹은 거 알려 줘
+IN	Q-04	unknown	내가 오늘 먹은 음식
+IN	Q-04	unknown	오늘 점심 기록 들려 줘
+IN	Q-04	unknown	어제 뭐 먹었지
+IN	Q-04	unknown	오늘 먹은 것 말해 줘
+IN	Q-04	unknown	저녁 기록 알려 줘
+IN	Q-04	unknown	오늘 식사 기록 들려 줘
+IN	Q-06	unknown	떡볶이 칼로리 얼마야
+IN	Q-06	unknown	바나나 당 많아?
+IN	Q-06	unknown	김치찌개 열량 알려 줘
+IN	Q-06	unknown	라면 칼로리 몇이야
+IN	Q-06	unknown	사과 칼로리
+IN	Q-06	unknown	우유 단백질 얼마나 들어 있어
+IN	Q-06	unknown	삼겹살 지방 많아?
+IN	Q-06	unknown	비빔밥 나트륨 얼마야
+IN	Q-06	unknown	고구마 탄수화물 알려 줘
+IN	Q-06	unknown	치킨 칼로리 얼마나 돼
+IN	Q-06	unknown	짜장면 영양성분 알려 줘
+IN	Q-06	unknown	마라탕 칼로리 얼마야
+IN	Q-07	unknown	메밀국수 먹어도 돼?
+IN	Q-07	unknown	떡볶이 먹어도 돼
+IN	Q-07	unknown	땅콩 먹어도 괜찮아?
+IN	Q-07	unknown	우유 먹어도 될까
+IN	Q-07	unknown	라면 먹어도 돼요
+IN	Q-07	unknown	새우 먹어도 괜찮을까
+IN	Q-07	unknown	치킨 먹어도 돼?
+IN	Q-07	unknown	바나나 먹어도 되나
+IN	Q-07	unknown	케이크 먹어도 될까요
+IN	Q-07	unknown	복숭아 먹어도 돼
 PHASE2	Q-05	unknown	오늘 식단 점수 알려 줘
 PHASE2	Q-05	unknown	오늘 몇 점이야
 PHASE2	Q-05	unknown	식단 점수
@@ -658,3 +715,16 @@ CONFLICT	Q-01	mypage	운동 몇 번 했어
 CONFLICT	U-02	mypage	처음으로
 CONFLICT	U-05	mypage	여기 어디야
 CONFLICT	S-05	mypage	로그아웃 할래
+OOS	OOS	unknown	점심 뭐 먹을까
+OOS	OOS	unknown	맛있는 거 먹고 싶다
+OOS	OOS	unknown	배고파 뭐 먹지
+OOS	OOS	unknown	저녁 메뉴 골라 줘
+SAFETY	SAFETY:MEDICAL	unknown	당뇨인데 떡볶이 먹어도 돼?
+SAFETY	SAFETY:MEDICAL	unknown	혈당 높은데 바나나 먹어도 괜찮아?
+CONFLICT	D-02	main	식사 기록할래
+CONFLICT	D-02	main	밥 먹은 거 적을래
+CONFLICT	Q-04	main	오늘 뭐 먹었지
+CONFLICT	A-02	main	점심에 김치찌개 먹었어
+CONFLICT	Q-03	mypage	오늘 몇 칼로리 먹었어
+VALUE	NONE	value	김치찌개 한 그릇
+VALUE	NONE	value	떡볶이 먹어도 돼

@@ -10,6 +10,8 @@
 #   seesun-backend_<태그>_amd64.tar.gz   docker save | gzip (linux/amd64)
 #   seed/exercises_content_seed_<날짜>.json  운동 카테고리·운동·운동 미디어(dumpdata, 원본 DB 그대로)
 #   seed/EXPECTED_COUNTS.txt             deploy.sh가 서버 DB와 비교하는 기대 개수
+#   seed/mfds_food_<날짜>.json.gz         (FOOD_JSON=<파일> 일 때) 식약처 음식 DB 원본(gzip)
+#   seed/EXPECTED_FOOD_COUNT.txt         (FOOD_JSON 일 때) deploy.sh가 비교하는 식약처 음식 수(import_mfds_foods --print-count)
 #   media_content_<날짜>.tar.gz           원본 media 폴더 전체(픽토그램·보기용 사본·운동 음성·병합본·안내 음성)
 #   SHA256SUMS
 # 이미지는 미리 빌드해 둔다:
@@ -58,6 +60,18 @@ print('category=%d exercise=%d pictogram=%d guide_audio=%d redrawn=%d script_rev
     len(miss)))
 PY
 cat "$OUT/seed/EXPECTED_COUNTS.txt"
+
+echo "[bundle] 2b. 식약처 음식 DB(계획 v8 ①, 선택): FOOD_JSON=<전국통합식품영양성분정보(음식) JSON> 이면 gzip으로 묶고 기대 개수를 적는다"
+if [ -n "${FOOD_JSON:-}" ]; then
+  [ -f "$FOOD_JSON" ] || { echo "FOOD_JSON 파일이 없습니다: $FOOD_JSON" >&2; exit 1; }
+  rm -f "$OUT"/seed/mfds_food_*.json.gz
+  FOOD_GZ="$OUT/seed/mfds_food_$(date -r "$FOOD_JSON" +%Y%m%d 2>/dev/null || date +%Y%m%d).json.gz"
+  gzip -9 -c "$FOOD_JSON" > "$FOOD_GZ"
+  # 기대 개수 = 이 파일을 적재하면 생길 음식 수(농진청 행 제외·같은 식품코드 하나로). deploy.sh가 서버 DB와 비교한다.
+  ( cd "$BACKEND" && "$PY" -X utf8 manage.py import_mfds_foods "$(winpath "$FOOD_GZ")" --print-count ) | tail -n 1 | tr -dc '0-9' \
+    > "$OUT/seed/EXPECTED_FOOD_COUNT.txt"
+  echo "음식 DB 기대 개수: $(cat "$OUT/seed/EXPECTED_FOOD_COUNT.txt")"
+fi
 
 echo "[bundle] 3. 미디어 묶음"
 tar --owner=0 --group=0 -czf "$OUT/media_content_$STAMP.tar.gz" -C "$SRC_MEDIA" .

@@ -35,6 +35,7 @@ import kr.seesun.core.network.model.FoodSummaryDto
 import kr.seesun.core.network.model.LogoutRequest
 import kr.seesun.core.network.model.MealItemInputDto
 import kr.seesun.core.network.model.NutritionDto
+import kr.seesun.core.network.model.RecommendationResponseDto
 
 /** Room에 먼저 쓰고 WorkManager로 보낸다(COM-15). */
 @Singleton
@@ -70,6 +71,13 @@ class OfflineFirstMealRepository @Inject constructor(
     }
 
     override suspend fun syncNow(): SyncOutcome = syncer.syncPending()
+
+    override suspend fun delete(clientUuid: String): Boolean {
+        val marked = dao.markDeleting(clientUuid) > 0
+        // 서버에 있든 없든 동기화가 정리한다(같은 작업 안에서 전송 → 삭제 순서라 전송 중인 기록도 서버에 남지 않는다).
+        if (marked) scheduler.scheduleMealSync()
+        return marked
+    }
 }
 
 @Singleton
@@ -80,6 +88,9 @@ class NetworkFoodRepository @Inject constructor(private val api: SeeSunApi, priv
 
     override suspend fun evaluate(items: List<MealItem>): ApiResult<DietEvaluateResponse> =
         apiCall(json) { api.evaluateDiet(DietEvaluateRequest(items.map { it.toInputDto() })) }
+
+    override suspend fun recommendations(type: String, key: String?): ApiResult<RecommendationResponseDto> =
+        apiCall(json) { api.recommendations(type, key) }
 
     private fun MealItem.toInputDto() = MealItemInputDto(
         foodId = foodId,
