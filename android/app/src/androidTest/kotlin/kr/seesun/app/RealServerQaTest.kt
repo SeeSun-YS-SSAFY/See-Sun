@@ -6,6 +6,8 @@ package kr.seesun.app
 import android.util.Log
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasStateDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isOn
 import androidx.compose.ui.test.isRoot
@@ -16,6 +18,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.printToString
 import androidx.compose.ui.test.tryPerformAccessibilityChecks
 import kr.seesun.core.auth.FakeAuthProvider
+import kr.seesun.feature.exercise.play.PLAY_TAG
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -211,8 +214,8 @@ class RealServerQaTest : RealServerTestBase() {
             fault("reset")
             deviceNetwork(on = false)
             click("운동")
-            waitPane("운동")
-            click("한 가지 운동")
+            waitPane(EXERCISE_HOME)
+            more("전체 운동·즐겨찾기") // v1.9: [한 가지 운동]은 [⋯ 더 보기] 안
             waitPane("한 가지 운동")
             waitText("기기에 저장된")
         }
@@ -227,7 +230,7 @@ class RealServerQaTest : RealServerTestBase() {
             waitText("기기 음성으로 읽어요", timeout = LONG_TIMEOUT)
             shot("qa/EX-02_오프라인_재생")
             Thread.sleep(PLAY_MS)
-            click("운동 마치기")
+            finishSingle() // v1.9: [운동 마치기] 대신 안내 끝 화면의 [기록하고 끝내기]
             waitText("운동을 기록했어요")
             assertEquals(1, unsent())
         }
@@ -235,7 +238,7 @@ class RealServerQaTest : RealServerTestBase() {
             click("목록으로")
             back()
             back()
-            waitPane("운동")
+            waitPane(EXERCISE_HOME)
             waitText("보내지 못한 운동 기록이 1건")
         }
         row("EX-04", "메인요약_보내지못한_기록1건_BUG03") {
@@ -246,10 +249,14 @@ class RealServerQaTest : RealServerTestBase() {
         row("EX-05", "로그아웃확인_보내지못한_기록경고_BUG03") {
             click("설정")
             waitPane("설정")
+            click("계정") // v1.9: 설정 첫 목록은 여섯 갈래, 로그아웃은 [계정] 안
+            waitPane("계정")
             click("로그아웃")
             waitPane("로그아웃 확인")
             waitText("보내지 못한 기록 1건도 함께 지워져요")
             click("취소")
+            waitPane("계정")
+            back()
             waitPane("설정")
             back()
             waitPane("메인")
@@ -265,22 +272,25 @@ class RealServerQaTest : RealServerTestBase() {
         deviceNetwork(on = true)
 
         click("운동")
-        waitPane("운동")
-        click("한 가지 운동")
+        waitPane(EXERCISE_HOME)
+        more("전체 운동·즐겨찾기")
+        waitPane("한 가지 운동")
         click("전체 운동")
         waitText("전체 29개")
         click("플랭크")
         row("EX-07", "재생중_가로회전_재생유지") {
-            waitText("상태: 재생 중", timeout = LONG_TIMEOUT)
+            // v1.9: 「상태: 재생 중」 줄 대신 재생 버튼의 상태 설명 「재생 중」
+            waitPlaying()
             rotate(landscape = true)
-            assertTrue(textExists("상태: 재생 중"))
+            assertTrue(isPlaying())
             shot("qa/EX-07_가로")
             rotate(landscape = false)
-            assertTrue(textExists("상태: 재생 중"))
+            assertTrue(isPlaying())
         }
         row("EX-08", "재생중_백그라운드_복귀_재생유지") {
             backgroundAndReturn()
-            assertTrue(textExists("상태: 재생 중") || textExists("구간"))
+            // 전의 「구간」 글자는 v1.9 [⋯]의 TalkBack 이름에도 있어 늘 참이 된다: 재생 화면(재생 버튼)이 남아 있는지로 본다.
+            assertTrue(isPlaying() || inPlayer())
         }
         row("EX-09", "재생중_뒤로가기_확인대화상자_계속") {
             scenario!!.onActivity { it.onBackPressedDispatcher.onBackPressed() }
@@ -291,7 +301,9 @@ class RealServerQaTest : RealServerTestBase() {
         }
         row("EX-10", "운동마치기_두번눌러도_기록1건") {
             Thread.sleep(PLAY_MS)
-            val node = rule.onAllNodes(hasText("운동 마치기") and hasClickAction())[0]
+            // v1.9: [운동 마치기] 대신 안내 끝 화면의 [기록하고 끝내기]를 두 번 누른다.
+            skipToGuideEnd()
+            val node = rule.onAllNodes(hasText("기록하고 끝내기") and hasClickAction())[0]
             node.performClick()
             runCatching { node.performClick() }
             waitText("운동을 기록했어요")
@@ -302,10 +314,10 @@ class RealServerQaTest : RealServerTestBase() {
         click("목록으로")
         back()
         back()
-        waitPane("운동")
+        waitPane(EXERCISE_HOME)
         row("EX-11", "주간기록_서버500_다시시도") {
             fault("500", "path=/exercise/weekly/")
-            click("이번 주 운동 기록")
+            more("이번 주 기록") // v1.9: [⋯ 더 보기] 안, 이름 「이번 주 기록」
             waitText("잠시 후 다시 시도해 주세요")
             shot("qa/EX-11_오류")
             fault("pass")
@@ -314,16 +326,17 @@ class RealServerQaTest : RealServerTestBase() {
         }
         fault("pass")
         back()
-        waitPane("운동")
+        waitPane(EXERCISE_HOME)
         row("EX-12", "기록전송_서버500_나중에_재전송") {
             fault("500", "path=/exercise-sessions/bulk/")
-            click("한 가지 운동")
+            more("전체 운동·즐겨찾기")
+            waitPane("한 가지 운동")
             click("전체 운동")
             waitText("전체 29개")
             click("맨몸 스쿼트")
-            waitText("상태: 재생 중", timeout = LONG_TIMEOUT)
+            waitPlaying()
             Thread.sleep(PLAY_MS)
-            click("운동 마치기")
+            finishSingle()
             waitText("운동을 기록했어요")
             Thread.sleep(SYNC_GRACE_MS)
             assertEquals("500 동안 큐에 남음", 1, unsent())
@@ -379,6 +392,8 @@ class RealServerQaTest : RealServerTestBase() {
         waitPane("메인")
         click("설정")
         waitPane("설정")
+        click("계정") // v1.9: 동의 관리·데이터 초기화는 [계정] 안
+        waitPane("계정")
         click("개인정보·동의 관리")
         waitPane("개인정보·동의 관리")
         row("CON-04", "민감정보_동의_시간초과_후_다시") {
@@ -394,7 +409,7 @@ class RealServerQaTest : RealServerTestBase() {
         }
         fault("pass")
         back()
-        waitPane("설정")
+        waitPane("계정")
         row("RST-01", "식사초기화_오프라인_다시시도") {
             click("데이터 초기화")
             waitPane("데이터 초기화")
@@ -456,21 +471,22 @@ class RealServerQaTest : RealServerTestBase() {
         row("RC-01", "문서변경_메인_다시동의_안내") { waitText("동의 문서가 바뀌었어요") }
         row("RC-02", "다시동의전_운동기록_403_큐보류") {
             click("운동")
-            waitPane("운동")
-            click("한 가지 운동")
+            waitPane(EXERCISE_HOME)
+            more("전체 운동·즐겨찾기")
+            waitPane("한 가지 운동")
             click("전체 운동")
             waitText("전체 29개")
             click("맨몸 스쿼트")
-            waitText("상태: 재생 중", timeout = LONG_TIMEOUT)
+            waitPlaying()
             Thread.sleep(PLAY_MS)
-            click("운동 마치기")
+            finishSingle()
             waitText("운동을 기록했어요")
             Thread.sleep(SYNC_GRACE_MS)
             assertEquals("403(동의 필요)이면 큐에 남김", 1, unsent())
             click("목록으로")
             back()
             back()
-            waitPane("운동")
+            waitPane(EXERCISE_HOME)
             back()
             waitPane("메인")
         }
@@ -509,25 +525,27 @@ class RealServerQaTest : RealServerTestBase() {
         }
         atf("TB-01", "ATF_메인")
         click("운동")
-        waitPane("운동")
+        waitPane(EXERCISE_HOME)
         atf("TB-02", "ATF_운동첫화면")
-        click("한 가지 운동")
+        more("전체 운동·즐겨찾기")
+        waitPane("한 가지 운동")
         click("전체 운동")
         waitText("전체 29개")
         atf("TB-03", "ATF_운동목록")
         click("맨몸 스쿼트")
         row("TB-04", "TalkBack켜짐_재생화면_자동재생없음_A9") {
-            waitText("상태: ", timeout = LONG_TIMEOUT)
+            rule.waitUntil(LONG_TIMEOUT) { inPlayer() }
             Thread.sleep(SHORT_MS)
-            assertFalse("자동 재생하지 않음", textExists("상태: 재생 중"))
-            assertTrue(textExists("재생을 누르면"))
+            assertFalse("자동 재생하지 않음", isPlaying())
+            // v1.9: 「재생을 누르면 …」 줄은 없앰 — 가운데 버튼 이름 「재생」·상태 「준비됨」으로 대기를 알린다.
+            rule.waitUntil(TIMEOUT) { has(hasTestTag(PLAY_TAG) and hasContentDescription("재생") and hasStateDescription(READY)) }
         }
         atf("TB-05", "ATF_재생화면")
         back()
         if (textExists("운동을 끝낼까요?")) click("기록하지 않고 나가기")
         back()
         back()
-        waitPane("운동")
+        waitPane(EXERCISE_HOME)
         back()
         waitPane("메인")
         click("마이페이지")
@@ -537,6 +555,8 @@ class RealServerQaTest : RealServerTestBase() {
         click("설정")
         waitPane("설정")
         atf("TB-07", "ATF_설정")
+        click("계정")
+        waitPane("계정")
         click("개인정보·동의 관리")
         waitPane("개인정보·동의 관리")
         atf("TB-08", "ATF_동의관리")
@@ -552,6 +572,8 @@ class RealServerQaTest : RealServerTestBase() {
         waitPane("메인")
         click("설정")
         waitPane("설정")
+        click("계정")
+        waitPane("계정")
         click("회원 탈퇴")
         waitPane("회원 탈퇴")
         click("탈퇴 계속하기")
