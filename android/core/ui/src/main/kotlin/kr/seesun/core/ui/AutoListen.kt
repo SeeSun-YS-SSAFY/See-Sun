@@ -134,6 +134,17 @@ class AutoListenEnvironment(
     /** 사용자가 조작했다(버튼 누름 등) → 쉬기까지의 시간을 새로 센다. */
     fun userActivity() = guard.onActivity(clock())
 
+    @Volatile private var restRequested = false
+
+    /** 시선 비서 「그만」(U-06): 이번 말을 처리한 뒤 다시 듣지 않고 쉰다(버튼·이어폰·두 번 탭으로 깨운다). */
+    fun requestRest() {
+        log("rest requested")
+        restRequested = true
+    }
+
+    /** 쉬기 요청을 한 번 가져간다(자동 듣기 반복이 본다). */
+    internal fun takeRest(): Boolean = restRequested.also { restRequested = false }
+
     /** 말하면 듣기 쉬기·헛깨움 판정(화면이 바뀌면 새로 센다). */
     val guard: StandbyGuard = StandbyGuard(idleMs.value)
 
@@ -693,7 +704,12 @@ internal fun AutoListenEffect(
                             val end = env.coordinator.exclusive { loop.run { latestListen(null).also { Log.d(TAG, "cycle outcome=$it") } } }
                             // 말 내용은 남기지 않는다(개인정보). 결과 종류와 회차만.
                             Log.d(TAG, "after-question end=$end silentCycles=${loop.silentCycles} listenedMs=${loop.listenedMs}")
-                            AutoListenFlow.afterQuestion(end, standbyAllowed).also { next ->
+                            val rest = end == AutoListenEnd.ACCEPTED && env.takeRest()
+                            if (rest) {
+                                if (standbyAllowed) Phase.PAUSED else Phase.DONE
+                            } else {
+                                AutoListenFlow.afterQuestion(end, standbyAllowed)
+                            }.also { next ->
                                 if (end == AutoListenEnd.ACCEPTED) env.userActivity()
                                 // 말하면 듣기 쉬기 시간은 대기를 시작할 때부터 센다(질문 뒤 듣기 시간을 빼지 않게).
                                 if (next == Phase.STANDBY) env.guard.reset(env.clock())
@@ -724,7 +740,7 @@ internal fun AutoListenEffect(
                                 StandbyEnd.FALSE_WAKES -> latestSpeak(noisyText)
                                 else -> Unit
                             }
-                            AutoListenFlow.afterStandby(end)
+                            if (end == StandbyEnd.ACCEPTED && env.takeRest()) Phase.PAUSED else AutoListenFlow.afterStandby(end)
                         }
 
                         Phase.PAUSED -> {

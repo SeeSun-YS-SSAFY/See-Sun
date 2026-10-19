@@ -26,6 +26,8 @@
     <string name="main_settings_desc">동의 · 로그아웃 · 탈퇴</string>
     <string name="main_components">공통 컴포넌트 보기</string>
     <string name="main_components_desc">개발용 점검</string>
-    <string name="main_voice_hint">식단, 운동, 약, 마이페이지 중에서 말씀해 주세요. 설정이라고 하셔도 돼요.</string>
-    <string name="main_guide">메인. %1$s 식단, 운동, 약, 마이페이지 중에서 골라 주세요. 설정은 오른쪽 위 톱니바퀴예요.</string>
+    <string name="main_voice_hint">식단, 운동, 약, 마이페이지 중에서 말씀하시거나, 하고 싶은 일을 말해 보세요. 도움말이라고 하면 할 수 있는 말을 알려 드려요.</string>
+    <!-- 시선 비서 입구(예전 [말로 고르기] 자리, 설계 voice_assistant_design_v1 §2.3 — 의뢰인 확인 목록 ①) -->
+    <string name="main_talk_to_seesun">시선에게 말하기</string>
+    <string name="main_guide">메인. %1$s 식단, 운동, 약, 마이페이지 중에서 골라 주세요. 무엇을 할까요? 예를 들어 「근력 운동 보여 줘」, 「이번 주에 운동 몇 번 했어」라고 말해 보세요. 설정은 오른쪽 위 톱니바퀴예요.</string>
 </resources>

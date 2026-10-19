@@ -33,6 +33,9 @@ object ScreenSpeechLog {
     /** [since] 뒤에 들어온 가장 최근 안내(없으면 null) — 헤더 [화면 다시 듣기]가 읽는다. */
     fun guidanceSince(since: Long): String? = synchronized(lock) { guidance?.takeIf { it.at >= since }?.text }
 
+    /** 앱이 마지막으로 한 말, 없으면 지금 화면 안내(시선 비서 「방금 뭐라고 했어?」 U-03). */
+    fun lastSpoken(): String? = synchronized(lock) { utterances.lastOrNull()?.text ?: guidance?.text }
+
     /** 되울림으로 볼 글자: 직전 [windowMs] 안의 앱 발화 + 지금 안내 + 화면 제목. */
     fun echoSources(now: Long, windowMs: Long = EchoFilter.APP_SPEECH_WINDOW_MS): List<String> = synchronized(lock) {
         utterances.filter { now - it.at <= windowMs }.map { it.text } + listOfNotNull(guidance?.text, title?.text)

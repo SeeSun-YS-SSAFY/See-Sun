@@ -31,6 +31,28 @@ class VoiceFieldControllerTest {
     )
 
     @Test
+    fun `시선 비서가 채운 값도 저장하지 않고 되읽기 확인부터 연다`() = runTest {
+        val c = controller(ScriptedSpeechInput())
+        assertTrue(c.propose("170"))
+        assertEquals("170", c.state.value.pending)
+        assertTrue(committed.isEmpty())
+        assertFalse(c.propose("구름"))
+        c.confirm()
+        assertEquals(listOf("170"), committed)
+    }
+
+    @Test
+    fun `값 입력 중 비서가 가져간 말은 값으로 쓰지 않는다`() = runTest {
+        val c = controller(ScriptedSpeechInput("처음으로", "백칠십 센티"))
+        c.interceptor = { it.first() == "처음으로" }
+        c.onMicClick()
+        assertNull(c.state.value.pending)
+        assertEquals(MicState.IDLE, c.state.value.mic)
+        c.onMicClick()
+        assertEquals("170", c.state.value.pending)
+    }
+
+    @Test
     fun `음성으로 알아들은 값은 되읽기 확인을 거쳐야 확정된다`() = runTest {
         val c = controller(ScriptedSpeechInput("백칠십육 센티"))
         c.onMicClick()

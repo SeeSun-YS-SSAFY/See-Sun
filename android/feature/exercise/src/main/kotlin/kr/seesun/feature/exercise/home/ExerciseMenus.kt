@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kr.seesun.core.assistant.IntentId
 import kr.seesun.core.data.model.ExerciseCategory
 import kr.seesun.core.data.repository.AuthRepository
 import kr.seesun.core.data.repository.ExerciseContentRepository
@@ -263,18 +264,21 @@ internal fun destinationOf(key: String, ui: HomeUi): HomeDestination = when {
 /** 제목은 한 줄에 들어가게 「추천 루틴」만(어떤 운동인지는 루틴 화면의 운동 순서와 첫 화면 타일 설명에 있다). */
 private fun recommendedRoutine(c: ExerciseCategory) = HomeDestination.RecommendedRoutine(c.id, "추천 루틴")
 
-/** 말로 고르기 선택지. 「추천 루틴」이 「루틴」보다 길어 먼저 맞는다(VoiceMenuMatcher는 긴 낱말 먼저). */
+/**
+ * 말로 고르기 선택지. 「추천 루틴」이 「루틴」보다 길어 먼저 맞는다(VoiceMenuMatcher는 긴 낱말 먼저).
+ * [VoiceMenuOption.same]: 시선 비서가 같은 일을 하는 말(「유산소 운동 할래」)을 알아들어도 이 화면 안에서 연다(설계 §4.6).
+ */
 internal fun homeVoiceOptions(
     categories: List<ExerciseCategory>,
     recommended: ExerciseCategory?,
     onOpen: (HomeDestination) -> Unit
 ): List<VoiceMenuOption> = categories.map { c ->
-    VoiceMenuOption(listOf(ExerciseOrder.shortName(c.name))) { onOpen(HomeDestination.Category(c.id, c.name)) }
+    VoiceMenuOption(listOf(ExerciseOrder.shortName(c.name)), IntentId.EXERCISE_CATEGORY) { onOpen(HomeDestination.Category(c.id, c.name)) }
 } + listOfNotNull(
-    recommended?.let { c -> VoiceMenuOption(listOf("추천", "추천 루틴")) { onOpen(recommendedRoutine(c)) } },
-    VoiceMenuOption(listOf("루틴", "이어서")) { onOpen(HomeDestination.Routine) },
-    VoiceMenuOption(listOf("기록", "이번 주", "이번주")) { onOpen(HomeDestination.Weekly) },
-    VoiceMenuOption(listOf("안전", "건강 확인")) { onOpen(HomeDestination.Safety) },
+    recommended?.let { c -> VoiceMenuOption(listOf("추천", "추천 루틴"), IntentId.ROUTINE) { onOpen(recommendedRoutine(c)) } },
+    VoiceMenuOption(listOf("루틴", "이어서"), IntentId.ROUTINE) { onOpen(HomeDestination.Routine) },
+    VoiceMenuOption(listOf("기록", "이번 주", "이번주"), IntentId.EXERCISE_WEEKLY) { onOpen(HomeDestination.Weekly) },
+    VoiceMenuOption(listOf("안전", "건강 확인"), IntentId.EXERCISE_SAFETY) { onOpen(HomeDestination.Safety) },
     VoiceMenuOption(listOf("전체", "즐겨찾기", "자주", "한 가지", "한가지")) { onOpen(HomeDestination.Single) }
 )
 

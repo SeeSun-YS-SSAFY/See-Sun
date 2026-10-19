@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -75,6 +76,20 @@ class VoiceCommandController(
     private val tracker = RecognitionFailureTracker()
     private var job: Job? = null
 
+    /** 시선 비서(화면에 그려질 때 [LinkAssistant]가 붙인다). 없으면 화면 명령만. */
+    internal var assistant: AssistantHost? = null
+
+    /**
+     * 들은 말 처리(처리 순서 §4.6): 비서 0·1단계(안전·묻던 것의 답·「시선아」) → 화면 명령 → 비서 3·4단계(어디서나 명령·전역 의도).
+     * 기기 시험이 받아쓴 말을 넣을 때도 이 길로 온다.
+     */
+    internal fun handle(candidates: List<String>): Boolean {
+        val host = assistant
+        if (host?.before(candidates, this) == true) return true
+        if (handler(candidates)) return true
+        return host?.after(candidates, this) == true
+    }
+
     fun onMicClick() {
         when (_state.value.mic) {
             MicState.LISTENING -> {
@@ -104,7 +119,7 @@ class VoiceCommandController(
             register = { job = it },
             setMic = { mic -> _state.update { it.copy(mic = mic.toMicState()) } },
             accept = { candidates ->
-                handler(candidates).also { ok ->
+                handle(candidates).also { ok ->
                     if (ok) {
                         tracker.onSuccess()
                         _state.update { it.copy(error = null, suggestButtons = false) }
@@ -125,7 +140,7 @@ class VoiceCommandController(
                 when (event) {
                     is RecognitionEvent.SpeechEnded -> _state.update { it.copy(mic = MicState.PROCESSING) }
 
-                    is RecognitionEvent.Final -> if (handler(event.candidates)) {
+                    is RecognitionEvent.Final -> if (handle(event.candidates)) {
                         tracker.onSuccess()
                         _state.update { it.copy(mic = MicState.IDLE, error = null, suggestButtons = false) }
                     } else {
@@ -165,6 +180,7 @@ fun VoiceCommandMic(
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
     val press = rememberDirectStart(gate.request)
     VoiceTriggers(controller, talkBackEnabled, speak, controller::listenAuto, press)
+    LinkAssistant(controller)
     val mic = displayedMic(state.mic)
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -178,6 +194,7 @@ fun VoiceCommandMic(
             showState = mic != MicState.IDLE
         )
         ChoiceResult(label = resultLabel, value = result)
+        AssistantResultStrip(controller)
         MicPermissionRationale(gate)
         CommandStatus(state, hint, talkBackEnabled, speak)
     }
@@ -214,6 +231,7 @@ private val UNDERLINE = 3.dp
  * 선택 화면의 [말로 고르기] 버튼(큰 마이크 대신 목록 위에 두는 보통 버튼). 상태를 글자로 보여 주고 오류는 liveRegion으로 알린다.
  *
  * @param hint 알아듣지 못했을 때 덧붙일 요령(예: "당뇨, 고혈압, 없음 중에서 말씀해 주세요")
+ * @param idleText 쉬는 동안 버튼 글자(기본 「말로 고르기」, 메인은 「시선에게 말하기」)
  */
 @Composable
 fun VoiceCommandButton(
@@ -222,17 +240,21 @@ fun VoiceCommandButton(
     talkBackEnabled: Boolean,
     speak: (String) -> Unit,
     modifier: Modifier = Modifier,
-    textStyle: TextStyle = SeeSunTheme.typography.button
+    textStyle: TextStyle = SeeSunTheme.typography.button,
+    idleText: String? = null
 ) {
     val state by controller.state.collectAsStateWithLifecycle()
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
     val press = rememberDirectStart(gate.request)
     VoiceTriggers(controller, talkBackEnabled, speak, controller::listenAuto, press)
+    LinkAssistant(controller)
     val mic = displayedMic(state.mic)
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(SeeSunDimens.Gap)) {
+        // 결과 띠는 마이크 버튼 바로 위(포커스 순서: 본문 → 결과 띠 → 마이크, §4.5).
+        AssistantResultStrip(controller)
         SeeSunButton(
             text = when (mic) {
-                MicState.IDLE -> stringResource(R.string.ui_voice_command_idle)
+                MicState.IDLE -> idleText ?: stringResource(R.string.ui_voice_command_idle)
                 MicState.STANDBY -> stringResource(R.string.ui_voice_command_standby)
                 MicState.LISTENING -> stringResource(R.string.ui_voice_command_listening)
                 MicState.PROCESSING -> stringResource(R.string.ui_voice_command_processing)
@@ -297,6 +319,7 @@ fun ScreenCommandListener(
     val gate = rememberMicPermissionGate(onGranted = controller::onMicClick, onDeclined = controller::onPermissionDenied)
     val press = rememberDirectStart(gate.request)
     VoiceTriggers(controller to key, talkBackEnabled, speak, controller::listenAuto, press)
+    LinkAssistant(controller)
     val latestPress by rememberUpdatedState(press)
     val latestStarted by rememberUpdatedState(onStarted)
     LaunchedEffect(startNow) {
@@ -312,9 +335,21 @@ fun ScreenCommandListener(
             else -> ""
         }
         LiveStatusText(listening)
+        AssistantResultStrip(controller)
         if (gate.nudges > 0) MicPermissionRationale(gate)
         CommandStatus(state, hint, talkBackEnabled, speak)
     }
+}
+
+/** 음성 명령 컨트롤러를 시선 비서에 잇는다(화면에 있는 동안). 받아쓴 말 주입(기기 시험)도 이 컨트롤러로 온다. */
+@Composable
+internal fun LinkAssistant(controller: VoiceCommandController) {
+    val host = LocalAssistant.current
+    DisposableEffect(controller, host) {
+        controller.assistant = host
+        onDispose { if (controller.assistant === host) controller.assistant = null }
+    }
+    AttachAssistant(controller, controller::handle)
 }
 
 /** 음성 명령 오류·버튼 안내(liveRegion + 앱 음성). */

@@ -27,10 +27,10 @@ complexity:
   CyclomaticComplexMethod:
     threshold: 20
     ignoreAnnotated: ['Composable']
-    # 규칙 파서는 분기가 본질이다. 테스트 벡터(100% 통과)로 지킨다.
-    excludes: ['**/voice/parse/**']
+    # 규칙 파서·시선 비서 규칙 엔진은 분기가 본질이다. 테스트 벡터(100% 통과)·비서 말뭉치(설계 §8.2 기준)로 지킨다.
+    excludes: ['**/voice/parse/**', '**/core/assistant/**']
   NestedBlockDepth:
-    excludes: ['**/voice/parse/**']
+    excludes: ['**/voice/parse/**', '**/core/assistant/**']
   TooManyFunctions:
     thresholdInFiles: 25
     thresholdInClasses: 20
@@ -51,7 +51,7 @@ style:
   ReturnCount:
     max: 6
     excludeGuardClauses: true
-    excludes: ['**/voice/parse/**']
+    excludes: ['**/voice/parse/**', '**/core/assistant/**']
   LoopWithTooManyJumpStatements:
     excludes: ['**/voice/parse/**']
   ForbiddenComment:

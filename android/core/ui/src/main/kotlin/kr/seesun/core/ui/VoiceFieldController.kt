@@ -85,6 +85,23 @@ class VoiceFieldController(
     private val tracker = RecognitionFailureTracker()
     private var listening: Job? = null
 
+    /**
+     * 값 입력 칸에서도 먼저 볼 말(시선 비서, [VoiceInputField]가 붙인다): 안전 표현·「시선아 …」·말 전체가 「처음으로」「그만」「취소」.
+     * 처리했으면 true — 그 말은 값으로 쓰지 않는다(설계 §4.6 1단계, R2).
+     */
+    internal var interceptor: ((List<String>) -> Boolean)? = null
+
+    /**
+     * 시선 비서가 값까지 알아들은 말(「몸무게 65킬로로 바꿔 줘」, A-01): 저장하지 않고 되읽기 확인을 그 값으로 연다.
+     * [확인](또는 「네」)을 받아야 [onCommit]한다. 해석기가 받지 않는 값이면 false.
+     */
+    fun propose(value: String): Boolean {
+        val parsed = parser(value.trim()) ?: return false
+        cancelListening()
+        _state.update { it.copy(text = parsed, pending = parsed, inputState = InputState.RECOGNIZED, mic = MicState.IDLE, error = null) }
+        return true
+    }
+
     /** 저장된 값으로 칸을 채운다(이전 단계로 돌아오거나 수정 화면에서 현재 값을 보여 줄 때). */
     fun setValue(value: String?) {
         cancelListening()
@@ -203,6 +220,7 @@ class VoiceFieldController(
 
     /** 자동 듣기 결과: 화면에 쓸 수 있는 말이면 수동 듣기와 같이 처리하고 true. */
     private fun acceptAuto(candidates: List<String>): Boolean {
+        if (interceptor?.invoke(candidates) == true) return true
         val answer = if (_state.value.pending != null) candidates.firstNotNullOfOrNull { AnswerParser.parse(it) } else null
         val usable = answer != null || candidates.any { parser(it.trim()) != null }
         if (usable) onFinal(candidates)
@@ -227,6 +245,10 @@ class VoiceFieldController(
     }
 
     private fun onFinal(candidates: List<String>) {
+        if (interceptor?.invoke(candidates) == true) {
+            idle()
+            return
+        }
         if (_state.value.pending != null) {
             when (candidates.firstNotNullOfOrNull { AnswerParser.parse(it) }) {
                 Answer.YES -> return idle().also { confirm() }

@@ -44,6 +44,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kr.seesun.core.a11y.rememberTalkBackEnabled
+import kr.seesun.core.assistant.IntentId
+import kr.seesun.core.assistant.ScreenCatalog
 import kr.seesun.core.data.repository.ConsentRepository
 import kr.seesun.core.data.repository.MealRepository
 import kr.seesun.core.data.repository.ProfileRepository
@@ -63,6 +65,7 @@ import kr.seesun.core.designsystem.theme.SeeSunDimens
 import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.AssistantScreen
 import kr.seesun.core.ui.AutoGuidance
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.VoiceMenuButton
@@ -163,6 +166,7 @@ fun MainRoute(onNavigate: (MainDestination) -> Unit, showDeveloperMenu: Boolean,
         onPauseOrDispose { viewModel.voice.stop() }
     }
     val talkBack = rememberTalkBackEnabled()
+    AssistantScreen(ScreenCatalog.MAIN)
     MainScreen(
         summary = summary,
         onNavigate = {
@@ -229,19 +233,21 @@ fun MainScreen(
             }
         )
         BottomActions(pushDown = LocalDensity.current.fontScale > 1f) {
-            // 말로 고르기(흐름 문서 P0-4): 안내가 「…중에서 골라 주세요」로 끝나므로 같은 말로 고른다(질문 뒤 듣기·말하면 듣기).
+            // [시선에게 말하기](시선 비서 입구, 설계 voice_assistant_design_v1 §2.3): 예전 [말로 고르기] 자리 그대로. 메뉴 이름은 여전히
+            // 화면 명령으로 받고(질문 뒤 듣기·말하면 듣기), 「근력 운동 보여 줘」처럼 더 구체적인 말은 비서가 받아 바로 데려간다.
             VoiceMenuButton(
                 options = listOf(
-                    VoiceMenuOption(listOf("식단", "식사", "밥")) { onNavigate(MainDestination.DIET) },
-                    VoiceMenuOption(listOf("운동")) { onNavigate(MainDestination.EXERCISE) },
-                    VoiceMenuOption(listOf("약", "복약")) {
+                    VoiceMenuOption(listOf("식단", "식사", "밥"), IntentId.DIET_HOME) { onNavigate(MainDestination.DIET) },
+                    VoiceMenuOption(listOf("운동"), IntentId.EXERCISE_HOME) { onNavigate(MainDestination.EXERCISE) },
+                    VoiceMenuOption(listOf("약", "복약"), IntentId.MEDICINE_SOON) {
                         notice = if (notice == comingSoon) comingSoon + ZERO_WIDTH else comingSoon
                         speak(comingSoon)
                     },
-                    VoiceMenuOption(listOf("마이페이지", "마이 페이지", "내 정보")) { onNavigate(MainDestination.MY_PAGE) },
-                    VoiceMenuOption(listOf("설정")) { onNavigate(MainDestination.SETTINGS) }
+                    VoiceMenuOption(listOf("마이페이지", "마이 페이지", "내 정보"), IntentId.MY_PAGE) { onNavigate(MainDestination.MY_PAGE) },
+                    VoiceMenuOption(listOf("설정"), IntentId.SETTINGS) { onNavigate(MainDestination.SETTINGS) }
                 ),
-                hint = stringResource(R.string.main_voice_hint)
+                hint = stringResource(R.string.main_voice_hint),
+                idleText = stringResource(R.string.main_talk_to_seesun)
             )
             // 하단 큰 [설정]은 없앴다(소유자 msg 1029): 설정은 오른쪽 위 톱니바퀴 하나, 말로 「설정」도 된다.
             if (showDeveloperMenu) {

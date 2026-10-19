@@ -10,6 +10,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.core.content.edit
 import kr.seesun.core.a11y.rememberTalkBackEnabled
+import kr.seesun.core.assistant.IntentId
+import kr.seesun.core.assistant.LocalCommand
 import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.tts.Speaker
 
@@ -31,8 +33,12 @@ fun EntryGuidance(key: String, message: String) {
     AutoGuidance(key = key, message = message, talkBackEnabled = talkBack, speak = { voice?.auto(it, talkBack) })
 }
 
-/** 말로 고를 메뉴 하나: [words] 중 하나가 들린 말에 들어 있으면 [onPick]. */
-data class VoiceMenuOption(val words: List<String>, val onPick: () -> Unit)
+/**
+ * 말로 고를 메뉴 하나: [words] 중 하나가 들린 말에 들어 있으면 [onPick].
+ * @param same 이 메뉴와 같은 일을 하는 시선 비서 의도(예: 메인 「운동」 = 운동 홈). 비서가 더 구체적인 말(「근력 운동 보여 줘」)을
+ *   알아들어도 같은 일이면 이 메뉴로 처리한다(설계 §4.6 구체성 비교).
+ */
+data class VoiceMenuOption(val words: List<String>, val same: IntentId? = null, val onPick: () -> Unit)
 
 /** 들린 말에서 메뉴를 고른다(순수 함수, 시험용). 띄어쓰기는 무시하고, 더 긴 낱말이 먼저 맞는다("마이페이지" > "페이지"). */
 object VoiceMenuMatcher {
@@ -49,23 +55,41 @@ object VoiceMenuMatcher {
 /**
  * 메뉴 화면의 [말로 고르기](흐름 문서 P0-4): 화면이 「…중에서 골라 주세요」로 안내하는 곳에 마이크를 붙인다.
  * 음성 화면과 같은 듣기 방식(질문 뒤 듣기·말하면 듣기·이어폰 버튼)을 쓴다. app이 음성 모듈을 내려 주지 않으면(미리보기·시험) 그리지 않는다.
+ * 시선 비서가 있으면 같은 마이크가 전역 명령도 받는다 — 메뉴 낱말과 비서 의도를 함께 보고 더 구체적인 쪽이 이긴다(설계 §4.6).
+ *
+ * @param idleText 버튼 글자(기본 「말로 고르기」, 메인은 「시선에게 말하기」)
  */
 @Composable
-fun VoiceMenuButton(options: List<VoiceMenuOption>, hint: String, modifier: Modifier = Modifier) {
+fun VoiceMenuButton(options: List<VoiceMenuOption>, hint: String, modifier: Modifier = Modifier, idleText: String? = null) {
     val speech = LocalSpeechInput.current ?: return
     val speaker = LocalGuidanceSpeaker.current
+    val host = LocalAssistant.current
     val talkBack = rememberTalkBackEnabled()
     val scope = rememberCoroutineScope()
     val latest by rememberUpdatedState(options)
     val voice = remember(speaker) { speaker?.let(::GuidanceVoice) }
-    val controller = remember(speech, scope) {
+    val self = remember { arrayOfNulls<VoiceCommandController>(1) }
+    val controller = remember(speech, scope, host) {
         VoiceCommandController(scope, speech, onBeforeListen = { voice?.stop() }) { candidates ->
-            val picked = candidates.firstNotNullOfOrNull { VoiceMenuMatcher.match(it, latest) }
-            picked?.onPick?.invoke()
-            picked != null
-        }
+            val current = latest
+            val owner = self[0]
+            if (host != null && owner != null) {
+                host.hearMenu(
+                    candidates,
+                    current.map {
+                        LocalCommand(it.words, it.same)
+                    },
+                    { i -> current.getOrNull(i)?.onPick?.invoke() },
+                    owner
+                )
+            } else {
+                val picked = candidates.firstNotNullOfOrNull { VoiceMenuMatcher.match(it, current) }
+                picked?.onPick?.invoke()
+                picked != null
+            }
+        }.also { self[0] = it }
     }
-    VoiceCommandButton(controller, hint, talkBack, { voice?.auto(it, talkBack) }, modifier)
+    VoiceCommandButton(controller, hint, talkBack, { voice?.auto(it, talkBack) }, modifier, idleText = idleText)
 }
 
 /** 첫 실행 사용법 안내를 이미 들었는지(기기에만, 「사용법 들음」 — 소유자 msg 1029). */

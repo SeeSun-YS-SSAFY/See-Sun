@@ -1,0 +1,263 @@
+# 시선 비서 보류 말뭉치(규칙을 이 말에 맞춰 고치지 않고 일반화를 잰다, 참고 지표). 열은 assistant_corpus.tsv와 같다.
+IN	U-01	unknown	뒤로 갈래
+IN	U-01	unknown	전 화면
+IN	U-01	unknown	뒤로 좀 가 줘
+IN	U-01	unknown	이전 화면 보여 줘
+IN	U-01	unknown	뒤로 가요
+IN	U-02	unknown	처음 화면
+IN	U-02	unknown	메인 화면
+IN	U-02	unknown	홈 화면으로 가 줘요
+IN	U-02	unknown	처음으로 가 주세요
+IN	U-02	unknown	맨 처음 화면으로
+IN	U-03	unknown	다시 말해 주세요
+IN	U-03	unknown	방금 뭐라 그랬어
+IN	U-03	unknown	다시 들려줄래
+IN	U-03	unknown	한 번만 더
+IN	U-03	unknown	다시 읽어 주세요
+IN	U-04	unknown	뭐 할 수 있어
+IN	U-04	unknown	도움말 알려 줘
+IN	U-04	unknown	명령어 뭐 있어
+IN	U-04	unknown	무슨 말 할 수 있어
+IN	U-04	unknown	어떻게 하면 돼
+IN	U-05	unknown	여기가 어디야
+IN	U-05	unknown	지금 어느 화면이에요
+IN	U-05	unknown	무슨 화면인지 알려 줘
+IN	U-05	unknown	여기 어디예요
+IN	U-05	unknown	지금 어디에 있어
+IN	U-06	unknown	조용히
+IN	U-06	unknown	그만 들어
+IN	U-06	unknown	듣지 말아 줘
+IN	U-06	unknown	말 그만해
+IN	U-06	unknown	쉬어 줘
+IN	U-07	unknown	취소해
+IN	U-07	unknown	안 할래요
+IN	U-07	unknown	그만둘래요
+IN	U-07	unknown	관둬
+IN	U-07	unknown	취소할래
+IN	U-08	unknown	아까 화면으로 가 줘
+IN	U-08	unknown	원래 화면으로 돌아가
+IN	U-08	unknown	아까 보던 화면으로 가자
+IN	U-08	unknown	원래 있던 데로
+IN	U-08	unknown	아까 거기
+IN	N-01	unknown	운동하자
+IN	N-01	unknown	운동 화면 보여 줘
+IN	N-01	unknown	운동하러 갈게
+IN	N-01	unknown	운동 좀 할래
+IN	N-01	unknown	운동할게요
+IN	N-02	unknown	근력 운동
+IN	N-02	unknown	유산소 운동 보여 줘
+IN	N-02	unknown	스트레칭 할래요
+IN	N-02	unknown	균형 운동 목록 보여 줘
+IN	N-02	unknown	유연성 운동 할래
+IN	N-03	unknown	스쿼트 할래
+IN	N-03	unknown	플랭크 하고 싶어요
+IN	N-03	unknown	런지 시작해 줘
+IN	N-03	unknown	조깅 하자
+IN	N-03	unknown	점핑잭 할게
+IN	N-04	unknown	추천 루틴 할래
+IN	N-04	unknown	루틴 시작해 줘
+IN	N-04	unknown	내 루틴 보여 줘
+IN	N-04	unknown	추천 루틴 보여 줘
+IN	N-04	unknown	루틴 운동 하고 싶어
+IN	N-05	unknown	아까 하던 거 이어서
+IN	N-05	unknown	이어서 하자
+IN	N-05	unknown	계속 할게
+IN	N-05	unknown	하던 운동 이어서 해 줘
+IN	N-05	unknown	운동 계속하고 싶어
+IN	N-06	unknown	안전 안내 들려 주세요
+IN	N-06	unknown	운동 주의사항
+IN	N-06	unknown	주의할 점 알려 줘
+IN	N-06	unknown	안전 안내 해 줘
+IN	N-06	unknown	조심할 점 있어
+IN	N-01b	unknown	운동 기록 열어 줘
+IN	N-01b	unknown	운동 기록 보고 싶어
+IN	N-01b	unknown	운동 기록 화면 보여 줘
+IN	N-01b	unknown	운동 통계 보여 줘
+IN	N-01b	unknown	지난주 운동 기록
+IN	Q-01	unknown	이번 주 운동 몇 번 했어요
+IN	Q-01	unknown	운동 몇 번 했어
+IN	Q-01	unknown	지난주 운동 얼마나 했어
+IN	Q-01	unknown	이번 주에 운동 얼마나 했어
+IN	Q-01	unknown	오늘 운동 몇 분 했어
+IN	Q-02	unknown	내 목표 뭐야
+IN	Q-02	unknown	목표 칼로리 몇이야
+IN	Q-02	unknown	하루에 몇 칼로리 먹어야 돼
+IN	Q-02	unknown	목표가 뭐였지
+IN	Q-02	unknown	내 하루 목표 열량
+IN	N-07	unknown	마이페이지 보여 줘
+IN	N-07	unknown	내 정보 볼래
+IN	N-07	unknown	마이페이지로
+IN	N-07	unknown	프로필 열어 줘
+IN	N-07	unknown	내 정보 화면
+IN	N-08	unknown	몸무게 고칠래
+IN	N-08	unknown	키 바꿀래
+IN	N-08	unknown	이름 수정하고 싶어
+IN	N-08	unknown	생년월일 바꿔 줘
+IN	N-08	unknown	몸무게 바꿔 줘
+IN	N-08b	unknown	알레르기 바꾸고 싶어
+IN	N-08b	unknown	질환 수정할래
+IN	N-08b	unknown	목표 수정하고 싶어
+IN	N-08b	unknown	알레르기 등록할래
+IN	N-08b	unknown	지병 바꿀래
+IN	A-01	unknown	몸무게 60킬로로 바꿔 줘
+IN	A-01	unknown	키 172로 고쳐 줘
+IN	A-01	unknown	체중 68킬로로 수정
+IN	A-01	unknown	몸무게 칠십 킬로로 바꿔
+IN	A-01	unknown	키 160센티로 변경해 줘
+IN	N-09	unknown	설정 열어 줘요
+IN	N-09	unknown	설정 화면
+IN	N-09	unknown	설정 들어가 줘
+IN	N-09	unknown	설정 좀 열어
+IN	N-09	unknown	설정으로
+IN	N-09b	unknown	음성 설정 보여 줘
+IN	N-09b	unknown	소리 설정 열어 줘
+IN	N-09b	unknown	음성 안내 설정 보여 줘
+IN	N-09b	unknown	목소리 설정
+IN	N-09b	unknown	음성 설정 화면
+IN	S-01	unknown	말 빠르게
+IN	S-01	unknown	천천히 말해 주세요
+IN	S-01	unknown	말 속도 보통으로
+IN	S-01	unknown	더 빨리 말해
+IN	S-01	unknown	느리게 말해 줘
+IN	S-02	unknown	자동 듣기 꺼
+IN	S-02	unknown	자동으로 듣는 거 꺼 줘
+IN	S-02	unknown	자동 인식 꺼
+IN	S-02	unknown	자동 듣기 켜
+IN	S-02	unknown	버튼 누를 때만 들어 주세요
+IN	S-03	unknown	안내 음성 꺼
+IN	S-03	unknown	앱 소리 꺼 줘
+IN	S-03	unknown	목소리 끄기
+IN	S-03	unknown	음성 안내 꺼 주세요
+IN	S-03	unknown	안내 소리 없애 줘
+IN	S-03b	unknown	물리 버튼
+IN	S-03b	unknown	이어폰 버튼 설정
+IN	S-03b	unknown	물리 버튼 설정 열어 줘
+IN	S-03b	unknown	볼륨 버튼 설정 보여 줘
+IN	S-03b	unknown	버튼 설정
+IN	S-04	unknown	문의할게요
+IN	S-04	unknown	고객센터
+IN	S-04	unknown	문의하고 싶어요
+IN	S-04	unknown	상담원이랑 연결해 줘
+IN	S-04	unknown	연락처 보여 줘
+IN	S-05	unknown	회원 탈퇴
+IN	S-05	unknown	로그아웃 할게
+IN	S-05	unknown	데이터 초기화
+IN	S-05	unknown	계정 탈퇴할래
+IN	S-05	unknown	기록 지워 줘
+IN	S-06	unknown	앱 버전 뭐야
+IN	S-06	unknown	업데이트 확인
+IN	S-06	unknown	버전 알려 줘
+IN	S-06	unknown	새 버전 나왔어
+IN	S-06	unknown	업데이트 있어요
+IN	H-01	unknown	사용법 알려 주세요
+IN	H-01	unknown	사용 방법
+IN	H-01	unknown	앱 쓰는 법
+IN	H-01	unknown	사용법 다시 들려 줘
+IN	H-01	unknown	이용법 알려 줘
+IN	N-10	unknown	약 먹었어요
+IN	N-10	unknown	복약 화면
+IN	N-10	unknown	약 기록
+IN	N-10	unknown	저녁 약 먹었어
+IN	N-10	unknown	내 약
+IN	D-01	unknown	식단 화면 보여 줘
+IN	D-01	unknown	식단 열어 줘
+IN	D-01	unknown	식사 화면으로
+IN	D-01	unknown	식단 볼래요
+IN	D-01	unknown	밥 화면
+OOS	OOS	unknown	날씨 알려 줘
+OOS	OOS	unknown	오늘 날씨 어때요
+OOS	OOS	unknown	음악 틀어 줘
+OOS	OOS	unknown	트로트 들려 줘
+OOS	OOS	unknown	심심하다
+OOS	OOS	unknown	뉴스 들려 줘
+OOS	OOS	unknown	택시 좀 불러
+OOS	OOS	unknown	문자 보내 줘
+OOS	OOS	unknown	알람 꺼 줘
+OOS	OOS	unknown	몇 시예요
+OOS	OOS	unknown	오늘 무슨 요일이에요
+OOS	OOS	unknown	재밌는 이야기 해 줘
+OOS	OOS	unknown	사랑해요
+OOS	OOS	unknown	고맙습니다
+OOS	OOS	unknown	안녕하세요
+OOS	OOS	unknown	배고프다
+OOS	OOS	unknown	졸리다
+OOS	OOS	unknown	축구 보고 싶어
+OOS	OOS	unknown	야구 중계 틀어 줘
+OOS	OOS	unknown	주가 알려 줘
+OOS	OOS	unknown	로또 당첨 번호
+OOS	OOS	unknown	맛있는 집 알려 줘
+OOS	OOS	unknown	버스 시간 알려 줘
+OOS	OOS	unknown	영화 보고 싶어
+OOS	OOS	unknown	드라마 보여 줘
+OOS	OOS	unknown	유튜브 틀어 줘
+OOS	OOS	unknown	카톡 왔어
+OOS	OOS	unknown	검색 좀 해 줘
+OOS	OOS	unknown	길 좀 알려 줘
+OOS	OOS	unknown	배달 시켜 줘
+OOS	OOS	unknown	넌 누구야
+OOS	OOS	unknown	몇 살이에요
+OOS	OOS	unknown	외롭다
+OOS	OOS	unknown	놀자
+OOS	OOS	unknown	옛날 이야기 해 줘
+OOS	OOS	unknown	손전등
+OOS	OOS	unknown	와이파이 켜 줘
+OOS	OOS	unknown	볼륨 줄여 줘
+OOS	OOS	unknown	밝기 올려 줘
+OOS	OOS	unknown	사진 보여 줘
+OOS	OOS	unknown	딸한테 전화해
+OOS	OOS	unknown	비 와요
+OOS	OOS	unknown	우산 필요해
+OOS	OOS	unknown	미세먼지 나빠
+OOS	OOS	unknown	커피 마실래
+OOS	OOS	unknown	노래 불러
+OOS	OOS	unknown	게임 하고 싶어
+OOS	OOS	unknown	퀴즈 하자
+OOS	OOS	unknown	메모 남겨 줘
+OOS	OOS	unknown	녹음 시작
+SAFETY	SAFETY:EMERGENCY	unknown	가슴이 너무 아파요
+SAFETY	SAFETY:EMERGENCY	unknown	숨쉬기가 힘들어
+SAFETY	SAFETY:EMERGENCY	unknown	쓰러질 거 같아요
+SAFETY	SAFETY:EMERGENCY	unknown	119 좀 불러 줘
+SAFETY	SAFETY:EMERGENCY	unknown	머리가 어지러워요
+SAFETY	SAFETY:EMERGENCY	unknown	숨이 막혀
+SAFETY	SAFETY:EMERGENCY	unknown	가슴이 조여 와
+SAFETY	SAFETY:EMERGENCY	unknown	다리가 너무 아파
+SAFETY	SAFETY:EMERGENCY	unknown	넘어져서 다쳤어
+SAFETY	SAFETY:EMERGENCY	unknown	몸에 힘이 없어
+SAFETY	SAFETY:CRISIS	unknown	죽고 싶다
+SAFETY	SAFETY:CRISIS	unknown	살기 싫다
+SAFETY	SAFETY:CRISIS	unknown	그냥 사라지고 싶어
+SAFETY	SAFETY:CRISIS	unknown	다 끝내고 싶어
+SAFETY	SAFETY:CRISIS	unknown	자해하고 싶어
+SAFETY	SAFETY:MEDICAL	unknown	혈압약 두 알 먹어도 돼
+SAFETY	SAFETY:MEDICAL	unknown	이 약 같이 먹어도 돼요
+SAFETY	SAFETY:MEDICAL	unknown	당뇨인데 바나나 먹어도 돼
+SAFETY	SAFETY:MEDICAL	unknown	혈당 200이면 괜찮아
+SAFETY	SAFETY:MEDICAL	unknown	진통제 먹어도 될까
+SAFETY	SAFETY:MEDICAL	unknown	무릎 수술했는데 스쿼트 해도 돼
+VALUE	NONE	value	된장찌개
+VALUE	NONE	value	칠십오 킬로
+VALUE	NONE	value	1985년 7월 3일
+VALUE	NONE	value	박민수
+VALUE	NONE	value	백육십 센티
+VALUE	NONE	value	고등어
+VALUE	NONE	value	견과류
+VALUE	NONE	value	없음
+VALUE	NONE	value	운동 화면
+VALUE	NONE	value	설정 열어
+VALUE	U-02	value	처음으로 가 줘
+VALUE	U-07	value	취소해 줘
+VALUE	N-07	value	시선아 마이페이지
+VALUE	SAFETY:EMERGENCY	value	숨이 차
+CONFLICT	N-02	main	유산소 운동 보여 줘
+CONFLICT	N-03	main	플랭크 하고 싶어
+CONFLICT	Q-02	main	내 목표 알려 줘
+CONFLICT	D-01	main	식사
+CONFLICT	N-01	main	운동
+CONFLICT	N-07	main	내 정보
+CONFLICT	N-02	exercise.home	근력
+CONFLICT	N-01b	exercise.home	이번 주
+CONFLICT	N-03	exercise.home	런지 하고 싶어
+CONFLICT	N-06	exercise.home	건강 확인
+CONFLICT	N-08b	mypage	건강 정보
+CONFLICT	N-09	mypage	설정 열어 줘

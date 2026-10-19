@@ -43,6 +43,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.seesun.core.a11y.LiveAnnouncement
 import kr.seesun.core.a11y.rememberTalkBackEnabled
+import kr.seesun.core.assistant.ScreenCatalog
+import kr.seesun.core.assistant.ScreenMode
 import kr.seesun.core.data.model.ExerciseDetail
 import kr.seesun.core.data.model.ExerciseSummary
 import kr.seesun.core.data.model.GuideSections
@@ -62,6 +64,7 @@ import kr.seesun.core.designsystem.theme.SeeSunSpace
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.AssistantScreen
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.LocalVoiceMediaButtons
 import kr.seesun.core.ui.ScreenCommandListener
@@ -507,6 +510,29 @@ class RoutinePlayerViewModel @Inject constructor(
         }
     }
 
+    /**
+     * 시선 비서가 안전 표현을 들었다(설계 §3.6 X-02): 운동 안내·쉬는 시간 모두 바로 멈춘다(다시 트는 것은 사용자가).
+     * 멈춘 동안 듣기가 켜져 119 되묻기에 말로 답할 수 있다.
+     */
+    fun pauseForSafety() {
+        when {
+            _ui.value.phase == RoutinePhase.REST && !_ui.value.restPaused -> _ui.update {
+                it.copy(
+                    restPaused = true,
+                    pauseSeq =
+                        it.pauseSeq + 1
+                )
+            }
+
+            player.state.value.isPlaying -> {
+                player.pause()
+                _ui.update { it.copy(pauseSeq = it.pauseSeq + 1) }
+            }
+
+            else -> Unit
+        }
+    }
+
     /** 사용자가 멈춤: 멈춘 동안 음성 명령을 듣는다(§6.4). TalkBack 꺼짐이면 할 수 있는 말을 알린다. */
     private fun pauseByUser() {
         player.pause()
@@ -824,6 +850,7 @@ private fun RoutinePlayerContent(
         ExerciseForegroundPolicy.keepScreenOnRoutine(ui.sessionActive, ui.phase == RoutinePhase.EXERCISE || ui.phase == RoutinePhase.REST)
     )
     val talkBack = rememberTalkBackEnabled()
+    AssistantScreen(ScreenCatalog.ROUTINE_PLAY, ScreenMode.PLAYBACK, onSafetyStop = viewModel::pauseForSafety)
     val appSettings = LocalAppSettingsAction.current
     val openSettings = appSettings?.let { open -> { viewModel.pauseForSettings().also { open() } } }
     val commands = rememberScreenCommands { viewModel.onVoice(it, openSettings) }

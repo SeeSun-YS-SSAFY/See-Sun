@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -22,6 +23,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
+import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,12 +37,15 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kr.seesun.app.gallery.ComponentGalleryScreen
 import kr.seesun.app.gallery.HighlightListGalleryScreen
+import kr.seesun.core.data.repository.ExerciseContentRepository
+import kr.seesun.core.data.repository.ProfileRepository
 import kr.seesun.core.data.repository.SessionRepository
 import kr.seesun.core.designsystem.component.LocalAppSettingsAction
 import kr.seesun.core.designsystem.component.LocalSettingsExtras
 import kr.seesun.core.designsystem.theme.SeeSunTheme
 import kr.seesun.core.feedback.Haptics
 import kr.seesun.core.ui.AutoListenEnvironment
+import kr.seesun.core.ui.LocalAssistant
 import kr.seesun.core.ui.LocalAutoListen
 import kr.seesun.core.ui.PermissionPrimerGate
 import kr.seesun.core.ui.VoiceMediaButtons
@@ -92,6 +97,16 @@ class MainActivity : ComponentActivity() {
     /** v7 관리자 모드(가운영 빌드만 실제 동작, Play·일반 빌드는 아무것도 하지 않는 구현). */
     @Inject lateinit var admin: AdminHooks
 
+    @Inject lateinit var profile: ProfileRepository
+
+    @Inject lateinit var exerciseContent: ExerciseContentRepository
+
+    @Inject lateinit var clock: Clock
+
+    /** 시선 비서(설계 voice_assistant_design_v1). 기기 시험이 받아쓴 말을 넣는 통로([AppAssistant.hearText])이기도 하다. */
+    lateinit var assistant: AppAssistant
+        private set
+
     /** 권한 안내 화면의 톱니바퀴: 안내를 닫은 뒤 설정을 연다(내비게이션 밖이라 요청 번호로 넘긴다). */
     private val settingsRequests = MutableStateFlow(0)
     private val settingsRequestFlow: StateFlow<Int> = settingsRequests.asStateFlow()
@@ -109,6 +124,7 @@ class MainActivity : ComponentActivity() {
             micIndicatorExplained = { voicePreferences.micIndicatorExplained },
             markMicIndicatorExplained = voicePreferences::markMicIndicatorExplained
         )
+        assistant = AppAssistant(this, speaker, voicePreferences, profile, exerciseContent, haptics, autoListen, session, clock)
         // 이어폰 버튼·TalkBack 두 손가락 두 번 탭으로 바로 듣기: 음성 화면이 앞에 있을 때만 미디어 세션을 켠다.
         val mediaButtons = VoiceMediaButtons(this, autoListen)
         lifecycleScope.launch {
@@ -127,7 +143,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SeeSunTheme {
                 // 처음 실행(또는 빠진 권한이 있는 기존 설치의 다음 실행) 때 온보딩보다 먼저 권한 안내 한 화면(msg 946).
-                ProvideAppChrome(speaker, speechInput, haptics, voicePreferences, autoListen) {
+                ProvideAppChrome(speaker, speechInput, haptics, voicePreferences, autoListen, assistant::onScreenTitle) {
                     PermissionPrimerGate(
                         speaker = speaker,
                         updateNotices = BuildConfig.SELF_UPDATE,
@@ -138,9 +154,10 @@ class MainActivity : ComponentActivity() {
                     ) {
                         CompositionLocalProvider(
                             LocalAutoListen provides autoListen,
-                            LocalSettingsExtras provides admin.settingsExtras
+                            LocalSettingsExtras provides admin.settingsExtras,
+                            LocalAssistant provides assistant
                         ) {
-                            SeeSunNavHost(session, appInfo(), settingsRequestFlow, admin)
+                            SeeSunNavHost(session, appInfo(), settingsRequestFlow, admin, assistant)
                         }
                     }
                 }
@@ -186,9 +203,17 @@ fun SeeSunNavHost(
     session: SessionRepository,
     appInfo: AppInfo = AppInfo(),
     settingsRequests: StateFlow<Int>? = null,
-    admin: AdminHooks? = null
+    admin: AdminHooks? = null,
+    assistant: AppAssistant? = null
 ) {
     val nav = rememberNavController()
+    // 시선 비서가 이 그래프로 데려간다(경로표 §5.1, 출발점 기억 §4.7).
+    if (assistant != null) {
+        DisposableEffect(assistant, nav) {
+            assistant.attach(nav)
+            onDispose { assistant.detach(nav) }
+        }
+    }
     val start: Any = remember { if (session.state.value.needsOnboarding) OnboardingRoute else MainRoute }
     SignedOutWatcher(session, nav)
     // 권한 안내 화면에서 톱니바퀴를 눌렀으면 안내가 닫힌 뒤 설정을 연다.
@@ -236,7 +261,7 @@ private fun SeeSunNavGraph(nav: NavHostController, start: Any, appInfo: AppInfo,
             onNavigate = { destination ->
                 when (destination) {
                     MainDestination.DIET -> nav.navigate(DietRoute)
-                    MainDestination.EXERCISE -> nav.navigate(ExerciseRoute)
+                    MainDestination.EXERCISE -> nav.navigate(ExerciseRoute())
                     MainDestination.MY_PAGE -> nav.navigate(MyPageRoute)
                     MainDestination.SETTINGS -> nav.navigate(SettingsRoute)
                     MainDestination.CONSENTS -> nav.navigate(ConsentManageRoute)

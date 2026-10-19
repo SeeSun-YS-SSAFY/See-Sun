@@ -72,4 +72,8 @@
     <string name="ui_mic_unavailable_hint">이 휴대폰에서 음성 인식을 쓸 수 없어요. 키보드와 버튼으로 입력해 주세요.</string>
     <string name="ui_mic_off_short">마이크 권한 꺼짐</string>
     <string name="ui_mic_unavailable_short">음성 인식 없음</string>
+    <!-- 시선 비서 결과 띠(설계 voice_assistant_design_v1 §4.5) -->
+    <string name="ui_assistant_strip">내 말: %1$s. 시선: %2$s</string>
+    <string name="ui_assistant_heard_only">내 말: %1$s</string>
+    <string name="ui_assistant_talk">시선에게 말하기</string>
 </resources>
