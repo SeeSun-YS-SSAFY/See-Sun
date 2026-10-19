@@ -26,9 +26,13 @@ import kr.seesun.core.voice.recognition.SpeechInput
 import kr.seesun.core.voice.settings.VoicePreferences
 import kr.seesun.core.voice.tts.Speaker
 
-/** 화면 틀 공통 동작: [화면 다시 듣기]·제목 기록·빈 곳 두 번 탭. */
-class AppScreenChrome(private val speaker: Speaker, private val env: AutoListenEnvironment) : ScreenChrome {
-    override fun onScreen(title: String) = ScreenSpeechLog.onScreen(title, now())
+/** 화면 틀 공통 동작: [화면 다시 듣기]·제목 기록·빈 곳 두 번 탭. [onTitle]: 시선 비서 「여기 어디야」가 표에 없는 화면의 제목을 쓴다. */
+class AppScreenChrome(private val speaker: Speaker, private val env: AutoListenEnvironment, private val onTitle: (String) -> Unit = {}) :
+    ScreenChrome {
+    override fun onScreen(title: String) {
+        ScreenSpeechLog.onScreen(title, now())
+        onTitle(title)
+    }
 
     override fun repeat(title: String, enteredAt: Long) {
         env.userActivity()
@@ -79,12 +83,13 @@ fun ProvideAppChrome(
     haptics: Haptics,
     prefs: VoicePreferences,
     env: AutoListenEnvironment,
+    onScreenTitle: (String) -> Unit = {},
     content: @Composable () -> Unit
 ) {
     val talkBack = rememberTalkBackEnabled()
     val voiceMode by prefs.appVoice.collectAsStateWithLifecycle()
     val pressMode by prefs.pressFeedback.collectAsStateWithLifecycle()
-    val chrome = remember(speaker, env) { AppScreenChrome(speaker, env) }
+    val chrome = remember(speaker, env) { AppScreenChrome(speaker, env, onScreenTitle) }
     val press = remember(talkBack, pressMode) { AppPressFeedback(speaker, haptics, env, talkBack, pressMode) }
     CompositionLocalProvider(
         LocalScreenChrome provides chrome,

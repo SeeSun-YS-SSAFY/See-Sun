@@ -11,6 +11,8 @@ android {
 dependencies {
     api(project(":core:designsystem"))
     api(project(":core:voice"))
+    // 시선 비서(규칙 엔진·대화 상태). 화면 쪽 입구(결과 띠·화면 등록)는 이 모듈의 Assistant.kt
+    api(project(":core:assistant"))
     api(project(":core:a11y"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

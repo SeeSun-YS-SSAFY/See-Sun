@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -67,6 +68,7 @@ fun VoiceInputField(
     // 음성 자동 인식: 안내(진입·되읽기 질문)가 끝나면 저절로 듣는다. 새 질문(되읽기 값·다시 듣기)마다 한도를 새로 받는다.
     val press = rememberDirectStart(gate.request)
     VoiceTriggers(Triple(controller, state.pending, state.repeatCount), talkBackEnabled, speak, controller::listenAuto, press)
+    LinkAssistantField(controller)
     val mic = displayedMic(state.mic)
     val focus = remember { FocusRequester() }
     LaunchedEffect(state.inputState) {
@@ -114,6 +116,7 @@ fun VoiceInputField(
                 editButtonText = stringResource(R.string.ui_keyboard_input)
             )
         }
+        AssistantResultStrip(controller)
         MicPermissionRationale(gate)
         val error = state.error?.let { errorMessage(it, hint) }.orEmpty()
         val suggestion = if (state.suggestKeyboard) stringResource(R.string.ui_suggest_keyboard) else ""
@@ -138,4 +141,15 @@ private fun errorMessage(error: FieldError, hint: String): String = when (error)
     is FieldError.Recognition -> error.error.message
 
     FieldError.PermissionDenied -> stringResource(R.string.ui_mic_permission_denied)
+}
+
+/** 값 입력 칸을 시선 비서에 잇는다: 값보다 먼저 안전·「시선아」·「처음으로/그만/취소」만 본다(R2). */
+@Composable
+private fun LinkAssistantField(controller: VoiceFieldController) {
+    val host = LocalAssistant.current
+    DisposableEffect(controller, host) {
+        val hook: ((List<String>) -> Boolean)? = host?.let { h -> { c -> h.before(c, controller, valueCapture = true) } }
+        controller.interceptor = hook
+        onDispose { if (controller.interceptor === hook) controller.interceptor = null }
+    }
 }

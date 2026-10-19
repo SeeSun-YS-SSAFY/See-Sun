@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kr.seesun.core.a11y.rememberTalkBackEnabled
+import kr.seesun.core.assistant.IntentId
 import kr.seesun.core.data.repository.ConsentRepository
 import kr.seesun.core.data.repository.HealthRepository
 import kr.seesun.core.data.repository.ProfileRepository
@@ -220,14 +221,14 @@ fun MyPageScreen(
             // 말로 고르기(흐름 문서 P0-4).
             VoiceMenuButton(
                 options = listOf(
-                    VoiceMenuOption(listOf("내 정보", "정보 수정", "프로필")) { onEditProfile() },
-                    VoiceMenuOption(listOf("건강")) { onEditHealth() },
-                    VoiceMenuOption(listOf("운동 기록", "운동")) { onOpenExerciseReport() },
-                    VoiceMenuOption(listOf("식단 기록", "식단")) {
+                    VoiceMenuOption(listOf("내 정보", "정보 수정", "프로필"), IntentId.PROFILE_EDIT) { onEditProfile() },
+                    VoiceMenuOption(listOf("건강"), IntentId.HEALTH_EDIT) { onEditHealth() },
+                    VoiceMenuOption(listOf("운동 기록", "운동"), IntentId.EXERCISE_WEEKLY) { onOpenExerciseReport() },
+                    VoiceMenuOption(listOf("식단 기록", "식단"), IntentId.DIET_HOME) {
                         notice = if (notice == dietSoon) dietSoon + ZERO_WIDTH else dietSoon
                         speak(dietSoon)
                     },
-                    VoiceMenuOption(listOf("설정")) { onOpenSettings() }
+                    VoiceMenuOption(listOf("설정"), IntentId.SETTINGS) { onOpenSettings() }
                 ),
                 hint = stringResource(R.string.my_voice_hint)
             )
@@ -468,10 +469,16 @@ class ProfileEditViewModel @Inject constructor(
     val weightField =
         field({ t -> ProfileParsers.weightKg(t)?.roundToInt()?.takeIf { it in WEIGHT_RANGE }?.toString() }, ProfileField.WEIGHT)
 
-    fun load() {
+    /**
+     * @param prefill 시선 비서가 연 항목·값(N-08·A-01). 값이 있으면 그 값으로 되읽기 확인을 띄운다 — 저장은 [확인]을 받은 뒤에만.
+     */
+    fun load(prefill: Pair<ProfileField, String?>? = null) {
         viewModelScope.launch {
             when (val r = profile.me()) {
-                is ApiResult.Success -> _state.update { it.copy(me = r.data, loading = false) }
+                is ApiResult.Success -> {
+                    _state.update { it.copy(me = r.data, loading = false) }
+                    prefill?.let { (field, value) -> openPrefilled(field, value) }
+                }
 
                 is ApiResult.Failure -> _state.update {
                     it.copy(
@@ -494,6 +501,18 @@ class ProfileEditViewModel @Inject constructor(
             ProfileField.HEIGHT -> heightField.setValue(me.heightCm?.toString())
             ProfileField.WEIGHT -> weightField.setValue(me.weightKg?.toString())
             ProfileField.GENDER -> Unit
+        }
+    }
+
+    private fun openPrefilled(field: ProfileField, value: String?) {
+        startEdit(field)
+        if (value == null) return
+        when (field) {
+            ProfileField.HEIGHT -> heightField.propose(value)
+            ProfileField.WEIGHT -> weightField.propose(value)
+            ProfileField.NAME -> nameField.propose(value)
+            ProfileField.BIRTHDATE -> birthField.propose(value)
+            ProfileField.GENDER -> false
         }
     }
 
@@ -545,9 +564,9 @@ class ProfileEditViewModel @Inject constructor(
 }
 
 @Composable
-fun ProfileEditRoute(onBack: () -> Unit, viewModel: ProfileEditViewModel = hiltViewModel()) {
+fun ProfileEditRoute(onBack: () -> Unit, viewModel: ProfileEditViewModel = hiltViewModel(), prefill: Pair<ProfileField, String?>? = null) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(viewModel) { viewModel.load() }
+    LaunchedEffect(viewModel) { viewModel.load(prefill) }
     BackHandler(enabled = state.editing != null) { viewModel.cancelEdit() }
     val talkBack = rememberTalkBackEnabled()
     ProfileEditScreen(state, viewModel, onBack, talkBack)

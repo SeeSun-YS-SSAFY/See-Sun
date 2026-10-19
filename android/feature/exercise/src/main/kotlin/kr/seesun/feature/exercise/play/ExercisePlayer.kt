@@ -27,6 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kr.seesun.core.a11y.LiveAnnouncement
 import kr.seesun.core.a11y.rememberTalkBackEnabled
+import kr.seesun.core.assistant.ScreenCatalog
+import kr.seesun.core.assistant.ScreenMode
 import kr.seesun.core.data.model.ExerciseDetail
 import kr.seesun.core.data.model.ExerciseSummary
 import kr.seesun.core.data.repository.ExerciseContentRepository
@@ -44,6 +46,7 @@ import kr.seesun.core.designsystem.theme.LayoutTier
 import kr.seesun.core.designsystem.theme.LocalLayoutTier
 import kr.seesun.core.feedback.ExerciseCue
 import kr.seesun.core.network.ApiResult
+import kr.seesun.core.ui.AssistantScreen
 import kr.seesun.core.ui.GuidanceVoice
 import kr.seesun.core.ui.LocalSpeechInput
 import kr.seesun.core.ui.LocalVoiceMediaButtons
@@ -262,6 +265,16 @@ class ExercisePlayerViewModel @Inject constructor(
         beginSession(detail)
         recorder.resumeKeepAlive()
         player.play()
+    }
+
+    /**
+     * 시선 비서가 안전 표현(「가슴이 아파」「어지러워」)을 들었다(설계 §3.6 X-02): 재생 중이면 바로 멈춘다. 다시 트는 것은 사용자가.
+     * 멈춘 동안 듣기가 켜져 119 되묻기에 말로 답할 수 있다(멈춤 안내는 하지 않는다 — 비서의 안전 문구가 먼저).
+     */
+    fun pauseForSafety() {
+        if (!player.state.value.isPlaying) return
+        player.pause()
+        _ui.update { it.copy(pauseSeq = it.pauseSeq + 1) }
     }
 
     /** 사용자가 멈춤: 멈춘 동안 음성 명령을 듣는다(재생 중에는 듣지 않음, §6.4). TalkBack 꺼짐이면 할 수 있는 말을 알린다. */
@@ -554,6 +567,7 @@ private fun ExercisePlayerContent(viewModel: ExercisePlayerViewModel, onClose: (
     LaunchedEffect(ui.closeRequested) { if (ui.closeRequested) onClose() }
     KeepScreenOn(ExerciseForegroundPolicy.keepScreenOnSingle(ui.sessionActive, ui.result != null, guide.status == GuideStatus.FINISHED))
     val talkBack = rememberTalkBackEnabled()
+    AssistantScreen(ScreenCatalog.EXERCISE_PLAY, ScreenMode.PLAYBACK, onSafetyStop = viewModel::pauseForSafety)
     // 설정은 [⋯] 안으로(재생 화면 머리줄 톱니 자리 = [⋯]). 재생을 먼저 멈춘 뒤 연다. 이 화면의 이어폰 버튼은 운동 재생/일시정지다.
     val appSettings = LocalAppSettingsAction.current
     val openSettings = appSettings?.let { open -> { viewModel.pauseForSettings().also { open() } } }

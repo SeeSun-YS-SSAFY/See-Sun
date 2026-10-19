@@ -5,6 +5,8 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import kr.seesun.core.assistant.ScreenCatalog
+import kr.seesun.core.ui.AssistantScreen
 
 /** MY-01 마이페이지 */
 @Serializable
@@ -13,6 +15,13 @@ data object MyPageRoute
 /** MY-02 내 정보 수정(이름·생년월일·성별·키·몸무게) */
 @Serializable
 data object ProfileEditRoute
+
+/**
+ * 시선 비서 N-08·A-01: 내 정보 수정을 [field] 항목([ProfileField] 이름)부터 연다. [value]가 있으면 그 값의 되읽기 확인을 띄운다 —
+ * 저장은 화면의 [확인](또는 「네」)을 받은 뒤에만(설계 §3.1 원칙).
+ */
+@Serializable
+data class ProfileValueRoute(val field: String, val value: String? = null)
 
 /** MY-02 건강 정보 수정(질환·알레르기·기타·목표) */
 @Serializable
@@ -111,6 +120,7 @@ fun NavGraphBuilder.myPageGraph(
 ) {
     val back: () -> Unit = { nav.popBackStack() }
     composable<MyPageRoute> {
+        AssistantScreen(ScreenCatalog.MY_PAGE)
         MyPageRoute(
             onBack = back,
             onEditProfile = { nav.navigate(ProfileEditRoute) },
@@ -119,9 +129,21 @@ fun NavGraphBuilder.myPageGraph(
             onOpenExerciseReport = onOpenExerciseReport
         )
     }
-    composable<ProfileEditRoute> { ProfileEditRoute(onBack = back) }
-    composable<HealthEditRoute> { HealthEditRoute(onBack = back, onOpenConsents = { nav.navigate(ConsentManageRoute) }) }
+    composable<ProfileEditRoute> {
+        AssistantScreen(ScreenCatalog.PROFILE_EDIT)
+        ProfileEditRoute(onBack = back)
+    }
+    composable<ProfileValueRoute> { entry ->
+        val route = entry.toRoute<ProfileValueRoute>()
+        AssistantScreen(ScreenCatalog.PROFILE_EDIT)
+        ProfileEditRoute(onBack = back, prefill = ProfileField.entries.firstOrNull { it.name == route.field }?.let { it to route.value })
+    }
+    composable<HealthEditRoute> {
+        AssistantScreen(ScreenCatalog.HEALTH_EDIT)
+        HealthEditRoute(onBack = back, onOpenConsents = { nav.navigate(ConsentManageRoute) })
+    }
     composable<SettingsRoute> {
+        AssistantScreen(ScreenCatalog.SETTINGS)
         SettingsRoute(
             onBack = back,
             onOpen = { destination -> nav.navigate(destination) },

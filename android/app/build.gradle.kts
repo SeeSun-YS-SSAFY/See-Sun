@@ -116,6 +116,7 @@ dependencies {
     implementation(project(":core:feedback"))
     implementation(project(":core:voice"))
     implementation(project(":core:ui"))
+    implementation(project(":core:assistant"))
     implementation(project(":core:auth"))
     implementation(project(":core:network"))
     implementation(project(":core:data"))

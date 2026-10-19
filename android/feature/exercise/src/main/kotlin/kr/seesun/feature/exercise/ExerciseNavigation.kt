@@ -10,6 +10,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import kr.seesun.core.assistant.ScreenCatalog
+import kr.seesun.core.ui.AssistantScreen
 import kr.seesun.feature.exercise.home.ExerciseHomeRoute
 import kr.seesun.feature.exercise.home.HomeDestination
 import kr.seesun.feature.exercise.home.RoutineMenuRoute
@@ -27,12 +29,44 @@ import kr.seesun.feature.exercise.weekly.WeeklyRoute
 /**
  * 앱 내비게이션에 붙는 운동 기능 진입점(EX-01). 운동 안의 화면 이동은 [ExerciseNavHost]가 따로 맡아서
  * 앱 그래프에는 이 경로 하나만 둔다(다른 기능 작업과 내비게이션 파일이 겹치지 않게).
+ *
+ * 시선 비서(설계 voice_assistant_design_v1 §4.7)가 운동 안 화면으로 바로 데려갈 때는 [entry]로 처음 열 화면을 고른다.
+ * 안쪽 뒤로가 비면 [exerciseScreen]의 onBack → 말하기 전 화면.
+ * @param entry [kr.seesun.core.assistant.ExerciseEntry] 이름(HOME·CATEGORY·PLAY·ROUTINE_*·WEEKLY·SAFETY·SINGLE)
+ * @param arg CATEGORY·ROUTINE_RECOMMENDED·ROUTINE_CATEGORY = 카테고리 ID, PLAY = 운동 ID
+ * @param title 목록·루틴 제목
  */
 @Serializable
-data object ExerciseRoute
+data class ExerciseRoute(val entry: String = "HOME", val arg: String? = null, val title: String? = null)
 
 fun NavGraphBuilder.exerciseScreen(onBack: () -> Unit) {
-    composable<ExerciseRoute> { ExerciseNavHost(onExit = onBack) }
+    composable<ExerciseRoute> { e -> ExerciseNavHost(onExit = onBack, start = e.toRoute<ExerciseRoute>().startDestination()) }
+}
+
+/** [ExerciseRoute.entry] → 안쪽 그래프의 첫 화면. 인자가 빠졌으면 운동 홈. 분기가 곧 경로표다. */
+@Suppress("CyclomaticComplexMethod")
+internal fun ExerciseRoute.startDestination(): Any = when (entry) {
+    "SINGLE" -> SingleMenuRoute
+
+    "CATEGORY" -> arg?.let { ExerciseListRoute(it, title ?: "운동 목록") } ?: ExerciseHomeRoute
+
+    "PLAY" -> arg?.let { ExercisePlayRoute(it) } ?: ExerciseHomeRoute
+
+    "ROUTINE_MENU" -> RoutineMenuRoute
+
+    "ROUTINE_RECOMMENDED" -> arg?.let { RoutinePlayRoute(title ?: "추천 루틴", categoryId = it, origin = RoutineOrigin.HOME.name) }
+        ?: RoutineMenuRoute
+
+    "ROUTINE_CATEGORY" -> arg?.let { RoutinePlayRoute(title ?: "루틴", categoryId = it, origin = RoutineOrigin.MENU.name) }
+        ?: RoutineMenuRoute
+
+    "ROUTINE_CUSTOM" -> CustomRoutineListRoute
+
+    "WEEKLY" -> ExerciseWeeklyRoute
+
+    "SAFETY" -> ExerciseSafetyRoute
+
+    else -> ExerciseHomeRoute
 }
 
 /** 마이페이지 [운동](EX-07)에서 주간 운동 기록부터 열 때 쓰는 진입점. 앱 그래프에 [exerciseWeeklyScreen]으로 붙인다. */
@@ -84,7 +118,12 @@ data object ExerciseSafetyRoute
  * RESUMED가 늦게 와서 첫 탭이 무시되는 문제가 있었다(실기동 QA에서 발견).
  */
 @Composable
-fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: NavHostController = rememberNavController()) {
+fun ExerciseNavHost(
+    onExit: () -> Unit,
+    startAtWeekly: Boolean = false,
+    nav: NavHostController = rememberNavController(),
+    start: Any = if (startAtWeekly) ExerciseWeeklyRoute else ExerciseHomeRoute
+) {
     fun NavBackStackEntry.whenResumed(block: () -> Unit) {
         if (nav.currentBackStackEntry?.id == id) block()
     }
@@ -93,8 +132,9 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
         if (!popBackStack()) onExit()
     }
 
-    NavHost(navController = nav, startDestination = if (startAtWeekly) ExerciseWeeklyRoute else ExerciseHomeRoute) {
+    NavHost(navController = nav, startDestination = start) {
         composable<ExerciseHomeRoute> { entry ->
+            AssistantScreen(ScreenCatalog.EXERCISE_HOME)
             ExerciseHomeRoute(
                 viewModel = hiltViewModel(),
                 onBack = { entry.whenResumed(onExit) },
@@ -121,6 +161,7 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             )
         }
         composable<SingleMenuRoute> { entry ->
+            AssistantScreen(ScreenCatalog.EXERCISE_SINGLE)
             SingleMenuRoute(
                 viewModel = hiltViewModel(),
                 onBack = { nav.up(entry, onExit) },
@@ -128,6 +169,7 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             )
         }
         composable<ExerciseListRoute> { entry ->
+            AssistantScreen(ScreenCatalog.EXERCISE_LIST, title = entry.toRoute<ExerciseListRoute>().title)
             ExerciseListScreenRoute(
                 viewModel = hiltViewModel(),
                 onBack = { nav.up(entry, onExit) },
@@ -138,6 +180,7 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             ExercisePlayerRoute(viewModel = hiltViewModel(), safety = hiltViewModel(), onClose = { nav.up(entry, onExit) })
         }
         composable<RoutineMenuRoute> { entry ->
+            AssistantScreen(ScreenCatalog.ROUTINE_MENU)
             RoutineMenuRoute(
                 viewModel = hiltViewModel(),
                 onBack = { nav.up(entry, onExit) },
@@ -189,9 +232,11 @@ fun ExerciseNavHost(onExit: () -> Unit, startAtWeekly: Boolean = false, nav: Nav
             )
         }
         composable<ExerciseSafetyRoute> { entry ->
+            AssistantScreen(ScreenCatalog.EXERCISE_SAFETY)
             SafetyReviewRoute(viewModel = hiltViewModel(), onClose = { nav.up(entry, onExit) })
         }
         composable<ExerciseWeeklyRoute> { entry ->
+            AssistantScreen(ScreenCatalog.EXERCISE_WEEKLY)
             WeeklyRoute(viewModel = hiltViewModel(), onBack = { nav.up(entry, onExit) })
         }
     }

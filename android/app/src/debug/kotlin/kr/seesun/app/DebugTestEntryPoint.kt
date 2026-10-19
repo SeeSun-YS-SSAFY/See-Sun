@@ -6,6 +6,7 @@ import dagger.hilt.components.SingletonComponent
 import kr.seesun.core.auth.AuthProvider
 import kr.seesun.core.auth.TokenStore
 import kr.seesun.core.data.repository.SessionFlags
+import kr.seesun.core.data.repository.SessionRepository
 import kr.seesun.core.data.repository.UnsentRecords
 
 /**
@@ -23,6 +24,9 @@ interface DebugTestEntryPoint {
 
     /** 기기에 남은 보내지 못한 기록(식사 + 운동). 로그아웃·탈퇴 뒤 0인지, 운동 기록이 서버로 갔는지 확인한다. */
     fun unsentRecords(): UnsentRecords
+
+    /** 로그인 상태(토큰·가입 표시를 합친 흐름). 심은 세션이 반영될 때까지 기다리는 데 쓴다(시선 비서 기기 시험). */
+    fun session(): SessionRepository
 
     /** debug는 FakeAuthProvider. QA가 SMS 자동 입력을 끄고 인증번호 직접 입력·오류 경로를 시험한다. */
     fun authProvider(): AuthProvider
