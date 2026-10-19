@@ -90,7 +90,7 @@ import kr.seesun.feature.exercise.ui.ScriptLine
 fun guideProgress(state: GuideState): Float {
     if (state.sections.isEmpty()) return 0f
     if (state.status == GuideStatus.FINISHED) return 1f
-    val counts = state.sections.map { ScriptTimeline.split(it.text).size.coerceAtLeast(1) }
+    val counts = sentenceCounts(state)
     val section = state.sectionIndex.coerceIn(0, counts.lastIndex)
     val done = counts.take(section).sum() + state.sentenceIndex.coerceIn(0, counts[section] - 1)
     return (done.toFloat() / counts.sum()).coerceIn(0f, 1f)
@@ -557,7 +557,8 @@ internal fun RoundButton(
  *   상태 설명 「구간 2/5 준비 자세, 40퍼센트」. 재생 중 값이 저절로 바뀌어도 liveRegion이 없어 초점이 있을 때만 읽는다.
  * - 손가락 하나: 막대 아무 곳이나 한 번 누르면 그 자리로(WCAG 2.5.7 끌기 대안). 손잡이를 끌면 **놓을 때만** 이동(소리가 튀지 않게).
  * - 버튼 대안(의뢰서 A8): [⋯]의 [이전 구간][다음 구간]과 이 슬라이더·재생 버튼의 TalkBack 작업. 제스처만으로 되는 기능은 없다.
- * - 터치 높이 48dp(막대 22dp + 위아래 여백), 손잡이 36dp. 아래 「구간 1 … 5」 눈금 글자(14sp, 장식 — 같은 내용을 상태 설명이 읽음).
+ * - 터치 높이 48dp(막대 22dp + 위아래 여백), 손잡이 36dp. 아래 「구간 1 … 5」 눈금 글자(14sp, 장식 — 같은 내용을 상태 설명이 읽음)는
+ *   구간이 실제로 시작하는 자리에 둔다(v1.9.1).
  */
 @Composable
 fun GuideSlider(
@@ -646,20 +647,36 @@ fun GuideSlider(
                 )
             }
         }
-        SectionTicks(spec.sectionCount)
+        SectionTicks(spec.starts)
     }
 }
 
-/** 슬라이더 아래 「구간 1 … 5」(장식, 낭독은 슬라이더 상태 설명). 구간이 많으면 처음과 끝만. */
+/**
+ * 슬라이더 아래 「구간 1 … 5」(장식, 낭독은 슬라이더 상태 설명). 글자마다 그 구간이 **실제로 시작하는 자리**([tickPositions])에 둔다 —
+ * 채움이 문장 수로 차므로 같은 간격으로 두면 글자와 손잡이가 어긋났다(v1.9.1). 글자끼리 겹치면 가운데 글자부터 뺀다.
+ */
 @Composable
-private fun SectionTicks(count: Int) {
-    if (count < 2) return
-    val labels = if (count <= MAX_TICKS) (1..count).map { if (it == 1) "구간 1" else "$it" } else listOf("구간 1", "$count")
-    Row(
-        Modifier.fillMaxWidth().clearAndSetSemantics { },
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        labels.forEach { Text(it, style = tickText, color = SeeSunTheme.colors.onBackground) }
+private fun SectionTicks(starts: List<Float>) {
+    if (starts.size < 2) return
+    val density = LocalDensity.current
+    val thumb = with(density) { SLIDER_THUMB.roundToPx() }
+    val gap = with(density) { TICK_GAP.roundToPx() }
+    val color = SeeSunTheme.colors.onBackground
+    val style = tickText
+    Layout(
+        content = {
+            starts.indices.forEach { i ->
+                Text(if (i == 0) "구간 1" else "${i + 1}", style = style, color = color, maxLines = 1, softWrap = false)
+            }
+        },
+        modifier = Modifier.fillMaxWidth().clearAndSetSemantics { }
+    ) { measurables, constraints ->
+        val placeables = measurables.map { it.measure(Constraints(maxWidth = constraints.maxWidth)) }
+        val width = constraints.maxWidth
+        val xs = tickPositions(starts, placeables.map { it.width }, width, thumb, gap)
+        layout(width, placeables.maxOf { it.height }) {
+            placeables.forEachIndexed { i, p -> xs.getOrNull(i)?.let { x -> p.placeRelative(x, 0) } }
+        }
     }
 }
 
@@ -687,7 +704,9 @@ private val SLIDER_TOUCH = 48.dp
 private val SLIDER_BAR = 22.dp
 private val SLIDER_THUMB = 36.dp
 private const val THUMB_SHADOW = 0.35f
-private const val MAX_TICKS = 7
+
+/** 눈금 글자 사이 최소 간격. */
+private val TICK_GAP = 8.dp
 private const val SENTENCE_LINES = 3
 
 /** 원 안 글자(「1배」·「T」, 24sp). */

@@ -7,9 +7,12 @@ import android.util.Log
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasSetTextAction
+import androidx.compose.ui.test.hasStateDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -24,7 +27,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kr.seesun.core.designsystem.component.LayoutTags
+import kr.seesun.core.designsystem.component.MORE_MENU_TAG
 import kr.seesun.core.uitest.recordLayout
+import kr.seesun.feature.exercise.play.PLAY_TAG
 import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -115,7 +121,9 @@ abstract class RealServerTestBase {
     protected fun waitText(text: String, timeout: Long = TIMEOUT) = rule.waitUntil(timeout) { textExists(text) }
 
     protected fun click(text: String) {
-        val matcher = (hasText(text) or hasContentDescription(text, substring = true)) and hasClickAction()
+        // v1.9 [⋯ 더 보기]는 TalkBack 이름에 안의 기능 이름(「루틴 운동」「다음 구간」…)을 함께 읽으므로 글자로 누를 때는 빼고 찾는다.
+        // [⋯] 안의 버튼은 [more]로 누른다.
+        val matcher = (hasText(text) or hasContentDescription(text, substring = true)) and hasClickAction() and !hasTestTag(LayoutTags.MORE)
         rule.waitUntil(TIMEOUT) { has(matcher) }
         val node = rule.onAllNodes(matcher)[0]
         runCatching { node.performScrollTo() } // 대화상자 버튼은 스크롤 영역 밖
@@ -147,11 +155,64 @@ abstract class RealServerTestBase {
 
     /** 이 사용자의 첫 운동이면 안전 안내(T-08)가 먼저 나온다: 7문항 모두 "아니요"로 마친다. */
     protected fun passSafetyIfAsked() {
-        rule.waitUntil(TIMEOUT) { textExists("건강 확인 시작") || textExists("상태: ") || textExists("운동 순서") }
+        // v1.9: 재생 화면은 「상태: …」 줄 대신 가운데 재생 버튼으로 알아본다.
+        rule.waitUntil(TIMEOUT) { textExists("건강 확인 시작") || inPlayer() || textExists("운동 순서") }
         if (!textExists("건강 확인 시작")) return
         click("건강 확인 시작")
         repeat(SAFETY_QUESTIONS) { click("아니요") }
         click("확인하고 운동하기")
+    }
+
+    // ── v1.9 재생 화면·[⋯ 더 보기] 도우미 ───────────────────────────
+
+    /** v1.9: 재생 상태는 가운데 재생 버튼의 상태 설명으로 읽는다(「상태: 재생 중」 줄은 없앰, ExerciseFlowTest와 같은 신호). */
+    protected fun playState(state: String) = has(hasTestTag(PLAY_TAG) and hasStateDescription(state))
+
+    protected fun isPlaying() = playState(PLAYING)
+
+    /** 재생 화면(한 가지 운동·루틴 운동 단계)이 떠 있는가. */
+    protected fun inPlayer() = has(hasTestTag(PLAY_TAG))
+
+    protected fun waitPlaying(timeout: Long = LONG_TIMEOUT) = rule.waitUntil(timeout) { isPlaying() }
+
+    /**
+     * 머리줄 [⋯ 더 보기]를 열고 목록의 [label] 버튼을 누른다(v1.9: 운동 첫 화면·재생 화면에서 숨긴 기능은 모두 이 목록에).
+     * 목록에 [label]이 없으면 [닫기]로 닫고 실패한다(열린 목록이 다음 단계를 가리지 않게).
+     */
+    protected fun more(label: String) {
+        val button = hasTestTag(LayoutTags.MORE) and hasClickAction()
+        rule.waitUntil(TIMEOUT) { has(button) }
+        rule.onAllNodes(button)[0].performClick()
+        rule.waitForIdle()
+        val item = hasText(label) and hasClickAction() and hasAnyAncestor(hasTestTag(MORE_MENU_TAG))
+        val found = runCatching { rule.waitUntil(MENU_TIMEOUT) { has(item) } }
+        if (found.isFailure) {
+            runCatching { click("닫기") }
+            throw AssertionError("[⋯ 더 보기]에 「$label」 없음", found.exceptionOrNull())
+        }
+        val node = rule.onAllNodes(item)[0]
+        runCatching { node.performScrollTo() } // 글꼴을 키우면 목록이 스크롤된다
+        node.performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * v1.9 한 가지 운동: 보이던 [운동 마치기]가 없어져 안내가 끝나야 [기록하고 끝내기] 화면이 나온다.
+     * [⋯]의 [다음 구간]으로 마지막 구간까지 넘겨 그 화면을 연다(다른 앱에서 돌아와 「이어서 시작」이 보이면 먼저 누른다).
+     */
+    protected fun skipToGuideEnd() {
+        repeat(MAX_SEGMENTS) {
+            if (textExists(GUIDE_END)) return
+            if (has(hasText("이어서 시작") and hasClickAction())) click("이어서 시작")
+            runCatching { more("다음 구간") }
+        }
+        waitText(GUIDE_END)
+    }
+
+    /** v1.9 [운동 마치기] 대신: 안내 끝 화면의 [기록하고 끝내기](완료로 저장 → 「…운동을 기록했어요」 + [목록으로]). */
+    protected fun finishSingle() {
+        skipToGuideEnd()
+        click("기록하고 끝내기")
     }
 
     protected fun back() {
@@ -252,5 +313,13 @@ abstract class RealServerTestBase {
         const val REASON_MAX = 400
         const val CODE_GRACE_MS = 1_500L
         const val SAFETY_QUESTIONS = 7
+
+        /** v1.9 운동 첫 화면 제목(전에는 「운동」). */
+        const val EXERCISE_HOME = "운동 방식"
+        const val PLAYING = "재생 중"
+        const val READY = "준비됨"
+        const val GUIDE_END = "안내가 끝났어요"
+        const val MENU_TIMEOUT = 5_000L
+        const val MAX_SEGMENTS = 12
     }
 }

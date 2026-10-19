@@ -301,7 +301,9 @@ data class SliderSpec(
     val label: String,
     val state: String,
     val rangeEnd: Float,
-    val steps: Int
+    val steps: Int,
+    /** 구간마다 시작하는 채움 비율(0~1, [fraction]과 같은 문장 눈금). 아래 「구간 1 … n」 글자를 이 자리에 둔다(v1.9.1). */
+    val starts: List<Float> = emptyList()
 )
 
 fun sliderSpec(state: GuideState): SliderSpec {
@@ -316,8 +318,56 @@ fun sliderSpec(state: GuideState): SliderSpec {
         label = SLIDER_LABEL,
         state = if (count == 0) "${progressPercent(fraction)}퍼센트" else "구간 ${index + 1}/$count$title, ${progressPercent(fraction)}퍼센트",
         rangeEnd = (count - 1).coerceAtLeast(1).toFloat(),
-        steps = (count - 2).coerceAtLeast(0)
+        steps = (count - 2).coerceAtLeast(0),
+        starts = sectionStarts(state)
     )
+}
+
+/** 구간마다 대본 문장 수(빈 구간도 1). 진행 채움([guideProgress])·누른 자리([positionAt])·눈금([sectionStarts])이 같은 눈금을 쓴다. */
+internal fun sentenceCounts(state: GuideState): List<Int> = state.sections.map { ScriptTimeline.split(it.text).size.coerceAtLeast(1) }
+
+/**
+ * 구간마다 시작하는 채움 비율(첫 구간 0). 채움은 문장 수로 차므로 구간 길이가 다르면 시작 자리도 고르지 않다 —
+ * 예전에는 눈금 글자만 같은 간격이라 「구간 5/5」인데 손잡이가 4 근처에 있었다(v1.9.1).
+ * 이 비율로 막대를 누르면([positionAt]) 그 구간의 첫 문장으로 간다.
+ */
+fun sectionStarts(state: GuideState): List<Float> {
+    val counts = sentenceCounts(state)
+    val total = counts.sum()
+    if (total == 0) return emptyList()
+    var before = 0
+    return counts.map { n -> (before.toFloat() / total).also { before += n } }
+}
+
+/**
+ * 눈금 글자의 왼쪽 자리(px). 글자 가운데를 그 구간이 시작할 때의 손잡이 가운데(thumb/2 + (width − thumb) × 시작 비율)에 맞추고
+ * 막대 밖으로 나가지 않게 당긴다. 이웃 글자와 [gap]보다 가까우면 그 글자는 그리지 않는다(null) — 처음(「구간 1」)과 마지막 구간 글자를 먼저 남기고
+ * 가운데 글자를 뺀다. 처음과 마지막끼리 겹칠 때(아주 좁은 막대)만 마지막 것 하나를 남긴다.
+ * 글자는 장식이다(같은 내용을 슬라이더 상태 설명이 읽는다).
+ */
+fun tickPositions(starts: List<Float>, widths: List<Int>, width: Int, thumb: Int, gap: Int): List<Int?> {
+    if (starts.isEmpty() || starts.size != widths.size) return emptyList()
+    val track = (width - thumb).coerceAtLeast(0)
+    val desired = starts.indices.map { i ->
+        val center = thumb / 2f + track * starts[i].coerceIn(0f, 1f)
+        (center - widths[i] / 2f).roundToInt().coerceIn(0, (width - widths[i]).coerceAtLeast(0))
+    }
+    val result = MutableList<Int?>(starts.size) { null }
+    val last = starts.lastIndex
+    result[last] = desired[last]
+    var right = Int.MIN_VALUE / 2
+    for (i in 0 until last) {
+        val x = desired[i]
+        val fitsLeft = i == 0 || x >= right + gap
+        val fitsRight = x + widths[i] + gap <= desired[last]
+        if (fitsLeft && (fitsRight || i == 0)) {
+            result[i] = x
+            right = x + widths[i]
+        }
+    }
+    // 첫 글자와 마지막 글자가 겹치면(구간 2개가 아주 좁은 막대에) 마지막 것만 남긴다.
+    if (last > 0 && result[0] != null && desired[0] + widths[0] + gap > desired[last]) result[0] = null
+    return result
 }
 
 /** TalkBack이 슬라이더 값을 바꿨을 때(위아래로 쓸기 = 한 단계): 갈 구간. */
@@ -329,7 +379,7 @@ fun sliderTargetSection(value: Float, sectionCount: Int): Int = value.roundToInt
  */
 fun positionAt(state: GuideState, fraction: Float): Pair<Int, Int> {
     if (state.sections.isEmpty()) return 0 to 0
-    val counts = state.sections.map { ScriptTimeline.split(it.text).size.coerceAtLeast(1) }
+    val counts = sentenceCounts(state)
     val total = counts.sum()
     var target = (fraction.coerceIn(0f, 1f) * total).toInt().coerceAtMost(total - 1)
     counts.forEachIndexed { s, n ->

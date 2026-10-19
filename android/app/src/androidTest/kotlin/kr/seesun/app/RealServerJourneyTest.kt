@@ -160,10 +160,10 @@ class RealServerJourneyTest : RealServerTestBase() {
         launch()
         waitPane("메인")
         click("운동")
-        waitPane("운동")
+        waitPane(EXERCISE_HOME)
         shot("20_운동_첫화면")
 
-        click("한 가지 운동")
+        more("전체 운동·즐겨찾기") // v1.9: [한 가지 운동]은 [⋯ 더 보기]의 「전체 운동·즐겨찾기」로
         waitPane("한 가지 운동")
         click("전체 운동")
         waitText("전체 29개")
@@ -180,10 +180,10 @@ class RealServerJourneyTest : RealServerTestBase() {
         shot("23_안전안내_건강확인_결과")
         click("확인하고 운동하기")
 
-        waitText("상태: 재생 중", timeout = LONG_TIMEOUT)
+        waitPlaying()
         Thread.sleep(PLAY_MS) // 주간 집계는 10초 이상 한 운동만 센다
         shot("24_한가지운동_재생중")
-        click("운동 마치기")
+        finishSingle() // v1.9: [운동 마치기] 대신 안내 끝 화면의 [기록하고 끝내기]
         waitText("운동을 기록했어요")
         shot("25_한가지운동_기록저장")
         waitSynced()
@@ -192,33 +192,34 @@ class RealServerJourneyTest : RealServerTestBase() {
 
         back()
         back()
-        waitPane("운동")
-        click("루틴 운동")
+        waitPane(EXERCISE_HOME)
+        more("루틴 운동")
         waitPane("루틴 운동")
         click("근력 운동 루틴")
         waitText("루틴 시작")
         shot("26_루틴_시작전_순서")
         click("루틴 시작")
-        waitText("상태: 재생 중", timeout = LONG_TIMEOUT)
+        waitPlaying()
         shot("27_루틴_첫운동_재생중")
-        // 첫 운동 안내를 [다음 구간]으로 끝까지 넘기면 휴식으로 간다.
-        repeat(MAX_SEGMENTS) { if (!textExists("남은 휴식")) runCatching { click("다음 구간") } }
+        // 첫 운동 안내를 [⋯]의 [다음 구간]으로 끝까지 넘기면 휴식으로 간다.
+        repeat(MAX_SEGMENTS) { if (!textExists("남은 휴식")) runCatching { more("다음 구간") } }
         waitText("남은 휴식")
         waitText("다음 운동: ")
         shot("28_루틴_휴식_카운트다운")
         waitText("운동 8개 중 2번째", timeout = LONG_TIMEOUT) // 휴식이 끝나면 저절로 다음 운동
         shot("29_루틴_두번째운동_자동시작")
-        click("루틴 끝내기")
+        more("루틴 끝내기")
         waitText("루틴을 끝낼까요?")
         shot("30_루틴_끝내기_확인")
         click("기록하고 끝내기")
         waitSynced()
         fact("routine_synced", "true")
 
-        rule.waitUntil(TIMEOUT) { hasPane("루틴 운동") || hasPane("운동") || textExists("루틴 목록으로") }
-        if (textExists("루틴 목록으로")) click("루틴 목록으로")
-        while (!hasPane("운동")) back()
-        click("이번 주 운동 기록")
+        // v1.9 R-14: 다 마친 뒤 버튼은 들어온 곳 이름(루틴 운동 메뉴 → 「루틴 운동으로」). 중간에 끝내면 바로 앞 화면으로.
+        rule.waitUntil(TIMEOUT) { hasPane("루틴 운동") || hasPane(EXERCISE_HOME) || textExists("루틴 운동으로") }
+        if (has(hasText("루틴 운동으로") and hasClickAction())) click("루틴 운동으로")
+        while (!hasPane(EXERCISE_HOME)) back()
+        more("이번 주 기록")
         waitText("이번 주 운동", timeout = LONG_TIMEOUT)
         val weekly = Regex("""이번 주 운동 (\d+)회""").find(allText())?.groupValues?.get(1) ?: "?"
         fact("weekly_count", weekly)
@@ -260,6 +261,8 @@ class RealServerJourneyTest : RealServerTestBase() {
         click("설정")
         waitPane("설정")
         shot("36_설정")
+        click("계정") // v1.9: 설정 첫 목록은 여섯 갈래, 동의 관리는 [계정] 안
+        waitPane("계정")
         click("개인정보·동의 관리")
         waitPane("개인정보·동의 관리")
         waitText("건강정보(민감정보) 처리 동의 철회")
@@ -277,6 +280,8 @@ class RealServerJourneyTest : RealServerTestBase() {
         click("동의")
         waitText("건강정보(민감정보) 처리 동의 철회")
         shot("40_민감정보_다시동의")
+        back()
+        waitPane("계정")
         back()
         waitPane("설정")
         back()
@@ -302,6 +307,8 @@ class RealServerJourneyTest : RealServerTestBase() {
 
         click("설정")
         waitPane("설정")
+        click("계정")
+        waitPane("계정")
         click("데이터 초기화")
         waitPane("데이터 초기화")
         click("건강 정보만 지우기")
@@ -322,6 +329,8 @@ class RealServerJourneyTest : RealServerTestBase() {
         waitPane("메인")
         click("설정")
         waitPane("설정")
+        click("계정")
+        waitPane("계정")
         click("로그아웃")
         waitPane("로그아웃 확인")
         shot("44_로그아웃_확인")
@@ -354,6 +363,8 @@ class RealServerJourneyTest : RealServerTestBase() {
         waitPane("메인")
         click("설정")
         waitPane("설정")
+        click("계정")
+        waitPane("계정")
         click("회원 탈퇴")
         waitPane("회원 탈퇴")
         shot("48_탈퇴_설명")
@@ -374,6 +385,5 @@ class RealServerJourneyTest : RealServerTestBase() {
     private companion object {
         const val VOICE_TIMEOUT = 15_000L
         const val PLAY_MS = 12_000L
-        const val MAX_SEGMENTS = 12
     }
 }
